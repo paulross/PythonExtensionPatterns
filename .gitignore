@@ -1,0 +1,4 @@
+doc/sphinx/build/*
+src/build/*
+*.so
+PythonExtensionPatterns/*
