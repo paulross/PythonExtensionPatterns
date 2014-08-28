@@ -34,7 +34,6 @@ Here is an example of a normal ``PyObject`` creation and deallocation:
 .. code-block:: c
     :linenos:
     
-    #include "Python.h"
     void print_hello_world(void) {
         PyObject *pObj = NULL:
     
