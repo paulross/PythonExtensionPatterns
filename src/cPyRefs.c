@@ -40,6 +40,14 @@ static PyObject *subtract_two_longs(PyObject *pModule) {
     return subtract_long(421, 17);
 }
 
+static PyObject *access_after_free(PyObject *pModule) {
+    PyObject *pA = PyLong_FromLong(1024L);
+    Py_DECREF(pA);
+    PyObject_Print(pA, stdout, 0);
+    Py_RETURN_NONE;
+}
+
+
 /* Stolen reference.
  * This is object creation but where another object takes responsibility
  * for decref'ing (freeing) the object.
@@ -110,15 +118,50 @@ static PyObject *pop_and_print_OK(PyObject *pModule, PyObject *pList) {
     Py_RETURN_NONE;
 }
 
-static PyObject *bad_incref(PyObject *pModule, PyObject *pObj) {
-    fprintf(stdout, "Ref count was: %zd\n", pObj->ob_refcnt);
+/* Just increfs a PyObject. */
+static PyObject *incref(PyObject *pModule, PyObject *pObj) {
+    fprintf(stdout, "incref(): Ref count was: %zd\n", pObj->ob_refcnt);
     Py_INCREF(pObj);
-    fprintf(stdout, "Ref count now: %zd\n", pObj->ob_refcnt);
-    if (1) {
-        Py_RETURN_NONE;
-    }
+    fprintf(stdout, "incref(): Ref count now: %zd\n", pObj->ob_refcnt);
     Py_RETURN_NONE;
 }
+
+/* Just decrefs a PyObject. */
+static PyObject *decref(PyObject *pModule, PyObject *pObj) {
+    fprintf(stdout, "decref(): Ref count was: %zd\n", pObj->ob_refcnt);
+    Py_DECREF(pObj);
+    fprintf(stdout, "decref(): Ref count now: %zd\n", pObj->ob_refcnt);
+    Py_RETURN_NONE;
+}
+
+/* This leaks new references.
+ */
+static PyObject *leak_new_reference(PyObject *pModule,
+                                     PyObject *args, PyObject *kwargs) {
+    PyObject *ret = NULL;
+    int value, count;
+    static char *kwlist[] = {"value", "count", NULL};
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii", kwlist, &value,
+                                     &count)) {
+        goto except;
+    }
+    fprintf(stdout, "loose_new_reference: value=%d count=%d\n", value, count);
+    for (int i = 0; i < count; ++i) {
+        PyLong_FromLong(value);    /* New reference, leaked. */
+    }
+    
+    Py_INCREF(Py_None);
+    ret = Py_None;
+    goto finally;
+except:
+    Py_XDECREF(ret);
+    ret = NULL;
+finally:
+    fprintf(stdout, "loose_new_reference: DONE\n");
+    return ret;
+}
+
 
 static PyMethodDef cPyRefs_methods[] = {
     {"newRef", (PyCFunction)subtract_two_longs, METH_NOARGS,
@@ -133,9 +176,16 @@ static PyMethodDef cPyRefs_methods[] = {
     {"popOK", (PyCFunction)pop_and_print_OK, METH_O,
 		"Borrowed refs, should not segfault."
     },
-    {"incref", (PyCFunction)bad_incref, METH_O,
-		"Naughty incref."
+    {"incref", (PyCFunction)incref, METH_O,
+		"incref a PyObject."
     },
+    {"decref", (PyCFunction)decref, METH_O,
+        "decref a PyObject."
+    },
+    {"leakNewRefs", (PyCFunction)leak_new_reference,
+        METH_VARARGS | METH_KEYWORDS, "Leaks new references to longs."},
+    {"afterFree", (PyCFunction)access_after_free,
+        METH_NOARGS, "Example of access after decrement reference."},
     {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
