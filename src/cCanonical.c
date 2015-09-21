@@ -8,6 +8,12 @@
 
 #include "Python.h"
 
+
+#define ASSERT_EXCEPTION_RETURN_VALUE(ret) assert ret && ! PyErr_Occurred() \
+|| !ret && PyErr_Occurred()
+
+
+
 /* So the canonical form is: */
 static PyObject *_func(PyObject *arg1) {
 	/* Create any local Python *objects as NULL. */

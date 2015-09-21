@@ -7,7 +7,7 @@ Created on May 30, 2013
 """
 import os
 
-DEBUG = False
+DEBUG = True
 
 extra_compile_args=["-std=c99", ]
 if DEBUG:

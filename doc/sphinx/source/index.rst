@@ -17,6 +17,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
    parsing_arguments
    module_globals
    logging
+   debugging/debug
 
 
 Indices and tables
