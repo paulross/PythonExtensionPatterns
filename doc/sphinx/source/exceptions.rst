@@ -87,3 +87,122 @@ The other thing to note is that if there are multiple calls to ``PyErr_SetString
         return NULL;
     }
 
+---------------------------------
+Creating Specialised Excpetions
+---------------------------------
+
+Often you need to create an Exception class that is specialised to a particular module. This can be done quite easily using either the ``PyErr_NewException`` or the ``PyErr_NewExceptionWithDoc`` functions. These create new exception classes that can be added to a module. For example:
+
+
+.. code-block:: c
+
+    /* Exception types as statics to be initialised during module initialisation. */
+    static PyObject *ExceptionBase;
+    static PyObject *SpecialisedError;
+
+    /* Standard module initialisation: */
+    static PyModuleDef noddymodule = {
+        PyModuleDef_HEAD_INIT,
+        "noddy",
+        "Example module that creates an extension type.",
+        -1,
+        NULL, NULL, NULL, NULL, NULL
+    };
+
+    PyMODINIT_FUNC
+    PyInit_noddy(void) 
+    {
+        PyObject* m;
+
+        noddy_NoddyType.tp_new = PyType_GenericNew;
+        if (PyType_Ready(&noddy_NoddyType) < 0)
+            return NULL;
+
+        m = PyModule_Create(&noddymodule);
+        if (m == NULL)
+            return NULL;
+
+        Py_INCREF(&noddy_NoddyType);
+        PyModule_AddObject(m, "Noddy", (PyObject *)&noddy_NoddyType);
+        
+        /* Initialise exceptions here.
+         *
+         * Firstly a base class exception that inherits from the builtin Exception.
+         * This is acheieved by passing NULL as the PyObject* as the third argument.
+         *
+         * PyErr_NewExceptionWithDoc returns a new reference.
+         */
+        ExceptionBase = PyErr_NewExceptionWithDoc(
+            "noddy.ExceptionBase" /* char *name */,
+            "Base exception class for the noddy module." /* char *doc */,
+            NULL /* PyObject *base */,
+            NULL /* PyObject *dict */);
+        /* Error checking: this is oversimplified as it should decref
+         * anything created above such as m.
+         */
+        if (! ExceptionBase) {
+            return NULL;
+        } else {
+            PyModule_AddObject(m, "ExceptionBase", ExceptionBase);
+        }
+        /* Now a sub-class exception that inherits from the base exception above.
+         * This is acheieved by passing non-NULL as the PyObject* as the third argument.
+         *
+         * PyErr_NewExceptionWithDoc returns a new reference.
+         */
+        SpecialisedError = PyErr_NewExceptionWithDoc(
+            "noddy.SpecialsiedError" /* char *name */,
+            "Some specialised problem description here." /* char *doc */,
+            ExceptionBase /* PyObject *base */,
+            NULL /* PyObject *dict */);
+        if (! SpecialisedError) {
+            return NULL;
+        } else {
+            PyModule_AddObject(m, "SpecialisedError", SpecialisedError);
+        }
+        /* END: Initialise exceptions here. */
+        
+        return m;
+    }
+
+To illustrate how you raise one of these exceptions suppose we have a function to test raising one of these exceptions:
+
+.. code-block:: c
+
+    static PyMethodDef Noddy_module_methods[] = {
+        ...
+        {"_test_raise", (PyCFunction)Noddy__test_raise, METH_NOARGS, "Raises a SpecialisedError."},
+        ...
+        {NULL, NULL, 0, NULL}  /* Sentinel */
+    };
+
+
+We can either access the exception type directly:
+
+.. code-block:: c
+
+    static PyObject *Noddy__test_raise(PyObject */* mod */)
+    {
+        if (SpecialisedError) {
+            PyErr_Format(SpecialisedError, "One %d two %d three %d.", 1, 2, 3);
+        } else {
+            PyErr_SetString(PyExc_RuntimeError, "Can not raise exception, module not initialised correctly");
+        }
+        return NULL;
+    }
+
+
+Or fish it out of the module:
+
+.. code-block:: c
+
+    static PyObject *Noddy__test_raise(PyObject *mod)
+    {
+        PyObject *err = PyDict_GetItemString(PyModule_GetDict(mod), "SpecialisedError");
+        if (err) {
+            PyErr_Format(err, "One %d two %d three %d.", 1, 2, 3);
+        } else {
+            PyErr_SetString(PyExc_RuntimeError, "Can not find exception in module");
+        }
+        return NULL;
+    }
