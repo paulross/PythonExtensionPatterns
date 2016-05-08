@@ -18,6 +18,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
    module_globals
    logging
    super_call
+   compiler_flags
    debugging/debug
 
 
