@@ -19,3 +19,4 @@ This is very much work in progress. I will add to it/correct it as I develop new
    leak_newrefs_vg
    debug_tactics
    gcov
+   debug_in_ide
