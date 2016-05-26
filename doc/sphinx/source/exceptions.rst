@@ -93,10 +93,9 @@ Creating Specialised Excpetions
 
 Often you need to create an Exception class that is specialised to a particular module. This can be done quite easily using either the ``PyErr_NewException`` or the ``PyErr_NewExceptionWithDoc`` functions. These create new exception classes that can be added to a module. For example:
 
-
 .. code-block:: c
 
-    /* Exception types as statics to be initialised during module initialisation. */
+    /* Exception types as static to be initialised during module initialisation. */
     static PyObject *ExceptionBase;
     static PyObject *SpecialisedError;
 
@@ -133,9 +132,9 @@ Often you need to create an Exception class that is specialised to a particular 
          * PyErr_NewExceptionWithDoc returns a new reference.
          */
         ExceptionBase = PyErr_NewExceptionWithDoc(
-            "noddy.ExceptionBase" /* char *name */,
-            "Base exception class for the noddy module." /* char *doc */,
-            NULL /* PyObject *base */,
+            "noddy.ExceptionBase", /* char *name */
+            "Base exception class for the noddy module.", /* char *doc */
+            NULL, /* PyObject *base */
             NULL /* PyObject *dict */);
         /* Error checking: this is oversimplified as it should decref
          * anything created above such as m.
@@ -151,9 +150,9 @@ Often you need to create an Exception class that is specialised to a particular 
          * PyErr_NewExceptionWithDoc returns a new reference.
          */
         SpecialisedError = PyErr_NewExceptionWithDoc(
-            "noddy.SpecialsiedError" /* char *name */,
-            "Some specialised problem description here." /* char *doc */,
-            ExceptionBase /* PyObject *base */,
+            "noddy.SpecialsiedError", /* char *name */
+            "Some specialised problem description here.", /* char *doc */
+            ExceptionBase, /* PyObject *base */
             NULL /* PyObject *dict */);
         if (! SpecialisedError) {
             return NULL;
@@ -181,7 +180,7 @@ We can either access the exception type directly:
 
 .. code-block:: c
 
-    static PyObject *Noddy__test_raise(PyObject */* mod */)
+    static PyObject *Noddy__test_raise(PyObject *_mod/* Unused */)
     {
         if (SpecialisedError) {
             PyErr_Format(SpecialisedError, "One %d two %d three %d.", 1, 2, 3);
@@ -192,7 +191,7 @@ We can either access the exception type directly:
     }
 
 
-Or fish it out of the module:
+Or fish it out of the module (this will be slower):
 
 .. code-block:: c
 
