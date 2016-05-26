@@ -32,7 +32,7 @@ gcov under Mac OS X
 Configuring Xcode
 ^^^^^^^^^^^^^^^^^
 
-`This document <https://developer.apple.com/library/mac/qa/qa1514/_index.html>`_ tells you how to configure Xbuild for gcov (actually llvm-cov).
+`This document <https://developer.apple.com/library/mac/qa/qa1514/_index.html>`_ tells you how to configure Xcode for gcov (actually llvm-cov).
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Running and Analysing Code Coverage

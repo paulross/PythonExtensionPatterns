@@ -57,6 +57,50 @@ The ``sysconfig`` module contains information about the build environment for th
     '/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7'
 
 --------------------------------------------------
+From the Command Line using ``sysconfig``
+--------------------------------------------------
+
+This very verbose output will give you a complete picture of your environment:
+
+.. code-block:: sh
+
+    $ python3 -m sysconfig
+    Platform: "macosx-10.6-intel"
+    Python version: "3.4"
+    Current installation scheme: "posix_prefix"
+
+    Paths: 
+        data = "/Library/Frameworks/Python.framework/Versions/3.4"
+        include = "/Library/Frameworks/Python.framework/Versions/3.4/include/python3.4m"
+        platinclude = "/Library/Frameworks/Python.framework/Versions/3.4/include/python3.4m"
+        platlib = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages"
+        platstdlib = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4"
+        purelib = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages"
+        scripts = "/Library/Frameworks/Python.framework/Versions/3.4/bin"
+        stdlib = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4"
+
+    Variables: 
+        ABIFLAGS = "m"
+        AC_APPLE_UNIVERSAL_BUILD = "1"
+        AIX_GENUINE_CPLUSPLUS = "0"
+        AR = "ar"
+        ARFLAGS = "rc"
+        ASDLGEN = "python /Users/sysadmin/build/v3.4.4/Parser/asdl_c.py"
+        ASDLGEN_FILES = "/Users/sysadmin/build/v3.4.4/Parser/asdl.py /Users/sysadmin/build/v3.4.4/Parser/asdl_c.py"
+        AST_ASDL = "/Users/sysadmin/build/v3.4.4/Parser/Python.asdl"
+        AST_C = "Python/Python-ast.c"
+        AST_C_DIR = "Python"
+        AST_H = "Include/Python-ast.h"
+        AST_H_DIR = "Include"
+        BASECFLAGS = "-fno-strict-aliasing -fno-common -dynamic"
+        BASECPPFLAGS = ""
+        BASEMODLIBS = ""
+        BINDIR = "/Library/Frameworks/Python.framework/Versions/3.4/bin"
+        BINLIBDEST = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4"
+    ...
+
+
+--------------------------------------------------
 Setting Flags Automatically in ``setup.py``
 --------------------------------------------------
 

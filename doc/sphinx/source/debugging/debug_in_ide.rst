@@ -192,14 +192,14 @@ The complete code for ``main()`` is here:
 Debuging Python C Extensions in Xcode
 --------------------------------------------
 
-Build this code in Xcode and set it to run with the command line arguments: ``test_sclist test`` and you can set break points in you extension, like this:
+Build this code in Xcode and set it to run with the command line arguments: ``test_sclist test`` and you can set break points in your extension, like this:
 
 
 .. image:: ../images/DebugXcode.png
-   :alt: The overall SVG diagram.
+   :alt: Debugging in Xcode.
    :align: center
 
-TODO: Commit the full code for this.
+The full code for this is in *src/debugging/XcodeExample/PythonSubclassList/*.
 
 --------------------------------------------
 Debuging Python C Extensions in Eclipse
