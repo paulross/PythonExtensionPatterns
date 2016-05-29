@@ -122,7 +122,8 @@ The sysconfig module allows you to create a generif setup.py script for Python C
     _DEBUG_LEVEL = 0
 
     # Common flags for both release and debug builds.
-    extra_compile_args=[sysconfig.get_config_var('CFLAGS'), "-std=c++11", "-Wall", "-Wextra"]
+    extra_compile_args = sysconfig.get_config_var('CFLAGS').split()
+    extra_compile_args += ["-std=c++11", "-Wall", "-Wextra"]
     if _DEBUG:
         extra_compile_args += ["-g3", "-O0", "-DDEBUG=%s" % _DEBUG_LEVEL, "-UNDEBUG"]
     else:
