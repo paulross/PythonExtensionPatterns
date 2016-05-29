@@ -46,7 +46,7 @@ In the Terminal navigate to the 'Build' directory:
 
 .. code-block:: bash
 
-    $ cd cd /Users/$USER/Library/Developer/Xcode/DerivedData/<project name and hash>/Build/
+    $ cd /Users/$USER/Library/Developer/Xcode/DerivedData/<project name and hash>/Build/
 
 Now navigate to the Intermediates/ directory and in there you should find the code coverage data in a path such as this:
 

@@ -6,6 +6,13 @@
 //  Copyright (c) 2014 Paul Ross. All rights reserved.
 //
 
+/* This is the code used for the documentation at:
+ * https://github.com/paulross/PythonExtensionPatterns/doc/sphinx/source/module_globals.rst
+ * Or:
+ * http://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
+ *
+ */
+
 #include "Python.h"
 
 const char *NAME_INT = "INT";

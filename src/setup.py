@@ -40,7 +40,7 @@ setup(
     ],
     license             = 'GNU General Public License v2 (GPLv2)',
     ext_modules=[
-        Extension("cExcep", sources=['cExcep.c',],
+        Extension("cExceptions", sources=['cExceptions.c',],
             include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
             library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
             extra_compile_args=extra_compile_args,
