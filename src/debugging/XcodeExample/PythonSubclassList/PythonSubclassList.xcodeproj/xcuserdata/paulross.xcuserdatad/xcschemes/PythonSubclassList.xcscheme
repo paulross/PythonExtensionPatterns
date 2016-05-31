@@ -59,6 +59,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "/Users/paulross/Documents/workspace/PythonExtensionPatterns/src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "test_sclist"
             isEnabled = "YES">
          </CommandLineArgument>
