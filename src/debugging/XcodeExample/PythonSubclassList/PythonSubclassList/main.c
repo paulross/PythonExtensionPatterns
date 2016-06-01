@@ -8,10 +8,6 @@
 
 #include <Python.h>
 
-/** This should be the name of your executable.
- * It is just used for error messages. */
-#define EXECUTABLE_NAME "pyxcode"
-
 /** Takes a path and adds it to sys.paths by calling PyRun_SimpleString.
  * This does rather laborious C string concatenation so that it will work in
  * a primitive C environment.
@@ -68,7 +64,7 @@ int import_call_execute(int argc, const char *argv[]) {
     if (argc != 4) {
         fprintf(stderr,
                 "Wrong arguments!"
-                " Usage: " EXECUTABLE_NAME " package_path module function\n");
+                " Usage: %s package_path module function\n", argv[0]);
         return_value = -1;
         goto except;
     }
@@ -81,31 +77,31 @@ int import_call_execute(int argc, const char *argv[]) {
     pModule = PyImport_ImportModule(argv[2]);
     if (! pModule) {
         fprintf(stderr,
-                EXECUTABLE_NAME ": Failed to load module \"%s\"\n", argv[2]);
+                "%s: Failed to load module \"%s\"\n", argv[0], argv[2]);
         return_value = -3;
         goto except;
     }
     pFunc = PyObject_GetAttrString(pModule, argv[3]);
     if (! pFunc) {
         fprintf(stderr,
-                EXECUTABLE_NAME ": Can not find function \"%s\"\n", argv[3]);
+                "%s: Can not find function \"%s\"\n", argv[0], argv[3]);
         return_value = -4;
         goto except;
     }
     if (! PyCallable_Check(pFunc)) {
         fprintf(stderr,
-                EXECUTABLE_NAME ": Function \"%s\" is not callable\n", argv[3]);
+                "%s: Function \"%s\" is not callable\n", argv[0], argv[3]);
         return_value = -5;
         goto except;
     }
     pResult = PyObject_CallObject(pFunc, NULL);
     if (! pResult) {
-        fprintf(stderr, EXECUTABLE_NAME ": Function call failed\n");
+        fprintf(stderr, "%s: Function call failed\n", argv[0]);
         return_value = -6;
         goto except;
     }
 #ifdef DEBUG
-    printf(EXECUTABLE_NAME ": PyObject_CallObject() succeeded\n");
+    printf("%s: PyObject_CallObject() succeeded\n", argv[0]);
 #endif
     assert(! PyErr_Occurred());
     goto finally;
