@@ -10,6 +10,7 @@
 		C31CD38E1CD6484100863554 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = C31CD38D1CD6484100863554 /* main.c */; };
 		C31CD3981CD6495F00863554 /* SubclassList.c in Sources */ = {isa = PBXBuildFile; fileRef = C31CD3961CD6495F00863554 /* SubclassList.c */; };
 		C31CD39D1CD929B700863554 /* py_call_super.c in Sources */ = {isa = PBXBuildFile; fileRef = C31CD39B1CD929B700863554 /* py_call_super.c */; };
+		C3814CF51D0B46D100BC0384 /* py_import_call_execute.c in Sources */ = {isa = PBXBuildFile; fileRef = C3814CF31D0B46D100BC0384 /* py_import_call_execute.c */; };
 		C3B45DD41CFE0DCA002A9D18 /* Python in Frameworks */ = {isa = PBXBuildFile; fileRef = C3B45DD31CFE0DC9002A9D18 /* Python */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +34,8 @@
 		C31CD3991CD7A2BC00863554 /* setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = setup.py; sourceTree = "<group>"; };
 		C31CD39B1CD929B700863554 /* py_call_super.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = py_call_super.c; sourceTree = "<group>"; };
 		C31CD39C1CD929B700863554 /* py_call_super.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = py_call_super.h; sourceTree = "<group>"; };
+		C3814CF31D0B46D100BC0384 /* py_import_call_execute.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = py_import_call_execute.c; sourceTree = "<group>"; };
+		C3814CF41D0B46D100BC0384 /* py_import_call_execute.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = py_import_call_execute.h; sourceTree = "<group>"; };
 		C3913BA41CE20386005A5E45 /* test_sclist.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = test_sclist.py; sourceTree = "<group>"; };
 		C3B45DD31CFE0DC9002A9D18 /* Python */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = Python; path = ../../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.4/Python; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -76,6 +79,8 @@
 				C31CD3971CD6495F00863554 /* SubclassList.h */,
 				C31CD39B1CD929B700863554 /* py_call_super.c */,
 				C31CD39C1CD929B700863554 /* py_call_super.h */,
+				C3814CF31D0B46D100BC0384 /* py_import_call_execute.c */,
+				C3814CF41D0B46D100BC0384 /* py_import_call_execute.h */,
 			);
 			path = PythonSubclassList;
 			sourceTree = "<group>";
@@ -137,6 +142,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C31CD38E1CD6484100863554 /* main.c in Sources */,
+				C3814CF51D0B46D100BC0384 /* py_import_call_execute.c in Sources */,
 				C31CD39D1CD929B700863554 /* py_call_super.c in Sources */,
 				C31CD3981CD6495F00863554 /* SubclassList.c in Sources */,
 			);
