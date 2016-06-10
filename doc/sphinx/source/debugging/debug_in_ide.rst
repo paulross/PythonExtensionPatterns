@@ -17,7 +17,7 @@ Debuging Python C Extensions in an IDE
 
 The basic idea is to compile/link your C extension in your IDE and get ``main()`` to call a function ``int import_call_execute(int argc, const char *argv[])`` that embeds the Python interpreter which then imports a Python module, say a unit test, that exercises your C extension code.
 
-This ``import_call_execute()`` entry point is fairly generic and takes the standard arguments to ``main()``.
+This ``import_call_execute()`` entry point is fairly generic and takes the standard arguments to ``main()`` so it can be in its own .h/.c file.
 
 ------------------------------------------------
 Creating a Python Unit Test to Execute
@@ -39,19 +39,19 @@ Suppose you have a Python extension ``ScList`` that sub-classes a list and count
 Writing a C Function to call any Python Unit Test
 -------------------------------------------------------
 
-We write the ``import_call_execute()`` function to take that same arguments as ``main()`` and ``import_call_execute()`` expects 4 arguments:
+We create the ``import_call_execute()`` function that takes that same arguments as ``main()`` which can forward its arguments. ``import_call_execute()`` expects 4 arguments:
 
 * ``argc[0]`` - Name of the executable.
 * ``argc[1]`` - Path to the directory that the Python module is in.
 * ``argc[2]`` - Name of the Python module to be imported. This could be a unit test module for example.
 * ``argc[3]`` - Name of the Python function in the Python module (no arguments will be supplied, the return value is ignored). This could be a particular unit test.
 
-The ``import_call_execute()`` function does this, in this particular case:
+The ``import_call_execute()`` function does this:
 
 #. Check the arguments and initialises the Python interpreter
-#. Add the path to the ``test_sclist.py`` to ``sys.paths``.
-#. Import ``test_sclist``.
-#. Find the function ``test()`` in module ``test_sclist`` and call it.
+#. Add the path to the ``argc[1]`` to ``sys.paths``.
+#. Import ``argc[2]``.
+#. Find the function ``argc[3]`` in module ``argc[2]`` and call it.
 #. Clean up.
 
 
@@ -59,17 +59,13 @@ The ``import_call_execute()`` function does this, in this particular case:
 Code Walk Through
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-So ``import_call_execute()`` is quite generic, here is a walk through of the code, the whole code is below.
+``import_call_execute()`` is quite generic and could be implemented in, say, ``py_import_call_execute.c``.
+
+Here is a walk through of the implementation code:
 
 Step 1: Check the arguments and initialise the Python interpreter
 
 .. code-block:: c
-
-    #include <Python.h>
-
-    /** This should be the name of your executable.
-     * It is just used for error messages. */
-    #define EXECUTABLE_NAME "pyxcode"
 
     /** This imports a Python module and calls a specific function in it.
      * It's arguments are similar to main():
@@ -96,7 +92,7 @@ Step 1: Check the arguments and initialise the Python interpreter
         if (argc != 4) {
             fprintf(stderr,
                     "Wrong arguments!"
-                    " Usage: " EXECUTABLE_NAME " package_path module function\n");
+                    " Usage: %s package_path module function\n", argv[0]);
             return_value = -1;
             goto except;
         }
@@ -204,28 +200,33 @@ Step 5: Clean up.
         return return_value;
     }
 
+And then we need ``main()`` to call this, thus:
+
+.. code-block:: c
+
+    #include "py_import_call_execute.h"
+
+    int main(int argc, const char *argv[]) {
+        return import_call_execute(argc, argv);
+    }
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Complete Code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The complete code for the file is here:
+The complete code for ``py_import_call_execute.c`` is here:
 
 .. code-block:: c
 
-    //
-    //  main.c
-    //  PythonSubclassList
-    //
-    //  Created by Paul Ross on 01/05/2016.
-    //  Copyright (c) 2016 Paul Ross. All rights reserved.
-    //
+    #include "py_import_call_execute.h"
 
     #include <Python.h>
 
-    /** This should be the name of your executable.
-     * It is just used for error messages. */
-    #define EXECUTABLE_NAME "pyxcode"
-
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+    
     /** Takes a path and adds it to sys.paths by calling PyRun_SimpleString.
      * This does rather laborious C string concatenation so that it will work in
      * a primitive C environment.
@@ -282,7 +283,7 @@ The complete code for the file is here:
         if (argc != 4) {
             fprintf(stderr,
                     "Wrong arguments!"
-                    " Usage: " EXECUTABLE_NAME " package_path module function\n");
+                    " Usage: %s package_path module function\n", argv[0]);
             return_value = -1;
             goto except;
         }
@@ -295,31 +296,31 @@ The complete code for the file is here:
         pModule = PyImport_ImportModule(argv[2]);
         if (! pModule) {
             fprintf(stderr,
-                    EXECUTABLE_NAME ": Failed to load module \"%s\"\n", argv[2]);
+                    "%s: Failed to load module \"%s\"\n", argv[0], argv[2]);
             return_value = -3;
             goto except;
         }
         pFunc = PyObject_GetAttrString(pModule, argv[3]);
         if (! pFunc) {
             fprintf(stderr,
-                    EXECUTABLE_NAME ": Can not find function \"%s\"\n", argv[3]);
+                    "%s: Can not find function \"%s\"\n", argv[0], argv[3]);
             return_value = -4;
             goto except;
         }
         if (! PyCallable_Check(pFunc)) {
             fprintf(stderr,
-                    EXECUTABLE_NAME ": Function \"%s\" is not callable\n", argv[3]);
+                    "%s: Function \"%s\" is not callable\n", argv[0], argv[3]);
             return_value = -5;
             goto except;
         }
         pResult = PyObject_CallObject(pFunc, NULL);
         if (! pResult) {
-            fprintf(stderr, EXECUTABLE_NAME ": Function call failed\n");
+            fprintf(stderr, "%s: Function call failed\n", argv[0]);
             return_value = -6;
             goto except;
         }
     #ifdef DEBUG
-        printf(EXECUTABLE_NAME ": PyObject_CallObject() succeeded\n");
+        printf("%s: PyObject_CallObject() succeeded\n", argv[0]);
     #endif
         assert(! PyErr_Occurred());
         goto finally;
@@ -333,10 +334,10 @@ The complete code for the file is here:
         Py_Finalize();
         return return_value;
     }
-
-    int main(int argc, const char *argv[]) {
-        return import_call_execute(argc, argv);
-    }
+    
+    #ifdef __cplusplus
+    //    extern "C" {
+    #endif
 
 
 --------------------------------------------
