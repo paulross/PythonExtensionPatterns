@@ -56,13 +56,12 @@ The Debug Builds
 ---------------------------
 
 The builds are controlled by the following macros:
-
-                                                                            
+            
 =================== ======================================================= ==============
 Macro               Description                                             Must Rebuild
                                                                             Extensions?
 =================== ======================================================= ==============
-``Py_DEBUG``        A standard debug build. ``Py_DEBUG`` implies            Yes
+``Py_DEBUG``        A standard debug build. ``Py_DEBUG`` sets               Yes
                     ``LLTRACE``, ``Py_REF_DEBUG``, ``Py_TRACE_REFS``, and
                     ``PYMALLOC_DEBUG`` (if ``WITH_PYMALLOC`` is enabled).
 ``Py_REF_DEBUG``    Turn on aggregate reference counting which will be      No
@@ -73,7 +72,7 @@ Macro               Description                                             Must
                     Also adds ``sys.gettotalrefcount()`` to the ``sys``
                     module and this returns the total number of references.
 ``Py_TRACE_REFS``   Turns on reference tracing.                             Yes
-                    Implies ``Py_REF_DEBUG``.
+                    Sets ``Py_REF_DEBUG``.
 ``COUNT_ALLOCS``    Keeps track of the number of objects of each type have  Yes
                     been allocated and how many freed.
                     See: :ref:`debug-version-of-python-COUNT_ALLOCS-label`
@@ -87,7 +86,13 @@ Macro               Description                                             Must
                     See: :ref:`debug-version-of-python-memory_alloc-label`
 =================== ======================================================= ==============
 
+Here is the description of other debug macros that are set by one of the macros above:
 
+=================== =======================================================
+Macro               Description
+=================== =======================================================
+``LLTRACE``         Low level tracing. See ``Python/ceval.c``.
+=================== =======================================================
 
 In the source directory:
 
@@ -120,7 +125,7 @@ To make a version of Python with its memory allocator suitable for use with Valg
     ../configure --with-pydebug --without-pymalloc
     make
 
-See :ref:`valgrind-label` for using Valgrind.
+See :ref:`using-valgrind-label` for using Valgrind.
 
 To make a version of Python with its memory allocator using Python's malloc debugger either:
 
