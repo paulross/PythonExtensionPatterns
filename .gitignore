@@ -1,6 +1,5 @@
 build/
 *.so
-PythonExtensionPatterns/
 doc/sphinx/build/
 __pycache__/
 .DS_Store
