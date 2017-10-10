@@ -1,5 +1,4 @@
 build/
 *.so
-PythonExtensionPatterns/
 doc/sphinx/build/
 __pycache__/

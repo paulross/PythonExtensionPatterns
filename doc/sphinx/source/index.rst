@@ -19,6 +19,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
    super_call
    compiler_flags
    debugging/debug
+   thread_safety
 
 
 Indices and tables

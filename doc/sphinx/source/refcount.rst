@@ -290,32 +290,30 @@ If we try a different string::
 
 At least this will get your attention!
 
-.. note::
+Incidentially from Python 3.3 onwards there is a module `faulthandler <https://docs.python.org/3.3/library/faulthandler.html#module-faulthandler>`_ that can give useful debugging information (file ``FaultHandlerExample.py``):
 
-    Incidentially from Python 3.3 onwards there is a module `faulthandler <https://docs.python.org/3.3/library/faulthandler.html#module-faulthandler>`_ that can give useful debugging information (file ``FaultHandlerExample.py``):
+.. code-block:: python
+	:linenos:
+	:emphasize-lines: 5
 
-    .. code-block:: python
-        :linenos:
-        :emphasize-lines: 7
-    
-        import faulthandler
-        faulthandler.enable()
+	import faulthandler
+	faulthandler.enable()
+	import cPyRefs
+	l = ['abc' * 200]
+	cPyRefs.popBAD(l)
 
-        import cPyRefs
+And this is what you get:
 
-        l = ['abc' * 200]
-        cPyRefs.popBAD(l)
+.. code-block:: console
 
-    And this is what you get::
+	$ python3 FaultHandlerExample.py 
+	Ref count was: 1
+	Ref count now: 2305843009213693952
+	Fatal Python error: Segmentation fault
 
-        $ python3 FaultHandlerExample.py 
-        Ref count was: 1
-        Ref count now: 2305843009213693952
-        Fatal Python error: Segmentation fault
-
-        Current thread 0x00007fff73c88310:
-          File "FaultHandlerExample.py", line 7 in <module>
-        Segmentation fault: 11
+	Current thread 0x00007fff73c88310:
+	  File "FaultHandlerExample.py", line 7 in <module>
+	Segmentation fault: 11
 
 There is a more subtle issue; suppose that in your Python code there is a reference to the last item in the list, then the problem suddenly "goes away"::
 

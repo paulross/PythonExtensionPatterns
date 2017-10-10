@@ -38,7 +38,9 @@ Configuring Xcode
 Running and Analysing Code Coverage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In Xcode select Product->Run then once that has completed note the GCov_build directory in Xcode by selecting Products-><project> in the left hand pane. In the right hand pane under 'Identity and Type' you should see 'Full Path' of something like::
+In Xcode select Product->Run then once that has completed note the GCov_build directory in Xcode by selecting Products-><project> in the left hand pane. In the right hand pane under 'Identity and Type' you should see 'Full Path' of something like:
+
+.. code-block:: console
 
     /Users/$USER/Library/Developer/Xcode/DerivedData/<project name and hash>/Build/Products/GCov_Build/<project>
 
