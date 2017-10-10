@@ -155,7 +155,7 @@ The function will be called with two arguments, the module, a ``PyListObject`` t
 
 In the following code we are expecting a string, an integer and an optional integer whose default value is 8. In Python the equivalent function declaration would be::
 
-    def argsOnly(theString, theInt, theOptInt=8):
+    def argsKwargs(theString, theOptInt=8):
 
 Here is the C code, note the string that describes the argument types passed to ``PyArg_ParseTuple``, if these types are not present a ``ValueError`` will be set.
 
@@ -169,17 +169,19 @@ Here is the C code, note the string that describes the argument types passed to 
         PyObject *pyStr = NULL;
         int arg2;
         static char *kwlist[] = {
-            "argOne", /* bytes object. */
-            "argTwo",
+            "theString",
+            "theOptInt",
             NULL
         };
     
+        /* If you are interested this is a way that you can trace the input.
         PyObject_Print(module, stdout, 0);
         fprintf(stdout, "\n");
         PyObject_Print(args, stdout, 0);
         fprintf(stdout, "\n");
         PyObject_Print(kwargs, stdout, 0);
         fprintf(stdout, "\n");
+         * End trace */
     
         arg2 = 8; /* Default value. */
         if (! PyArg_ParseTupleAndKeywords(args, kwargs, "S|i",
@@ -215,6 +217,28 @@ This function can be added to the module with the ``METH_VARARGS`` and ``METH_KE
         /* Other functions here... */
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
+
+All arguments are keyword arguments so this function can be called in a number of ways, all of the following are equivalent:
+
+.. code-block:: python
+    
+    argsKwargs('foo')
+    argsKwargs('foo', 8)
+    argsKwargs(theString='foo')
+    argsKwargs(theOptInt=8, theString='foo')
+    argsKwargs(theString, theOptInt=8)
+
+If you want the function signature to be ``argsKwargs(theString, theOptInt=8)`` with a single argument and a single optional keyword argument then put an empty string in the kwlist array:
+
+.. code-block:: c
+
+        ...
+        static char *kwlist[] = {
+            "",
+            "theOptInt",
+            NULL
+        };
+        ...
 
 .. note::
     If you use ``|`` in the parser format string you have to set the default values for those optional arguments yourself in the C code. This is pretty straightforward if they are fundamental C types as ``arg2 = 8`` above. For Python values is a bit more tricky as described next.
