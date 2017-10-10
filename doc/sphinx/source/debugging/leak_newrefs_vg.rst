@@ -124,7 +124,7 @@ In the second shell pidmon.py shows the sudden jump in memory usage:
 
 .. code-block:: bash
 
-    python3 pidmon.py 14488
+    $ python3 pidmon.py 14488
     pextmem(rss=7659520, vms=2475937792, pfaults=8380416, pageins=2617344)
          7.660 [Mb]
          7.660 [Mb]     +0.000 [Mb]
@@ -146,7 +146,9 @@ Observing the Total Reference Counts
 
 If you have a debug build of Python with ``Py_REF_DEBUG`` defined you might notice a very high level of total reference counts by either invoking Python with ``-X showrefcount`` or calling ``sys.gettotalrefcount()``.
 
-For example::
+For example:
+
+.. code-block:: python
 
     >>> import sys
     >>> import cPyRefs
@@ -179,7 +181,9 @@ And those references are not collectable::
 Observing the Reference Counts for a Particular Type
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a debug build with ``COUNT_ALLOCS`` [See: :ref:`debug-version-of-python-COUNT_ALLOCS-label`] defined you can see the references counts for each type. This build will have a new function ``sys.getcounts()`` which returns a list of tuples ``(tp_name, tp_allocs, tp_frees, tp_maxalloc)`` where ``tp_maxalloc`` is the maximum ever seen value of the reference ``tp_allocs - tp_frees``. The list is ordered by time of first object allocation::
+If you have a debug build with ``COUNT_ALLOCS`` [See: :ref:`debug-version-of-python-COUNT_ALLOCS-label`] defined you can see the references counts for each type. This build will have a new function ``sys.getcounts()`` which returns a list of tuples ``(tp_name, tp_allocs, tp_frees, tp_maxalloc)`` where ``tp_maxalloc`` is the maximum ever seen value of the reference ``tp_allocs - tp_frees``. The list is ordered by time of first object allocation:
+
+.. code-block:: python
 
     >>> import pprint
     >>> import sys
@@ -193,7 +197,9 @@ If you have a debug build with ``COUNT_ALLOCS`` [See: :ref:`debug-version-of-pyt
      ('dict', 1421, 714, 714),
      ('tuple', 13379, 9633, 3746)]
 
-We can try our leaky code::
+We can try our leaky code:
+
+.. code-block:: python
 
     >>> import cPyRefs
     >>> cPyRefs.leakNewRefs(1000, 1000000)
@@ -210,6 +216,8 @@ We can try our leaky code::
 There is a big jump in ``tp_maxalloc`` for ints that is worth investigating.
 
 When the Python process finishes you get a dump of this list as the interpreter is broken down::
+
+.. code-block:: console
 
     memoryview alloc'd: 210, freed: 210, max in use: 1
     managedbuffer alloc'd: 210, freed: 210, max in use: 1
