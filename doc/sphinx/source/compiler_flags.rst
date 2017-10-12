@@ -104,9 +104,10 @@ This very verbose output will give you a complete picture of your environment:
 Setting Flags Automatically in ``setup.py``
 --------------------------------------------------
 
-The sysconfig module allows you to create a generif setup.py script for Python C extensions.
+The sysconfig module allows you to create a generic ``setup.py`` script for Python C extensions (see highlighted line):
 
 .. code-block:: python
+    :emphasize-lines: 15
 
     from distutils.core import setup, Extension
     import os
