@@ -88,7 +88,7 @@ The other thing to note is that if there are multiple calls to ``PyErr_SetString
     }
 
 ---------------------------------
-Creating Specialised Excpetions
+Creating Specialised Exceptions
 ---------------------------------
 
 Often you need to create an Exception class that is specialised to a particular module. This can be done quite easily using either the ``PyErr_NewException`` or the ``PyErr_NewExceptionWithDoc`` functions. These create new exception classes that can be added to a module. For example:
