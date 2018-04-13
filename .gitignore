@@ -1,3 +1,4 @@
+PythonExtensionPatterns.bbprojectd/
 build/
 *.so
 doc/sphinx/build/
