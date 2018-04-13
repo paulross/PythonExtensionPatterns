@@ -437,3 +437,55 @@ Here is the complete C code:
         Py_XDECREF(pyObjArg_1);
         return ret;
     }
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Simplifying Macros
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+For simple default values some macros may help. The first one declares and initialises the default value. It takes three arguments:
+
+* The name of the argument variable, a static ``PyObject`` named ``default_<name>`` will also be created.
+* The default value which should return a new reference.
+* The value to return on failure to create a default value, usually -1 or ``NULL``.
+
+.. code-block:: c
+
+    #define PY_DEFAULT_ARGUMENT_INIT(name, value, ret) \
+        PyObject *name = NULL; \
+        static PyObject *default_##name = NULL; \
+        if (! default_##name) { \
+            default_##name = value; \
+            if (! default_##name) { \
+                PyErr_SetString(PyExc_RuntimeError, "Can not create default value for " #name); \
+                return ret; \
+            } \
+        }
+
+The second one assigns the argument to the default if it is not initialised. It just takes the name of the argument:
+
+.. code-block:: c
+
+    #define PY_DEFAULT_ARGUMENT_SET(name) if (! name) name = default_##name
+
+And they can be used thus:
+
+.. code-block:: c
+
+    static int
+    something_init(something *self, PyObject *args, PyObject *kwds) {
+        /* Initialise default arguments */
+        PY_DEFAULT_ARGUMENT_INIT(encoding,  PyUnicode_FromString("utf-8"),  -1);
+        PY_DEFAULT_ARGUMENT_INIT(the_id,    PyLong_FromLong(0L),            -1);
+        PY_DEFAULT_ARGUMENT_INIT(must_log,  PyBool_FromLong(1L),            -1);
+
+        static const char *kwlist[] = { "encoding", "the_id", "must_log", NULL };
+        if (! PyArg_ParseTupleAndKeywords(args, kwds, "|Oip",
+                                          const_cast<char**>(kwlist),
+                                          &encoding, &the_id, &must_log)) {
+            return -1;
+        }
+        /* Assign absent arguments to defaults. */
+        PY_DEFAULT_ARGUMENT_SET(encoding);
+        PY_DEFAULT_ARGUMENT_SET(the_id);
+        PY_DEFAULT_ARGUMENT_SET(must_log);
+        /* Use encoding, the_id, must_log from here on... */
