@@ -88,6 +88,34 @@ The other thing to note is that if there are multiple calls to ``PyErr_SetString
     }
 
 ---------------------------------
+Common Exception Patterns
+---------------------------------
+
+Here are some common use cases for raising exceptions.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type Checking
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A common requirement is to check the types of the arguments and raise a ``TypeError`` if they are wrong. Here is an example where we require a ``bytes`` object:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 4-9
+
+    static PyObject*
+    function(PyObject *self, PyObject *arg) {
+        /* ... */
+        if (! PyBytes_Check(arg)) {
+            PyErr_Format(PyExc_TypeError,
+                         "Argument \"value\" to %s must be a bytes object not a \"%s\"",
+                         __FUNCTION__, Py_TYPE(arg)->tp_name);
+            goto except;
+        }
+        /* ... */
+    }
+
+---------------------------------
 Creating Specialised Excpetions
 ---------------------------------
 

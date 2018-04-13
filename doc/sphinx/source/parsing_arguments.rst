@@ -232,16 +232,34 @@ If you want the function signature to be ``argsKwargs(theString, theOptInt=8)`` 
 
 .. code-block:: c
 
-        ...
+        /* ... */
         static char *kwlist[] = {
             "",
             "theOptInt",
             NULL
         };
-        ...
+        /* ... */
 
 .. note::
     If you use ``|`` in the parser format string you have to set the default values for those optional arguments yourself in the C code. This is pretty straightforward if they are fundamental C types as ``arg2 = 8`` above. For Python values is a bit more tricky as described next.
+    
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Keyword Arguments and C++11
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+C++11 compilers warn when creating non-const ``char*`` from string literals as we have done with the keyword array above. The solution is to declare these ``const char*`` however ``PyArg_ParseTupleAndKeywords`` expects a ``char **``. The solution is to cast away const in the call:
+
+.. code-block:: c
+
+    /* ... */
+    static const char *kwlist[] = { "foo", "bar", "baz", NULL };
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "OOO",
+                                      const_cast<char**>(kwlist),
+                                      &foo, &bar, &baz)) {
+        return NULL;
+    }
+    /* ... */
+
 
 --------------------------------------------------------------------------
 Being Pythonic with Default Arguments
@@ -461,31 +479,61 @@ For simple default values some macros may help. The first one declares and initi
             } \
         }
 
-The second one assigns the argument to the default if it is not initialised. It just takes the name of the argument:
+The second one assigns the argument to the default if it is not initialised and increments the reference count. It just takes the name of the argument:
 
 .. code-block:: c
 
-    #define PY_DEFAULT_ARGUMENT_SET(name) if (! name) name = default_##name
+    #define PY_DEFAULT_ARGUMENT_SET(name) if (! name) name = default_##name; \
+        Py_INCREF(name)
 
-And they can be used thus:
+And they can be used like this when implementing a Python function signature such as::
+    
+    def do_something(self, encoding='utf-8', the_id=0, must_log=True):
+        # ...
+        return None
+
+Here is that function implemented in C:
 
 .. code-block:: c
 
-    static int
-    something_init(something *self, PyObject *args, PyObject *kwds) {
-        /* Initialise default arguments */
-        PY_DEFAULT_ARGUMENT_INIT(encoding,  PyUnicode_FromString("utf-8"),  -1);
-        PY_DEFAULT_ARGUMENT_INIT(the_id,    PyLong_FromLong(0L),            -1);
-        PY_DEFAULT_ARGUMENT_INIT(must_log,  PyBool_FromLong(1L),            -1);
+    static PyObject*
+    do_something(something *self, PyObject *args, PyObject *kwds) {
+        PyObject *ret = NULL;
+        /* Initialise default arguments. Note: these might cause an early return. */
+        PY_DEFAULT_ARGUMENT_INIT(encoding,  PyUnicode_FromString("utf-8"),  NULL);
+        PY_DEFAULT_ARGUMENT_INIT(the_id,    PyLong_FromLong(0L),            NULL);
+        PY_DEFAULT_ARGUMENT_INIT(must_log,  PyBool_FromLong(1L),            NULL);
 
         static const char *kwlist[] = { "encoding", "the_id", "must_log", NULL };
         if (! PyArg_ParseTupleAndKeywords(args, kwds, "|Oip",
                                           const_cast<char**>(kwlist),
                                           &encoding, &the_id, &must_log)) {
-            return -1;
+            return NULL;
         }
-        /* Assign absent arguments to defaults. */
+        /* 
+         * Assign absent arguments to defaults and increment the reference count.
+         * Don't forget to decrement the reference count before returning!
+         */
         PY_DEFAULT_ARGUMENT_SET(encoding);
         PY_DEFAULT_ARGUMENT_SET(the_id);
         PY_DEFAULT_ARGUMENT_SET(must_log);
-        /* Use encoding, the_id, must_log from here on... */
+
+        /*
+         * Use encoding, the_id, must_log from here on...
+         */
+
+        Py_INCREF(Py_None);
+        ret = Py_None;
+        assert(! PyErr_Occurred());
+        assert(ret);
+        goto finally;
+    except:
+        assert(PyErr_Occurred());
+        Py_XDECREF(ret);
+        ret = NULL;
+    finally:
+        Py_DECREF(encoding);
+        Py_DECREF(the_id);
+        Py_DECREF(must_log);
+        return ret;
+    }
