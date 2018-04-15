@@ -115,6 +115,20 @@ A common requirement is to check the types of the arguments and raise a ``TypeEr
         /* ... */
     }
 
+Thats fine if you have a macro such as ``PyBytes_Check`` and for your own types you can create a couple of suitable macros:
+
+.. code-block:: c
+
+    #define PyMyType_CheckExact(op) (Py_TYPE(op) == &PyMyType_Type)
+    #define PyMyType_Check(op) PyObject_TypeCheck(op, &PyMyType_Type)
+
+Incidentially ``PyObject_TypeCheck`` is defined as:
+
+.. code-block:: c
+
+    #define PyObject_TypeCheck(ob, tp) \
+        (Py_TYPE(ob) == (tp) || PyType_IsSubtype(Py_TYPE(ob), (tp)))
+
 ---------------------------------
 Creating Specialised Excpetions
 ---------------------------------
