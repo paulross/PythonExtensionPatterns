@@ -15,6 +15,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
    exceptions
    canonical_function
    parsing_arguments
+   new_types
    module_globals
    super_call
    compiler_flags
