@@ -18,6 +18,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
    new_types
    module_globals
    super_call
+   unicode_and_cpp
    compiler_flags
    debugging/debug
    thread_safety
