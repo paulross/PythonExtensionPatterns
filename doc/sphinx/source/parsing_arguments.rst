@@ -62,8 +62,11 @@ There is no parsing required here, a single ``PyObject`` is expected:
                                     ) {
         PyObject *ret = NULL;
         assert(arg);
-        /* Treat arg as a borrowed reference. */
-        Py_INCREF(arg);
+        /* arg as a borrowed reference and the general rule is that you Py_INCREF them
+         * whilst you have an interest in them. We do _not_ do that here for reasons
+         * explained below.
+         */
+        // Py_INCREF(arg);
     
         /* Your code here...*/
     
@@ -76,8 +79,9 @@ There is no parsing required here, a single ``PyObject`` is expected:
         Py_XDECREF(ret);
         ret = NULL;
     finally:
-        /* Treat arg as a borrowed reference. */
-        Py_DECREF(arg);
+        /* If we were to treat arg as a borrowed reference and had Py_INCREF'd above we
+         * should do this. See below. */
+        // Py_DECREF(arg);
         return ret;
     }
 
@@ -93,6 +97,46 @@ This function can be added to the module with the ``METH_O`` flag:
         /* Other functions here... */
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Arguments as Borrowed References
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There is some subtlety here as indicated by the comments. ``*arg`` is not our reference, it is a borrowed reference so why don't we increment it at the beginning of this function and decrement it at the end? After all we are trying to protect against calling into some malicious/badly written code that could hurt us. For example:
+
+.. code-block:: c
+
+    static PyObject *foo(PyObject *module,
+                         PyObject *arg
+                         ) {
+        /* arg has a minimum recount of 1. */
+        call_malicious_code_that_decrefs_by_one_this_argument(arg);
+        /* arg potentially could have had a ref count of 0 and been deallocated. */
+        /* ... */
+        /* So now doing something with arg could be undefined. */
+    }
+
+A solution would be, since ``arg`` is a 'borrowed' reference and borrowed references should always be incremented whilst in use and decremented when done with. This would suggest the following:
+
+.. code-block:: c
+
+    static PyObject *foo(PyObject *module,
+                         PyObject *arg
+                         ) {
+        /* arg has a minimum recount of 1. */
+        Py_INCREF(arg);
+        /* arg now has a minimum recount of 2. */
+        call_malicious_code_that_decrefs_by_one_this_argument(arg);
+        /* arg can not have a ref count of 0 so is safe to use. */
+        /* Use arg to your hearts content... */
+        /* Do a matching decref. */
+        Py_DECREF(arg);
+        /* But now arg could have had a ref count of 0 so is unsafe to use by the caller. */
+    }
+
+But now we have just pushed the burden onto our caller. They created ``arg`` and passed it to us in good faith and whilst we have protected ourselves have not protected the caller and they can fail unexpectedly. So it is best to fail fast, an near the error site, that dastardly ``call_malicious_code_that_decrefs_by_one_this_argument()``.
+
+Side note: Of course this does not protect you from malicious/badly written code that decrements by more than one :-)
 
 ----------------------------------------------------
 Variable Number of Arguments
