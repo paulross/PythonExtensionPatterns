@@ -581,3 +581,94 @@ Here is that function implemented in C:
         Py_DECREF(must_log);
         return ret;
     }
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Simplifying C++11 class
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+With C++ we can make this a bit smoother. We declare a class thus:
+
+.. code-block:: cpp
+
+    /** Class to simplify default arguments.
+     *
+     * Usage:
+     *
+     * static DefaultArg arg_0(PyLong_FromLong(1L));
+     * static DefaultArg arg_1(PyUnicode_FromString("Default string."));
+     * if (! arg_0 || ! arg_1) {
+     *      return NULL;
+     * }
+     *
+     * if (! PyArg_ParseTupleAndKeywords(args, kwargs, "...",
+                                         const_cast<char**>(kwlist),
+                                         &arg_0, &arg_1, ...)) {
+            return NULL;
+        }
+     *
+     * Then just use arg_0, arg_1 as if they were a PyObject* (possibly
+     * might need to be cast to some specific PyObject*).
+     *
+     * WARN: This class is designed to be statically allocated. If allocated
+     * on the heap or stack it will leak memory. That could be fixed by
+     * implementing:
+     *
+     * ~DefaultArg() { Py_XDECREF(m_default); }
+     *
+     * But this will be highly dangerous when statically allocated as the
+     * destructor will be invoked with the Python interpreter in an
+     * uncertain state and will, most likely, segfault:
+     * "Python(39158,0x7fff78b66310) malloc: *** error for object 0x100511300: pointer being freed was not allocated"
+     */
+    class DefaultArg {
+    public:
+        DefaultArg(PyObject *new_ref) : m_arg { NULL }, m_default { new_ref } {}
+        // Allow setting of the (optional) argument with
+        // PyArg_ParseTupleAndKeywords
+        PyObject **operator&() { m_arg = NULL; return &m_arg; }
+        // Access the argument or the default if default.
+        operator PyObject*() const {
+            return m_arg ? m_arg : m_default;
+        }
+        // Test if constructed successfully from the new reference.
+        explicit operator bool() { return m_default != NULL; }
+    protected:
+        PyObject *m_arg;
+        PyObject *m_default;
+    };
+
+
+And we can use ``DefaultArg`` like this:
+
+.. code-block:: c
+
+    static PyObject*
+    do_something(something *self, PyObject *args, PyObject *kwds) {
+        PyObject *ret = NULL;
+        /* Initialise default arguments. */
+        static DefaultArg encoding { PyUnicode_FromString("utf-8") };
+        static DefaultArg the_id { PyLong_FromLong(0L) };
+        static DefaultArg must_log { PyBool_FromLong(1L) };
+        
+        /* Check that the defaults are non-NULL i.e. succesful. */
+        if (!encoding || !the_id || !must_log) {
+            return NULL;
+        }
+        
+        static const char *kwlist[] = { "encoding", "the_id", "must_log", NULL };
+        /* &encoding etc. accesses &m_arg in DefaultArg because of PyObject **operator&() */
+        if (! PyArg_ParseTupleAndKeywords(args, kwds, "|Oip",
+                                          const_cast<char**>(kwlist),
+                                          &encoding, &the_id, &must_log)) {
+            return NULL;
+        }
+        /*
+         * Use encoding, the_id, must_log from here on as PyObject* since we have
+         * operator PyObject*() const ...
+         *
+         * So if we have a function:
+         * set_encoding(PyObject *obj) { ... }
+         */
+         set_encoding(encoding);
+        /* ... */
+    }
