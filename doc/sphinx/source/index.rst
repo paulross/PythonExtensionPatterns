@@ -23,6 +23,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
    debugging/debug
    thread_safety
    miscellaneous
+   further_reading
 
 
 Indices and tables
