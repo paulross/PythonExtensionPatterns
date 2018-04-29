@@ -198,7 +198,7 @@ The contract with *new* references is: either you decref it or give it to someon
 
 This is also to do with object creation but where another object takes responsibility for decref'ing (possibly freeing) the object. Typical examples are when you create a ``PyObject`` that is then inserted into an existing container such as a tuple list, dict etc.
 
-The analogy with C code is malloc'ing some memory, populating it and then passing that pointer to a linked list which then takes on the responsibility to free the memory if that item in the list is removed.
+The analogy with C code is malloc'ing some memory, populating it and then passing that pointer to a linked list which then takes on the responsibility to free the memory if that item in the list is removed. If you were to free the memory you had malloc'd then you will get a double free when the linked list (eventually) frees its members.
 
 Here is an example of creating a 3-tuple, the comments describe what is happening contractually:
 
