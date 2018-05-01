@@ -23,6 +23,8 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
    compiler_flags
    debugging/debug
    thread_safety
+   code_layout
+   cpp_and_cpython
    miscellaneous
    further_reading
 
