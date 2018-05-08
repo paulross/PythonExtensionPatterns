@@ -9,7 +9,7 @@ Miscellaneous
 ====================================
 
 ------------------------------------
-No ``PyInit`` Function Found  
+No ``PyInit_...`` Function Found  
 ------------------------------------
 
 This is probably Mac OS X and Clang specific but when you import your extension and you get an error like:
@@ -37,5 +37,5 @@ And the binary now looks like this:
 
 .. code-block:: sh
 
-    $ nm -m cXmlWrite.cpython-36m-darwin.so | grep Init
-    00000000000010d0 (__TEXT,__text) external _PyInit_cXmlWrite
+    $ nm -m Foo.cpython-36m-darwin.so | grep Init
+    00000000000010d0 (__TEXT,__text) external _PyInit_Foo

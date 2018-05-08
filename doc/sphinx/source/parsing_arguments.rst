@@ -305,6 +305,8 @@ C++11 compilers warn when creating non-const ``char*`` from string literals as w
     /* ... */
 
 
+.. _cpython_default_arguments:
+
 --------------------------------------------------------------------------
 Being Pythonic with Default Arguments
 --------------------------------------------------------------------------
@@ -315,7 +317,7 @@ If the arguments default to some C fundamental type the code above is fine. Howe
 
     def function(arg_0=(42, "this"), arg_1={}):
 
-The first argument is immmutable, the second is mutable and so we need to mimic the well known behaviour of Python with mutable arguments. Mutable default arguments are evaluated once only at function definition time and then becomes a (mutable) property of the function. For example:
+The first argument is immutable, the second is mutable and so we need to mimic the well known behaviour of Python with mutable arguments. Mutable default arguments are evaluated once only at function definition time and then becomes a (mutable) property of the function. For example:
 
 .. code-block:: python
 

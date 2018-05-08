@@ -9,23 +9,23 @@ Coding Patterns for Python Extensions
 This describes reliable patterns of coding Python Extensions in C. It covers the essentials of reference counts, exceptions and creating functions that are safe and efficient.
 
 .. toctree::
-   :maxdepth: 3
+	:numbered:
+   	:maxdepth: 3
 
-   refcount
-   exceptions
-   canonical_function
-   parsing_arguments
-   new_types
-   module_globals
-   super_call
-   unicode_and_cpp
-   compiler_flags
-   debugging/debug
-   thread_safety
-   code_layout
-   cpp_and_cpython
-   miscellaneous
-   further_reading
+	refcount
+	exceptions
+	canonical_function
+	parsing_arguments
+	new_types
+	module_globals
+	super_call
+	compiler_flags
+	debugging/debug
+	thread_safety
+	code_layout
+	cpp
+	miscellaneous
+	further_reading
 
 
 Indices and tables
