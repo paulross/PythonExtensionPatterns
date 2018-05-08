@@ -4,6 +4,8 @@
 .. toctree::
     :maxdepth: 2
 
+.. _cpp_and_unicode:
+
 ====================================
 Python Unicode Strings and C++
 ====================================
