@@ -4,6 +4,8 @@
 .. toctree::
     :maxdepth: 3
 
+.. _cpp_and_cpython:
+
 ============================================
 C++ RAII Wrappers Around ``PyObject*``
 ============================================
