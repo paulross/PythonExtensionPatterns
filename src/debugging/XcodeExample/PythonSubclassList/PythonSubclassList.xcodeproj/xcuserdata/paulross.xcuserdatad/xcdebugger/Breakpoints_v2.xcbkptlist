@@ -24,6 +24,7 @@
                   continueAfterRunningActions = "No"
                   symbolName = "ScList_append"
                   moduleName = "PythonSubclassList"
+                  usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/paulross/Documents/workspace/PythonExtensionPatterns/src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.c"
                   timestampString = "486418359.147248"
                   startingColumnNumber = "9223372036854775807"
@@ -38,6 +39,7 @@
                   continueAfterRunningActions = "No"
                   symbolName = "ScList_append"
                   moduleName = "ScList.so"
+                  usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/paulross/Documents/workspace/PythonExtensionPatterns/src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.c"
                   timestampString = "486418359.297105"
                   startingColumnNumber = "9223372036854775807"
@@ -61,8 +63,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "49"
             endingLineNumber = "49"
-            landmarkName = "call_super_pyname()"
-            landmarkType = "7">
+            landmarkName = "call_super_pyname"
+            landmarkType = "9">
             <Locations>
                <Location
                   shouldBeEnabled = "Yes"
@@ -70,13 +72,14 @@
                   continueAfterRunningActions = "No"
                   symbolName = "call_super_pyname"
                   moduleName = "PythonSubclassList"
+                  usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/paulross/Documents/workspace/PythonExtensionPatterns/src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_call_super.c"
-                  timestampString = "487278611.130096"
+                  timestampString = "564676032.821329"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "49"
                   endingLineNumber = "49"
-                  offsetFromSymbolStart = "444">
+                  offsetFromSymbolStart = "405">
                </Location>
                <Location
                   shouldBeEnabled = "Yes"
@@ -84,8 +87,9 @@
                   continueAfterRunningActions = "No"
                   symbolName = "call_super_pyname"
                   moduleName = "ScList.so"
+                  usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/paulross/Documents/workspace/PythonExtensionPatterns/src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_call_super.c"
-                  timestampString = "487278611.358352"
+                  timestampString = "564676034.091737"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "49"
