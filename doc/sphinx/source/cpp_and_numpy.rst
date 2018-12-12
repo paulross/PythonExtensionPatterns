@@ -188,3 +188,100 @@ Supposing you have laid out your source code in the following fashion::
 This is a hybrid of the above and typical for CPython C++ extensions where ``module.c`` contains the CPython code that allows Python to access the pure C++ code.
 
 The code in ``class.h`` and ``class.cpp`` is unchanged and the code in ``module.c`` is essentially the same as that of a CPython module as described above where ``import_array()`` is called from within the ``PyInit_<module>`` function.
+
+
+How These Macros Work Together
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The two macros ``PY_ARRAY_UNIQUE_SYMBOL`` and ``NO_IMPORT_ARRAY`` work together as follows:
+
++-----------------------------------+-------------------------------+-------------------------------+
+|                                   |                               |                               |
++-----------------------------------+-------------------------------+-------------------------------+
+|                                   |   ``PY_ARRAY_UNIQUE_SYMBOL``  |   ``PY_ARRAY_UNIQUE_SYMBOL``  |
+|                                   |          NOT defined          |        defined as <NAME>      |
++-----------------------------------+-------------------------------+-------------------------------+
+|                                   | C API is declared as:         | C API is declared as:         |
+| ``NO_IMPORT_ARRAY`` not defined   | ``static void **PyArray_API`` | ``void **<NAME>``             |
+|                                   | Which makes it only available | so can be seen by other       |
+|                                   | to that translation unit.     | translation units.            |
++-----------------------------------+-------------------------------+-------------------------------+
+|                                   | C API is declared as:         | C API is declared as:         |
+| ``NO_IMPORT_ARRAY`` defined       | ``extern void **PyArray_API`` | ``extern void **<NAME>``      |
+|                                   | so is available from another  | so is available from another  |
+|                                   | translation unit.             | translation unit.             |
++-----------------------------------+-------------------------------+-------------------------------+
+
+
+Adding a Search Path to a Virtual Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you are linking to the system Python this may not have numpy installed, here is a way to cope with that. Create a virtual environment from the system python and install numpy:
+
+.. code-block:: bash
+
+    python -m venv <PATH_TO_VIRTUAL_ENVIRONMENT>
+    pip install numpy
+
+Then in your C++ entry point add this function that manipulates ``sys.path``:
+
+.. code-block:: cpp
+
+    /** Takes a path and adds it to sys.paths by calling PyRun_SimpleString.
+     * This does rather laborious C string concatenation so that it will work in
+     * a primitive C environment.
+     *
+     * Returns 0 on success, non-zero on failure.
+     */
+    int add_path_to_sys_module(const char *path) {
+        int ret = 0;
+        const char *prefix = "import sys\nsys.path.append(\"";
+        const char *suffix = "\")\n";
+        char *command = (char*)malloc(strlen(prefix)
+                                      + strlen(path)
+                                      + strlen(suffix)
+                                      + 1);
+        if (! command) {
+            return -1;
+        }
+        strcpy(command, prefix);
+        strcat(command, path);
+        strcat(command, suffix);
+        ret = PyRun_SimpleString(command);
+    #ifdef DEBUG
+        printf("Calling PyRun_SimpleString() with:\n");
+        printf("%s", command);
+        printf("PyRun_SimpleString() returned: %d\n", ret);
+        fflush(stdout);
+    #endif
+        free(command);
+        return ret;
+    }
+
+``main()`` now calls this with the path to the virtual environment ``site-packages``:
+
+.. code-block:: cpp
+
+    int main(int argc, const char * argv[]) {
+        wchar_t *program = Py_DecodeLocale(argv[0], NULL);
+        if (program == NULL) {
+            fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
+            exit(1);
+        }
+        // Initialise the interpreter.
+        Py_SetProgramName(program);  /* optional but recommended */
+        Py_Initialize();
+        const char *multiarray_path = "<PATH_TO_VIRTUAL_ENVIRONMENT_SITE_PACKAGES>";
+        add_path_to_sys_module(multiarray_path);
+        import_array();
+        if (PyErr_Occurred()) {
+            std::cerr << "Failed to import numpy Python module(s)." << std::endl;
+            return -1;
+        }
+        assert(PyArray_API);
+        // Your code here...
+    }
+
+
+
+
