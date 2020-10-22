@@ -21,6 +21,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
 	super_call
 	compiler_flags
 	debugging/debug
+	memory_leaks
 	thread_safety
 	code_layout
 	cpp
