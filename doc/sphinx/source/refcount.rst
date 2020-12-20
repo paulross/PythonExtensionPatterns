@@ -368,9 +368,65 @@ The ``pLast = NULL;`` line is not necessary but is good coding style as it will 
 
 An important takeaway here is that incrementing and decrementing reference counts is a cheap operation but the consequences of getting it wrong can be expensive. A precautionary approach in your code might be to *always* increment borrowed references when they are instantiated and then *always* decrement them before they go out of scope. That way you incur two cheap operations but eliminate a vastly more expensive one.
 
-^^^^^^^^^^^^^^^^^^
+-----------------------
+An Example Leak Problem
+-----------------------
+
+Here is an example that exhibits a leak. The object is to add the integers 400 to 404 to the end of a list. You  might want to study it to see if you can spot the problem:
+
+.. code-block:: c
+    
+    static PyObject *
+    list_append_one_to_four(PyObject *list) {
+        for (int i = 400; i < 405; ++i) {
+            PyList_Append(list, PyLong_FromLong(i));
+        }
+        Py_RETURN_NONE;
+    }
+
+The problem is that ``PyLong_FromLong`` creates  ``PyObject`` (an int) with a reference count of 1 **but** ``PyList_Append`` increments the reference count of the object passed to it by 1 to 2. This means when the list is destroyed the list element reference counts drop by one (to 1) but *no lower* as nothing else references them. Therefore they never get deallocated so there is a memory leak.
+
+
+The append operation *must* behave this way, consider this Python code
+
+.. code-block:: python
+    
+    l = []
+    a = 400
+    # The integer object '400' has a reference count of 1 as only
+    # one symbol references it: ``a``.
+    l.append(a)
+    # The integer object '400' must now have a reference count of
+    # 2 as two symbols reference it: ``a`` and ``l``,
+    # specifically ``l[-1]``.
+
+The fix for this code is to do this, error checking omitted:
+
+.. code-block:: c
+    
+    static PyObject *
+    list_append_one_to_four(PyObject *list) {
+        PyObject *temporary_item = NULL;
+        
+        for (int i = 400; i < 405; ++i) {
+            /* Create the object to append to the list. */
+            temporary_item = PyLong_FromLong(i);
+            /* Append it. This will increment the reference count. */
+            PyList_Append(list, temporary_item);
+            /* Decrement our reference to it leaving the list having the only reference. */
+            Py_DECREF(temporary_item);
+            /* Implementation detail really. */
+            assert(temporary_item->ob_refcnt == 1);
+            /* Good practice... */
+            temporary_item =  NULL;
+        }
+        Py_RETURN_NONE;
+    }
+
+
+-----------------------
 Summary
-^^^^^^^^^^^^^^^^^^
+-----------------------
 
 The contracts you enter into with these three reference types are:
 
