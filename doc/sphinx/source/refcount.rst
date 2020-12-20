@@ -394,13 +394,12 @@ The append operation *must* behave this way, consider this Python code
     l = []
     a = 400
     # The integer object '400' has a reference count of 1 as only
-    # one symbol references it: ``a``.
+    # one symbol references it: a.
     l.append(a)
     # The integer object '400' must now have a reference count of
-    # 2 as two symbols reference it: ``a`` and ``l``,
-    # specifically ``l[-1]``.
+    # 2 as two symbols reference it: a and l, specifically l[-1].
 
-The fix for this code is to do this, error checking omitted:
+The fix is to create a temporary item and then decref *that* once appended (error checking omitted):
 
 .. code-block:: c
     
@@ -411,14 +410,13 @@ The fix for this code is to do this, error checking omitted:
         for (int i = 400; i < 405; ++i) {
             /* Create the object to append to the list. */
             temporary_item = PyLong_FromLong(i);
-            /* Append it. This will increment the reference count. */
+            /* temporary_item->ob_refcnt == 1 now */
+            /* Append it. This will increment the reference count to 2. */
             PyList_Append(list, temporary_item);
             /* Decrement our reference to it leaving the list having the only reference. */
             Py_DECREF(temporary_item);
-            /* Implementation detail really. */
-            assert(temporary_item->ob_refcnt == 1);
-            /* Good practice... */
-            temporary_item =  NULL;
+            /* temporary_item->ob_refcnt == 1 now */
+            temporary_item =  NULL; /* Good practice... */
         }
         Py_RETURN_NONE;
     }
