@@ -215,10 +215,10 @@ We can try our leaky code:
 
 There is a big jump in ``tp_maxalloc`` for ints that is worth investigating.
 
-When the Python process finishes you get a dump of this list as the interpreter is broken down::
+When the Python process finishes you get a dump of this list as the interpreter is broken down:
 
 .. code-block:: console
-
+    
     memoryview alloc'd: 210, freed: 210, max in use: 1
     managedbuffer alloc'd: 210, freed: 210, max in use: 1
     PrettyPrinter alloc'd: 2, freed: 2, max in use: 1

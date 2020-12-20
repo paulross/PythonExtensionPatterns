@@ -1,7 +1,12 @@
 PythonExtensionPatterns.bbprojectd/
-build/
+
 *.so
+build/
 doc/sphinx/build/
+
 __pycache__/
+
 .DS_Store
+
+.idea
 

@@ -221,6 +221,7 @@ If you are linking to the system Python this may not have numpy installed, here 
 .. code-block:: bash
 
     python -m venv <PATH_TO_VIRTUAL_ENVIRONMENT>
+    source <PATH_TO_VIRTUAL_ENVIRONMENT>/bin/activate
     pip install numpy
 
 Then in your C++ entry point add this function that manipulates ``sys.path``:
