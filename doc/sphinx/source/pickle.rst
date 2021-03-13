@@ -5,7 +5,7 @@
     :maxdepth: 2
 
 ====================================
-Pickling and C Extensions
+Pickling and C Extension Types
 ====================================
 
 If you need to provide support for pickling your specialised types from your C extension then you need to implement some special functions.
@@ -44,7 +44,7 @@ Implementing ``__getstate__``
 Note that a ``Custom`` object has two Python objects (``first`` and ``last``) and a C integer (``number``) that need to be converted to a Python object.
 We also need to add the version information.
 
-Her is the C implementation:
+Here is the C implementation:
 
 .. code-block:: c
 
@@ -100,6 +100,87 @@ Before setting any member value we need to de-allocate the existing value set by
                          pickle_version, PICKLE_VERSION);
             return NULL;
         }
+
+Set ``first``:
+
+.. code-block:: c
+
+        /* NOTE: Custom_new() will have been invoked so self->first and self->last
+         * will have been allocated so we have to de-allocate them. */
+        Py_DECREF(self->first);
+        self->first = PyDict_GetItemString(state, "first"); /* Borrowed reference. */
+        if (self->first == NULL) {
+            /* PyDict_GetItemString does not set any error state so we have to. */
+            PyErr_SetString(PyExc_KeyError, "No \"first\" in pickled dict.");
+            return NULL;
+        }
+        /* Increment the borrowed reference for our instance of it. */
+        Py_INCREF(self->first);
+
+Set ``last``:
+
+.. code-block:: c
+
+        /* Similar to self->first above. */
+        Py_DECREF(self->last);
+        self->last = PyDict_GetItemString(state, "last"); /* Borrowed reference. */
+        if (self->last == NULL) {
+            /* PyDict_GetItemString does not set any error state so we have to. */
+            PyErr_SetString(PyExc_KeyError, "No \"last\" in pickled dict.");
+            return NULL;
+        }
+        Py_INCREF(self->last);
+
+Set ``number``, this is a C fundamental type:
+
+.. code-block:: c
+
+        /* Borrowed reference but no need to incref as we create a C long from it. */
+        PyObject *number = PyDict_GetItemString(state, "number");
+        if (number == NULL) {
+            /* PyDict_GetItemString does not set any error state so we have to. */
+            PyErr_SetString(PyExc_KeyError, "No \"number\" in pickled dict.");
+            return NULL;
+        }
+        self->number = (int) PyLong_AsLong(number);
+
+And we are done.
+
+.. code-block:: c
+
+        Py_RETURN_NONE;
+    }
+
+The complete code is:
+
+.. code-block:: c
+
+    /* Un-pickle the object */
+    static PyObject *
+    Custom___setstate__(CustomObject *self, PyObject *state) {
+        /* Error check. */
+        if (!PyDict_CheckExact(state)) {
+            PyErr_SetString(PyExc_ValueError, "Pickled object is not a dict.");
+            return NULL;
+        }
+        /* Version check. */
+        /* Borrowed reference but no need to increment as we create a C long
+         * from it. */
+        PyObject *temp = PyDict_GetItemString(state, PICKLE_VERSION_KEY);
+        if (temp == NULL) {
+            /* PyDict_GetItemString does not set any error state so we have to. */
+            PyErr_Format(PyExc_KeyError, "No \"%s\" in pickled dict.",
+                         PICKLE_VERSION_KEY);
+            return NULL;
+        }
+        int pickle_version = (int) PyLong_AsLong(temp);
+        if (pickle_version != PICKLE_VERSION) {
+            PyErr_Format(PyExc_ValueError,
+                         "Pickle version mismatch. Got version %d but expected version %d.",
+                         pickle_version, PICKLE_VERSION);
+            return NULL;
+        }
+
         /* NOTE: Custom_new() will have been invoked so self->first and self->last
          * will have been allocated so we have to de-allocate them. */
         Py_DECREF(self->first);
@@ -134,6 +215,8 @@ Before setting any member value we need to de-allocate the existing value set by
         Py_RETURN_NONE;
     }
 
+
+
 Add the Special Methods
 ---------------------------------
 
@@ -167,32 +250,30 @@ Here is some Python code that exercises our module:
     import custom2
 
     original = custom2.Custom('FIRST', 'LAST', 11)
-    print(
-        f'original is {original} @ 0x{id(original):x} first: {original.first} last: {original.last}'
-        ' number: {original.number} name: {original.name()}'
-    )
+    print(f'original is {original} @ 0x{id(original):x}')
+    print(f'original first: {original.first} last: {original.last} number: {original.number} name: {original.name()}')
     pickled_value = pickle.dumps(original)
     print(f'Pickled original is {pickled_value}')
     result = pickle.loads(pickled_value)
-    print(
-        f'result is {result} @ 0x{id(result):x} first: {result.first} last: {result.last}'
-        ' number: {result.number} name: {result.name()}'
-    )
-
+    print(f'result is {result} @ 0x{id(result):x}')
+    print(f'result first: {result.first} last: {result.last} number: {result.number} name: {result.name()}')
 
 .. code-block:: sh
 
     $ python main.py
-    original is <custom2.Custom object at 0x102b00810> @ 0x102b00810 first: FIRST last: LAST number: 11 name: FIRST LAST
+    original is <custom2.Custom object at 0x1049e6810> @ 0x1049e6810
+    original first: FIRST last: LAST number: 11 name: FIRST LAST
     Pickled original is b'\x80\x04\x95[\x00\x00\x00\x00\x00\x00\x00\x8c\x07custom2\x94\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_version\x94K\x01ub.'
-    result is <custom2.Custom object at 0x102a3f510> @ 0x102a3f510 first: FIRST last: LAST number: 11 name: FIRST LAST
+    result is <custom2.Custom object at 0x1049252d0> @ 0x1049252d0
+    result first: FIRST last: LAST number: 11 name: FIRST LAST
 
-So we have pickled one object and recreated a different, but equivalent, instance from that object.
+So we have pickled one object and recreated a different, but equivalent, instance from the pickle of the original object which is what we set out to do.
 
 Pickling Objects with External State
 -----------------------------------------
 
 This is just a simple example, if your object relies on external state such as open files, databases and the like you need to be careful, and knowledgeable about your state management.
+There is some useful information here: `Handling Stateful Objects <https://docs.python.org/3/library/pickle.html#pickle-state>`_
 
 References
 -----------------------
