@@ -5,12 +5,12 @@
     :maxdepth: 2
 
 ====================================
-Pickling C Extension Types
+Pickling and C Extensions
 ====================================
 
 If you need to provide support for pickling your specialised types from your C extension then you need to implement some special functions.
 
-This example shows you how to provided pickle support for for the ``custom2.Custom`` type described in the C extension tutorial in the
+This example shows you how to provided pickle support for for the ``custom2`` type described in the C extension tutorial in the
 `Python documentation <https://docs.python.org/3/extending/newtypes_tutorial.html#adding-data-and-methods-to-the-basic-example>`_.
 
 Pickle Version Control
@@ -248,6 +248,22 @@ Pickling a ``custom2.Custom`` Object
 -------------------------------------
 
 We can test this with code like this that pickles one ``custom2.Custom`` object then creates another ``custom2.Custom`` object from that pickle.
+            {"name", (PyCFunction) Custom_name, METH_NOARGS,
+                    "Return the name, combining the first and last name"
+            },
+            {"__getstate__", (PyCFunction) Custom___getstate__, METH_NOARGS,
+                    "Pickle the Custom object"
+            },
+            {"__setstate__", (PyCFunction) Custom___setstate__, METH_O,
+                    "Un-pickle the Custom object"
+            },
+            {NULL}  /* Sentinel */
+    };
+
+Example of Using ``custom2.Custom``
+-------------------------------------
+
+We can test this with code like this that pickles one object then creates another object from that pickle.
 Here is some Python code that exercises our module:
 
 .. code-block:: python
@@ -257,13 +273,18 @@ Here is some Python code that exercises our module:
     import custom2
 
     original = custom2.Custom('FIRST', 'LAST', 11)
-    print(f'original is {original} @ 0x{id(original):x}')
-    print(f'original first: {original.first} last: {original.last} number: {original.number} name: {original.name()}')
+    print(
+        f'original is {original} @ 0x{id(original):x} first: {original.first} last: {original.last}'
+        ' number: {original.number} name: {original.name()}'
+    )
     pickled_value = pickle.dumps(original)
     print(f'Pickled original is {pickled_value}')
     result = pickle.loads(pickled_value)
-    print(f'result is {result} @ 0x{id(result):x}')
-    print(f'result first: {result.first} last: {result.last} number: {result.number} name: {result.name()}')
+    print(
+        f'result is {result} @ 0x{id(result):x} first: {result.first} last: {result.last}'
+        ' number: {result.number} name: {result.name()}'
+    )
+
 
 .. code-block:: sh
 
@@ -275,6 +296,11 @@ Here is some Python code that exercises our module:
     result first: FIRST last: LAST number: 11 name: FIRST LAST
 
 So we have pickled one object and recreated a different, but equivalent, instance from the pickle of the original object which is what we set out to do.
+    original is <custom2.Custom object at 0x102b00810> @ 0x102b00810 first: FIRST last: LAST number: 11 name: FIRST LAST
+    Pickled original is b'\x80\x04\x95[\x00\x00\x00\x00\x00\x00\x00\x8c\x07custom2\x94\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_version\x94K\x01ub.'
+    result is <custom2.Custom object at 0x102a3f510> @ 0x102a3f510 first: FIRST last: LAST number: 11 name: FIRST LAST
+
+So we have pickled one object and recreated a different, but equivalent, instance from that object.
 
 Pickling Objects with External State
 -----------------------------------------
