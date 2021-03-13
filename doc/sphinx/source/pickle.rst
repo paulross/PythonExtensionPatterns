@@ -5,7 +5,7 @@
     :maxdepth: 2
 
 ====================================
-Pickling and C Extensions
+Pickling and C Extension Types
 ====================================
 
 If you need to provide support for pickling your specialised types from your C extension then you need to implement some special functions.
@@ -224,6 +224,8 @@ And we are done.
         Py_RETURN_NONE;
     }
 
+
+
 Add the Special Methods
 ---------------------------------
 
@@ -273,34 +275,33 @@ Here is some Python code that exercises our module:
     import custom2
 
     original = custom2.Custom('FIRST', 'LAST', 11)
-    print(
-        f'original is {original} @ 0x{id(original):x} first: {original.first} last: {original.last}'
-        ' number: {original.number} name: {original.name()}'
-    )
+    print(f'original is {original} @ 0x{id(original):x}')
+    print(f'original first: {original.first} last: {original.last} number: {original.number} name: {original.name()}')
     pickled_value = pickle.dumps(original)
     print(f'Pickled original is {pickled_value}')
     result = pickle.loads(pickled_value)
-    print(
-        f'result is {result} @ 0x{id(result):x} first: {result.first} last: {result.last}'
-        ' number: {result.number} name: {result.name()}'
-    )
-
+    print(f'result is {result} @ 0x{id(result):x}')
+    print(f'result first: {result.first} last: {result.last} number: {result.number} name: {result.name()}')
 
 .. code-block:: sh
 
     $ python main.py
     original is <custom2.Custom object at 0x1049e6810> @ 0x1049e6810
     original first: FIRST last: LAST number: 11 name: FIRST LAST
+<<<<<<< HEAD
     Pickled original is b'\x80\x04\x95[\x00\x00\x00\x00\x00\x00\x00\x8c\x07custom2\x94\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_version\x94K\x01ub.'
     result is <custom2.Custom object at 0x1049252d0> @ 0x1049252d0
     result first: FIRST last: LAST number: 11 name: FIRST LAST
 
 So we have pickled one object and recreated a different, but equivalent, instance from the pickle of the original object which is what we set out to do.
     original is <custom2.Custom object at 0x102b00810> @ 0x102b00810 first: FIRST last: LAST number: 11 name: FIRST LAST
+=======
+>>>>>>> b623a25 (Documentation on pickling pretty much complete.)
     Pickled original is b'\x80\x04\x95[\x00\x00\x00\x00\x00\x00\x00\x8c\x07custom2\x94\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_version\x94K\x01ub.'
-    result is <custom2.Custom object at 0x102a3f510> @ 0x102a3f510 first: FIRST last: LAST number: 11 name: FIRST LAST
+    result is <custom2.Custom object at 0x1049252d0> @ 0x1049252d0
+    result first: FIRST last: LAST number: 11 name: FIRST LAST
 
-So we have pickled one object and recreated a different, but equivalent, instance from that object.
+So we have pickled one object and recreated a different, but equivalent, instance from the pickle of the original object which is what we set out to do.
 
 Pickling Objects with External State
 -----------------------------------------
