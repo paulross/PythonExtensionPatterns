@@ -113,7 +113,7 @@ In the ``<Python source>/Misc`` directory there is a ``valgrind-python.supp`` fi
     cp <Python source>/Misc/valgrind-python.supp ~/valgrind-python.supp
     vi ~/valgrind-python.supp
 
-Uncomment ``PyObject_Free`` and ``PyObject_Realloc`` in the valgring suppression file.
+Uncomment ``PyObject_Free`` and ``PyObject_Realloc`` in the valgrind suppression file.
 
 Invoking the Python interpreter with Valgrind:
 
