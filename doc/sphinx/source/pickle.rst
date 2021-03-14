@@ -5,12 +5,12 @@
     :maxdepth: 2
 
 ====================================
-Pickling and C Extension Types
+Pickling C Extension Types
 ====================================
 
 If you need to provide support for pickling your specialised types from your C extension then you need to implement some special functions.
 
-This example shows you how to provided pickle support for for the ``custom2`` type described in the C extension tutorial in the
+This example shows you how to provided pickle support for for the ``custom2.Custom`` type described in the C extension tutorial in the
 `Python documentation <https://docs.python.org/3/extending/newtypes_tutorial.html#adding-data-and-methods-to-the-basic-example>`_.
 
 Pickle Version Control
@@ -73,6 +73,9 @@ We are being passed an arbitrary Python object and need to check:
 Note that our ``__new__`` method (``Custom_new()``) has already been called on ``self``.
 Before setting any member value we need to de-allocate the existing value set by ``Custom_new()`` otherwise we will have a memory leak.
 
+Error Checking
+^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. code-block:: c
 
     /* Un-pickle the object */
@@ -101,7 +104,8 @@ Before setting any member value we need to de-allocate the existing value set by
             return NULL;
         }
 
-Set ``first``:
+Set the ``first`` Member
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: c
 
@@ -117,7 +121,8 @@ Set ``first``:
         /* Increment the borrowed reference for our instance of it. */
         Py_INCREF(self->first);
 
-Set ``last``:
+Set the ``last`` Member
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: c
 
@@ -131,7 +136,10 @@ Set ``last``:
         }
         Py_INCREF(self->last);
 
-Set ``number``, this is a C fundamental type:
+Set the ``number`` Member
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a C fundamental type so the code is slightly different:
 
 .. code-block:: c
 
@@ -151,7 +159,8 @@ And we are done.
         Py_RETURN_NONE;
     }
 
-The complete code is:
+``__setstate__`` in Full
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: c
 
@@ -215,8 +224,6 @@ The complete code is:
         Py_RETURN_NONE;
     }
 
-
-
 Add the Special Methods
 ---------------------------------
 
@@ -225,22 +232,22 @@ Now we need to add these two special methods to the methods table which now look
 .. code-block:: c
 
     static PyMethodDef Custom_methods[] = {
-            {"name", (PyCFunction) Custom_name, METH_NOARGS,
-                    "Return the name, combining the first and last name"
-            },
-            {"__getstate__", (PyCFunction) Custom___getstate__, METH_NOARGS,
-                    "Pickle the Custom object"
-            },
-            {"__setstate__", (PyCFunction) Custom___setstate__, METH_O,
-                    "Un-pickle the Custom object"
-            },
-            {NULL}  /* Sentinel */
+        {"name", (PyCFunction) Custom_name, METH_NOARGS,
+                "Return the name, combining the first and last name"
+        },
+        {"__getstate__", (PyCFunction) Custom___getstate__, METH_NOARGS,
+                "Pickle the Custom object"
+        },
+        {"__setstate__", (PyCFunction) Custom___setstate__, METH_O,
+                "Un-pickle the Custom object"
+        },
+        {NULL}  /* Sentinel */
     };
 
-Example of Using ``custom2.Custom``
+Pickling a ``custom2.Custom`` Object
 -------------------------------------
 
-We can test this with code like this that pickles one object then creates another object from that pickle.
+We can test this with code like this that pickles one ``custom2.Custom`` object then creates another ``custom2.Custom`` object from that pickle.
 Here is some Python code that exercises our module:
 
 .. code-block:: python
