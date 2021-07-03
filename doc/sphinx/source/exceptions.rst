@@ -178,6 +178,7 @@ Often you need to create an Exception class that is specialised to a particular 
         if (! ExceptionBase) {
             return NULL;
         } else {
+            Py_INCREF(ExceptionBase);
             PyModule_AddObject(m, "ExceptionBase", ExceptionBase);
         }
         /* Now a sub-class exception that inherits from the base exception above.
@@ -193,6 +194,7 @@ Often you need to create an Exception class that is specialised to a particular 
         if (! SpecialisedError) {
             return NULL;
         } else {
+            Py_INCREF(SpecialisedError);
             PyModule_AddObject(m, "SpecialisedError", SpecialisedError);
         }
         /* END: Initialise exceptions here. */
