@@ -155,17 +155,11 @@ Often you need to create an Exception class that is specialised to a particular 
     {
         PyObject* m;
 
-        noddy_NoddyType.tp_new = PyType_GenericNew;
-        if (PyType_Ready(&noddy_NoddyType) < 0)
-            return NULL;
-
         m = PyModule_Create(&noddymodule);
         if (m == NULL)
             return NULL;
 
-        Py_INCREF(&noddy_NoddyType);
-        PyModule_AddObject(m, "Noddy", (PyObject *)&noddy_NoddyType);
-        
+   
         /* Initialise exceptions here.
          *
          * Firstly a base class exception that inherits from the builtin Exception.
