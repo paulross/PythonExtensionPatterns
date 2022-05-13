@@ -40,7 +40,7 @@ Here is an example of a normal ``PyObject`` creation and deallocation:
         PyObject *pObj = NULL;
         
         pObj = PyBytes_FromString("Hello world\n"); /* Object creation, ref count = 1. */
-        PyObject_Print(pLast, stdout, 0);        
+        PyObject_Print(pObj, stdout, 0);        
         Py_DECREF(pObj);    /* ref count becomes 0, object deallocated.
                              * Miss this step and you have a memory leak. */
     }
@@ -64,7 +64,7 @@ Taking the above example of a normal ``PyObject`` creation and deallocation then
     #include "Python.h"
     
     void print_hello_world(void) {
-        PyObject *pObj = NULL:
+        PyObject *pObj = NULL;
     
         pObj = PyBytes_FromString("Hello world\n");   /* Object creation, ref count = 1. */
         PyObject_Print(pLast, stdout, 0);        
