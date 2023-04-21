@@ -39,3 +39,6 @@ And the binary now looks like this:
 
     $ nm -m Foo.cpython-36m-darwin.so | grep Init
     00000000000010d0 (__TEXT,__text) external _PyInit_Foo
+    
+
+In clang 13 under FreeBSD instead of the __attribute__((visibility("defaut"))} it might be required to link using these flags: LDFLAGS=-shared -fvisibility=defaul
