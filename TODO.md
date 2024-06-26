@@ -55,6 +55,8 @@ Maturin: https://github.com/PyO3/maturin
 
 ## Other
 
+Add section on using CMake.
+
 ## Announce
 
 - On Python announce mailing list.
