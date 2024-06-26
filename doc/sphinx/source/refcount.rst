@@ -234,6 +234,15 @@ What would be bad is this:
 
 Once ``v`` has been passed to ``PyTuple_SetItem`` then your  ``v`` becomes a *borrowed* reference with all of their problems which is the subject of the next section.
 
+.. note::
+
+    This example describes tuples that *do* steal references.
+    Other containers, such as ``dict`` s do *not*.
+
+    A consequence is that ``PyTuple_SetItem(pTuple, 0, PyLong_FromLong(1L))`` does *not* leak but ``PyDict_SetItem(pDict, PyLong_FromLong(1L), PyLong_FromLong(2L))`` *does* leak.
+
+    Unfortunately this was only made clear in the Python documentation for ``PyDict_SetItem`` in Python version 3.8+: https://docs.python.org/3.8/c-api/dict.html
+
 The contract with *stolen* references is: the thief will take care of things so you don't have to. If you try to the results are undefined.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
