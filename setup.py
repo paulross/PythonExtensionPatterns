@@ -38,7 +38,7 @@ PACKAGE_NAME = 'cPyExtPatt'
 from distutils.core import setup, Extension
 setup(
     name                = PACKAGE_NAME,
-    version             = '0.1.0',
+    version             = '0.2.0',
     author              = 'Paul Ross',
     author_email        = 'apaulross@gmail.com',
     maintainer          = 'Paul Ross',
