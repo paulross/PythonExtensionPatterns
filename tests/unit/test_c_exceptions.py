@@ -1,14 +1,3 @@
-# >>> cExceptions.raise_error_silent()
-# ValueError: ERROR: _raise_error_mixup()
-#
-# The above exception was the direct cause of the following exception:
-#
-# Traceback (most recent call last):
-#   File "<stdin>", line 1, in <module>
-# SystemError: <built-in function raise_error_silent> returned a result with an exception set
-# >>> cExceptions.raise_error_silent_test()
-# >>> ^D
-
 import pytest
 
 from cPyExtPatt import cExceptions
@@ -73,3 +62,15 @@ def test_SpecialsiedError_exists():
         " <class 'object'>"
         ")"
     )
+
+
+def test_raise_exception_base():
+    with pytest.raises(cExceptions.ExceptionBase) as err:
+        cExceptions.raise_exception_base()
+    assert err.value.args[0] == 'One 1 two 2 three 3.'
+
+
+def test_raise_specialised_error():
+    with pytest.raises(cExceptions.SpecialisedError) as err:
+        cExceptions.raise_specialised_error()
+    assert err.value.args[0] == 'One 1 two 2 three 3.'
