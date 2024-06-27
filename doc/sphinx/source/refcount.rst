@@ -137,7 +137,10 @@ And here is what happens to the memory if we use this function from Python (``cP
 
 .. warning::
 
-    Do not be tempted to read the reference count itself to determine if the object is alive. The reason is that if ``Py_DECREF`` sees a refcount of one it can free and then reuse the address of the refcount field for a completely different object which makes it highly unlikely that that field will have a zero in it. There are some examples of this later on.
+    Do not be tempted to read the reference count itself to determine if the object is alive.
+    The reason is that if ``Py_DECREF`` sees a refcount of one it can free and then reuse the address of the refcount
+    field for a completely different object which makes it highly unlikely that that field will have a zero in it.
+    There are some examples of this later on.
     
 -----------------------
 Python Terminology 
@@ -162,7 +165,8 @@ When you create a "New" ``PyObject`` from a Python C API then you own it and it 
 
 If neither of these things is done you have a memory leak in just like a ``malloc()`` without a corresponding ``free()``. 
 
-Here is an example of a well behaved C function that take two C longs, converts them to Python integers and, subtracts one from the other and returns the Python result: 
+Here is an example of a well behaved C function that take two C longs, converts them to Python integers and, subtracts
+one from the other and returns the Python result:
 
 .. code-block:: c
     :linenos:
@@ -234,12 +238,15 @@ What would be bad is this:
 
 Once ``v`` has been passed to ``PyTuple_SetItem`` then your  ``v`` becomes a *borrowed* reference with all of their problems which is the subject of the next section.
 
-.. note::
+.. warning::
 
-    This example describes tuples that *do* steal references.
+    The above example describes tuples that *do* "steal" references.
     Other containers, such as ``dict`` s do *not*.
 
-    A consequence is that ``PyTuple_SetItem(pTuple, 0, PyLong_FromLong(1L))`` does *not* leak but ``PyDict_SetItem(pDict, PyLong_FromLong(1L), PyLong_FromLong(2L))`` *does* leak.
+    A consequence is that ``PyTuple_SetItem(pTuple, 0, PyLong_FromLong(1L))`` does *not* leak but
+    ``PyDict_SetItem(pDict, PyLong_FromLong(1L), PyLong_FromLong(2L))`` *does* leak.
+    To avoid that particular leak then create temporaries, then call ``PyDict_SetItem`` with them and then decref
+    your temporaries.
 
     Unfortunately this was only made clear in the Python documentation for ``PyDict_SetItem`` in Python version 3.8+: https://docs.python.org/3.8/c-api/dict.html
 
