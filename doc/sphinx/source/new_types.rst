@@ -100,4 +100,10 @@ And the type struct must reference this array of ``PyMemberDef`` thus:
 Examples
 ---------------
 
-See ``src/cpy/cObject.c`` for some examples.
+See ``src/cpy/cObject.c`` for some examples:
+
+- ``Null`` is a basic class that does nothing.
+- ``Str`` is a subclass of the builtin ``str`` class.
+- ``ObjectWithAttributes`` is a class that can set, get, delete attributes dynamically.
+
+The tests for these are in ``tests/unit/test_c_object.py``.
