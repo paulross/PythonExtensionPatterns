@@ -19,7 +19,7 @@ The simplest from is a global function in a module that takes no arguments at al
 
 .. code-block:: c
 
-    static PyObject *_parse_no_args(PyObject *module) {
+    static PyObject *parse_no_args(PyObject *module) {
         PyObject *ret = NULL;
     
         /* Your code here...*/
@@ -42,7 +42,7 @@ This function is added to the module methods with the ``METH_NOARGS`` value. The
 
     static PyMethodDef cParseArgs_methods[] = {
         /* Other functions here... */
-        {"argsNone", (PyCFunction)_parse_no_args, METH_NOARGS,
+        {"argsNone", (PyCFunction)parse_no_args, METH_NOARGS,
             "No arguments."
         },
         /* Other functions here... */
@@ -57,7 +57,7 @@ There is no parsing required here, a single ``PyObject`` is expected:
 
 .. code-block:: c
 
-    static PyObject *_parse_one_arg(PyObject *module,
+    static PyObject *parse_one_arg(PyObject *module,
                                     PyObject *arg
                                     ) {
         PyObject *ret = NULL;
@@ -91,7 +91,7 @@ This function can be added to the module with the ``METH_O`` flag:
 
     static PyMethodDef cParseArgs_methods[] = {
         /* Other functions here... */
-        {"argsOne", (PyCFunction)_parse_one_arg, METH_O,
+        {"argsOne", (PyCFunction)parse_one_arg, METH_O,
             "One argument."
         },
         /* Other functions here... */
@@ -152,7 +152,7 @@ Here is the C code, note the string that describes the argument types passed to 
 
 .. code-block:: c
 
-    static PyObject *_parse_args(PyObject *module,
+    static PyObject *parse_args(PyObject *module,
                                  PyObject *args
                                  ) {
         PyObject *ret = NULL;
@@ -184,7 +184,7 @@ This function can be added to the module with the ``METH_VARARGS`` flag:
 
     static PyMethodDef cParseArgs_methods[] = {
         /* Other functions here... */
-        {"argsOnly", (PyCFunction)_parse_args, METH_VARARGS,
+        {"argsOnly", (PyCFunction)parse_args, METH_VARARGS,
             "Reads args only."
         },
         /* Other functions here... */
@@ -205,7 +205,7 @@ Here is the C code, note the string that describes the argument types passed to 
 
 .. code-block:: c
 
-    static PyObject *_parse_args_kwargs(PyObject *module,
+    static PyObject *parse_args_kwargs(PyObject *module,
                                         PyObject *args,
                                         PyObject *kwargs
                                         ) {
@@ -254,9 +254,9 @@ This function can be added to the module with the ``METH_VARARGS`` and ``METH_KE
 
     static PyMethodDef cParseArgs_methods[] = {
         /* Other functions here... */
-        {"argsKwargs", (PyCFunction)_parse_args_kwargs,
+        {"argsKwargs", (PyCFunction)parse_args_kwargs,
             METH_VARARGS | METH_KEYWORDS,
-            _parse_args_kwargs_docstring
+            parse_args_kwargs_docstring
         },
         /* Other functions here... */
         {NULL, NULL, 0, NULL}  /* Sentinel */
