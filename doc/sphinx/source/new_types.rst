@@ -95,3 +95,9 @@ And the type struct must reference this array of ``PyMemberDef`` thus:
 
 
 `Reference to PyGetSetDef. <https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef>`_
+
+---------------
+Examples
+---------------
+
+See ``src/cpy/cObject.c`` for some examples.

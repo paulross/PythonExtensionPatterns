@@ -74,7 +74,7 @@ add_executable(PythonExtensionPatterns
         PythonExtensionPatterns/PythonExtensionPatterns/PythonExtensionPatterns.c
         src/cpy/cExceptions.c
         src/cpy/cModuleGlobals.c
-        src/cpy/cObjmodule.c
+        src/cpy/cObject.c
         src/cpy/cParseArgs.c
         src/cpy/cPyRefs.c
         src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/main.c
