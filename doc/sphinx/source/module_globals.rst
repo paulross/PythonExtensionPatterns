@@ -10,7 +10,8 @@ Setting and Getting Module Globals
 
 This section describes how you create and access module globals from Python C Extensions.
 
-In this module, written as a Python extension in C, we are going to have a string, int, list, tuple and dict in global scope. In the C code we firstly define names for them:
+In this module, written as a Python extension in C, we are going to have a string, int, list, tuple and dict in global
+scope. In the C code we firstly define names for them:
 
 
 .. code-block:: c
@@ -31,13 +32,14 @@ These are the names of the objects that will appear in the Python module::
 Initialising Module Globals
 ------------------------------------
 
-This is the module declaration, it will be called ``cModuleGlobals`` and has just one function; ``print()`` that will access the module globals from C:
+This is the module declaration, it will be called ``cModuleGlobals`` and has just one function; ``print()`` that will
+access the module globals from C:
 
 .. code-block:: c
 
     static PyMethodDef cModuleGlobals_methods[] = {
-        {"print", (PyCFunction)_print_globals, METH_NOARGS,
-            "Access and print out th globals."
+        {"print", (PyCFunction)print_globals, METH_NOARGS,
+            "Access and print out the globals."
         },
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
@@ -82,8 +84,8 @@ The module initialisation code is next, this uses the Python C API to create the
         if (PyModule_AddObject(m, NAME_LST, Py_BuildValue("[iii]", 66, 68, 73))) {
             goto except;
         }
-        /* An invented convenience function for this dict. */
-        if (_add_map_to_module(m)) {
+        /* An invented convenience function for this dict. See below. */
+        if (add_map_to_module(m)) {
             goto except;
         }
         goto finally;
@@ -101,7 +103,7 @@ The dict is added in a separate C function merely for readability:
     /* Add a dict of {str : int, ...}.
      * Returns 0 on success, 1 on failure.
      */
-    int _add_map_to_module(PyObject *module) {
+    int add_map_to_module(PyObject *module) {
         int ret = 0;
         PyObject *pMap = NULL;
     
@@ -157,11 +159,13 @@ Once the module is built we can access the globals from Python as usual::
 Getting Module Globals From C
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Accessing Python module globals from C is a little bit more tedious as we are getting borrowed references from the modules ``__dict__`` and we should increment and decrement them appropriately. Here we print out the global ``INT`` as both a Python object and a 'C' ``long``:
+Accessing Python module globals from C is a little bit more tedious as we are getting borrowed references from the
+modules ``__dict__`` and we should increment and decrement them appropriately.
+Here we print out the global ``INT`` as both a Python object and a 'C' ``long``:
 
 .. code-block:: c
 
-    static PyObject *_print_global_INT(PyObject *pMod) {
+    static PyObject *print_global_INT(PyObject *pMod) {
         PyObject *ret = NULL;
         PyObject *pItem = NULL;
         long val;
@@ -202,7 +206,7 @@ Accessing Python module globals from C is a little bit more tedious as we are ge
         return ret;
     }
 
-From Python we would see this (C's ``_print_global_INT()`` is mapped to Python's ``cModuleGlobals.printINT()``):
+From Python we would see this (C's ``print_global_INT()`` is mapped to Python's ``cModuleGlobals.printINT()``):
 
     >>> import cModuleGlobals
     >>> cModuleGlobals.printINT()
@@ -214,7 +218,8 @@ From Python we would see this (C's ``_print_global_INT()`` is mapped to Python's
 Setting Module Globals From C
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is similar to the get code above but using ``int PyDict_SetItemString(PyObject *p, const char *key, PyObject *val)`` where val will be a *stolen* reference:
+This is similar to the get code above but using ``int PyDict_SetItemString(PyObject *p, const char *key, PyObject *val)``
+where val will be a *stolen* reference:
 
 .. code-block:: c
 
@@ -241,5 +246,3 @@ This is similar to the get code above but using ``int PyDict_SetItemString(PyObj
     finally:
         return ret;
     }
-
-

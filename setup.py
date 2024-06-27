@@ -64,11 +64,11 @@ setup(
             library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
             extra_compile_args=extra_compile_args,
         ),
-        # Extension(f"{PACKAGE_NAME}.cModuleGlobals", sources=['src/cpy/cModuleGlobals.c',],
-        #     include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
-        #     library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
-        #     extra_compile_args=extra_compile_args,
-        # ),
+        Extension(f"{PACKAGE_NAME}.cModuleGlobals", sources=['src/cpy/cModuleGlobals.c',],
+            include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
+            library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
+            extra_compile_args=extra_compile_args,
+        ),
         # Extension(f"{PACKAGE_NAME}.cObj", sources=['src/cpy/cObjmodule.c',],
         #     include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
         #     library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
