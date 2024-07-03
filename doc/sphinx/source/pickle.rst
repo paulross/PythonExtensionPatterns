@@ -341,6 +341,13 @@ Pickling Objects with External State
 This is just a simple example, if your object relies on external state such as open files, databases and the like you need to be careful, and knowledgeable about your state management.
 There is some useful information here: `Handling Stateful Objects <https://docs.python.org/3/library/pickle.html#pickle-state>`_
 
+
+.. note::
+
+    Marshalling support for use with the `marshall <https://docs.python.org/3/library/marshal.html#module-marshal>`_
+    module is given by the `C Marshall API <https://docs.python.org/3/c-api/marshal.html>`_
+
+
 References
 -----------------------
 
