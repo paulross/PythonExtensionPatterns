@@ -11,7 +11,7 @@ from distutils.core import setup, Extension
 import os
 import sysconfig
 
-DEBUG = False
+DEBUG = True
 # Generally I write code so that if DEBUG is defined as 0 then all optimisations
 # are off and asserts are enabled. Typically run times of these builds are x2 to x10
 # release builds.
