@@ -11,32 +11,38 @@
 #include "time.h"
 
 /****************** Parsing arguments. ****************/
-static PyObject *parse_no_args(PyObject *module) {
+static PyObject *parse_no_args(PyObject *Py_UNUSED(module)) {
+#if 0
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\nparse_no_args()\n");
+#endif
     Py_RETURN_NONE;
 }
 
-static PyObject *parse_one_arg(PyObject *module, PyObject *arg) {
+static PyObject *parse_one_arg(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg)) {
+#if 0
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\nparse_one_arg(): ");
     PyObject_Print(arg, stdout, 0);
     fprintf(stdout, "\n");
+#endif
     /* Your code here...*/
     Py_RETURN_NONE;
 }
 
 /** Example of a METH_VARGS function that takes a bytes object and int and an optional string.
  * Returns the number of arguments parsed. */
-static PyObject *parse_args(PyObject *module, PyObject *args) {
+static PyObject *parse_args(PyObject *Py_UNUSED(module), PyObject *args) {
     PyObject *arg0 = NULL;
     int arg1;
     char *str = NULL;
 
+#if 0
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\nparse_args(): ");
     PyObject_Print(args, stdout, 0);
     fprintf(stdout, "\n");
+#endif
 
     if (!PyArg_ParseTuple(args, "Si|s", &arg0, &arg1, &str)) {
         return NULL;
@@ -55,7 +61,7 @@ static PyObject *parse_args(PyObject *module, PyObject *args) {
  * optional.
  * */
 static PyObject *
-parse_args_kwargs(PyObject *module, PyObject *args, PyObject *kwargs) {
+parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
     PyObject *ret = NULL;
     PyObject *py_sequence = NULL;
     int count;
@@ -65,12 +71,14 @@ parse_args_kwargs(PyObject *module, PyObject *args, PyObject *kwargs) {
             NULL,
     };
 
+#if 0
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\n");
     PyObject_Print(args, stdout, 0);
     fprintf(stdout, "\n");
     PyObject_Print(kwargs, stdout, 0);
     fprintf(stdout, "\n");
+#endif
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|i", kwlist, &py_sequence, &count)) {
         goto except;
@@ -121,14 +129,16 @@ int sum_list_of_longs(PyObject *list_longs, void *address) {
  *
  * This illustrates the use of "O&" in parsing.
  */
-static PyObject *parse_args_with_function_conversion_to_c(PyObject *module, PyObject *args) {
+static PyObject *parse_args_with_function_conversion_to_c(PyObject *Py_UNUSED(module), PyObject *args) {
     PyObject *ret = NULL;
     long result;
 
+#if 0
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\n");
     PyObject_Print(args, stdout, 0);
     fprintf(stdout, "\n");
+#endif
 
     if (!PyArg_ParseTuple(args, "O&", sum_list_of_longs, &result)) {
         /* NOTE: If check_list_of_numbers() returns 0 an error should be set. */
@@ -213,12 +223,14 @@ static PyObject *parse_args_with_immutable_defaults(PyObject *Py_UNUSED(module),
     Py_INCREF(pyObjArg_1);
     have_inc_ref_arguments = 1;
 
+#if 0
     fprintf(stdout, "pyObjArg0 was: ");
     PyObject_Print(pyObjArg_0, stdout, 0);
     fprintf(stdout, "\n");
     fprintf(stdout, "pyObjArg1 was: ");
     PyObject_Print(pyObjArg_1, stdout, 0);
     fprintf(stdout, "\n");
+#endif
 
     /* Your code here...*/
 
@@ -289,9 +301,11 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
 //    Py_INCREF(pyObjArg_1);
 //    ref_inc_arg_1 = 1;
 
+#if 0
     fprintf(stdout, "pyObjArg1 was: ");
     PyObject_Print(pyObjArg_1, stdout, 0);
     fprintf(stdout, "\n");
+#endif
 
     /* Your code here...*/
     /* Append the first argument to the second. */
@@ -300,9 +314,11 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
         goto except;
     }
 
+#if 0
     fprintf(stdout, "pyObjArg1 now: ");
     PyObject_Print(pyObjArg_1, stdout, 0);
     fprintf(stdout, "\n");
+#endif
 
     /* Success. */
     assert(!PyErr_Occurred());
