@@ -199,7 +199,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'PythonExtensionPatterns.tex', u'Python Extension Patterns Documentation',
+  ('index', 'PythonExtensionPatterns.tex', u'Python Extension Patterns',
    u'Paul Ross', 'manual'),
 ]
 
@@ -229,7 +229,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pythonextensionpatterns', u'Python Extension Patterns Documentation',
+    ('index', 'pythonextensionpatterns', u'Python Extension Patterns',
      [u'Paul Ross'], 1)
 ]
 
@@ -243,7 +243,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'PythonExtensionPatterns', u'Python Extension Patterns Documentation',
+  ('index', 'PythonExtensionPatterns', u'Python Extension Patterns',
    u'Paul Ross', 'PythonExtensionPatterns', 'One line description of project.',
    'Miscellaneous'),
 ]
