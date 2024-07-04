@@ -56,7 +56,7 @@ ScList_init(ScList *self, PyObject *args, PyObject *kwds)
 }
 
 static PyTypeObject ScListType = {
-    {PyObject_HEAD_INIT(NULL)},
+    PyVarObject_HEAD_INIT(NULL, 0)
     "ScList.ScList",         /* tp_name */
     sizeof(ScList),          /* tp_basicsize */
     0,                       /* tp_itemsize */
@@ -105,6 +105,8 @@ static PyTypeObject ScListType = {
     0,                              /* tp_weaklist */
     0,                              /* tp_del */
     0,                              /* tp_version_tag */
+    NULL,                           /* tp_finalize */
+    NULL,                           /* tp_vectorcall */
 };
 
 static PyModuleDef ScListmodule = {

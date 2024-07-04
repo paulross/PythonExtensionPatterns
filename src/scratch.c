@@ -12,14 +12,15 @@
 #include <stdlib.h>
 
 
-void leak() {
+void leak(void) {
     char *p;
     
     p = malloc(1024);
+    fprintf(stdout, "malloc(1024) returns %s", p);
 }
 
 
-void access_after_free() {
+void access_after_free(void) {
     char *p;
     
     p = malloc(1024);
@@ -32,7 +33,7 @@ void access_after_free() {
 
 #include "Python.h"
 
-void py_leak() {
+void py_leak(void) {
     PyObject *pObj = NULL;
     
     /* Object creation, ref count = 1. */
@@ -43,7 +44,7 @@ void py_leak() {
 
 #include "Python.h"
 
-void py_access_after_free() {
+void py_access_after_free(void) {
     PyObject *pObj = NULL;
     
     /* Object creation, ref count = 1. */
@@ -78,7 +79,7 @@ PyObject *bad_incref(PyObject *pObj) {
 }
 
 
-void bad_steal() {
+void bad_steal(void) {
 
 PyObject *v, *r;
 
@@ -105,7 +106,7 @@ static PyObject *pop_and_print_BAD(PyObject *pList) {
     
     pLast = PyList_GetItem(pList, PyList_Size(pList) - 1);
     fprintf(stdout, "Ref count was: %zd\n", pLast->ob_refcnt);
-    do_something(pList);    /* Dragons ahoy me hearties! */
+    //do_something(pList);    /* Dragons ahoy me hearties! */
     fprintf(stdout, "Ref count now: %zd\n", pLast->ob_refcnt);
     PyObject_Print(pLast, stdout, 0);
     fprintf(stdout, "\n");
