@@ -33,8 +33,8 @@ def test_parse_one_arg_raises():
 @pytest.mark.parametrize(
     'args, expected',
     (
-            ((b'bytes', 123), 2),
-            ((b'bytes', 123, 'str'), 3),
+            ((b'bytes', 123), (b'bytes', 123, 'default_string')),
+            ((b'bytes', 123, 'local_string'), (b'bytes', 123, 'local_string')),
     )
 )
 def test_parse_args(args, expected):
@@ -76,10 +76,22 @@ def test_parse_args_raises(args, expected):
             # NOTE: If count is absent entirely then an empty sequence of given type is returned.
             ((b'bytes',), {}, b''),
             ((b'b',), {}, b''),
+            # args/kwargs are None
+            (None, {'sequence': b'b', 'count': 5}, b'bbbbb'),
+            (('b', 5), None, 'bbbbb'),
     )
 )
 def test_parse_args_kwargs(args, kwargs, expected):
-    assert cParseArgs.parse_args_kwargs(*args, **kwargs) == expected
+    if args is None:
+        if kwargs is None:
+            assert cParseArgs.parse_args_kwargs() == expected
+        else:
+            assert cParseArgs.parse_args_kwargs(**kwargs) == expected
+    elif kwargs is None:
+        assert cParseArgs.parse_args_kwargs(*args) == expected
+    else:
+        assert cParseArgs.parse_args_kwargs(*args, **kwargs) == expected
+    # assert cParseArgs.parse_args_kwargs(*args, **kwargs) == expected
 
 
 @pytest.mark.parametrize(
@@ -90,11 +102,22 @@ def test_parse_args_kwargs(args, kwargs, expected):
             ((), {'count': 2}, "function missing required argument 'sequence' (pos 1)"),
             ((), {'sequence': b'b', 'count': 5, 'foo': 27.2}, 'function takes at most 2 keyword arguments (3 given)'),
             ((b'b',), {'count': 5, 'foo': 27.2}, 'function takes at most 2 arguments (3 given)'),
+            # args/kwargs are None
+            (None, {'count': 5, }, "function missing required argument 'sequence' (pos 1)"),
+            (None, None, "function missing required argument 'sequence' (pos 1)"),
     )
 )
 def test_parse_args_kwargs_raises(args, kwargs, expected):
     with pytest.raises(TypeError) as err:
-        cParseArgs.parse_args_kwargs(*args, **kwargs)
+        if args is None:
+            if kwargs is None:
+                cParseArgs.parse_args_kwargs()
+            else:
+                cParseArgs.parse_args_kwargs(**kwargs)
+        elif kwargs is None:
+            cParseArgs.parse_args_kwargs(*args)
+        else:
+            cParseArgs.parse_args_kwargs(*args, **kwargs)
     assert err.value.args[0] == expected
 
 
@@ -181,7 +204,7 @@ def test_py_parse_args_with_mutable_defaults():
     assert py_parse_args_with_mutable_defaults(3) == [1, 2, 3, ]
     assert py_parse_args_with_mutable_defaults(-1, local_list) == [-1, ]
     assert py_parse_args_with_mutable_defaults(-2, local_list) == [-1, -2]
-    
+
     assert py_parse_args_with_mutable_defaults(4) == [1, 2, 3, 4, ]
     assert py_parse_args_with_mutable_defaults(5) == [1, 2, 3, 4, 5, ]
 

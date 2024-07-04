@@ -37,12 +37,12 @@ static PyObject *parse_one_arg(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(
  *
  * Signature is:
  *
- * def parse_args(a: bytes, b: int, c: str = '') -> int:
+ * def parse_args(a: bytes, b: int, c: str = 'default_string') -> typing.Tuple[bytes, int, str]:
  * */
 static PyObject *parse_args(PyObject *Py_UNUSED(module), PyObject *args) {
-    PyObject *arg0 = NULL;
-    int arg1;
-    char *str = "";
+    PyObject *arg_0 = NULL;
+    int arg_1;
+    char *arg_2 = "default_string";
 
 #if FPRINTF_DEBUG
     PyObject_Print(module, stdout, 0);
@@ -51,18 +51,21 @@ static PyObject *parse_args(PyObject *Py_UNUSED(module), PyObject *args) {
     fprintf(stdout, "\n");
 #endif
 
-    if (!PyArg_ParseTuple(args, "Si|s", &arg0, &arg1, &str)) {
+    if (!PyArg_ParseTuple(args, "Si|s", &arg_0, &arg_1, &arg_2)) {
         return NULL;
     }
     /* Your code here...*/
 
-    /* PyTuple_Size returns a Py_ssize_t */
-    return Py_BuildValue("n", PyTuple_Size(args));
+//    /* PyTuple_Size returns a Py_ssize_t */
+//    return Py_BuildValue("n", PyTuple_Size(args));
+    return Py_BuildValue("Ois", arg_0, arg_1, arg_2);
 }
 
 
 /** This takes a Python object, 'sequence', that supports the sequence protocol and, optionally, an integer, 'count'.
  * This returns a new sequence which is the old sequence multiplied by the count.
+ *
+ * def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: int) -> typing.Sequence[typing.Any]:
  *
  * NOTE: If count is absent entirely then an empty sequence of given type is returned as count is assumed zero as
  * optional.
@@ -73,7 +76,7 @@ parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs)
     PyObject *py_sequence = NULL;
     int count;
     static char *kwlist[] = {
-            "sequence", /* bytes object. */
+            "sequence", /* A sequence object, str, list, tuple etc. */
             "count", /* Python int converted to a C int. */
             NULL,
     };

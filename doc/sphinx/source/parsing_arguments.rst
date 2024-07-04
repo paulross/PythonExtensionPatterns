@@ -241,45 +241,36 @@ So it is best to fail fast, an near the error site, that dastardly
 
 Side note: Of course this does not protect you from malicious/badly written code that decrements by more than one :-)
 
-TODO: WIP here.
-
 Variable Number of Arguments
 ----------------------------------------------------
 
-The function will be called with two arguments, the module and a ``PyListObject`` that contains a list of arguments. You can either parse this list yourself or use a helper method to parse it into Python and C types.
+The function will be called with two arguments, the module and a ``PyTupleObject`` that contains a tuple of arguments.
+You can either parse this list yourself or use a helper method to parse it into Python and C types.
 
-In the following code we are expecting a string, an integer and an optional integer whose default value is 8. In Python the equivalent function declaration would be::
+In the following code we are expecting a bytes object, an integer and an optional string whose default value is
+'default_string'.
+For demonstration purposes, this returns the same three arguments.
+In Python the equivalent function declaration would be::
 
-    def argsOnly(theString, theInt, theOptInt=8):
+    def parse_args(a: bytes, b: int, c: str = 'default_string') -> typing.Tuple[bytes, int, str]:
 
-Here is the C code, note the string that describes the argument types passed to ``PyArg_ParseTuple``, if these types are not present a ``ValueError`` will be set.
+Here is the C code, note the string that describes the argument types passed to ``PyArg_ParseTuple``, if these types
+are not present a ``ValueError`` will be set.
 
 .. code-block:: c
 
-    static PyObject *parse_args(PyObject *module,
-                                 PyObject *args
-                                 ) {
-        PyObject *ret = NULL;
-        PyObject *pyStr = NULL;
-        int arg1, arg2;
-    
-        arg2 = 8; /* Default value. */
-        if (! PyArg_ParseTuple(args, "Si|i", &pyStr, &arg1, &arg2)) {
-            goto except;
+    static PyObject *parse_args(PyObject *Py_UNUSED(module), PyObject *args) {
+        PyObject *arg_0 = NULL;
+        int arg_1;
+        char *arg_2 = "default_string";
+
+        if (!PyArg_ParseTuple(args, "Si|s", &arg_0, &arg_1, &arg_2)) {
+            return NULL;
         }
-    
+
         /* Your code here...*/
-    
-        Py_INCREF(Py_None);
-        ret = Py_None;
-        assert(! PyErr_Occurred());
-        assert(ret);
-        goto finally;
-    except:
-        Py_XDECREF(ret);
-        ret = NULL;
-    finally:
-        return ret;
+
+        return Py_BuildValue("Ois", arg_0, arg_1, arg_2);
     }
 
 This function can be added to the module with the ``METH_VARARGS`` flag:
@@ -288,87 +279,98 @@ This function can be added to the module with the ``METH_VARARGS`` flag:
 
     static PyMethodDef cParseArgs_methods[] = {
         /* Other functions here... */
-        {"argsOnly", (PyCFunction)parse_args, METH_VARARGS,
-            "Reads args only."
+        {
+            "parse_args",
+            (PyCFunction) parse_args,
+            METH_VARARGS,
+            "parse_args() documentation"
         },
         /* Other functions here... */
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
 
+This code can be seen in ``src/cpy/cParseArgs.c``.
+It is tested in ``tests.unit.test_c_parse_args.test_parse_args``.
+Failure modes, when the wrong arguments are passed are tested in ``tests.unit.test_c_parse_args.test_parse_args_raises``.
+Note the wide variety of error messages that are obtained.
+
 Variable Number of Arguments and Keyword Arguments
 --------------------------------------------------------------------------
 
-The function will be called with two arguments, the module, a ``PyListObject`` that contains a list of arguments and a ``PyDictObject`` that contains a dictionary of keyword arguments. You can either parse these yourself or use a helper method to parse it into Python and C types.
+The function will be called with three arguments, the module, a ``PyTupleObject`` that contains a tuple of arguments
+and a ``PyDictObject`` that contains a dictionary of keyword arguments.
+You can either parse these yourself or use a helper method to parse it into Python and C types.
 
-In the following code we are expecting a string, an integer and an optional integer whose default value is 8. In Python the equivalent function declaration would be::
+In the following code we are expecting a sequence and an integer.
+It returns the sequence repeated count times.
+In Python the equivalent function declaration would be::
 
-    def argsKwargs(theString, theOptInt=8):
+    def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: int) -> typing.Sequence[typing.Any]:
 
-Here is the C code, note the string that describes the argument types passed to ``PyArg_ParseTuple``, if these types are not present a ``ValueError`` will be set.
+Here is the C code, note the string that describes the argument types passed to ``PyArg_ParseTupleAndKeywords``,
+if these types are not present a ``ValueError`` will be set.
 
 .. code-block:: c
 
-    static PyObject *parse_args_kwargs(PyObject *module,
-                                        PyObject *args,
-                                        PyObject *kwargs
-                                        ) {
+    static PyObject *
+    parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
         PyObject *ret = NULL;
-        PyObject *pyStr = NULL;
-        int arg2;
+        PyObject *py_sequence = NULL;
+        int count;
         static char *kwlist[] = {
-            "theString",
-            "theOptInt",
-            NULL
+                "sequence", /* A sequence object, str, list, tuple etc. */
+                "count", /* Python int converted to a C int. */
+                NULL,
         };
-    
-        /* If you are interested this is a way that you can trace the input.
-        PyObject_Print(module, stdout, 0);
-        fprintf(stdout, "\n");
-        PyObject_Print(args, stdout, 0);
-        fprintf(stdout, "\n");
-        PyObject_Print(kwargs, stdout, 0);
-        fprintf(stdout, "\n");
-         * End trace */
-    
-        arg2 = 8; /* Default value. */
-        if (! PyArg_ParseTupleAndKeywords(args, kwargs, "S|i",
-                                          kwlist, &pyStr, &arg2)) {
+
+        if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|i", kwlist, &py_sequence, &count)) {
             goto except;
         }
-    
+
         /* Your code here...*/
-    
-        Py_INCREF(Py_None);
-        ret = Py_None;
-        assert(! PyErr_Occurred());
-        assert(ret);
+
+        ret = PySequence_Repeat(py_sequence, count);
+        if (ret == NULL) {
+            goto except;
+        }
+        assert(!PyErr_Occurred());
         goto finally;
     except:
+        assert(PyErr_Occurred());
         Py_XDECREF(ret);
         ret = NULL;
     finally:
         return ret;
     }
 
-
-This function can be added to the module with the ``METH_VARARGS`` and ``METH_KEYWORDS`` flags:
+This function can be added to the module with both the ``METH_VARARGS`` and ``METH_KEYWORDS`` flags set:
 
 .. code-block:: c
 
     static PyMethodDef cParseArgs_methods[] = {
         /* Other functions here... */
-        {"argsKwargs", (PyCFunction)parse_args_kwargs,
+        {
+            "parse_args_kwargs",
+            (PyCFunction) parse_args_kwargs,
             METH_VARARGS | METH_KEYWORDS,
-            parse_args_kwargs_docstring
+            "parse_args_kwargs() documentation"
         },
         /* Other functions here... */
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
 
+This code can be seen in ``src/cpy/cParseArgs.c``.
+It is tested in ``tests.unit.test_c_parse_args.test_parse_args_kwargs`` which shows the variety of ways this can be
+called.
+Failure modes, when the wrong arguments are passed are tested in
+``tests.unit.test_c_parse_args.test_parse_args_kwargs_raises``.
+
+TODO: WIP here.
+
 All arguments are keyword arguments so this function can be called in a number of ways, all of the following are equivalent:
 
 .. code-block:: python
-    
+
     argsKwargs('foo')
     argsKwargs('foo', 8)
     argsKwargs(theString='foo')
@@ -388,7 +390,9 @@ If you want the function signature to be ``argsKwargs(theString, theOptInt=8)`` 
         /* ... */
 
 .. note::
-    If you use ``|`` in the parser format string you have to set the default values for those optional arguments yourself in the C code. This is pretty straightforward if they are fundamental C types as ``arg2 = 8`` above. For Python values is a bit more tricky as described next.
+    If you use ``|`` in the parser format string you have to set the default values for those optional arguments
+    yourself in the C code. This is pretty straightforward if they are fundamental C types as ``arg2 = 8`` above.
+    For Python values is a bit more tricky as described next.
     
 Keyword Arguments and C++11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
