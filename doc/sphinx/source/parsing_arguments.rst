@@ -1,55 +1,162 @@
 .. highlight:: python
-    :linenothreshold: 10
+    :linenothreshold: 20
 
 .. toctree::
     :maxdepth: 3
 
-=================================
-Parsing Python Arguments 
-=================================
+***************************
+Parsing Python Arguments
+***************************
 
-This section describes how you write functions that accept Python ``*args`` and ``**kwargs`` arguments and how to extract ``PyObject`` or C fundamental types from them.
+This section describes how you write functions that accept Python ``*args`` and ``**kwargs``
+arguments and how to extract ``PyObject`` or C fundamental types from them.
 
 
-------------------------------------
-No Arguments
-------------------------------------
+Specifying the Function Arguments
+====================================
 
-The simplest from is a global function in a module that takes no arguments at all:
+Python has a myriad of ways of function arguments and the C API reflects that.
+Two important features of C functions are:
+
+- Declaring them correctly with the right signature and flags.
+- Parsing the arguments and checking their types.
+
+These are described below.
+
+C Function Declaration
+-------------------------------
+
+The C function signature must be declared correctly depending on the arguments it is expected to work with.
+Here is a small summary of the required declaration.
+
+.. list-table:: Function Arguments
+   :widths: 10 10 30 20
+   :header-rows: 1
+
+   * - Arguments
+     - Flags
+     - C Function Signature
+     - Description
+   * - None
+     - `METH_NOARGS <https://docs.python.org/3/c-api/structures.html#c.METH_NOARGS>`_
+     - ``PyObject *PyCFunction(PyObject *self, PyObject *args);`` `Docs <https://docs.python.org/3/c-api/structures.html#c.PyCFunction>`_
+     - Second argument will be ``NULL``.
+   * - One
+     - `METH_O <https://docs.python.org/3/c-api/structures.html#c.METH_O>`_
+     - ``PyObject *PyCFunction(PyObject *self, PyObject *args);`` `Docs <https://docs.python.org/3/c-api/structures.html#c.PyCFunction>`_
+     - Second argument will be the single argument.
+   * - Positional
+     - `METH_VARARGS <https://docs.python.org/3/c-api/structures.html#c.METH_VARARGS>`_
+     - ``PyObject *PyCFunction(PyObject *self, PyObject *args);`` `Docs <https://docs.python.org/3/c-api/structures.html#c.PyCFunction>`_
+     - Second value will be a sequence of arguments.
+   * - Positional and keywords
+     - `METH_NOARGS | METH_KEYWORDS <https://docs.python.org/3/c-api/structures.html#c.METH_KEYWORDS>`_
+     - ``PyObject *PyCFunctionWithKeywords(PyObject *self, PyObject *args, PyObject *kwargs);`` `Docs <https://docs.python.org/3/c-api/structures.html#c.PyCFunctionWithKeywords>`_
+     -
+
+.. note::
+
+    I don't cover the use of `METH_FASTCALL <https://docs.python.org/3/c-api/structures.html#c.METH_FASTCALL>`_
+    in this tutorial.
+
+.. note::
+
+    `METH_KEYWORDS <https://docs.python.org/3/c-api/structures.html#c.METH_KEYWORDS>`_
+    can only be used in combination with other flags.
+
+Example
+^^^^^^^^
+
+A function that takes positional and keyword arguments would be declared as:
 
 .. code-block:: c
 
-    static PyObject *parse_no_args(PyObject *module) {
-        PyObject *ret = NULL;
-    
+    static PyObject *
+    parse_args_kwargs(PyObject *module, PyObject *args, PyObject *kwargs);
+
+And this would be added to the module, say, by using:
+
+.. code-block:: c
+
+    static PyMethodDef cParseArgs_methods[] = {
+            /* ... */
+            {
+                "parse_args_kwargs",
+                (PyCFunction) parse_args_kwargs,
+                METH_VARARGS | METH_KEYWORDS,
+                "Documentation for parse_args_kwargs()."
+            },
+            /* ... */
+            {NULL, NULL, 0, NULL} /* Sentinel */
+    };
+
+Parsing the Arguments
+------------------------------
+
+Once whe have the C function correctly declared then the arguments have to parsed according to their types.
+This is done using the `PyArg_ParseTuple <https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTuple>`_
+and `PyArg_ParseTupleAndKeywords <https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTupleAndKeywords>`_
+(ignoring “old-style” functions which use `PyArg_Parse <https://docs.python.org/3/c-api/arg.html#c.PyArg_Parse>`_).
+
+These use formatting strings that can become bewilderingly complex so this tutorial uses examples as an introduction.
+The reference documentation is excellent: `argument parsing and building values <https://docs.python.org/3/c-api/arg.html>`_.
+
+.. warning::
+
+    Error messages can be slightly misleading as the argument index is the *C* index
+    not the *Python* index. For example a C function using ``METH_VARARGS`` declared as
+    ``static PyObject *parse_args(PyObject *module, PyObject *args);``
+    which expects the Python argument[0] to be a bytes object and the Python argument[1]
+    to be an integer by using ``PyArg_ParseTuple(args, "Si", &arg0, &arg1)``.
+
+    Calling this from Python with ``parse_args(21, 22)`` will give
+    ``TypeError: argument 1 must be bytes, not int``.
+
+    The "1" here refers to the C index not the Python index.
+    The correct call would be to change the 0th Python argument to
+    ``cParseArgs.parse_args(b'21', 22)``
+
+    Also consider the signature ``def parse_args(a: bytes, b: int, c: str = '') -> int:``
+    Called with ``parse_args(b'bytes', '456')`` gives the error "'str' object cannot be interpreted as an integer"
+    without specifying which argument it is referring to.
+
+Examples
+====================================
+
+These examples are in ``src/cpy/cParseArgs.c`` and their tests are in ``tests/unit/test_c_parse_args.py``.
+
+No Arguments
+------------------------------------
+
+The simplest form is a global function in a module that takes no arguments at all:
+
+.. code-block:: c
+
+    static PyObject *parse_no_args(PyObject *Py_UNUSED(module)) {
+
         /* Your code here...*/
-    
-        Py_INCREF(Py_None);
-        ret = Py_None;
-        assert(! PyErr_Occurred());
-        assert(ret);
-        goto finally;
-    except:
-        Py_XDECREF(ret);
-        ret = NULL;
-    finally:
-        return ret;
+
+        Py_RETURN_NONE;
     }
 
-This function is added to the module methods with the ``METH_NOARGS`` value. The Python interpreter will raise a ``TypeError`` in any arguments are offered.
+This function is added to the module methods with the ``METH_NOARGS`` value.
+The Python interpreter will raise a ``TypeError`` in any arguments are offered.
 
 .. code-block:: c
 
     static PyMethodDef cParseArgs_methods[] = {
         /* Other functions here... */
-        {"argsNone", (PyCFunction)parse_no_args, METH_NOARGS,
+        {
+            "parse_no_args",
+            (PyCFunction)parse_no_args,
+            METH_NOARGS,
             "No arguments."
         },
         /* Other functions here... */
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
 
-------------------------------------
+
 One Argument
 ------------------------------------
 
@@ -57,33 +164,21 @@ There is no parsing required here, a single ``PyObject`` is expected:
 
 .. code-block:: c
 
-    static PyObject *parse_one_arg(PyObject *module,
-                                    PyObject *arg
-                                    ) {
-        PyObject *ret = NULL;
-        assert(arg);
+    static PyObject *parse_one_arg(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg)) {
         /* arg as a borrowed reference and the general rule is that you Py_INCREF them
-         * whilst you have an interest in them. We do _not_ do that here for reasons
-         * explained below.
+         * whilst you have an interest in them.
          */
         // Py_INCREF(arg);
-    
+
         /* Your code here...*/
-    
-        Py_INCREF(Py_None);
-        ret = Py_None;
-        assert(! PyErr_Occurred());
-        assert(ret);
-        goto finally;
-    except:
-        Py_XDECREF(ret);
-        ret = NULL;
-    finally:
+
         /* If we were to treat arg as a borrowed reference and had Py_INCREF'd above we
          * should do this. See below. */
         // Py_DECREF(arg);
-        return ret;
+        Py_RETURN_NONE;
     }
+
+
 
 This function can be added to the module with the ``METH_O`` flag:
 
@@ -91,24 +186,28 @@ This function can be added to the module with the ``METH_O`` flag:
 
     static PyMethodDef cParseArgs_methods[] = {
         /* Other functions here... */
-        {"argsOne", (PyCFunction)parse_one_arg, METH_O,
+        {
+            "parse_one_arg",
+            (PyCFunction) parse_one_arg,
+            METH_O,
             "One argument."
         },
         /* Other functions here... */
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Arguments as Borrowed References
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There is some subtlety here as indicated by the comments. ``*arg`` is not our reference, it is a borrowed reference so why don't we increment it at the beginning of this function and decrement it at the end? After all we are trying to protect against calling into some malicious/badly written code that could hurt us. For example:
+There is some subtlety here as indicated by the comments. ``*arg`` is not our reference, it is a borrowed reference
+so why don't we increment it at the beginning of this function and decrement it at the end?
+After all we are trying to protect against calling into some malicious/badly written code that could hurt us.
+For example:
 
 .. code-block:: c
 
-    static PyObject *foo(PyObject *module,
-                         PyObject *arg
-                         ) {
+    static PyObject *foo(PyObject *module, PyObject *arg) {
         /* arg has a minimum recount of 1. */
         call_malicious_code_that_decrefs_by_one_this_argument(arg);
         /* arg potentially could have had a ref count of 0 and been deallocated. */
@@ -116,13 +215,13 @@ There is some subtlety here as indicated by the comments. ``*arg`` is not our re
         /* So now doing something with arg could be undefined. */
     }
 
-A solution would be, since ``arg`` is a 'borrowed' reference and borrowed references should always be incremented whilst in use and decremented when done with. This would suggest the following:
+A solution would be, since ``arg`` is a 'borrowed' reference and borrowed references should always be incremented
+whilst in use and decremented when done with.
+This would suggest the following:
 
 .. code-block:: c
 
-    static PyObject *foo(PyObject *module,
-                         PyObject *arg
-                         ) {
+    static PyObject *foo(PyObject *module, PyObject *arg) {
         /* arg has a minimum recount of 1. */
         Py_INCREF(arg);
         /* arg now has a minimum recount of 2. */
@@ -134,11 +233,16 @@ A solution would be, since ``arg`` is a 'borrowed' reference and borrowed refere
         /* But now arg could have had a ref count of 0 so is unsafe to use by the caller. */
     }
 
-But now we have just pushed the burden onto our caller. They created ``arg`` and passed it to us in good faith and whilst we have protected ourselves have not protected the caller and they can fail unexpectedly. So it is best to fail fast, an near the error site, that dastardly ``call_malicious_code_that_decrefs_by_one_this_argument()``.
+But now we have just pushed the burden onto our caller.
+They created ``arg`` and passed it to us in good faith and whilst we have protected ourselves have not protected the
+caller and they can fail unexpectedly.
+So it is best to fail fast, an near the error site, that dastardly
+``call_malicious_code_that_decrefs_by_one_this_argument()``.
 
 Side note: Of course this does not protect you from malicious/badly written code that decrements by more than one :-)
 
-----------------------------------------------------
+TODO: WIP here.
+
 Variable Number of Arguments
 ----------------------------------------------------
 
@@ -191,7 +295,6 @@ This function can be added to the module with the ``METH_VARARGS`` flag:
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
 
---------------------------------------------------------------------------
 Variable Number of Arguments and Keyword Arguments
 --------------------------------------------------------------------------
 
@@ -287,7 +390,6 @@ If you want the function signature to be ``argsKwargs(theString, theOptInt=8)`` 
 .. note::
     If you use ``|`` in the parser format string you have to set the default values for those optional arguments yourself in the C code. This is pretty straightforward if they are fundamental C types as ``arg2 = 8`` above. For Python values is a bit more tricky as described next.
     
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keyword Arguments and C++11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -307,7 +409,6 @@ C++11 compilers warn when creating non-const ``char*`` from string literals as w
 
 .. _cpython_default_arguments:
 
---------------------------------------------------------------------------
 Being Pythonic with Default Arguments
 --------------------------------------------------------------------------
 
@@ -502,7 +603,6 @@ Here is the complete C code:
         return ret;
     }
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Simplifying Macros
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -584,7 +684,6 @@ Here is that function implemented in C:
         return ret;
     }
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Simplifying C++11 class
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -674,3 +773,24 @@ And we can use ``DefaultArg`` like this:
          set_encoding(encoding);
         /* ... */
     }
+
+
+TODO: Positional only and keyword only arguments.
+
+References:
+
+Positional only:
+https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTupleAndKeywords
+PyArg_ParseTupleAndKeywords has empty strings in kwlist.
+"Empty names denote positional-only parameters."
+
+Keyword has '$' in parse string.
+$
+PyArg_ParseTupleAndKeywords() only: Indicates that the remaining arguments in the Python argument
+list are keyword-only.
+Currently, all keyword-only arguments must also be optional arguments, so | must always be
+specified before $ in the format string.
+
+Glossary:
+https://docs.python.org/3/glossary.html#positional-only-parameter
+https://docs.python.org/3/glossary.html#keyword-only-parameter

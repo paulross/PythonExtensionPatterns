@@ -33,11 +33,16 @@ static PyObject *parse_one_arg(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(
 }
 
 /** Example of a METH_VARGS function that takes a bytes object and int and an optional string.
- * Returns the number of arguments parsed. */
+ * Returns the number of arguments parsed.
+ *
+ * Signature is:
+ *
+ * def parse_args(a: bytes, b: int, c: str = '') -> int:
+ * */
 static PyObject *parse_args(PyObject *Py_UNUSED(module), PyObject *args) {
     PyObject *arg0 = NULL;
     int arg1;
-    char *str = NULL;
+    char *str = "";
 
 #if FPRINTF_DEBUG
     PyObject_Print(module, stdout, 0);

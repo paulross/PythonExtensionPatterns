@@ -56,6 +56,10 @@ def test_parse_args(args, expected):
     )
 )
 def test_parse_args_raises(args, expected):
+    """Signature is::
+
+        def parse_args(a: bytes, b: int, c: str = '') -> int:
+    """
     with pytest.raises(TypeError) as err:
         cParseArgs.parse_args(*args)
     assert err.value.args[0] == expected
