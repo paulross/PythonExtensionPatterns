@@ -15,6 +15,8 @@
 
 #include "Python.h"
 
+#define FPRINTF_DEBUG 0
+
 const char *NAME_INT = "INT";
 const char *NAME_STR = "STR";
 const char *NAME_LST = "LST";
@@ -24,7 +26,6 @@ const char *NAME_MAP = "MAP";
 static PyObject *print_global_INT(PyObject *pMod) {
     PyObject *ret = NULL;
     PyObject *pItem = NULL;
-    long val;
 
     /* Returns a new reference. */
     pItem = PyObject_GetAttrString(pMod, NAME_INT);
@@ -35,11 +36,13 @@ static PyObject *print_global_INT(PyObject *pMod) {
         );
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "Integer: \"%s\" ", NAME_INT);
     PyObject_Print(pItem, stdout, 0);
-    val = PyLong_AsLong(pItem);
+    long val = PyLong_AsLong(pItem);
     fprintf(stdout, " C long: %ld ", val);
     fprintf(stdout, "\n");
+#endif
 
     assert(!PyErr_Occurred());
     Py_INCREF(Py_None);
@@ -57,15 +60,16 @@ static PyObject *print_global_INT(PyObject *pMod) {
 static PyObject *print_global_INT_borrowed_ref(PyObject *pMod) {
     PyObject *ret = NULL;
     PyObject *pItem = NULL;
-    long val;
 
     assert(pMod);
     assert(PyModule_CheckExact(pMod));
     assert(!PyErr_Occurred());
 
+#if FPRINTF_DEBUG
     fprintf(stdout, "Module:\n");
     PyObject_Print(pMod, stdout, 0);
     fprintf(stdout, "\n");
+#endif
 
     /* NOTE: PyModule_GetDict(pMod); never fails and returns a borrowed
      * reference. pItem is NULL or a borrowed reference.
@@ -79,11 +83,14 @@ static PyObject *print_global_INT_borrowed_ref(PyObject *pMod) {
         goto except;
     }
     Py_INCREF(pItem);
+
+#if FPRINTF_DEBUG
     fprintf(stdout, "Integer: \"%s\" ", NAME_INT);
     PyObject_Print(pItem, stdout, 0);
-    val = PyLong_AsLong(pItem);
+    long val = PyLong_AsLong(pItem);
     fprintf(stdout, " C long: %ld ", val);
     fprintf(stdout, "\n");
+#endif
 
     assert(!PyErr_Occurred());
     Py_INCREF(Py_None);
@@ -106,9 +113,11 @@ static PyObject *print_globals(PyObject *pMod) {
     assert(PyModule_CheckExact(pMod));
     assert(!PyErr_Occurred());
 
+#if FPRINTF_DEBUG
     fprintf(stdout, "cModuleGlobals:\n");
     PyObject_Print(pMod, stdout, 0);
     fprintf(stdout, "\n");
+#endif
 
     /* Your code here...*/
     if (!print_global_INT(pMod)) {
@@ -127,11 +136,13 @@ static PyObject *print_globals(PyObject *pMod) {
         );
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, " String: \"%s\" ", NAME_STR);
     PyObject_Print(pItem, stdout, 0);
     fprintf(stdout, "\n");
     Py_DECREF(pItem);
     pItem = NULL;
+#endif
 
     pItem = PyObject_GetAttrString(pMod, NAME_LST);
     if (!pItem) {
@@ -141,12 +152,14 @@ static PyObject *print_globals(PyObject *pMod) {
         );
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "   List: \"%s\" ", NAME_LST);
     PyObject_Print(pItem, stdout, 0);
     fprintf(stdout, "\n");
+#endif
+
     Py_DECREF(pItem);
     pItem = NULL;
-
     pItem = PyObject_GetAttrString(pMod, NAME_MAP);
     if (!pItem) {
         PyErr_Format(PyExc_AttributeError,
@@ -155,9 +168,12 @@ static PyObject *print_globals(PyObject *pMod) {
         );
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "    Map: \"%s\" ", NAME_MAP);
     PyObject_Print(pItem, stdout, 0);
     fprintf(stdout, "\n");
+#endif
+
     Py_DECREF(pItem);
     pItem = NULL;
 

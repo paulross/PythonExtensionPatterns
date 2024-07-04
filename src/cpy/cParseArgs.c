@@ -10,9 +10,11 @@
 
 #include "time.h"
 
+#define FPRINTF_DEBUG 0
+
 /****************** Parsing arguments. ****************/
 static PyObject *parse_no_args(PyObject *Py_UNUSED(module)) {
-#if 0
+#if FPRINTF_DEBUG
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\nparse_no_args()\n");
 #endif
@@ -20,7 +22,7 @@ static PyObject *parse_no_args(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *parse_one_arg(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg)) {
-#if 0
+#if FPRINTF_DEBUG
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\nparse_one_arg(): ");
     PyObject_Print(arg, stdout, 0);
@@ -37,7 +39,7 @@ static PyObject *parse_args(PyObject *Py_UNUSED(module), PyObject *args) {
     int arg1;
     char *str = NULL;
 
-#if 0
+#if FPRINTF_DEBUG
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\nparse_args(): ");
     PyObject_Print(args, stdout, 0);
@@ -71,7 +73,7 @@ parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs)
             NULL,
     };
 
-#if 0
+#if FPRINTF_DEBUG
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\n");
     PyObject_Print(args, stdout, 0);
@@ -133,7 +135,7 @@ static PyObject *parse_args_with_function_conversion_to_c(PyObject *Py_UNUSED(mo
     PyObject *ret = NULL;
     long result;
 
-#if 0
+#if FPRINTF_DEBUG
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\n");
     PyObject_Print(args, stdout, 0);
@@ -223,7 +225,7 @@ static PyObject *parse_args_with_immutable_defaults(PyObject *Py_UNUSED(module),
     Py_INCREF(pyObjArg_1);
     have_inc_ref_arguments = 1;
 
-#if 0
+#if FPRINTF_DEBUG
     fprintf(stdout, "pyObjArg0 was: ");
     PyObject_Print(pyObjArg_0, stdout, 0);
     fprintf(stdout, "\n");
@@ -301,7 +303,7 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
 //    Py_INCREF(pyObjArg_1);
 //    ref_inc_arg_1 = 1;
 
-#if 0
+#if FPRINTF_DEBUG
     fprintf(stdout, "pyObjArg1 was: ");
     PyObject_Print(pyObjArg_1, stdout, 0);
     fprintf(stdout, "\n");
@@ -314,7 +316,7 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
         goto except;
     }
 
-#if 0
+#if FPRINTF_DEBUG
     fprintf(stdout, "pyObjArg1 now: ");
     PyObject_Print(pyObjArg_1, stdout, 0);
     fprintf(stdout, "\n");
