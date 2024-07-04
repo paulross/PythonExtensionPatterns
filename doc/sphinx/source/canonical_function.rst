@@ -6,6 +6,9 @@
 A Pythonic Coding Pattern for C Functions
 ===========================================
 
+Principle
+===============
+
 To avoid all the errors we have seen it is useful to have a C coding pattern for handling ``PyObjects`` that does the following:
 
 * No early returns and a single place for clean up code.
@@ -26,6 +29,9 @@ The basic pattern in C is similar to Python's try/except/finally pattern:
     finally:
         /* Clean up under normal conditions and return an appropriate value. */
 
+
+Coding the Function
+=====================
 
 Firstly we set any local ``PyObject`` (s) and the return value to ``NULL``:
 
@@ -139,6 +145,9 @@ Notice the ``except:`` block falls through to the ``finally:`` block.
         return ret;
     }
 
+
+The Function Code as One
+========================
 
 Here is the complete code with minimal comments:
 
