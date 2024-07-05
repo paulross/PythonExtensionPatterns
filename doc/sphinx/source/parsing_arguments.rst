@@ -301,11 +301,12 @@ The function will be called with three arguments, the module, a ``PyTupleObject`
 and a ``PyDictObject`` that contains a dictionary of keyword arguments.
 You can either parse these yourself or use a helper method to parse it into Python and C types.
 
-In the following code we are expecting a sequence and an integer.
-It returns the sequence repeated count times.
+In the following code we are expecting a sequence and an optional integer defaulting to 1.
+It returns the `sequence` repeated `count` times.
 In Python the equivalent function declaration would be::
 
-    def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: int) -> typing.Sequence[typing.Any]:
+    def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: = 1) -> typing.Sequence[typing.Any]:
+        return sequence * count
 
 Here is the C code, note the string that describes the argument types passed to ``PyArg_ParseTupleAndKeywords``,
 if these types are not present a ``ValueError`` will be set.
@@ -316,7 +317,7 @@ if these types are not present a ``ValueError`` will be set.
     parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
         PyObject *ret = NULL;
         PyObject *py_sequence = NULL;
-        int count;
+        int count = 1;          /* Default. */
         static char *kwlist[] = {
                 "sequence", /* A sequence object, str, list, tuple etc. */
                 "count", /* Python int converted to a C int. */
@@ -365,35 +366,14 @@ called.
 Failure modes, when the wrong arguments are passed are tested in
 ``tests.unit.test_c_parse_args.test_parse_args_kwargs_raises``.
 
-TODO: WIP here.
-
 All arguments are keyword arguments so this function can be called in a number of ways, all of the following are equivalent:
 
 .. code-block:: python
 
-    argsKwargs('foo')
-    argsKwargs('foo', 8)
-    argsKwargs(theString='foo')
-    argsKwargs(theOptInt=8, theString='foo')
-    argsKwargs(theString, theOptInt=8)
+    cParseArgs.parse_args_kwargs([1, 2, 3], 2)
+    cParseArgs.parse_args_kwargs([1, 2, 3], count=2)
+    cParseArgs.parse_args_kwargs(sequence=[1, 2, 3], count=2)
 
-If you want the function signature to be ``argsKwargs(theString, theOptInt=8)`` with a single argument and a single optional keyword argument then put an empty string in the kwlist array:
-
-.. code-block:: c
-
-        /* ... */
-        static char *kwlist[] = {
-            "",
-            "theOptInt",
-            NULL
-        };
-        /* ... */
-
-.. note::
-    If you use ``|`` in the parser format string you have to set the default values for those optional arguments
-    yourself in the C code. This is pretty straightforward if they are fundamental C types as ``arg2 = 8`` above.
-    For Python values is a bit more tricky as described next.
-    
 Keyword Arguments and C++11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -411,18 +391,88 @@ C++11 compilers warn when creating non-const ``char*`` from string literals as w
     /* ... */
 
 
-.. _cpython_default_arguments:
+Default String and Bytes Arguments
+------------------------------------------
 
-Being Pythonic with Default Arguments
+The recommended way to accept binary data is to parse the argument using the ``"y*"`` formatting string and supply
+a `Py_Buffer <https://docs.python.org/3/c-api/buffer.html#c.Py_buffer>`_ argument.
+This also applies to strings, using the ``"s*"`` formatting string, where they might contain ``'\0'`` characters.
+
+Typically this would be done with C code such as this:
+
+.. code-block:: c
+
+    Py_buffer arg;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "y*", kwlist, &arg)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    /* arg.buf has the byte data of length arg.len */
+
+However this will likely segfault if it is used as a default argument using ``"|y*"`` formatting string as the
+Py_Buffer is uninitialized.
+Here is the fix for using a default value of ``b''``:
+
+.. code-block:: c
+
+    Py_buffer arg;
+    arg.buf = NULL;
+    arg.len = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|y*", kwlist, &arg)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+
+
+For a different default value, say ``b'default'``, then this will work.
+The Python signature is:
+
+.. code-block:: python
+
+    def parse_default_bytes_object(b: bytes = b"default") -> bytes:
+        pass
+
+The complete C code is:
+
+.. code-block:: c
+
+    static PyObject *
+    parse_default_bytes_object(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
+        static const char *arg_default = "default";
+        Py_buffer arg;
+        arg.buf = (void *)arg_default;
+        arg.len = strlen(arg_default);
+        static char *kwlist[] = {
+                "b",
+                NULL,
+        };
+        if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|y*", kwlist, &arg)) {
+            assert(PyErr_Occurred());
+            return NULL;
+        }
+        return Py_BuildValue("y#", arg.buf, arg.len);
+    }
+
+.. _cpython_default_mutable_arguments:
+
+Being Pythonic with Default Mutable Arguments
 --------------------------------------------------------------------------
 
-If the arguments default to some C fundamental type the code above is fine. However if the arguments default to Python objects then a little more work is needed. Here is a function that has a tuple and a dict as default arguments, in other words the Python signature:
+If the arguments default to some C fundamental type the code above is fine.
+However if the arguments default to Python objects then a little more work is needed.
+Here is a function that has a tuple and a dict as default arguments, in other words the Python signature:
 
 .. code-block:: python
 
     def function(arg_0=(42, "this"), arg_1={}):
 
-The first argument is immutable, the second is mutable and so we need to mimic the well known behaviour of Python with mutable arguments. Mutable default arguments are evaluated once only at function definition time and then becomes a (mutable) property of the function. For example:
+The first argument is immutable, the second is mutable and so we need to mimic the well known behaviour of Python
+with mutable arguments.
+Mutable default arguments are evaluated once only at function definition time and then becomes a (mutable) property of
+the function.
+For example:
 
 .. code-block:: python
 
@@ -439,7 +489,8 @@ The first argument is immutable, the second is mutable and so we need to mimic t
     >>> f()
     [9, 9, 9]
 
-In C we can get this behaviour by treating the mutable argument as ``static``, the immutable argument does not need to be ``static`` but it will do no harm if it is (if non-``static`` it will have to be initialised on every function call).
+In C we can get this behaviour by treating the mutable argument as ``static``, the immutable argument does not need to
+be ``static`` but it will do no harm if it is (if non-``static`` it will have to be initialised on every function call).
 
 My advice: Always make all ``PyObject*`` references to default arguments ``static``.
 
@@ -779,22 +830,198 @@ And we can use ``DefaultArg`` like this:
     }
 
 
-TODO: Positional only and keyword only arguments.
+Positional Only and Keyword Only Arguments
+-----------------------------------------------
 
-References:
+This section shows how to achieve
+`positional only <https://docs.python.org/3/glossary.html#positional-only-parameter>`_
+and `keyword only <https://docs.python.org/3/glossary.html#keyword-only-parameter>`_ arguments in a C extension.
+These are described in the Python documentation for
+`Special parameters <https://docs.python.org/3/tutorial/controlflow.html#special-parameters>`_
+Specifically `positional only parameters <https://docs.python.org/3/tutorial/controlflow.html#positional-only-parameters>`_
+and `keyword only arguments <https://docs.python.org/3/tutorial/controlflow.html#keyword-only-arguments>`_
 
-Positional only:
-https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTupleAndKeywords
-PyArg_ParseTupleAndKeywords has empty strings in kwlist.
-"Empty names denote positional-only parameters."
+Suppose we want the functional equivalent of the Python function signature
+(reproducing https://docs.python.org/3/tutorial/controlflow.html#special-parameters )::
 
-Keyword has '$' in parse string.
-$
-PyArg_ParseTupleAndKeywords() only: Indicates that the remaining arguments in the Python argument
-list are keyword-only.
-Currently, all keyword-only arguments must also be optional arguments, so | must always be
-specified before $ in the format string.
+    def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float, kwd2: int):
+        return None
 
-Glossary:
-https://docs.python.org/3/glossary.html#positional-only-parameter
-https://docs.python.org/3/glossary.html#keyword-only-parameter
+This is achieved by combining two techniques:
+
+- Positional only: The strings in the ``*kwlist`` passed to ``PyArg_ParseTupleAndKeywords`` are empty.
+- Keyword only: The formatting string passed to ``PyArg_ParseTupleAndKeywords`` uses the ``'$'`` character.
+
+A function using either positional only or keyword only arguments must use the flags ``METH_VARARGS | METH_KEYWORDS``
+and uses``PyArg_ParseTupleAndKeywords``. Currently, all keyword-only arguments must also be optional arguments, so ``'|'`` must always be
+specified before ``'$'`` in the format string.
+
+Here is the C code:
+
+.. code-block:: c
+
+    static PyObject *
+    parse_pos_only_kwd_only(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
+        /* Arguments, first three are required. */
+        Py_buffer pos1;
+        int pos2;
+        Py_buffer pos_or_kwd;
+        /* Last two are optional. */
+        double kwd1 = 256.0;
+        int kwd2 = -421;
+        static char *kwlist[] = {
+                "",                 /* pos1 is positional only. */
+                "",                 /* pos2 is positional only. */
+                "pos_or_kwd",       /* pos_or_kwd can be positional or keyword argument. */
+                "kwd1",             /* kwd1 is keyword only argument by use of '$' in format string. */
+                "kwd2",             /* kwd2 is keyword only argument by use of '$' in format string. */
+                NULL,
+        };
+
+        if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s*iy*|$di", kwlist, &pos1, &pos2, &pos_or_kwd, &kwd1, &kwd2)) {
+            assert(PyErr_Occurred());
+            return NULL;
+        }
+        /* Return the parsed arguments. */
+        return Py_BuildValue("s#iy#di", pos1.buf, pos1.len, pos2, pos_or_kwd.buf, pos_or_kwd.len, kwd1, kwd2);
+    }
+
+
+
+Parsing Arguments With a Functional Conversion to C
+---------------------------------------------------------
+
+Often you want to convert a Python argument to a C value(s) in a way that is not covered by the format strings
+provided by the Python C API. To do this you can provide a special conversion function in C and give it to
+``PyArg_ParseTuple`` or ``PyArg_ParseTupleAndKeywords``.
+
+In this example we are expecting the Python argument to be a list of integers and we want the sum of them as
+a C ``long``. First create a C function that takes a Python list, checks it and sums the values.
+The function returns 1 on success or 0 on error and, in that case, and exception is expected to be set.
+On success the result will be written into the opaque pointer, here called ``address``:
+
+.. code-block:: c
+
+    int sum_list_of_longs(PyObject *list_longs, void *address) {
+        PyObject *item = NULL;
+
+        if (!list_longs || !PyList_Check(list_longs)) { /* Note: PyList_Check allows sub-types. */
+            PyErr_Format(PyExc_TypeError, "check_list_of_longs(): First argument is not a list");
+            return 0;
+        }
+        long result = 0L;
+        for (Py_ssize_t i = 0; i < PyList_GET_SIZE(list_longs); ++i) {
+            item = PyList_GetItem(list_longs, i);
+            if (!PyLong_CheckExact(item)) {
+                PyErr_Format(PyExc_TypeError, "check_list_of_longs(): Item %d is not a Python integer.", i);
+                return 0;
+            }
+            /* PyLong_AsLong() must always succeed because of check above. */
+            result += PyLong_AsLong(item);
+        }
+        long *p_long = (long *) address;
+        *p_long = result;
+        return 1; /* Success. */
+    }
+
+Now we can pass this function to ``PyArg_ParseTuple`` with the ``"O&"`` formatting string that takes two arguments,
+the Python list and the C conversion function. On success ``PyArg_ParseTuple`` writes the value to the target,
+``result``.
+
+In this case the function just returns the sum of the integers in the list.
+Here is the C code.
+
+.. code-block:: c
+
+    static PyObject *
+    parse_args_with_function_conversion_to_c(PyObject *Py_UNUSED(module), PyObject *args) {
+        PyObject *ret = NULL;
+        long result;
+
+        if (!PyArg_ParseTuple(args, "O&", sum_list_of_longs, &result)) {
+            /* NOTE: If check_list_of_numbers() returns 0 an error should be set. */
+            assert(PyErr_Occurred());
+            goto except;
+        }
+
+        /* Your code here...*/
+        ret = PyLong_FromLong(result);
+        if (ret == NULL) {
+            goto except;
+        }
+        assert(!PyErr_Occurred());
+        goto finally;
+    except:
+        assert(PyErr_Occurred());
+        Py_XDECREF(ret);
+        ret = NULL;
+    finally:
+        return ret;
+    }
+
+
+
+Parsing File Paths as Arguments
+----------------------------------------
+
+This technique is very useful, and common, when converting Python file paths (a ``str`` or path-like object)
+to C file paths (``char *``).
+For this the Python C API provides some useful functions
+`PyUnicode_FSConverter <https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FSConverter>`_
+and
+`PyUnicode_DecodeFSDefaultAndSize <https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_DecodeFSDefaultAndSize>`_
+
+Here is an example of taking a Python Unicode string representing a file path, converting it to C and then back
+to Python. The stages are:
+
+- Use ``PyArg_ParseTupleAndKeywords`` and ``PyUnicode_FSConverter`` to convert the path-like Python object to
+    a Python ``bytes`` object.
+- Extract the raws bytes to use as a C path.
+
+.. code-block:: c
+
+    static PyObject *
+    parse_filesystem_argument(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
+        assert(!PyErr_Occurred());
+        assert(args || kwargs);
+
+        PyBytesObject *py_path = NULL;
+        char *c_path = NULL;
+        Py_ssize_t path_size;
+        PyObject *ret = NULL;
+
+        /* Parse arguments */
+        static char *kwlist[] = {"path", NULL};
+        /* Can be optional output path with "|O&". */
+        if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&", kwlist, PyUnicode_FSConverter, &py_path)) {
+            goto except;
+        }
+        /* Check arguments. */
+        assert(py_path);
+        /* Grab a reference to the internal bytes buffer. */
+        if (PyBytes_AsStringAndSize((PyObject *) py_path, &c_path, &path_size)) {
+            /* Should have a TypeError or ValueError. */
+            assert(PyErr_Occurred());
+            assert(PyErr_ExceptionMatches(PyExc_TypeError) || PyErr_ExceptionMatches(PyExc_ValueError));
+            goto except;
+        }
+        assert(c_path);
+
+        /* Use the C path. */
+
+        /* Now convert the C path to a Python object, a string. */
+        ret = PyUnicode_DecodeFSDefaultAndSize(c_path, path_size);
+        if (!ret) {
+            goto except;
+        }
+        assert(!PyErr_Occurred());
+        goto finally;
+    except:
+        assert(PyErr_Occurred());
+        Py_XDECREF(ret);
+        ret = NULL;
+    finally:
+        // Assert all temporary locals are NULL and thus have been transferred if used.
+        Py_XDECREF(py_path);
+        return ret;
+    }

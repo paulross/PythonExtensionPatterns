@@ -6,6 +6,8 @@
 //  Copyright (c) 2014 Paul Ross. All rights reserved.
 //
 
+#define PY_SSIZE_T_CLEAN
+
 #include "Python.h"
 
 #include "time.h"
@@ -65,7 +67,7 @@ static PyObject *parse_args(PyObject *Py_UNUSED(module), PyObject *args) {
 /** This takes a Python object, 'sequence', that supports the sequence protocol and, optionally, an integer, 'count'.
  * This returns a new sequence which is the old sequence multiplied by the count.
  *
- * def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: int) -> typing.Sequence[typing.Any]:
+ * def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: int = 1) -> typing.Sequence[typing.Any]:
  *
  * NOTE: If count is absent entirely then an empty sequence of given type is returned as count is assumed zero as
  * optional.
@@ -74,7 +76,7 @@ static PyObject *
 parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
     PyObject *ret = NULL;
     PyObject *py_sequence = NULL;
-    int count;
+    int count = 1;      /* Default. */
     static char *kwlist[] = {
             "sequence", /* A sequence object, str, list, tuple etc. */
             "count", /* Python int converted to a C int. */
@@ -96,68 +98,6 @@ parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs)
 
     /* Your code here...*/
     ret = PySequence_Repeat(py_sequence, count);
-    if (ret == NULL) {
-        goto except;
-    }
-    assert(!PyErr_Occurred());
-    goto finally;
-    except:
-    assert(PyErr_Occurred());
-    Py_XDECREF(ret);
-    ret = NULL;
-    finally:
-    return ret;
-}
-
-/** Checks that a list is full of Python integers. */
-int sum_list_of_longs(PyObject *list_longs, void *address) {
-    PyObject *item = NULL;
-
-    if (!list_longs || !PyList_Check(list_longs)) { /* Note: PyList_Check allows sub-types. */
-        PyErr_Format(PyExc_TypeError, "check_list_of_longs(): First argument is not a list");
-        return 0;
-    }
-    long result = 0L;
-    for (Py_ssize_t i = 0; i < PyList_GET_SIZE(list_longs); ++i) {
-        item = PyList_GetItem(list_longs, i);
-        if (!PyLong_CheckExact(item)) {
-            PyErr_Format(PyExc_TypeError, "check_list_of_longs(): Item %d is not a Python integer.", i);
-            return 0;
-        }
-        /* PyLong_AsLong() must always succeed because of check above. */
-        result += PyLong_AsLong(item);
-    }
-    long *p_long = (long *) address;
-    *p_long = result;
-    return 1; /* Success. */
-}
-
-/** Parse the args where we are expecting a single argument that must be a
- * list of numbers.
- *
- * This returns the sum of the numbers as a Python integer.
- *
- * This illustrates the use of "O&" in parsing.
- */
-static PyObject *parse_args_with_function_conversion_to_c(PyObject *Py_UNUSED(module), PyObject *args) {
-    PyObject *ret = NULL;
-    long result;
-
-#if FPRINTF_DEBUG
-    PyObject_Print(module, stdout, 0);
-    fprintf(stdout, "\n");
-    PyObject_Print(args, stdout, 0);
-    fprintf(stdout, "\n");
-#endif
-
-    if (!PyArg_ParseTuple(args, "O&", sum_list_of_longs, &result)) {
-        /* NOTE: If check_list_of_numbers() returns 0 an error should be set. */
-        assert(PyErr_Occurred());
-        goto except;
-    }
-
-    /* Your code here...*/
-    ret = PyLong_FromLong(result);
     if (ret == NULL) {
         goto except;
     }
@@ -325,9 +265,9 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
     }
 
 #if FPRINTF_DEBUG
-    fprintf(stdout, "pyObjArg1 now: ");
-    PyObject_Print(pyObjArg_1, stdout, 0);
-    fprintf(stdout, "\n");
+        fprintf(stdout, "pyObjArg1 now: ");
+        PyObject_Print(pyObjArg_1, stdout, 0);
+        fprintf(stdout, "\n");
 #endif
 
     /* Success. */
@@ -336,14 +276,193 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
     Py_INCREF(pyObjArg_1);
     ret = pyObjArg_1;
     goto finally;
-except:
+    except:
     assert(PyErr_Occurred());
     Py_XDECREF(ret);
     ret = NULL;
-finally:
+    finally:
 //    if (ref_inc_arg_1) {
 //        Py_XDECREF(pyObjArg_1);
 //    }
+    return ret;
+}
+
+/**
+ * Example of setting a bytes default argument.
+ *
+ * Signature:
+ *
+ * def parse_default_bytes_object(b: bytes = b"default") -> bytes:
+ */
+static PyObject *
+parse_default_bytes_object(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
+    static const char *arg_default = "default";
+    Py_buffer arg;
+    arg.buf = (void *) arg_default;
+    arg.len = strlen(arg_default);
+    static char *kwlist[] = {
+            "b",
+            NULL,
+    };
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|y*", kwlist, &arg)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    return Py_BuildValue("y#", arg.buf, arg.len);
+}
+
+/** Positional only and keyword only arguments.
+ *
+ * Reproducing https://docs.python.org/3/tutorial/controlflow.html#special-parameters
+ *
+ * Equivalent to the Python function:
+ *
+ * def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float, kwd2: int) -> typing.Tuple[typing.Any, ...]:
+ *     return None
+ * */
+static PyObject *
+parse_pos_only_kwd_only(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
+    /* Arguments, first three are required. */
+    Py_buffer pos1;
+    int pos2;
+    Py_buffer pos_or_kwd;
+    /* Last two are optional. */
+    double kwd1 = 256.0;
+    int kwd2 = -421;
+    static char *kwlist[] = {
+            "",                 /* pos1 is positional only. */
+            "",                 /* pos2 is positional only. */
+            "pos_or_kwd",       /* pos_or_kwd can be positional or keyword argument. */
+            "kwd1",             /* kwd1 is keyword only argument by use of '$' in format string. */
+            "kwd2",             /* kwd2 is keyword only argument by use of '$' in format string. */
+            NULL,
+    };
+
+#if FPRINTF_DEBUG
+    //    PyObject_Print(module, stdout, 0);
+        fprintf(stdout, "parse_pos_only_kwd_only():\n");
+        PyObject_Print(args, stdout, 0);
+        fprintf(stdout, "\n");
+        PyObject_Print(kwargs, stdout, 0);
+        fprintf(stdout, "\n");
+#endif
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s*iy*|$di", kwlist, &pos1, &pos2, &pos_or_kwd, &kwd1, &kwd2)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    /* Return the parsed arguments. */
+    return Py_BuildValue("s#iy#di", pos1.buf, pos1.len, pos2, pos_or_kwd.buf, pos_or_kwd.len, kwd1, kwd2);
+}
+
+/** Checks that a list is full of Python integers. */
+int sum_list_of_longs(PyObject *list_longs, void *address) {
+    PyObject *item = NULL;
+
+    if (!list_longs || !PyList_Check(list_longs)) { /* Note: PyList_Check allows sub-types. */
+        PyErr_Format(PyExc_TypeError, "check_list_of_longs(): First argument is not a list");
+        return 0;
+    }
+    long result = 0L;
+    for (Py_ssize_t i = 0; i < PyList_GET_SIZE(list_longs); ++i) {
+        item = PyList_GetItem(list_longs, i);
+        if (!PyLong_CheckExact(item)) {
+            PyErr_Format(PyExc_TypeError, "check_list_of_longs(): Item %d is not a Python integer.", i);
+            return 0;
+        }
+        /* PyLong_AsLong() must always succeed because of check above. */
+        result += PyLong_AsLong(item);
+    }
+    long *p_long = (long *) address;
+    *p_long = result;
+    return 1; /* Success. */
+}
+
+/** Parse the args where we are expecting a single argument that must be a
+ * list of numbers.
+ *
+ * This returns the sum of the numbers as a Python integer.
+ *
+ * This illustrates the use of "O&" in parsing.
+ */
+static PyObject *
+parse_args_with_function_conversion_to_c(PyObject *Py_UNUSED(module), PyObject *args) {
+    PyObject *ret = NULL;
+    long result;
+
+#if FPRINTF_DEBUG
+    PyObject_Print(module, stdout, 0);
+    fprintf(stdout, "\n");
+    PyObject_Print(args, stdout, 0);
+    fprintf(stdout, "\n");
+#endif
+
+    if (!PyArg_ParseTuple(args, "O&", sum_list_of_longs, &result)) {
+        /* NOTE: If check_list_of_numbers() returns 0 an error should be set. */
+        assert(PyErr_Occurred());
+        goto except;
+    }
+
+    /* Your code here...*/
+    ret = PyLong_FromLong(result);
+    if (ret == NULL) {
+        goto except;
+    }
+    assert(!PyErr_Occurred());
+    goto finally;
+    except:
+    assert(PyErr_Occurred());
+    Py_XDECREF(ret);
+    ret = NULL;
+    finally:
+    return ret;
+}
+
+
+/** Example of changing a Python string representing a file path to a C string and back again.
+ */
+static PyObject *
+parse_filesystem_argument(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
+    assert(!PyErr_Occurred());
+    assert(args || kwargs);
+
+    PyBytesObject *py_path = NULL;
+    char *c_path = NULL;
+    Py_ssize_t path_size;
+    PyObject *ret = NULL;
+
+    /* Parse arguments */
+    static char *kwlist[] = {"path", NULL};
+    /* Can be optional output path with "|O&". */
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&", kwlist, PyUnicode_FSConverter, &py_path)) {
+        goto except;
+    }
+    /* Check arguments. */
+    assert(py_path);
+    /* Grab a reference to the internal bytes buffer. */
+    if (PyBytes_AsStringAndSize((PyObject *) py_path, &c_path, &path_size)) {
+        /* Should have a TypeError or ValueError. */
+        assert(PyErr_Occurred());
+        assert(PyErr_ExceptionMatches(PyExc_TypeError) || PyErr_ExceptionMatches(PyExc_ValueError));
+        goto except;
+    }
+    assert(c_path);
+    /* Use the C path. */
+
+    /* Now convert the C path to a Python object, a string. */
+    ret = PyUnicode_DecodeFSDefaultAndSize(c_path, path_size);
+    if (!ret) {
+        goto except;
+    }
+    assert(!PyErr_Occurred());
+    goto finally;
+    except:
+    assert(PyErr_Occurred());
+    Py_XDECREF(ret);
+    ret = NULL;
+    finally:
+    // Assert all temporary locals are NULL and thus have been transferred if used.
+    Py_XDECREF(py_path);
     return ret;
 }
 
@@ -356,12 +475,18 @@ static PyMethodDef cParseArgs_methods[] = {
         {"parse_args",                               (PyCFunction) parse_args,                               METH_VARARGS, "Reads args only."},
         {"parse_args_kwargs",                        (PyCFunction) parse_args_kwargs,                        METH_VARARGS |
                                                                                                              METH_KEYWORDS, parse_args_kwargs_docstring},
-        {"parse_args_with_function_conversion_to_c", (PyCFunction) parse_args_with_function_conversion_to_c, METH_VARARGS,
-                                                                                                                           "Parsing an argument that must be a list of numbers."},
         {"parse_args_with_immutable_defaults",       (PyCFunction) parse_args_with_immutable_defaults,
                                                                                                              METH_VARARGS, "A function with mutable defaults."},
         {"parse_args_with_mutable_defaults",         (PyCFunction) parse_args_with_mutable_defaults,
                                                                                                              METH_VARARGS, "A function with mutable defaults."},
+        {"parse_default_bytes_object",               (PyCFunction) parse_default_bytes_object,               METH_VARARGS |
+                                                                                                             METH_KEYWORDS, "Example of default bytes object."},
+        {"parse_pos_only_kwd_only",                  (PyCFunction) parse_pos_only_kwd_only,                  METH_VARARGS |
+                                                                                                             METH_KEYWORDS, "Positional and keyword only arguments"},
+        {"parse_args_with_function_conversion_to_c", (PyCFunction) parse_args_with_function_conversion_to_c, METH_VARARGS,
+                                                                                                                           "Parsing an argument that must be a list of numbers."},
+        {"parse_filesystem_argument",                (PyCFunction) parse_filesystem_argument,                METH_VARARGS |
+                                                                                                             METH_KEYWORDS, "Parsing an argument that is a file path."},
         {NULL, NULL, 0,                                                                                                     NULL} /* Sentinel */
 };
 

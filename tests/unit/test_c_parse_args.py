@@ -7,7 +7,8 @@ def test_module_dir():
     assert dir(cParseArgs) == ['__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', 'parse_args',
                                'parse_args_kwargs', 'parse_args_with_function_conversion_to_c',
                                'parse_args_with_immutable_defaults', 'parse_args_with_mutable_defaults',
-                               'parse_no_args', 'parse_one_arg']
+                               'parse_default_bytes_object', 'parse_filesystem_argument',
+                               'parse_no_args', 'parse_one_arg', 'parse_pos_only_kwd_only', ]
 
 
 def test_parse_no_args():
@@ -73,9 +74,12 @@ def test_parse_args_raises(args, expected):
             ((b'b',), {'count': 5}, b'bbbbb'),
             ((), {'sequence': b'b', 'count': 5}, b'bbbbb'),
             (([1, 2, 3], 3), {}, [1, 2, 3, 1, 2, 3, 1, 2, 3]),
-            # NOTE: If count is absent entirely then an empty sequence of given type is returned.
-            ((b'bytes',), {}, b''),
-            ((b'b',), {}, b''),
+            # NOTE: If count is zero then an empty sequence of given type is returned.
+            ((b'bytes', 0,), {}, b''),
+            ((b'b', 0,), {}, b''),
+            # NOTE: If count is absent then it defaults to 1.
+            ((b'bytes',), {}, b'bytes'),
+            ((b'b',), {}, b'b'),
             # args/kwargs are None
             (None, {'sequence': b'b', 'count': 5}, b'bbbbb'),
             (('b', 5), None, 'bbbbb'),
@@ -92,6 +96,16 @@ def test_parse_args_kwargs(args, kwargs, expected):
     else:
         assert cParseArgs.parse_args_kwargs(*args, **kwargs) == expected
     # assert cParseArgs.parse_args_kwargs(*args, **kwargs) == expected
+
+
+def test_parse_args_kwargs_examples():
+    """Variations on the signature::
+
+        def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: int = 1) -> typing.Sequence[typing.Any]:
+    """
+    assert cParseArgs.parse_args_kwargs([1, 2, 3], 2) == [1, 2, 3, 1, 2, 3]
+    assert cParseArgs.parse_args_kwargs([1, 2, 3], count=2) == [1, 2, 3, 1, 2, 3]
+    assert cParseArgs.parse_args_kwargs(sequence=[1, 2, 3], count=2) == [1, 2, 3, 1, 2, 3]
 
 
 @pytest.mark.parametrize(
@@ -122,31 +136,6 @@ def test_parse_args_kwargs_raises(args, kwargs, expected):
 
 
 @pytest.mark.parametrize(
-    'arg, expected',
-    (
-            ([], 0),
-            ([3, 7], 10),
-    )
-)
-def test_parse_args_with_function_conversion_to_c(arg, expected):
-    assert cParseArgs.parse_args_with_function_conversion_to_c(arg) == expected
-
-
-@pytest.mark.parametrize(
-    'arg, expected',
-    (
-            # Number of arguments.
-            ((), 'check_list_of_longs(): First argument is not a list'),
-            ([1, 2.9], 'check_list_of_longs(): Item 1 is not a Python integer.'),
-    )
-)
-def test_parse_args_with_function_conversion_to_c_raises(arg, expected):
-    with pytest.raises(TypeError) as err:
-        cParseArgs.parse_args_with_function_conversion_to_c(arg)
-    assert err.value.args[0] == expected
-
-
-@pytest.mark.parametrize(
     'args, expected',
     (
             (
@@ -165,20 +154,6 @@ def test_parse_args_with_function_conversion_to_c_raises(arg, expected):
 )
 def test_parse_args_with_immutable_defaults(args, expected):
     assert cParseArgs.parse_args_with_immutable_defaults(*args) == expected
-
-
-# @pytest.mark.parametrize(
-#     'args, expected',
-#     (
-#             # Number of arguments.
-#             ((), 'check_list_of_longs(): First argument is not a list'),
-#             ([1, 2.9], 'check_list_of_longs(): Item 1 is not a Python integer.'),
-#     )
-# )
-# def test_parse_args_with_immutable_defaults_raises(args, expected):
-#     with pytest.raises(TypeError) as err:
-#         cParseArgs.parse_args_with_immutable_defaults(args)
-#     assert err.value.args[0] == expected
 
 
 def py_parse_args_with_mutable_defaults(obj, obj_list=[]):
@@ -234,3 +209,122 @@ def test_parse_args_with_mutable_defaults():
     assert cParseArgs.parse_args_with_mutable_defaults(5) == [1, 2, 3, 4, 5, ]
 
     assert cParseArgs.parse_args_with_mutable_defaults(-3, local_list) == [-1, -2, -3, ]
+
+
+@pytest.mark.parametrize(
+    'value, expected',
+    (
+            (None, b"default"),
+            (b'local_value', b'local_value'),
+    )
+)
+def test_parse_default_bytes_object(value, expected):
+    """Signature is::
+
+        def parse_default_bytes_object(b: bytes = b"default") -> bytes:
+    """
+    if value is None:
+        result = cParseArgs.parse_default_bytes_object()
+    else:
+        result = cParseArgs.parse_default_bytes_object(value)
+    assert result == expected
+
+
+# @pytest.mark.parametrize(
+#     'args, expected',
+#     (
+#             ((b'bytes', 123), (b'bytes', 123, 'default_string')),
+#             ((b'bytes', 123, 'local_string'), (b'bytes', 123, 'local_string')),
+#     )
+# )
+# def test_parse_pos_only_kwd_only(args, expected):
+def test_parse_pos_only_kwd_only():
+    """Signature is::
+
+        def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float, kwd2: int) -> typing.Tuple[typing.Any, ...]
+    """
+    result = cParseArgs.parse_pos_only_kwd_only('pos1', 12, b'pos_or_keyword')
+    print()
+    print(result)
+    assert result == ('pos1', 12, b'pos_or_keyword', 256.0, -421)
+    result = cParseArgs.parse_pos_only_kwd_only('pos1', 12, pos_or_kwd=b'pos_or_keyword')
+    print()
+    print(result)
+    assert result == ('pos1', 12, b'pos_or_keyword', 256.0, -421)
+    result = cParseArgs.parse_pos_only_kwd_only('pos1', 12, pos_or_kwd=b'pos_or_keyword', kwd1=8.0, kwd2=16)
+    print()
+    print(result)
+    assert result == ('pos1', 12, b'pos_or_keyword', 8.0, 16)
+
+
+@pytest.mark.parametrize(
+    'args, kwargs, expected',
+    (
+            # Number of arguments.
+            ((), {}, 'function takes at least 2 positional arguments (0 given)'),
+            (('pos1', 12,), {}, "function missing required argument 'pos_or_kwd' (pos 3)"),
+            (('pos1', 12, b'pos_or_keyword', 'kwd1'), {}, 'function takes at most 3 positional arguments (4 given)'),
+            (('pos1', 12, b'pos_or_keyword'), {'pos1': 'pos1'},
+             "'pos1' is an invalid keyword argument for this function"),
+    )
+)
+def test_parse_pos_only_kwd_only_raises(args, kwargs, expected):
+    """Signature is::
+
+        def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float, kwd2: int):
+    """
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_pos_only_kwd_only(*args, **kwargs)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.parametrize(
+    'arg, expected',
+    (
+            ([], 0),
+            ([3, 7], 10),
+    )
+)
+def test_parse_args_with_function_conversion_to_c(arg, expected):
+    assert cParseArgs.parse_args_with_function_conversion_to_c(arg) == expected
+
+
+@pytest.mark.parametrize(
+    'arg, expected',
+    (
+            # Number of arguments.
+            ((), 'check_list_of_longs(): First argument is not a list'),
+            ([1, 2.9], 'check_list_of_longs(): Item 1 is not a Python integer.'),
+    )
+)
+def test_parse_args_with_function_conversion_to_c_raises(arg, expected):
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_args_with_function_conversion_to_c(arg)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.parametrize(
+    'arg, expected',
+    (
+            ('~/foo/bar.txt', '~/foo/bar.txt',),
+    )
+)
+def test_parse_filesystem_argument(arg, expected):
+    assert cParseArgs.parse_filesystem_argument(arg) == expected
+
+
+@pytest.mark.parametrize(
+    'arg, expected',
+    (
+            # Number of arguments.
+            (None, "function missing required argument 'path' (pos 1)"),
+            ([1, 2.9], 'expected str, bytes or os.PathLike object, not list'),
+    )
+)
+def test_parse_filesystem_argument_raises(arg, expected):
+    with pytest.raises(TypeError) as err:
+        if arg is None:
+            cParseArgs.parse_filesystem_argument()
+        else:
+            cParseArgs.parse_filesystem_argument(arg)
+    assert err.value.args[0] == expected
