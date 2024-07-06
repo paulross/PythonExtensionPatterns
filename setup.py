@@ -23,7 +23,7 @@ DEBUG_LEVEL = 0
 # Python stlib requirement:
 LANGUAGE_STANDARD = "c99"
 # Our level of C++
-#LANGUAGE_STANDARD = "c++11"
+# LANGUAGE_STANDARD = "c++11"
 
 # Common flags for both release and debug builds.
 extra_compile_args = sysconfig.get_config_var('CFLAGS').split()
@@ -36,17 +36,18 @@ else:
 PACKAGE_NAME = 'cPyExtPatt'
 
 from distutils.core import setup, Extension
+
 setup(
-    name                = PACKAGE_NAME,
-    version             = '0.2.0',
-    author              = 'Paul Ross',
-    author_email        = 'apaulross@gmail.com',
-    maintainer          = 'Paul Ross',
-    maintainer_email    = 'apaulross@gmail.com',
-    description         = 'Python C Extension Patterns.',
-    long_description    = """Examples of good and bad practice with Python C Extensions.""",
-    platforms           = ['Mac OSX', 'POSIX',],
-    classifiers         = [
+    name=PACKAGE_NAME,
+    version='0.2.0',
+    author='Paul Ross',
+    author_email='apaulross@gmail.com',
+    maintainer='Paul Ross',
+    maintainer_email='apaulross@gmail.com',
+    description='Python C Extension Patterns.',
+    long_description="""Examples of good and bad practice with Python C Extensions.""",
+    platforms=['Mac OSX', 'POSIX', ],
+    classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
@@ -57,33 +58,33 @@ setup(
         'Programming Language :: Python',
         'Topic :: Programming',
     ],
-    licence = 'GNU General Public License v2 (GPLv2)',
+    licence='GNU General Public License v2 (GPLv2)',
     ext_modules=[
-        Extension(f"{PACKAGE_NAME}.cExceptions", sources=['src/cpy/cExceptions.c',],
-            include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
-            library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
-            extra_compile_args=extra_compile_args,
-        ),
-        Extension(f"{PACKAGE_NAME}.cModuleGlobals", sources=['src/cpy/cModuleGlobals.c',],
-            include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
-            library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
-            extra_compile_args=extra_compile_args,
-        ),
-        Extension(f"{PACKAGE_NAME}.cObject", sources=['src/cpy/cObject.c',],
-            include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
-            library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
-            extra_compile_args=extra_compile_args,
-        ),
-        Extension(f"{PACKAGE_NAME}.cParseArgs", sources=['src/cpy/cParseArgs.c',],
-            include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
-            library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
-            extra_compile_args=extra_compile_args,
-        ),
-        # Extension(f"{PACKAGE_NAME}.cPyRefs", sources=['src/cpy/cPyRefs.c',],
-        #     include_dirs = ['/usr/local/include',], # os.path.join(os.getcwd(), 'include'),],
-        #     library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
-        #     #libraries = ['jpeg',],
-        #     extra_compile_args=extra_compile_args,
-        # ),
+        Extension(f"{PACKAGE_NAME}.cExceptions", sources=['src/cpy/cExceptions.c', ],
+                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args,
+                  ),
+        Extension(f"{PACKAGE_NAME}.cModuleGlobals", sources=['src/cpy/cModuleGlobals.c', ],
+                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args,
+                  ),
+        Extension(f"{PACKAGE_NAME}.cObject", sources=['src/cpy/cObject.c', ],
+                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args,
+                  ),
+        Extension(f"{PACKAGE_NAME}.cParseArgs", sources=['src/cpy/cParseArgs.c', ],
+                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args,
+                  ),
+        Extension(f"{PACKAGE_NAME}.cPyRefs", sources=['src/cpy/cPyRefs.c', ],
+                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  # libraries = ['jpeg',],
+                  extra_compile_args=extra_compile_args,
+                  ),
     ]
 )
