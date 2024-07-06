@@ -43,5 +43,3 @@ def test_subtract_two_longs():
 
 def test_make_tuple():
     assert cPyRefs.make_tuple() == (1, 2, 'three')
-
-
