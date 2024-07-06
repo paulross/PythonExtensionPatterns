@@ -959,8 +959,6 @@ Here is the C code.
         return ret;
     }
 
-
-
 Parsing File Paths as Arguments
 ----------------------------------------
 
@@ -975,7 +973,7 @@ Here is an example of taking a Python Unicode string representing a file path, c
 to Python. The stages are:
 
 - Use ``PyArg_ParseTupleAndKeywords`` and ``PyUnicode_FSConverter`` to convert the path-like Python object to
-    a Python ``bytes`` object.
+  a Python ``bytes`` object.
 - Extract the raws bytes to use as a C path.
 
 .. code-block:: c

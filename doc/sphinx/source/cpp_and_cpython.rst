@@ -100,7 +100,7 @@ This new reference wrapper can be used as follows:
 Handling Default Arguments
 ============================================
 
-Handling default, possibly mutable, arguments in a pythonic way is described here: :ref:`cpython_default_arguments`. It is quite complicated to get it right but C++ can ease the pain with a generic class to simplify handling default arguments in CPython functions:
+Handling default, possibly mutable, arguments in a pythonic way is described here: :ref:`cpython_default_mutable_arguments`. It is quite complicated to get it right but C++ can ease the pain with a generic class to simplify handling default arguments in CPython functions:
 
 .. code-block:: cpp
 
