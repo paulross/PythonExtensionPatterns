@@ -14,3 +14,5 @@ cmake-build-debug/
 cmake-build-release/
 
 cPyExtPatt.egg-info/
+
+dist/
