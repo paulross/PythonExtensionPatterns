@@ -7,8 +7,8 @@ Created on May 30, 2013
 """
 import os
 
-from distutils.core import setup, Extension
 import os
+from setuptools import setup, Extension
 import sysconfig
 
 DEBUG = True
@@ -35,8 +35,7 @@ else:
 
 PACKAGE_NAME = 'cPyExtPatt'
 
-from distutils.core import setup, Extension
-
+# For keywords see: https://setuptools.pypa.io/en/latest/references/keywords.html
 setup(
     name=PACKAGE_NAME,
     version='0.2.0',
@@ -46,6 +45,7 @@ setup(
     maintainer_email='apaulross@gmail.com',
     description='Python C Extension Patterns.',
     long_description="""Examples of good and bad practice with Python C Extensions.""",
+    long_description_content_type='text/plain',
     platforms=['Mac OSX', 'POSIX', ],
     classifiers=[
         'Development Status :: 3 - Alpha',

@@ -100,7 +100,7 @@ static PyObject *make_tuple(PyObject *Py_UNUSED(module)) {
     PyObject *v;
 
     r = PyTuple_New(3);         /* New reference. */
-    fprintf(stdout, "Ref count new: %zd\n", r->ob_refcnt);
+//    fprintf(stdout, "Ref count new: %zd\n", r->ob_refcnt);
     v = PyLong_FromLong(1L);    /* New reference. */
     /* PyTuple_SetItem steals the new reference v. */
     PyTuple_SetItem(r, 0, v);

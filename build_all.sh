@@ -12,12 +12,60 @@ set -o nounset  # abort on unbound variable
 set -o pipefail # don't hide errors within pipes
 
 # For current versions see https://devguide.python.org/versions/
-#PYTHON_VERSIONS=('3.9' '3.10' '3.11' '3.12')
-PYTHON_VERSIONS=('3.11')
+PYTHON_VERSIONS=('3.6' '3.7' '3.8' '3.9' '3.10' '3.11' '3.12' '3.13')
+#PYTHON_VERSIONS=('3.11' '3.12' '3.13')
+#PYTHON_VERSIONS=('3.7')
+#PYTHON_VERSIONS=('3.9' '3.10')
+#PYTHON_VERSIONS=('3.6' '3.7' '3.8' '3.9' '3.10')
+#PYTHON_VERSIONS=('3.8' '3.9' '3.10')
 # Used for venvs
 PYTHON_VENV_ROOT="${HOME}/pyenvs"
 PROJECT_NAME="PyExtPatt"
 #CPP_EXECUTABLE="PyExtPatt"
+
+usage()
+{
+    echo "usage: build_all.sh [-d] [-r] [-h, --help]"
+    echo "options:"
+    echo " -h, --help  Print help and exit."
+    echo " -d  Build documentation (slow)."
+    echo " -r  Remove and rebuild all virtual environments."
+}
+
+# If -h or --help print help.
+for arg in "$@"
+do
+    if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
+    then
+        usage
+        exit
+    fi
+done
+
+OPT_REMOVE_REBUILD_VENVS=false
+OPT_BUILD_DOCUMENTATION=false
+
+if [[ "$#" -gt 0 ]]; then
+#while [ -n "$1" ]; do # while loop starts
+#    case "$1" in
+#    -r) OPT_REMOVE_REBUILD_VENVS=true ;; # Remove existing venvs and rebuild them.
+#    -d) OPT_BUILD_DOCUMENTATION=true ;; # Build documentation.
+#    --)
+#        shift # The double dash which separates options from parameters
+#        break
+#        ;;
+#    *) break;;
+#    esac
+#    shift
+#done
+for arg in "$@"
+do
+    case "$arg" in
+    -r)     OPT_REMOVE_REBUILD_VENVS=true ;; # Remove existing venvs and rebuild them.
+    -d)     OPT_BUILD_DOCUMENTATION=true ;; # Build documentation.
+    esac
+done
+fi
 
 #printf "%-8s %8s %10s %10s %12s\n" "Ext" "Files" "Lines" "Words" "Bytes"
 
@@ -55,6 +103,19 @@ create_virtual_environments() {
       echo "---> Creating virtual environment at: ${venv_path}"
       "python${version}" -m venv "${venv_path}"
     fi
+    # https://stackoverflow.com/questions/42997258/virtualenv-activate-script-wont-run-in-bash-script-with-set-euo
+    set +u
+    source "${venv_path}/bin/activate"
+    set -u
+    echo "---> Python version:"
+    python -VV
+    echo "---> Installing everything via pip:"
+    pip install -U pip setuptools wheel
+    pip install -r requirements.txt
+    # Needed for uploading to pypi
+    pip install twine
+    echo "---> Result of pip install:"
+    pip list
   done
 }
 
@@ -82,6 +143,8 @@ create_and_test_bdist_wheel() {
       # Control will enter here if directory doesn't exist.
       echo "---> Creating virtual environment at: ${venv_path}"
       "python${version}" -m venv "${venv_path}"
+    else
+      echo "---> EXISTING Virtual environment at: ${venv_path}"
     fi
     # https://stackoverflow.com/questions/42997258/virtualenv-activate-script-wont-run-in-bash-script-with-set-euo
     set +u
@@ -89,13 +152,13 @@ create_and_test_bdist_wheel() {
     set -u
     echo "---> Python version:"
     python -VV
-    echo "---> Installing everything via pip:"
-    pip install -U pip setuptools wheel
-    pip install -r requirements.txt
-    # Needed for uploading to pypi
-    pip install twine
-    echo "---> Result of pip install:"
-    pip list
+#    echo "---> Installing everything via pip:"
+#    pip install -U pip setuptools wheel
+#    pip install -r requirements.txt
+#    # Needed for uploading to pypi
+#    pip install twine
+#    echo "---> Result of pip install:"
+#    pip list
     echo "---> Running python setup.py develop:"
 #    MACOSX_DEPLOYMENT_TARGET=10.9 CC=clang CXX=clang++ python setup.py develop
     python setup.py develop
@@ -106,6 +169,8 @@ create_and_test_bdist_wheel() {
 #    pytest tests --runslow --benchmark-sort=name
 #    pytest tests -v
     echo "---> Running setup for bdist_wheel:"
+    # Need wheel otherwise bdist_wheel "error: invalid command 'bdist_wheel'"
+    pip install wheel
     python setup.py bdist_wheel
   done
 }
@@ -140,8 +205,9 @@ report_all_versions_and_setups() {
       # Control will enter here if directory doesn't exist.
       echo "---> Creating virtual environment at: ${venv_path}"
       "python${version}" -m venv "${venv_path}"
+    else
+      echo "---> EXISTING Virtual environment at: ${venv_path}"
     fi
-      echo "---> Virtual environment at: ${venv_path}"
     # https://stackoverflow.com/questions/42997258/virtualenv-activate-script-wont-run-in-bash-script-with-set-euo
     set +u
     source "${venv_path}/bin/activate"
@@ -159,6 +225,7 @@ show_results_of_dist() {
   echo "---> dist/:"
   ls -l "dist"
   echo "---> twine check dist/*:"
+  pip install twine
   twine check dist/*
   # Test from Test PyPi
   # pip install -i https://test.pypi.org/simple/orderedstructs
@@ -176,18 +243,26 @@ show_results_of_dist() {
 echo "===> Removing build/ and dist/"
 #rm --recursive --force -- "build" "dist"
 rm -rf -- "build" "dist"
+
+if [ $OPT_REMOVE_REBUILD_VENVS = true ]; then
 echo "===> Removing virtual environments"
 remove_virtual_environments
 echo "===> Creating virtual environments"
 create_virtual_environments
+fi
+
 echo "===> Creating binary wheels"
 create_and_test_bdist_wheel
 echo "===> Creating source distribution"
 create_sdist
 echo "===> All versions and setups:"
 report_all_versions_and_setups
+
+if [ $OPT_BUILD_DOCUMENTATION = true ]; then
 echo "===> Building documentation:"
 create_documentation
+fi
+
 echo "===> dist/ result:"
 show_results_of_dist
 #deactivate_virtual_environment

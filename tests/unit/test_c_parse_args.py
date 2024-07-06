@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from cPyExtPatt import cParseArgs
@@ -51,12 +53,46 @@ def test_parse_args(args, expected):
             ((b'bytes', 123, 'str', 7), 'function takes at most 3 arguments (4 given)'),
             # Type of arguments.
             (('str', 456), 'argument 1 must be bytes, not str'),
-            ((b'bytes', 456.0), "'float' object cannot be interpreted as an integer"),
-            ((b'bytes', '456'), "'str' object cannot be interpreted as an integer"),
             ((b'bytes', 456, 456), 'argument 3 must be str, not int'),
     )
 )
 def test_parse_args_raises(args, expected):
+    """Signature is::
+
+        def parse_args(a: bytes, b: int, c: str = '') -> int:
+    """
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_args(*args)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.skipif(sys.version_info.minor > 9, reason='Python <= 3.9')
+@pytest.mark.parametrize(
+    'args, expected',
+    (
+            ((b'bytes', 456.0), "integer argument expected, got float"),
+            ((b'bytes', '456'), "an integer is required (got type str)"),
+    )
+)
+def test_parse_args_raises_conversion_old(args, expected):
+    """Signature is::
+
+        def parse_args(a: bytes, b: int, c: str = '') -> int:
+    """
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_args(*args)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.skipif(sys.version_info.minor <= 9, reason='Python > 3.9')
+@pytest.mark.parametrize(
+    'args, expected',
+    (
+            ((b'bytes', 456.0), "'float' object cannot be interpreted as an integer"),
+            ((b'bytes', '456'), "'str' object cannot be interpreted as an integer"),
+    )
+)
+def test_parse_args_raises_conversion(args, expected):
     """Signature is::
 
         def parse_args(a: bytes, b: int, c: str = '') -> int:
@@ -264,8 +300,9 @@ def test_parse_pos_only_kwd_only():
             ((), {}, 'function takes at least 2 positional arguments (0 given)'),
             (('pos1', 12,), {}, "function missing required argument 'pos_or_kwd' (pos 3)"),
             (('pos1', 12, b'pos_or_keyword', 'kwd1'), {}, 'function takes at most 3 positional arguments (4 given)'),
-            (('pos1', 12, b'pos_or_keyword'), {'pos1': 'pos1'},
-             "'pos1' is an invalid keyword argument for this function"),
+            # See: test_parse_pos_only_kwd_only_raises_3_13
+            # (('pos1', 12, b'pos_or_keyword'), {'pos1': 'pos1'},
+            #  "'pos1' is an invalid keyword argument for this function"),
     )
 )
 def test_parse_pos_only_kwd_only_raises(args, kwargs, expected):
@@ -273,6 +310,38 @@ def test_parse_pos_only_kwd_only_raises(args, kwargs, expected):
 
         def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float, kwd2: int):
     """
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_pos_only_kwd_only(*args, **kwargs)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.skipif(sys.version_info.minor >= 13, reason='Python 3.13 changed the error message.')
+@pytest.mark.parametrize(
+    'args, kwargs, expected',
+    (
+            (
+                    ('pos1', 12, b'pos_or_keyword'), {'pos1': 'pos1'},
+                    "'pos1' is an invalid keyword argument for this function",
+            ),
+    )
+)
+def test_parse_pos_only_kwd_only_raises_before_3_13(args, kwargs, expected):
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_pos_only_kwd_only(*args, **kwargs)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.skipif(sys.version_info.minor < 13, reason='Python 3.13 changed the error message.')
+@pytest.mark.parametrize(
+    'args, kwargs, expected',
+    (
+            (
+                    ('pos1', 12, b'pos_or_keyword'), {'pos1': 'pos1'},
+             "this function got an unexpected keyword argument 'pos1'",
+            ),
+    )
+)
+def test_parse_pos_only_kwd_only_raises_after_3_13(args, kwargs, expected):
     with pytest.raises(TypeError) as err:
         cParseArgs.parse_pos_only_kwd_only(*args, **kwargs)
     assert err.value.args[0] == expected

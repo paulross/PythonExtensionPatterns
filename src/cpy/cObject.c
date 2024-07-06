@@ -98,7 +98,11 @@ static PyTypeObject ObjectWithAttributes_Type = {
         0,                          /*tp_itemsize*/
         /* methods */
         (destructor) ObjectWithAttributes_dealloc,    /*tp_dealloc*/
+#if PY_MINOR_VERSION < 8
         0,                          /*tp_print*/
+#else
+        0,                          /* Py_ssize_t tp_vectorcall_offset; */
+#endif
         (getattrfunc) 0,             /*tp_getattr*/
         (setattrfunc) ObjectWithAttributes_setattr,   /*tp_setattr*/
         0,                          /*tp_reserved*/
@@ -142,7 +146,18 @@ static PyTypeObject ObjectWithAttributes_Type = {
         NULL,                       /* tp_del */
         0,                  /* tp_version_tag */
         NULL,                   /* tp_finalize */
+#if PY_MINOR_VERSION > 7
         NULL,                   /* tp_vectorcall */
+#endif
+#if PY_MINOR_VERSION == 8
+        0,                          /*tp_print*/
+#endif
+#if PY_MINOR_VERSION >= 12
+        '\0',                   /* unsigned char tp_watched */
+#if PY_MINOR_VERSION >= 13
+        0,                      /* uint16_t tp_versions_used */
+#endif
+#endif
 };
 /* --------------------------------------------------------------------- */
 
@@ -224,7 +239,11 @@ static PyTypeObject Str_Type = {
         0,                          /*tp_itemsize*/
         /* methods */
         0,                          /*tp_dealloc*/
+#if PY_MINOR_VERSION < 8
         0,                          /*tp_print*/
+#else
+        0,                          /* Py_ssize_t tp_vectorcall_offset; */
+#endif
         0,                          /*tp_getattr*/
         0,                          /*tp_setattr*/
         0,                          /*tp_reserved*/
@@ -267,7 +286,18 @@ static PyTypeObject Str_Type = {
         NULL,                       /* tp_del */
         0,                  /* tp_version_tag */
         NULL,                   /* tp_finalize */
+#if PY_MINOR_VERSION > 7
         NULL,                   /* tp_vectorcall */
+#endif
+#if PY_MINOR_VERSION == 8
+        0,                          /*tp_print*/
+#endif
+#if PY_MINOR_VERSION >= 12
+        '\0',                   /* unsigned char tp_watched */
+#if PY_MINOR_VERSION >= 13
+        0,                      /* uint16_t tp_versions_used */
+#endif
+#endif
 };
 
 /* ---------- */
@@ -286,7 +316,11 @@ static PyTypeObject Null_Type = {
         0,                          /*tp_basicsize*/
         0,                          /*tp_itemsize*/
         /* methods */
-        0,                          /*tp_dealloc*/
+#if PY_MINOR_VERSION < 8
+        0,                          /*tp_print*/
+#else
+        0,                          /* Py_ssize_t tp_vectorcall_offset; */
+#endif
         0,                          /*tp_print*/
         0,                          /*tp_getattr*/
         0,                          /*tp_setattr*/
@@ -330,7 +364,18 @@ static PyTypeObject Null_Type = {
         NULL,                       /* tp_del */
         0,                  /* tp_version_tag */
         NULL,                   /* tp_finalize */
+#if PY_MINOR_VERSION > 7
         NULL,                   /* tp_vectorcall */
+#endif
+#if PY_MINOR_VERSION == 8
+        0,                          /*tp_print*/
+#endif
+#if PY_MINOR_VERSION >= 12
+        '\0',                   /* unsigned char tp_watched */
+#if PY_MINOR_VERSION >= 13
+        0,                      /* uint16_t tp_versions_used */
+#endif
+#endif
 };
 
 

@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from cPyExtPatt import cExceptions
@@ -9,6 +11,14 @@ def test_raise_error():
     assert err.value.args[0] == 'Ooops.'
 
 
+@pytest.mark.skipif(sys.version_info.minor > 9, reason='Python <= 3.9')
+def test_raise_error_bad_old():
+    with pytest.raises(SystemError) as err:
+        cExceptions.raise_error_bad()
+    assert err.value.args[0] == '<built-in function raise_error_bad> returned NULL without setting an error'
+
+
+@pytest.mark.skipif(sys.version_info.minor <= 9, reason='Python > 3.9')
 def test_raise_error_bad():
     with pytest.raises(SystemError) as err:
         cExceptions.raise_error_bad()
@@ -27,6 +37,14 @@ def test_raise_error_overwrite():
     assert err.value.args[0] == 'ERROR: raise_error_overwrite()'
 
 
+@pytest.mark.skipif(sys.version_info.minor > 9, reason='Python <= 3.9')
+def test_raise_error_silent_old():
+    with pytest.raises(SystemError) as err:
+        cExceptions.raise_error_silent()
+    assert err.value.args[0] == '<built-in function raise_error_silent> returned a result with an error set'
+
+
+@pytest.mark.skipif(sys.version_info.minor <= 9, reason='Python > 3.9')
 def test_raise_error_silent():
     with pytest.raises(SystemError) as err:
         cExceptions.raise_error_silent()
