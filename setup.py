@@ -48,7 +48,7 @@ setup(
     long_description_content_type='text/plain',
     platforms=['Mac OSX', 'POSIX', ],
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
