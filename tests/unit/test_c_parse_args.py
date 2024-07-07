@@ -17,20 +17,36 @@ def test_parse_no_args():
     assert cParseArgs.parse_no_args() is None
 
 
+@pytest.mark.skipif(not (sys.version_info.minor > 8), reason='Python > 3.8')
 def test_parse_no_args_raises():
     with pytest.raises(TypeError) as err:
         cParseArgs.parse_no_args(123)
     assert err.value.args[0] == 'cPyExtPatt.cParseArgs.parse_no_args() takes no arguments (1 given)'
 
 
+@pytest.mark.skipif(not (sys.version_info.minor <= 8), reason='Python <= 3.8')
+def test_parse_no_args_raises_pre_39():
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_no_args(123)
+    assert err.value.args[0] == 'parse_no_args() takes no arguments (1 given)'
+
+
 def test_parse_one_arg():
     assert cParseArgs.parse_one_arg(123) is None
 
 
+@pytest.mark.skipif(not (sys.version_info.minor > 8), reason='Python > 3.8')
 def test_parse_one_arg_raises():
     with pytest.raises(TypeError) as err:
         cParseArgs.parse_one_arg(123, 456)
     assert err.value.args[0] == 'cPyExtPatt.cParseArgs.parse_one_arg() takes exactly one argument (2 given)'
+
+
+@pytest.mark.skipif(not (sys.version_info.minor <= 8), reason='Python <= 3.8')
+def test_parse_one_arg_raises_pre_39():
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_one_arg(123, 456)
+    assert err.value.args[0] == 'parse_one_arg() takes exactly one argument (2 given)'
 
 
 @pytest.mark.parametrize(
