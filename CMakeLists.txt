@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 3.24)
-project(PythonExtensionPatterns C)
+project(PythonExtensionPatterns)
 
 set(CMAKE_C_STANDARD 99)
-#set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
+#set(CMAKE_CXX_STANDARD 17)
+
+
+# /Library/Frameworks/Python.framework/Versions/3.11/include/python3.11/cpython/pymem.h:42:39: fatal error: commas at the end of enumerator lists are a C++11 extension [-Wc++11-extensions]
+#    PYMEM_ALLOCATOR_PYMALLOC_DEBUG = 6,
+#                                      ^
 
 add_compile_options(
         "-Wall"
@@ -16,6 +21,7 @@ add_compile_options(
         "-fexceptions"
         # To allow designated initialisers.
         "-Wno-c99-extensions"
+        "-Wno-c++11-extensions"
         "$<$<CONFIG:DEBUG>:-O0;-g3;-ggdb>"
         # Temporary
         -Wno-unused-function
@@ -40,7 +46,7 @@ endfunction()
 
 
 
-FIND_PACKAGE(PythonLibs 3.9.7 EXACT REQUIRED)
+FIND_PACKAGE(PythonLibs 3.11.1 EXACT REQUIRED)
 #SET(PythonLibs_DIR "/Library/Frameworks/Python.framework/Versions/3.8")
 #FIND_PACKAGE(PythonLibs 3.8 REQUIRED PATHS ("/Library/Frameworks/Python.framework/Versions/3.8"))
 #FindPythonLibs()
@@ -62,12 +68,7 @@ ELSE ()
     MESSAGE(FATAL_ERROR "Unable to find Python libraries.")
 ENDIF ()
 
-
-
 include_directories(src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList)
-
-
-
 
 add_executable(PythonExtensionPatterns
         PythonExtensionPatterns/PythonExtensionPatterns/main.c
@@ -77,16 +78,19 @@ add_executable(PythonExtensionPatterns
         src/cpy/cObject.c
         src/cpy/cParseArgs.c
         src/cpy/cPyRefs.c
-        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/main.c
-        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_call_super.c
-        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_call_super.h
-        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_import_call_execute.c
-        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_import_call_execute.h
-        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.c
-        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.h
+        # TODO:
+#        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/main.c
+#        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_call_super.c
+#        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_call_super.h
+#        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_import_call_execute.c
+#        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_import_call_execute.h
+#        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.c
+#        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.h
         src/cCanonical.c
-        src/scratch.c)
-
+        src/scratch.c
+        # Legacy code. Removed in the documentation for version 0.2.0.
+#        src/cpy/cParseArgsHelper.cpp
+        )
 
 link_directories(
         ${PYTHON_LINK_LIBRARY}
