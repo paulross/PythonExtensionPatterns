@@ -21,17 +21,25 @@ DEBUG = True
 DEBUG_LEVEL = 0
 
 # Python stlib requirement:
-LANGUAGE_STANDARD = "c99"
+LANGUAGE_STANDARD_C = "c99"
 # Our level of C++
-# LANGUAGE_STANDARD = "c++11"
+LANGUAGE_STANDARD_CPP = "c++11"
 
 # Common flags for both release and debug builds.
-extra_compile_args = sysconfig.get_config_var('CFLAGS').split()
-extra_compile_args += ["-std=%s" % LANGUAGE_STANDARD, "-Wall", "-Wextra"]
+# C
+extra_compile_args_c = sysconfig.get_config_var('CFLAGS').split()
+extra_compile_args_c += ["-std=%s" % LANGUAGE_STANDARD_C, "-Wall", "-Wextra"]
 if DEBUG:
-    extra_compile_args += ["-g3", "-O0", "-DDEBUG=%s" % DEBUG_LEVEL, "-UNDEBUG"]
+    extra_compile_args_c += ["-g3", "-O0", "-DDEBUG=%s" % DEBUG_LEVEL, "-UNDEBUG"]
 else:
-    extra_compile_args += ["-DNDEBUG", "-O3"]
+    extra_compile_args_c += ["-DNDEBUG", "-O3"]
+# C++
+extra_compile_args_cpp = sysconfig.get_config_var('CFLAGS').split()
+extra_compile_args_cpp += ["-std=%s" % LANGUAGE_STANDARD_CPP, "-Wall", "-Wextra"]
+if DEBUG:
+    extra_compile_args_cpp += ["-g3", "-O0", "-DDEBUG=%s" % DEBUG_LEVEL, "-UNDEBUG"]
+else:
+    extra_compile_args_cpp += ["-DNDEBUG", "-O3"]
 
 PACKAGE_NAME = 'cPyExtPatt'
 
@@ -55,36 +63,44 @@ setup(
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: C',
+        'Programming Language :: C++',
         'Programming Language :: Python',
         'Topic :: Programming',
     ],
     licence='GNU General Public License v2 (GPLv2)',
+    # See: https://setuptools.pypa.io/en/latest/userguide/ext_modules.html
+    # language='c' or language='c++',
     ext_modules=[
         Extension(f"{PACKAGE_NAME}.cExceptions", sources=['src/cpy/cExceptions.c', ],
                   include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
-                  extra_compile_args=extra_compile_args,
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
                   ),
         Extension(f"{PACKAGE_NAME}.cModuleGlobals", sources=['src/cpy/cModuleGlobals.c', ],
                   include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
-                  extra_compile_args=extra_compile_args,
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
                   ),
         Extension(f"{PACKAGE_NAME}.cObject", sources=['src/cpy/cObject.c', ],
                   include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
-                  extra_compile_args=extra_compile_args,
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
                   ),
         Extension(f"{PACKAGE_NAME}.cParseArgs", sources=['src/cpy/cParseArgs.c', ],
                   include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
-                  extra_compile_args=extra_compile_args,
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
                   ),
         Extension(f"{PACKAGE_NAME}.cPyRefs", sources=['src/cpy/cPyRefs.c', ],
                   include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
                   # libraries = ['jpeg',],
-                  extra_compile_args=extra_compile_args,
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
                   ),
     ]
 )
