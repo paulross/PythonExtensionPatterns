@@ -160,6 +160,7 @@ def test_parse_args_kwargs_examples():
     assert cParseArgs.parse_args_kwargs(sequence=[1, 2, 3], count=2) == [1, 2, 3, 1, 2, 3]
 
 
+@pytest.mark.skipif(not (7 <= sys.version_info.minor), reason='Python 3.7+')
 @pytest.mark.parametrize(
     'args, kwargs, expected',
     (
@@ -174,6 +175,34 @@ def test_parse_args_kwargs_examples():
     )
 )
 def test_parse_args_kwargs_raises(args, kwargs, expected):
+    with pytest.raises(TypeError) as err:
+        if args is None:
+            if kwargs is None:
+                cParseArgs.parse_args_kwargs()
+            else:
+                cParseArgs.parse_args_kwargs(**kwargs)
+        elif kwargs is None:
+            cParseArgs.parse_args_kwargs(*args)
+        else:
+            cParseArgs.parse_args_kwargs(*args, **kwargs)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
+@pytest.mark.parametrize(
+    'args, kwargs, expected',
+    (
+            ((), {}, "Required argument 'sequence' (pos 1) not found"),
+            ((5,), {'sequence': b'bytes', }, "Argument given by name ('sequence') and position (1)"),
+            ((), {'count': 2}, "Required argument 'sequence' (pos 1) not found"),
+            ((), {'sequence': b'b', 'count': 5, 'foo': 27.2}, 'function takes at most 2 arguments (3 given)'),
+            ((b'b',), {'count': 5, 'foo': 27.2}, 'function takes at most 2 arguments (3 given)'),
+            # args/kwargs are None
+            (None, {'count': 5, }, "Required argument 'sequence' (pos 1) not found"),
+            (None, None, "Required argument 'sequence' (pos 1) not found"),
+    )
+)
+def test_parse_args_kwargs_raises_pre_37(args, kwargs, expected):
     with pytest.raises(TypeError) as err:
         if args is None:
             if kwargs is None:
@@ -309,6 +338,7 @@ def test_parse_pos_only_kwd_only():
     assert result == ('pos1', 12, b'pos_or_keyword', 8.0, 16)
 
 
+@pytest.mark.skipif(not (7 <= sys.version_info.minor), reason='Python 3.7+')
 @pytest.mark.parametrize(
     'args, kwargs, expected',
     (
@@ -322,6 +352,27 @@ def test_parse_pos_only_kwd_only():
     )
 )
 def test_parse_pos_only_kwd_only_raises(args, kwargs, expected):
+    """Signature is::
+
+        def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float, kwd2: int):
+    """
+    with pytest.raises(TypeError) as err:
+        cParseArgs.parse_pos_only_kwd_only(*args, **kwargs)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
+@pytest.mark.parametrize(
+    'args, kwargs, expected',
+    (
+            # Number of arguments.
+            ((), {}, 'Function takes at least 2 positional arguments (0 given)'),
+            (('pos1', 12,), {}, "Required argument 'pos_or_kwd' (pos 3) not found"),
+            (('pos1', 12, b'pos_or_keyword', 'kwd1'), {},
+             'Function takes at most 3 positional arguments (4 given)'),
+    )
+)
+def test_parse_pos_only_kwd_only_raises_pre_37(args, kwargs, expected):
     """Signature is::
 
         def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float, kwd2: int):
@@ -353,7 +404,7 @@ def test_parse_pos_only_kwd_only_raises_before_3_13(args, kwargs, expected):
     (
             (
                     ('pos1', 12, b'pos_or_keyword'), {'pos1': 'pos1'},
-             "this function got an unexpected keyword argument 'pos1'",
+                    "this function got an unexpected keyword argument 'pos1'",
             ),
     )
 )
@@ -398,6 +449,7 @@ def test_parse_filesystem_argument(arg, expected):
     assert cParseArgs.parse_filesystem_argument(arg) == expected
 
 
+@pytest.mark.skipif(not (sys.version_info.minor >= 7), reason='Python 3.7+')
 @pytest.mark.parametrize(
     'arg, expected',
     (
@@ -407,6 +459,24 @@ def test_parse_filesystem_argument(arg, expected):
     )
 )
 def test_parse_filesystem_argument_raises(arg, expected):
+    with pytest.raises(TypeError) as err:
+        if arg is None:
+            cParseArgs.parse_filesystem_argument()
+        else:
+            cParseArgs.parse_filesystem_argument(arg)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
+@pytest.mark.parametrize(
+    'arg, expected',
+    (
+            # Number of arguments.
+            (None, "Required argument 'path' (pos 1) not found"),
+            ([1, 2.9], 'expected str, bytes or os.PathLike object, not list'),
+    )
+)
+def test_parse_filesystem_argument_raises_pre_37(arg, expected):
     with pytest.raises(TypeError) as err:
         if arg is None:
             cParseArgs.parse_filesystem_argument()
