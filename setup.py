@@ -97,12 +97,12 @@ setup(
                   language='c',
                   ),
         # Legacy code, see src/cpy/cParseArgsHelper.cpp for comments.
-        # Extension(f"{PACKAGE_NAME}.cParseArgsHelper", sources=['src/cpy/cParseArgsHelper.cpp', ],
-        #           include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
-        #           library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
-        #           extra_compile_args=extra_compile_args_cpp,
-        #           language='c++11',
-        #           ),
+        Extension(f"{PACKAGE_NAME}.cParseArgsHelper", sources=['src/cpy/cParseArgsHelper.cpp', ],
+                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args_cpp,
+                  language='c++11',
+                  ),
         Extension(f"{PACKAGE_NAME}.cPyRefs", sources=['src/cpy/cPyRefs.c', ],
                   include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)

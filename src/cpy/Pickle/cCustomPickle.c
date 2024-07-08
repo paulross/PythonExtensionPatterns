@@ -11,6 +11,8 @@
 #include <Python.h>
 #include "structmember.h"
 
+#define FPRINTF_DEBUG 0
+
 typedef struct {
     PyObject_HEAD
     PyObject *first; /* first name */
@@ -44,7 +46,9 @@ Custom_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kw
         }
         self->number = 0;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "Custom_new() reference counts first %zu last %zu\n", Py_REFCNT(self->first), Py_REFCNT(self->last));
+#endif
     return (PyObject *) self;
 }
 
@@ -109,17 +113,19 @@ Custom___getstate__(CustomObject *self, PyObject *Py_UNUSED(ignored)) {
                                   "last", self->last,
                                   "number", self->number,
                                   PICKLE_VERSION_KEY, PICKLE_VERSION);
+#if FPRINTF_DEBUG
     fprintf(stdout, "Custom___getstate__ returning type %s\n", Py_TYPE(ret)->tp_name);
+#endif
     return ret;
 }
 
 
 static PyObject *
 Custom___setstate__(CustomObject *self, PyObject *state) {
+#if FPRINTF_DEBUG
     fprintf(stdout, "Custom___getstate__ getting type %s\n", Py_TYPE(state)->tp_name);
     PyObject *key, *value;
     Py_ssize_t pos = 0;
-
     while (PyDict_Next(state, &pos, &key, &value)) {
         /* do something interesting with the values... */
         fprintf(stdout, "Types Key: %s Value: %s\n", Py_TYPE(key)->tp_name, Py_TYPE(value)->tp_name);
@@ -130,6 +136,7 @@ Custom___setstate__(CustomObject *self, PyObject *state) {
         fprintf(stdout, "\n");
     }
     fprintf(stdout, "Initial reference counts first %zu last %zu\n", Py_REFCNT(self->first), Py_REFCNT(self->last));
+#endif
 
 //    static char *kwlist[] = {"first", "last", "number", NULL};
 //
@@ -198,9 +205,10 @@ Custom___setstate__(CustomObject *self, PyObject *state) {
         return NULL;
     }
     self->number = (int) PyLong_AsLong(number);
-
+#if FPRINTF_DEBUG
     fprintf(stdout, "Final reference counts first %zu last %zu\n", Py_REFCNT(self->first),
             Py_REFCNT(self->last));
+#endif
     Py_RETURN_NONE;
 }
 
