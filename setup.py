@@ -55,6 +55,7 @@ setup(
     long_description="""Examples of good and bad practice with Python C Extensions.""",
     long_description_content_type='text/plain',
     platforms=['Mac OSX', 'POSIX', ],
+    packages=[PACKAGE_NAME,],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',

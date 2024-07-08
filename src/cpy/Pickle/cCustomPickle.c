@@ -219,7 +219,7 @@ static PyMethodDef Custom_methods[] = {
 
 static PyTypeObject CustomType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        .tp_name = "cPickle.Custom",
+        .tp_name = "cPyExtPatt.cPickle.Custom",
         .tp_doc = "Custom objects",
         .tp_basicsize = sizeof(CustomObject),
         .tp_itemsize = 0,
