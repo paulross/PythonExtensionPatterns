@@ -222,12 +222,22 @@ int add_map_to_module(PyObject *module) {
         goto except;
     }
     /* Load map. */
-    if (PyDict_SetItem(pMap, PyBytes_FromString("66"), PyLong_FromLong(66))) {
+    PyObject *key = NULL;
+    PyObject *val = NULL;
+    key = PyBytes_FromString("66");
+    val = PyLong_FromLong(66);
+    if (PyDict_SetItem(pMap, key, val)) {
         goto except;
     }
+    Py_XDECREF(key);
+    Py_XDECREF(val);
+    key = PyBytes_FromString("123");
+    val = PyLong_FromLong(123);
     if (PyDict_SetItem(pMap, PyBytes_FromString("123"), PyLong_FromLong(123))) {
         goto except;
     }
+    Py_XDECREF(key);
+    Py_XDECREF(val);
     /* Add map to module. */
     if (PyModule_AddObject(module, NAME_MAP, pMap)) {
         goto except;
@@ -236,6 +246,8 @@ int add_map_to_module(PyObject *module) {
     goto finally;
 except:
     Py_XDECREF(pMap);
+    Py_XDECREF(key);
+    Py_XDECREF(val);
     ret = 1;
 finally:
     return ret;

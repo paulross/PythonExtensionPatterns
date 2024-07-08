@@ -106,18 +106,28 @@ The dict is added in a separate C function merely for readability:
     int add_map_to_module(PyObject *module) {
         int ret = 0;
         PyObject *pMap = NULL;
-    
+
         pMap = PyDict_New();
-        if (! pMap) {
+        if (!pMap) {
             goto except;
         }
         /* Load map. */
-        if (PyDict_SetItem(pMap, PyBytes_FromString("66"), PyLong_FromLong(66))) {
+        PyObject *key = NULL;
+        PyObject *val = NULL;
+        key = PyBytes_FromString("66");
+        val = PyLong_FromLong(66);
+        if (PyDict_SetItem(pMap, key, val)) {
             goto except;
         }
+        Py_XDECREF(key);
+        Py_XDECREF(val);
+        key = PyBytes_FromString("123");
+        val = PyLong_FromLong(123);
         if (PyDict_SetItem(pMap, PyBytes_FromString("123"), PyLong_FromLong(123))) {
             goto except;
         }
+        Py_XDECREF(key);
+        Py_XDECREF(val);
         /* Add map to module. */
         if (PyModule_AddObject(module, NAME_MAP, pMap)) {
             goto except;
@@ -126,6 +136,8 @@ The dict is added in a separate C function merely for readability:
         goto finally;
     except:
         Py_XDECREF(pMap);
+        Py_XDECREF(key);
+        Py_XDECREF(val);
         ret = 1;
     finally:
         return ret;
@@ -219,15 +231,22 @@ Setting Module Globals From C
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is similar to the get code above but using ``int PyDict_SetItemString(PyObject *p, const char *key, PyObject *val)``
-where val will be a *stolen* reference:
+where val will **not** be a *stolen* reference thus must be created as a temporary
+and subsequently decref'd:
 
 .. code-block:: c
 
     static PyObject *some_set_function(PyObject *pMod) {
         PyObject *ret = NULL;
         long val = ...; /* Some computed value. */
-        
-        if (PyDict_SetItemString(PyModule_GetDict(pMod), NAME_INT, PyLong_FromLong(val))) {
+
+        PyObject *py_long = PyLong_FromLong(val);
+        if (! py_long) {
+            goto except;
+        }
+        /* PyDict_SetItemString does not steal a reference to py_long
+        so we have to decref the temporary. */
+        if (PyDict_SetItemString(PyModule_GetDict(pMod), NAME_INT, py_long)) {
             PyErr_Format(PyExc_AttributeError,
                          "Can not set Module '%s' attibute '%s'.", \
                          PyModule_GetName(pMod), NAME_INT
@@ -244,5 +263,7 @@ where val will be a *stolen* reference:
         Py_XDECREF(ret);
         ret = NULL;
     finally:
+        /* See comment above about PyDict_SetItemString(). */
+        Py_XDECREF(py_long);
         return ret;
     }

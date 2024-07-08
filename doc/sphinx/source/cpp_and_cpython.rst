@@ -456,6 +456,7 @@ This generic function converts a ``std::unordered_map<K, V>`` to a new Python ``
             if (! val || PyErr_Occurred()) {
                 goto except;
             }
+            /* TODO: Fix PyDict_SetItem leak. */
             if (PyDict_SetItem(r, key, val)) {
                 goto except;
             }

@@ -86,6 +86,7 @@ ObjectWithAttributes_setattr(ObjectWithAttributes *self, char *name, PyObject *v
                             "delete non-existing ObjectWithAttributes attribute");
         return rv;
     } else
+        /* v is a borrowed reference, then PyDict_SetItemString() does NOT steal it so nothing to do. */
         return PyDict_SetItemString(self->x_attr, name, v);
 }
 
