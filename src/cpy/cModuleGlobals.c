@@ -216,14 +216,14 @@ static PyModuleDef cModuleGlobals_module = {
 int add_map_to_module(PyObject *module) {
     int ret = 0;
     PyObject *pMap = NULL;
+    PyObject *key = NULL;
+    PyObject *val = NULL;
 
     pMap = PyDict_New();
-    if (!pMap) {
+    if (pMap == NULL) {
         goto except;
     }
     /* Load map. */
-    PyObject *key = NULL;
-    PyObject *val = NULL;
     key = PyBytes_FromString("66");
     val = PyLong_FromLong(66);
     if (PyDict_SetItem(pMap, key, val)) {
