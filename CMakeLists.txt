@@ -90,7 +90,7 @@ add_executable(PythonExtensionPatterns
         src/scratch.c
         # Legacy code. Removed in the documentation for version 0.2.0.
 #        src/cpy/cParseArgsHelper.cpp
-        )
+        src/cpy/Pickle/cCustomPickle.c)
 
 link_directories(
         ${PYTHON_LINK_LIBRARY}
