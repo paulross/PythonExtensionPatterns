@@ -46,24 +46,23 @@ endfunction()
 
 
 
-FIND_PACKAGE(PythonLibs 3.11.1 EXACT REQUIRED)
+FIND_PACKAGE (Python3 COMPONENTS Interpreter Development)
+#FIND_PACKAGE(PythonLibs 3.11 EXACT REQUIRED)
 #SET(PythonLibs_DIR "/Library/Frameworks/Python.framework/Versions/3.8")
 #FIND_PACKAGE(PythonLibs 3.8 REQUIRED PATHS ("/Library/Frameworks/Python.framework/Versions/3.8"))
 #FindPythonLibs()
-IF (PYTHONLIBS_FOUND)
-    INCLUDE_DIRECTORIES("${PYTHON_INCLUDE_DIRS}")
+IF (Python3_FOUND)
+    INCLUDE_DIRECTORIES("${Python3_INCLUDE_DIRS}")
     get_filename_component(PYTHON_LINK_DIRECTORY ${PYTHON_LIBRARY} DIRECTORY)
-    message("PYTHON_LIBS_FOUND:         ${PYTHON_LIBS_FOUND}")
-    message("PYTHONLIBS_VERSION_STRING: ${PYTHONLIBS_VERSION_STRING}")
-    message("PYTHON_DEBUG_LIBRARIES:    ${PYTHON_DEBUG_LIBRARIES}")
-    message("PYTHON_INCLUDE_DIR:        ${PYTHON_INCLUDE_DIR}")
-    message("PYTHON_INCLUDE_DIRS:       ${PYTHON_INCLUDE_DIRS}")
-    message("PYTHON_INCLUDE_PATH:       ${PYTHON_INCLUDE_PATH}")
-    message("PYTHON_LIBRARIES:          ${PYTHON_LIBRARIES}")
-    message("PYTHON_LIBRARY:            ${PYTHON_LIBRARY}")
-    message("PYTHON_LIBRARY_DEBUG:      ${PYTHON_LIBRARY_DEBUG}")
-    message("PYTHON_LIBRARY_RELEASE:    ${PYTHON_LIBRARY_RELEASE}")
-    message("PYTHON_LINK_DIRECTORY:     ${PYTHON_LINK_DIRECTORY}")
+    # See: https://cmake.org/cmake/help/latest/module/FindPython3.html#module:FindPython3
+    message("Python3_VERSION:           ${Python3_VERSION}")
+    message("Python3_EXECUTABLE:        ${Python3_EXECUTABLE}")
+    message("Python3_INTERPRETER_ID:    ${Python3_INTERPRETER_ID}")
+    message("Python3_INCLUDE_DIRS:      ${Python3_INCLUDE_DIRS}")
+    message("Python3_STDLIB:            ${Python3_STDLIB}")
+    message("Python3_STDARCH:           ${Python3_STDARCH}")
+    message("Python3_LINK_OPTIONS:      ${Python3_LINK_OPTIONS}")
+    message("Python3_LIBRARIES:         ${Python3_LIBRARIES}")
 ELSE ()
     MESSAGE(FATAL_ERROR "Unable to find Python libraries.")
 ENDIF ()
@@ -89,8 +88,9 @@ add_executable(PythonExtensionPatterns
         src/cCanonical.c
         src/scratch.c
         # Legacy code. Removed in the documentation for version 0.2.0.
-#        src/cpy/cParseArgsHelper.cpp
-        src/cpy/Pickle/cCustomPickle.c)
+        src/cpy/cParseArgsHelper.cpp
+        src/cpy/Pickle/cCustomPickle.c
+        src/cpy/cParseArgsHelper.cpp)
 
 link_directories(
         ${PYTHON_LINK_LIBRARY}
