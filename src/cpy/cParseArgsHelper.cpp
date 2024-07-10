@@ -124,7 +124,7 @@ finally:
  */
 class DefaultArg {
 public:
-    DefaultArg(PyObject *new_ref) : m_arg { NULL }, m_default { new_ref } {}
+    DefaultArg(PyObject *new_ref) : m_arg(NULL), m_default(new_ref) {}
     /// Allow setting of the (optional) argument with
     /// PyArg_ParseTupleAndKeywords
     PyObject **operator&() { m_arg = NULL; return &m_arg; }

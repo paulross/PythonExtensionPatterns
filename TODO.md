@@ -24,12 +24,12 @@ Remove any reference to Python 2, for example "Porting to Python 3".
 
 There is lots of good stuff here:
 
+- File handling such as `src/FileObjectToStdout/cFileObjectToStdout.c` and `src/FilePath/FilePath.cpp`
+- File wrapper between Python/C++ `src/PythonFile/PythonFileWrapper.h`
 - Capsules
 - C++ placement new.
-- Pickling
-- File handling such as `src/FileObjectToStdout/cFileObjectToStdout.c` and `src/FilePath/FilePath.cpp`
+- ~~Pickling~~
 - Generators
-- File wrapper between Python/C++ `src/PythonFile/PythonFileWrapper.h`
 
 ## Other Projects to Merge Here
 

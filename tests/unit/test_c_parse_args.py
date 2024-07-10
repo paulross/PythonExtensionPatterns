@@ -9,7 +9,7 @@ def test_module_dir():
     assert dir(cParseArgs) == ['__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', 'parse_args',
                                'parse_args_kwargs', 'parse_args_with_function_conversion_to_c',
                                'parse_args_with_immutable_defaults', 'parse_args_with_mutable_defaults',
-                               'parse_default_bytes_object', 'parse_filesystem_argument',
+                               'parse_default_bytes_object',
                                'parse_no_args', 'parse_one_arg', 'parse_pos_only_kwd_only', ]
 
 
@@ -436,50 +436,4 @@ def test_parse_args_with_function_conversion_to_c(arg, expected):
 def test_parse_args_with_function_conversion_to_c_raises(arg, expected):
     with pytest.raises(TypeError) as err:
         cParseArgs.parse_args_with_function_conversion_to_c(arg)
-    assert err.value.args[0] == expected
-
-
-@pytest.mark.parametrize(
-    'arg, expected',
-    (
-            ('~/foo/bar.txt', '~/foo/bar.txt',),
-    )
-)
-def test_parse_filesystem_argument(arg, expected):
-    assert cParseArgs.parse_filesystem_argument(arg) == expected
-
-
-@pytest.mark.skipif(not (sys.version_info.minor >= 7), reason='Python 3.7+')
-@pytest.mark.parametrize(
-    'arg, expected',
-    (
-            # Number of arguments.
-            (None, "function missing required argument 'path' (pos 1)"),
-            ([1, 2.9], 'expected str, bytes or os.PathLike object, not list'),
-    )
-)
-def test_parse_filesystem_argument_raises(arg, expected):
-    with pytest.raises(TypeError) as err:
-        if arg is None:
-            cParseArgs.parse_filesystem_argument()
-        else:
-            cParseArgs.parse_filesystem_argument(arg)
-    assert err.value.args[0] == expected
-
-
-@pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
-@pytest.mark.parametrize(
-    'arg, expected',
-    (
-            # Number of arguments.
-            (None, "Required argument 'path' (pos 1) not found"),
-            ([1, 2.9], 'expected str, bytes or os.PathLike object, not list'),
-    )
-)
-def test_parse_filesystem_argument_raises_pre_37(arg, expected):
-    with pytest.raises(TypeError) as err:
-        if arg is None:
-            cParseArgs.parse_filesystem_argument()
-        else:
-            cParseArgs.parse_filesystem_argument(arg)
     assert err.value.args[0] == expected

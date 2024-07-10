@@ -19,6 +19,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
     parsing_arguments
     new_types
     module_globals
+    files
     super_call
     compiler_flags
     debugging/debug

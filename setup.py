@@ -116,5 +116,11 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
+        Extension(f"{PACKAGE_NAME}.cFile", sources=['src/cpy/cFile.c', ],
+                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
     ]
 )

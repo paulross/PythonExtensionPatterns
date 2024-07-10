@@ -419,53 +419,6 @@ parse_args_with_function_conversion_to_c(PyObject *Py_UNUSED(module), PyObject *
 }
 
 
-/** Example of changing a Python string representing a file path to a C string and back again.
- */
-static PyObject *
-parse_filesystem_argument(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
-    assert(!PyErr_Occurred());
-    assert(args || kwargs);
-
-    PyBytesObject *py_path = NULL;
-    char *c_path = NULL;
-    Py_ssize_t path_size;
-    PyObject *ret = NULL;
-
-    /* Parse arguments */
-    static char *kwlist[] = {"path", NULL};
-    /* Can be optional output path with "|O&". */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&", kwlist, PyUnicode_FSConverter, &py_path)) {
-        goto except;
-    }
-    /* Check arguments. */
-    assert(py_path);
-    /* Grab a reference to the internal bytes buffer. */
-    if (PyBytes_AsStringAndSize((PyObject *) py_path, &c_path, &path_size)) {
-        /* Should have a TypeError or ValueError. */
-        assert(PyErr_Occurred());
-        assert(PyErr_ExceptionMatches(PyExc_TypeError) || PyErr_ExceptionMatches(PyExc_ValueError));
-        goto except;
-    }
-    assert(c_path);
-    /* Use the C path. */
-
-    /* Now convert the C path to a Python object, a string. */
-    ret = PyUnicode_DecodeFSDefaultAndSize(c_path, path_size);
-    if (!ret) {
-        goto except;
-    }
-    assert(!PyErr_Occurred());
-    goto finally;
-    except:
-    assert(PyErr_Occurred());
-    Py_XDECREF(ret);
-    ret = NULL;
-    finally:
-    // Assert all temporary locals are NULL and thus have been transferred if used.
-    Py_XDECREF(py_path);
-    return ret;
-}
-
 static char parse_args_kwargs_docstring[] =
         "Some documentation for this function.";
 
@@ -485,8 +438,6 @@ static PyMethodDef cParseArgs_methods[] = {
                                                                                                              METH_KEYWORDS, "Positional and keyword only arguments"},
         {"parse_args_with_function_conversion_to_c", (PyCFunction) parse_args_with_function_conversion_to_c, METH_VARARGS,
                                                                                                                            "Parsing an argument that must be a list of numbers."},
-        {"parse_filesystem_argument",                (PyCFunction) parse_filesystem_argument,                METH_VARARGS |
-                                                                                                             METH_KEYWORDS, "Parsing an argument that is a file path."},
         {NULL, NULL, 0,                                                                                                     NULL} /* Sentinel */
 };
 
