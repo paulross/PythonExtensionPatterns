@@ -83,10 +83,12 @@ def test_read_python_file_to_c(file_object, size, expected):
 @pytest.mark.parametrize(
     'bytes_to_write, expected',
     (
-            (b'Some bytes.', b'Some'),
+            (b'Some bytes.', len(b'Some bytes.')),
+            (b'Some\0bytes.', len(b'Some bytes.')),
+            ('Some bytes.', len(b'Some bytes.')),
     )
 )
-def test_read_python_file_to_c(bytes_to_write, expected):
-    file = io.BytesIO()
+def test_write_bytes_to_python_file(bytes_to_write, expected):
+    file = io.StringIO()
     result = cFile.write_bytes_to_python_file(bytes_to_write, file)
     assert result == expected

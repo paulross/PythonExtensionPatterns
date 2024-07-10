@@ -177,9 +177,9 @@ write_bytes_to_python_file(PyObject *Py_UNUSED(module), PyObject *args, PyObject
     fprintf(stdout, "Calling PyFile_WriteString() with bytes \"%s\"\n", (char *)c_buffer.buf);
     int result = PyFile_WriteString((char *)c_buffer.buf, py_file_object);
     if (result != 0) {
-        PyErr_Format(PyExc_IOError,
-                     "PyFile_WriteString() failed with error code %d.",
-                     result);
+//        PyErr_Format(PyExc_IOError,
+//                     "PyFile_WriteString() failed with error code %d.",
+//                     result);
         goto except;
     }
     ret = Py_BuildValue("n", c_buffer.len);
