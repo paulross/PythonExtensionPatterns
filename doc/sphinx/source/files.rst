@@ -114,10 +114,13 @@ This section describes how to interoperate between Python files, C ``FILE*`` and
 Reading a Python File
 ----------------------------
 
+Here is an example of reading from a Python file in C.
 The Python signature is::
 
     def read_python_file_to_c(file_object: typing.IO, size: int = -1) -> bytes:
 
+The technique is to get the ``read()`` method from the file object with ``PyObject_GetAttrString`` then call it with the
+appropriate arguments using ``PyObject_Call``.
 Here is the C code:
 
 .. code-block:: c
@@ -188,3 +191,66 @@ Here is the C code:
         Py_XDECREF(py_read_args);
         return ret;
     }
+
+Writing to a Python File
+----------------------------
+
+A similar technique can be used to write to a file, however there are a couple of C functions for writing directly to a
+Python file:
+
+``PyFile_WriteObject()``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This writes a Python object to a Python file using the objects ``__str__`` method
+(if `Py_PRINT_RAW <https://docs.python.org/3/c-api/object.html#c.Py_PRINT_RAW>`_ is given as the flags argument or
+the objects ``__repr__`` method if flags is zero.
+
+
+``PyFile_WriteString()``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This will write a C ``char *`` to a Python file.
+
+.. note::
+
+    ``PyFile_WriteString()`` creates a unicode string and then calls ``PyFile_WriteObject()``
+    so the Python file object must be capable of writing strings.
+
+Here is an example of taking a Python bytees object, extracting the ``char *`` C buffere and writing that to a Python
+file.
+The Python function signature is::
+
+    def write_bytes_to_python_file(bytes_to_write: bytes, file_object: typing.IO) -> int:
+
+Here is the C code:
+
+.. code-block:: c
+
+    static PyObject *
+    write_bytes_to_python_file(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+        assert(!PyErr_Occurred());
+        static const char *kwlist[] = {"bytes_to_write", "file_object", NULL};
+        PyObject *py_file_object = NULL;
+        Py_buffer c_buffer;
+        PyObject *ret = NULL;
+
+        if (!PyArg_ParseTupleAndKeywords(args, kwds, "y*O", (char **) (kwlist),
+                                         &c_buffer, &py_file_object)) {
+            return NULL;
+        }
+        /* NOTE: PyFile_WriteString() creates a unicode string and then calls PyFile_WriteObject()
+         * so the py_file_object must be capable of writing strings. */
+        int result = PyFile_WriteString((char *)c_buffer.buf, py_file_object);
+        if (result != 0) {
+            goto except;
+        }
+        ret = Py_BuildValue("n", c_buffer.len);
+        goto finally;
+    except:
+        assert(PyErr_Occurred());
+        ret = NULL;
+    finally:
+        return ret;
+    }
+
+

@@ -84,11 +84,36 @@ def test_read_python_file_to_c(file_object, size, expected):
     'bytes_to_write, expected',
     (
             (b'Some bytes.', len(b'Some bytes.')),
-            (b'Some\0bytes.', len(b'Some bytes.')),
-            ('Some bytes.', len(b'Some bytes.')),
+            (b'Some\0bytes.', len(b'Some\0bytes.')),
     )
 )
-def test_write_bytes_to_python_file(bytes_to_write, expected):
+def test_write_bytes_to_python_string_file(bytes_to_write, expected):
     file = io.StringIO()
     result = cFile.write_bytes_to_python_file(bytes_to_write, file)
     assert result == expected
+
+@pytest.mark.parametrize(
+    'bytes_to_write, expected',
+    (
+            ('Some string.', "a bytes-like object is required, not 'str'"),
+    )
+)
+def test_write_bytes_to_python_string_file_raises(bytes_to_write, expected):
+    file = io.StringIO()
+    with pytest.raises(TypeError) as err:
+        cFile.write_bytes_to_python_file(bytes_to_write, file)
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.parametrize(
+    'bytes_to_write, expected',
+    (
+            ('Some bytes.', "a bytes-like object is required, not 'str'"),
+            (b'Some bytes.', "a bytes-like object is required, not 'str'"),
+    )
+)
+def test_write_bytes_to_python_bytes_file_raises(bytes_to_write, expected):
+    file = io.BytesIO()
+    with pytest.raises(TypeError) as err:
+        cFile.write_bytes_to_python_file(bytes_to_write, file)
+    assert err.value.args[0] == expected

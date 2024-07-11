@@ -175,11 +175,10 @@ write_bytes_to_python_file(PyObject *Py_UNUSED(module), PyObject *args, PyObject
         return NULL;
     }
     fprintf(stdout, "Calling PyFile_WriteString() with bytes \"%s\"\n", (char *)c_buffer.buf);
+    /* NOTE: PyFile_WriteString() creates a unicode string and then calls PyFile_WriteObject()
+     * so the py_file_object must be capable of writing strings. */
     int result = PyFile_WriteString((char *)c_buffer.buf, py_file_object);
     if (result != 0) {
-//        PyErr_Format(PyExc_IOError,
-//                     "PyFile_WriteString() failed with error code %d.",
-//                     result);
         goto except;
     }
     ret = Py_BuildValue("n", c_buffer.len);
