@@ -9,7 +9,7 @@
 #define PY_SSIZE_T_CLEAN
 
 #include "Python.h"
-
+#include "PythonFileWrapper.h"
 #include "time.h"
 
 #define FPRINTF_DEBUG 0
@@ -31,9 +31,9 @@ parse_filesystem_argument(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
     PyObject *ret = NULL;
 
     /* Parse arguments */
-    static char *kwlist[] = {"path", NULL};
+    static const char *kwlist[] = {"path", NULL};
     /* Can be optional output path with "|O&". */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&", kwlist, PyUnicode_FSConverter,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&", const_cast<char **>(kwlist), PyUnicode_FSConverter,
                                      &py_path)) {
         goto except;
     }
@@ -190,6 +190,29 @@ finally:
     return ret;
 }
 
+/**
+ * Wraps a Python file object.
+ */
+static PyObject *
+wrap_python_file(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+    assert(!PyErr_Occurred());
+    static const char *kwlist[] = {"file_object", NULL};
+    PyObject *py_file_object = NULL;
+//    PyObject *ret = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", (char **) (kwlist),
+                                     &py_file_object)) {
+        return NULL;
+    }
+    PythonFileObjectWrapper py_file_wrapper(py_file_object);
+
+    std::string str_pointers = py_file_wrapper.str_pointers();
+//    fprintf(stdout, "Created PythonFileObjectWrapper: \n%s\n", str_pointers.c_str());
+//    fprintf(stdout, "Created PythonFileObjectWrapper: DONE\n");
+    return PyUnicode_FromStringAndSize(str_pointers.c_str(), str_pointers.size());
+//    Py_RETURN_NONE;
+}
+
 #if 0
 /**
  * Returns an integer file descriptor from a Python file object.
@@ -238,6 +261,12 @@ static PyMethodDef cFile_methods[] = {
                 (PyCFunction) write_bytes_to_python_file,
                 METH_VARARGS | METH_KEYWORDS,
                 "Wrote bytes to a Python file."
+        },
+        {
+                "wrap_python_file",
+                (PyCFunction) wrap_python_file,
+                METH_VARARGS | METH_KEYWORDS,
+                "Wrap a Python file."
         },
         {
                 NULL,

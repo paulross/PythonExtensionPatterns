@@ -92,6 +92,7 @@ def test_write_bytes_to_python_string_file(bytes_to_write, expected):
     result = cFile.write_bytes_to_python_file(bytes_to_write, file)
     assert result == expected
 
+
 @pytest.mark.parametrize(
     'bytes_to_write, expected',
     (
@@ -117,3 +118,11 @@ def test_write_bytes_to_python_bytes_file_raises(bytes_to_write, expected):
     with pytest.raises(TypeError) as err:
         cFile.write_bytes_to_python_file(bytes_to_write, file)
     assert err.value.args[0] == expected
+
+
+def test_wrap_python_file():
+    file = io.StringIO()
+    result = cFile.wrap_python_file(file)
+    print()
+    print(result)
+    # assert result == ''

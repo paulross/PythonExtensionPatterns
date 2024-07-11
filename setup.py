@@ -55,7 +55,7 @@ setup(
     long_description="""Examples of good and bad practice with Python C Extensions.""",
     long_description_content_type='text/plain',
     platforms=['Mac OSX', 'POSIX', ],
-    packages=[PACKAGE_NAME,],
+    packages=[PACKAGE_NAME, ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
@@ -116,11 +116,14 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
-        Extension(f"{PACKAGE_NAME}.cFile", sources=['src/cpy/cFile.c', ],
-                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+        Extension(f"{PACKAGE_NAME}.cFile", sources=[
+            'src/cpy/File/cFile.cpp',
+            'src/cpy/File/PythonFileWrapper.cpp',
+        ],
+                  include_dirs=['/usr/local/include', 'src/cpy/File', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
-                  extra_compile_args=extra_compile_args_c,
-                  language='c',
+                  extra_compile_args=extra_compile_args_cpp,
+                  language='c++11',
                   ),
     ]
 )

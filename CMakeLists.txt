@@ -3,7 +3,7 @@ project(PythonExtensionPatterns)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD 11)
-#set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 
 
 # /Library/Frameworks/Python.framework/Versions/3.11/include/python3.11/cpython/pymem.h:42:39: fatal error: commas at the end of enumerator lists are a C++11 extension [-Wc++11-extensions]
@@ -91,7 +91,9 @@ add_executable(PythonExtensionPatterns
         src/cpy/cParseArgsHelper.cpp
         src/cpy/Pickle/cCustomPickle.c
         src/cpy/cParseArgsHelper.cpp
-        src/cpy/cFile.c
+        src/cpy/File/cFile.cpp
+        src/cpy/File/PythonFileWrapper.h
+        src/cpy/File/PythonFileWrapper.cpp
 )
 
 link_directories(
