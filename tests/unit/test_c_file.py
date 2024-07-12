@@ -124,8 +124,10 @@ def test_wrap_python_file():
     file = io.BytesIO()
     result = cFile.wrap_python_file(file)
     print()
+    print('result:')
     print(result)
     print('file.getvalue()')
-    print(file.getvalue())
-    assert 0
-    # assert result == ''
+    get_value = file.getvalue()
+    print(get_value)
+    assert get_value == b'Test write to python file'
+    

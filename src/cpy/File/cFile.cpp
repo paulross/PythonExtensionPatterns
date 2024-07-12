@@ -92,9 +92,10 @@ read_python_file_to_c(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwd
                                      &py_file_object, &bytes_to_read)) {
         return NULL;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "Got a file object of type \"%s\" and bytes to read of %ld\n", Py_TYPE(py_file_object)->tp_name,
             bytes_to_read);
-
+#endif
     // Check that this is a readable file, well does it have a read method?
     /* Get the read method of the passed object */
     py_read_meth = PyObject_GetAttrString(py_file_object, "read"); // New reference
@@ -104,14 +105,18 @@ read_python_file_to_c(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwd
                      Py_TYPE(py_file_object)->tp_name);
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "Have read attribute of type \"%s\"\n", Py_TYPE(py_read_meth)->tp_name);
+#endif
     if (!PyCallable_Check(py_read_meth)) {
         PyErr_Format(PyExc_ValueError,
                      "read attribute of type %s is not callable.",
                      Py_TYPE(py_file_object)->tp_name);
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "Read attribute is callable.\n");
+#endif
     // Call read(VisibleRecord::NUMBER_OF_HEADER_BYTES) to get a Python bytes object.
     py_read_args = Py_BuildValue("(i)", bytes_to_read);
     if (!py_read_args) {
@@ -122,7 +127,9 @@ read_python_file_to_c(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwd
     if (py_read_data == NULL) {
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "read_data is type \"%s\"\n", Py_TYPE(py_read_data)->tp_name);
+#endif
     /* Check for EOF */
     if (bytes_to_read >= 0 && PySequence_Length(py_read_data) != bytes_to_read) {
         assert(PyErr_Occurred());
@@ -131,14 +138,17 @@ read_python_file_to_c(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwd
                      bytes_to_read, PySequence_Length(py_read_data));
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "read_data is length is: %ld\n", PySequence_Length(py_read_data));
+#endif
     c_bytes_data = PyBytes_AsString(py_read_data);
     if (c_bytes_data == NULL) {
         // TypeError already set.
         goto except;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "Data is \"%s\"\n", c_bytes_data);
-//    Py_INCREF(Py_None);
+#endif
     ret = py_read_data;
     goto finally;
 except:
@@ -149,7 +159,6 @@ finally:
     /* Clean up under normal conditions and return an appropriate value. */
     Py_XDECREF(py_read_meth);
     Py_XDECREF(py_read_args);
-//    Py_XDECREF(py_read_data);
     return ret;
 }
 
@@ -174,7 +183,9 @@ write_bytes_to_python_file(PyObject *Py_UNUSED(module), PyObject *args, PyObject
                                      &c_buffer, &py_file_object)) {
         return NULL;
     }
+#if FPRINTF_DEBUG
     fprintf(stdout, "Calling PyFile_WriteString() with bytes \"%s\"\n", (char *)c_buffer.buf);
+#endif
     /* NOTE: PyFile_WriteString() creates a unicode string and then calls PyFile_WriteObject()
      * so the py_file_object must be capable of writing strings. */
     int result = PyFile_WriteString((char *)c_buffer.buf, py_file_object);

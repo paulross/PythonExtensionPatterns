@@ -4,15 +4,16 @@
 .. toctree::
     :maxdepth: 2
 
-====================================
+
+**********************
 File Paths and Files
-====================================
+**********************
 
 This chapter discusses reading and writing files from C extensions.
 
--------------------------------
+====================================
 File Paths
--------------------------------
+====================================
 
 There are several builtin functions that allow conversion between Python and C described in the
 `File System Encoding <https://docs.python.org/3/c-api/unicode.html#file-system-encoding>`_
@@ -28,8 +29,10 @@ In summary:
 - ``PyUnicode_DecodeFSDefault`` Takes a null terminated C string and length and returns a Python ``str``.
 - ``PyUnicode_EncodeFSDefault`` Takes a Python ``str`` and return a Python ``bytes`` object.
 
-The example code is in ``src/cpy/cFile.c`` and the tests are in ``tests/unit/test_c_file.py``
+The example code is in ``src/cpy/cFile.cpp``, ``src/cpy/PythonFileWrapper.h`` and
+``src/cpy/PythonFileWrapper.cpp`` and the tests are in ``tests/unit/test_c_file.py``.
 
+----------------------------------------
 Parsing File Paths as Arguments
 ----------------------------------------
 
@@ -104,13 +107,14 @@ Here is the C code:
         return ret;
     }
 
--------------------------------
+=============================
 Files
--------------------------------
+=============================
 
 This section describes how to interoperate between Python files, C ``FILE*`` and C++ ``iostream`` objects.
 
 
+----------------------------
 Reading a Python File
 ----------------------------
 
@@ -192,6 +196,7 @@ Here is the C code:
         return ret;
     }
 
+----------------------------
 Writing to a Python File
 ----------------------------
 
@@ -199,7 +204,7 @@ A similar technique can be used to write to a file, however there are a couple o
 Python file:
 
 ``PyFile_WriteObject()``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 
 This writes a Python object to a Python file using the objects ``__str__`` method
 (if `Py_PRINT_RAW <https://docs.python.org/3/c-api/object.html#c.Py_PRINT_RAW>`_ is given as the flags argument or
@@ -207,7 +212,7 @@ the objects ``__repr__`` method if flags is zero.
 
 
 ``PyFile_WriteString()``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 
 This will write a C ``char *`` to a Python file.
 
@@ -252,5 +257,65 @@ Here is the C code:
     finally:
         return ret;
     }
+
+A C++ Python File Wrapper
+----------------------------------
+
+In ``src/cpy/PythonFileWrapper.h`` and ``src/cpy/PythonFileWrapper.cpp`` there is a C++ class that takes a Python file
+and extracts the ``read()``, ``write()``, ``seek()`` and ``tell()`` methods that can then be used to read and write to
+the Python file from C++. Some example code is in ``src/cpy/cFile.cpp`` and some tests are in
+``tests/unit/test_c_file.py``.
+
+Here is the class:
+
+.. code-block:: c++
+
+    /// Class that is created with a PyObject* that looks like a Python File.
+    /// This can then read from that file object ans write to a user provided C++ stream or read from a user provided C++
+    /// stream and write to the give Python file like object.
+    class PythonFileObjectWrapper {
+    public:
+        explicit PythonFileObjectWrapper(PyObject *python_file_object);
+
+        /// Read from a Python file and write to the C++ stream.
+        /// Return zero on success, non-zero on failure.
+        int read_py_write_cpp(Py_ssize_t number_of_bytes, std::iostream &ios);
+
+        /// Read from a C++ stream and write to a Python file.
+        /// Return zero on success, non-zero on failure.
+        int read_cpp_write_py(std::iostream &ios, Py_ssize_t number_of_bytes);
+
+        /// Read a number of bytes from a Python file and load them into the result.
+        /// Return zero on success, non-zero on failure.
+        int read(Py_ssize_t number_of_bytes, std::vector<char> &result);
+
+        /// Write a number of bytes to a Python file.
+        /// Return zero on success, non-zero on failure.
+        int write(const char *buffer, Py_ssize_t number_of_bytes);
+
+        /// Move the file pointer to the given position.
+        /// whence is:
+        /// 0 – start of the stream (the default); offset should be zero or positive.
+        /// 1 – current stream position; offset may be negative.
+        /// 2 – end of the stream; offset is usually negative.
+        /// Returns the new absolute position.
+        long seek(Py_ssize_t pos, int whence = 0);
+
+        /// Returns the current absolute position.
+        long tell();
+        /// Returns a multi-line string that describes the class state.
+        std::string str_pointers();
+        /// Returns a Python multi-line bytes object that describes the class state.
+        PyObject *py_str_pointers();
+        /// Destructor, this decrements the held references.
+        virtual ~PythonFileObjectWrapper();
+
+    protected:
+        PyObject *m_python_file_object = NULL;
+        PyObject *m_python_read_method = NULL;
+        PyObject *m_python_write_method = NULL;
+        PyObject *m_python_seek_method = NULL;
+        PyObject *m_python_tell_method = NULL;
+    };
 
 

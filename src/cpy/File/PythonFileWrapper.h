@@ -44,17 +44,29 @@ public:
     /// Return zero on success, non-zero on failure.
     int read_cpp_write_py(std::iostream &ios, Py_ssize_t number_of_bytes);
 
+    /// Read a number of bytes from a Python file and load them into the result.
+    /// Return zero on success, non-zero on failure.
     int read(Py_ssize_t number_of_bytes, std::vector<char> &result);
 
+    /// Write a number of bytes to a Python file.
+    /// Return zero on success, non-zero on failure.
     int write(const char *buffer, Py_ssize_t number_of_bytes);
 
+    /// Move the file pointer to the given position.
+    /// whence is:
+    /// 0 – start of the stream (the default); offset should be zero or positive.
+    /// 1 – current stream position; offset may be negative.
+    /// 2 – end of the stream; offset is usually negative.
+    /// Returns the new absolute position.
     long seek(Py_ssize_t pos, int whence = 0);
 
+    /// Returns the current absolute position.
     long tell();
-
+    /// Returns a multi-line string that describes the class state.
     std::string str_pointers();
+    /// Returns a Python multi-line bytes object that describes the class state.
     PyObject *py_str_pointers();
-
+    /// Destructor, this decrements the held references.
     virtual ~PythonFileObjectWrapper();
 
 protected:

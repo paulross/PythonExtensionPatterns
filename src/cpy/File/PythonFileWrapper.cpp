@@ -269,7 +269,7 @@ std::string PythonFileObjectWrapper::str_pointers() {
     oss << "m_python_tell_method  " << std::hex << m_python_tell_method << " type: "
         << Py_TYPE(m_python_tell_method)->tp_name << " ref count=" << std::dec << m_python_tell_method->ob_refcnt
         << std::endl;
-    return std::string(oss.str());
+    return oss.str();
 }
 
 PyObject *PythonFileObjectWrapper::py_str_pointers() {
