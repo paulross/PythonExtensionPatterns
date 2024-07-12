@@ -99,15 +99,14 @@ int PythonFileObjectWrapper::read_cpp_write_py(std::iostream &ios, Py_ssize_t nu
     assert(m_python_read_method);
     assert(m_python_write_method);
     int ret = 0;
-    PyObject * py_bytes = NULL;
-    PyObject * write_args = NULL;
-    PyObject * write_value = NULL;
+    PyObject *py_bytes = NULL;
+    PyObject *write_args = NULL;
+    PyObject *write_result = NULL;
 #if DEBUG_PYEXT_COMMON
     fprintf(stdout, "%s(): %s#%d number_of_bytes=%ld\n", __FUNCTION__, __FILE__, __LINE__, number_of_bytes);
 #endif
     if (!ios.good()) {
         PyErr_SetString(PyExc_ValueError, "C++ stream not capable of being read.");
-//        PyErr_Format(PyExc_ValueError, "Argument must be a GeneratorType, not a %s", Py_TYPE(generator)->tp_name);
         goto except;
     }
     // Read from ios, write to Python file.
@@ -116,14 +115,16 @@ int PythonFileObjectWrapper::read_cpp_write_py(std::iostream &ios, Py_ssize_t nu
     ios.read(PyBytes_AsString(py_bytes), number_of_bytes);
     if (!ios.good()) {
         PyErr_SetString(PyExc_ValueError, "Can not read from C++ stream.");
-        // TODO: Add std::ios:iostate to error message.
-//        PyErr_Format(PyExc_ValueError, "Argument must be a GeneratorType, not a %s", Py_TYPE(generator)->tp_name);
         goto except;
     }
-    write_args = Py_BuildValue("(si)", PyBytes_AsString(py_bytes), number_of_bytes);
-    write_value = PyObject_Call(m_python_write_method, write_args, NULL);
-    if (write_value == NULL) {
+    write_args = Py_BuildValue("(O)", py_bytes);
+    write_result = PyObject_Call(m_python_write_method, write_args, NULL);
+    if (write_result == NULL) {
         ret = -1;
+        goto except;
+    }
+    if (PyLong_AsLong(write_result) != number_of_bytes) {
+        ret = -2;
         goto except;
     }
     goto finally;
@@ -132,8 +133,99 @@ int PythonFileObjectWrapper::read_cpp_write_py(std::iostream &ios, Py_ssize_t nu
     assert(ret);
     finally:
     /* Clean up under normal conditions and return an appropriate value. */
+    Py_XDECREF(py_bytes);
     Py_XDECREF(write_args);
-    Py_XDECREF(write_value);
+    Py_XDECREF(write_result);
+#if DEBUG_PYEXT_COMMON
+    fprintf(stdout, "%s(): %s#%d ret=%d\n", __FUNCTION__, __FILE__, __LINE__, ret);
+#endif
+    return ret;
+}
+
+
+int PythonFileObjectWrapper::read(Py_ssize_t number_of_bytes, std::vector<char> &result) {
+    assert(!PyErr_Occurred());
+    assert(m_python_file_object);
+    assert(m_python_read_method);
+    assert(m_python_write_method);
+    int ret = 0;
+#if DEBUG_PYEXT_COMMON
+    fprintf(stdout, "%s(): %s#%d number_of_bytes=%ld\n", __FUNCTION__, __FILE__, __LINE__, number_of_bytes);
+#endif
+    result.clear();
+    PyObject * read_args = Py_BuildValue("(i)", number_of_bytes);
+    PyObject * read_value = PyObject_Call(m_python_read_method, read_args, NULL);
+    if (read_value == NULL) {
+        ret = -1;
+        goto except;
+    } else {
+        /* Check for EOF */
+        if (number_of_bytes >= 0 && PySequence_Length(read_value) != number_of_bytes) {
+            ret = -2; /* Signal EOF. */
+            goto except;
+        }
+        const char *buffer;
+        Py_ssize_t size;
+        if (PyBytes_Check(read_value)) {
+            buffer = PyBytes_AsString(read_value);
+            size =PyBytes_Size(read_value);
+        } else if (PyUnicode_Check(read_value)) {
+            buffer = PyUnicode_AsUTF8AndSize(read_value, &size);
+        } else {
+            ret = -3;
+            goto except;
+        }
+        for (Py_ssize_t i = 0; i < size; ++i) {
+            result.push_back(buffer[i]);
+        }
+    }
+    goto finally;
+    except:
+    /* Handle every abnormal condition and clean up. */
+    assert(ret);
+    finally:
+    /* Clean up under normal conditions and return an appropriate value. */
+    Py_XDECREF(read_args);
+    Py_XDECREF(read_value);
+#if DEBUG_PYEXT_COMMON
+    fprintf(stdout, "%s(): %s#%d ret=%d\n", __FUNCTION__, __FILE__, __LINE__, ret);
+#endif
+    return ret;
+}
+
+int PythonFileObjectWrapper::write(const char *buffer, Py_ssize_t number_of_bytes) {
+    assert(!PyErr_Occurred());
+    assert(m_python_file_object);
+    assert(m_python_read_method);
+    assert(m_python_write_method);
+    int ret = 0;
+    PyObject * py_bytes = NULL;
+    PyObject * write_args = NULL;
+    PyObject * write_result = NULL;
+#if DEBUG_PYEXT_COMMON
+    fprintf(stdout, "%s(): %s#%d number_of_bytes=%ld\n", __FUNCTION__, __FILE__, __LINE__, number_of_bytes);
+#endif
+    // Create a Python bytes object, read into it.
+    py_bytes = PyBytes_FromStringAndSize(buffer, number_of_bytes);
+    write_args = Py_BuildValue("(O)", py_bytes);
+    write_result = PyObject_Call(m_python_write_method, write_args, NULL);
+    if (write_result == NULL) {
+        ret = -1;
+        goto except;
+    }
+    if (PyLong_AsLong(write_result) != number_of_bytes) {
+        ret = -2;
+        goto except;
+    }
+    goto finally;
+except:
+    /* Handle every abnormal condition and clean up. */
+    assert(ret);
+finally:
+    /* Clean up under normal conditions and return an appropriate value. */
+    Py_XDECREF(py_bytes);
+    Py_XDECREF(write_args);
+    Py_XDECREF(write_result);
 #if DEBUG_PYEXT_COMMON
     fprintf(stdout, "%s(): %s#%d ret=%d\n", __FUNCTION__, __FILE__, __LINE__, ret);
 #endif
@@ -177,7 +269,29 @@ std::string PythonFileObjectWrapper::str_pointers() {
     oss << "m_python_tell_method  " << std::hex << m_python_tell_method << " type: "
         << Py_TYPE(m_python_tell_method)->tp_name << " ref count=" << std::dec << m_python_tell_method->ob_refcnt
         << std::endl;
-    return oss.str();
+    return std::string(oss.str());
+}
+
+PyObject *PythonFileObjectWrapper::py_str_pointers() {
+    std::ostrstream oss;
+    oss << "PythonFileObjectWrapper:" << std::endl;
+    oss << "m_python_file_object  " << std::hex << m_python_file_object << " type: "
+        << Py_TYPE(m_python_file_object)->tp_name << " ref count=" << std::dec << m_python_file_object->ob_refcnt
+        << std::endl;
+    oss << "m_python_read_method  " << std::hex << m_python_read_method << " type: "
+        << Py_TYPE(m_python_read_method)->tp_name << " ref count=" << std::dec << m_python_read_method->ob_refcnt
+        << std::endl;
+    oss << "m_python_write_method " << std::hex << m_python_write_method << " type: "
+        << Py_TYPE(m_python_write_method)->tp_name << " ref count=" << std::dec << m_python_write_method->ob_refcnt
+        << std::endl;
+    oss << "m_python_seek_method  " << std::hex << m_python_seek_method << " type: "
+        << Py_TYPE(m_python_seek_method)->tp_name << " ref count=" << std::dec << m_python_seek_method->ob_refcnt
+        << std::endl;
+    oss << "m_python_tell_method  " << std::hex << m_python_tell_method << " type: "
+        << Py_TYPE(m_python_tell_method)->tp_name << " ref count=" << std::dec << m_python_tell_method->ob_refcnt
+        << std::endl;
+    std::string str_result = oss.str();
+    return PyBytes_FromStringAndSize(str_result.c_str(), str_result.size());
 }
 
 PythonFileObjectWrapper::~PythonFileObjectWrapper() {

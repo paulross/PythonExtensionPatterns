@@ -44,11 +44,16 @@ public:
     /// Return zero on success, non-zero on failure.
     int read_cpp_write_py(std::iostream &ios, Py_ssize_t number_of_bytes);
 
+    int read(Py_ssize_t number_of_bytes, std::vector<char> &result);
+
+    int write(const char *buffer, Py_ssize_t number_of_bytes);
+
     long seek(Py_ssize_t pos, int whence = 0);
 
     long tell();
 
     std::string str_pointers();
+    PyObject *py_str_pointers();
 
     virtual ~PythonFileObjectWrapper();
 

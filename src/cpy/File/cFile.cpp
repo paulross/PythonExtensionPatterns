@@ -206,11 +206,12 @@ wrap_python_file(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     }
     PythonFileObjectWrapper py_file_wrapper(py_file_object);
 
-    std::string str_pointers = py_file_wrapper.str_pointers();
-//    fprintf(stdout, "Created PythonFileObjectWrapper: \n%s\n", str_pointers.c_str());
-//    fprintf(stdout, "Created PythonFileObjectWrapper: DONE\n");
-    return PyUnicode_FromStringAndSize(str_pointers.c_str(), str_pointers.size());
-//    Py_RETURN_NONE;
+    /* Exercise ths wrapper by writing, reading etc. */
+    py_file_wrapper.write("Test write to python file", 25);
+
+//    std::string str_pointers = py_file_wrapper.str_pointers();
+//    return PyBytes_FromStringAndSize(str_pointers.c_str(), str_pointers.size());
+    return py_file_wrapper.py_str_pointers();
 }
 
 #if 0

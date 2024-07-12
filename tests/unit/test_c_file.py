@@ -121,8 +121,11 @@ def test_write_bytes_to_python_bytes_file_raises(bytes_to_write, expected):
 
 
 def test_wrap_python_file():
-    file = io.StringIO()
+    file = io.BytesIO()
     result = cFile.wrap_python_file(file)
     print()
     print(result)
+    print('file.getvalue()')
+    print(file.getvalue())
+    assert 0
     # assert result == ''
