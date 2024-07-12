@@ -20,6 +20,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
     new_types
     module_globals
     files
+    capsules
     super_call
     compiler_flags
     debugging/debug
