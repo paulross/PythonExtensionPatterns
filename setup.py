@@ -47,6 +47,8 @@ PYTHON_INCLUDE_DIRECTORIES = [
 
 PACKAGE_NAME = 'cPyExtPatt'
 
+# TODO: Make directory cPyExtPatt/ and sub-directories such as Capsules/
+
 # For keywords see: https://setuptools.pypa.io/en/latest/references/keywords.html
 setup(
     name=PACKAGE_NAME,
@@ -128,6 +130,18 @@ setup(
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
                   extra_compile_args=extra_compile_args_cpp,
                   language='c++11',
+                  ),
+        Extension(f"{PACKAGE_NAME}.Capsules.spam", sources=['src/cpy/Capsules/spam.c',],
+                  include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
+        Extension(f"{PACKAGE_NAME}.Capsules.spam_capsule", sources=['src/cpy/Capsules/spam_capsule.c',],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules',],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
                   ),
     ]
 )
