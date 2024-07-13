@@ -2,19 +2,13 @@
 // Created by Paul Ross on 13/07/2024.
 //
 // Implements: https://docs.python.org/3/extending/extending.html#extending-simpleexample
-// as a capsule: https://docs.python.org/3/extending/extending.html#providing-a-c-api-for-an-extension-module
-// Includes specific exception.
+// but using a capsule exported by spam_capsule.h/.c
+// Excludes specific exception.
 // Lightly edited.
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#define SPAM_CAPSULE
 #include "spam_capsule.h"
-
-static int
-PySpam_System(const char *command) {
-    return system(command);
-}
 
 static PyObject *
 spam_system(PyObject *Py_UNUSED(self), PyObject *args) {
@@ -30,14 +24,14 @@ spam_system(PyObject *Py_UNUSED(self), PyObject *args) {
 static PyMethodDef SpamMethods[] = {
         /* ... */
         {"system",  spam_system, METH_VARARGS,
-                "Execute a shell command."},
+                    "Execute a shell command."},
         /* ... */
         {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-static struct PyModuleDef spammodule = {
+static struct PyModuleDef spam_clientmodule = {
         PyModuleDef_HEAD_INIT,
-        "spam_capsule",   /* name of module */
+        "spam_client",   /* name of module */
         PyDoc_STR("Documentation for the spam module"), /* module documentation, may be NULL */
         -1,       /* size of per-interpreter state of the module,
                  or -1 if the module keeps state in global variables. */
@@ -49,27 +43,15 @@ static struct PyModuleDef spammodule = {
 };
 
 PyMODINIT_FUNC
-PyInit_spam_capsule(void)
+PyInit_spam_client(void)
 {
     PyObject *m;
-    static void *PySpam_API[PySpam_API_pointers];
-    PyObject *c_api_object;
 
-    m = PyModule_Create(&spammodule);
+    m = PyModule_Create(&spam_clientmodule);
     if (m == NULL)
         return NULL;
-
-    /* Initialize the C API pointer array */
-    PySpam_API[PySpam_System_NUM] = (void *)PySpam_System;
-
-    /* Create a Capsule containing the API pointer array's address */
-    c_api_object = PyCapsule_New((void *)PySpam_API, "cPyExtPatt.Capsules.spam_capsule._C_API", NULL);
-
-    if (PyModule_AddObject(m, "_C_API", c_api_object) < 0) {
-        Py_XDECREF(c_api_object);
-        Py_DECREF(m);
+    if (import_spam_capsule() < 0)
         return NULL;
-    }
-
+    /* additional initialization can happen here */
     return m;
 }

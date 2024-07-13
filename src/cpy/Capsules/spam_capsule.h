@@ -34,9 +34,8 @@ static void **PySpam_API;
  * PyCapsule_Import will set an exception if there's an error.
  */
 static int
-import_spam(void)
-{
-    PySpam_API = (void **)PyCapsule_Import("spam._C_API", 0);
+import_spam_capsule(void) {
+    PySpam_API = (void **)PyCapsule_Import("cPyExtPatt.Capsules.spam_capsule._C_API", 0);
     return (PySpam_API != NULL) ? 0 : -1;
 }
 

@@ -143,5 +143,11 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
+        Extension(f"{PACKAGE_NAME}.Capsules.spam_client", sources=['src/cpy/Capsules/spam_client.c',],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules',],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
     ]
 )
