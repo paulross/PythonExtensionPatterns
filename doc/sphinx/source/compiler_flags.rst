@@ -8,28 +8,28 @@
 Setting Compiler Flags
 =================================
 
-It is sometimes difficult to decide what flags to set for the compiler and the best advice is to use the same flags that the version of Python you are using was compiled with. Here are a couple of ways to do that.
+It is sometimes difficult to decide what flags to set for the compiler and the best advice is to use the same flags that
+the version of Python you are using was compiled with. Here are a couple of ways to do that.
 
 
 ---------------------------------
 From the Command Line
 ---------------------------------
 
-In the Python install directory there is a `pythonX.Y-config` executable that can be used to extract the compiler flags where X is the major version and Y the minor version. For example (output is wrapped here for clarity):
+In the Python install directory there is a `pythonX.Y-config` executable that can be used to extract the compiler flags
+where X is the major version and Y the minor version. For example (output is wrapped here for clarity):
 
 .. code-block:: sh
 
-    $ which python
-    /usr/bin/python
-    $ python -V
-    Python 2.7.5
-    $ /usr/bin/python2.7-config --cflags
-    -I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
-    -I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
-    -fno-strict-aliasing -fno-common -dynamic -arch x86_64 -arch i386 -g -Os -pipe
-    -fno-common -fno-strict-aliasing -fwrapv -DENABLE_DTRACE -DMACOSX -DNDEBUG -Wall
-    -Wstrict-prototypes -Wshorten-64-to-32 -DNDEBUG -g -fwrapv -Os -Wall
-    -Wstrict-prototypes -DENABLE_DTRACE
+    $ which python3
+    /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+    $ python3 -VV
+    Python 3.13.0b3 (v3.13.0b3:7b413952e8, Jun 27 2024, 09:57:31) [Clang 15.0.0 (clang-1500.3.9.4)]
+    $ /Library/Frameworks/Python.framework/Versions/3.13/bin/python3-config --cflags
+    -I/Library/Frameworks/Python.framework/Versions/3.13/include/python3.13
+    -I/Library/Frameworks/Python.framework/Versions/3.13/include/python3.13
+    -fno-strict-overflow -Wsign-compare -Wunreachable-code -fno-common -dynamic -DNDEBUG
+    -g -O3 -Wall -arch arm64 -arch x86_64 -g
 
 
 --------------------------------------------------
@@ -38,23 +38,30 @@ Programatically from Within a Python Process
 
 The ``sysconfig`` module contains information about the build environment for the particular version of Python:
 
+.. code-block:: bash
+
+    $ python3
+    Python 3.13.0b3 (v3.13.0b3:7b413952e8, Jun 27 2024, 09:57:31) [Clang 15.0.0 (clang-1500.3.9.4)] on darwin
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>>
+
 .. code-block:: python
 
     >>> import sysconfig
     >>> sysconfig.get_config_var('CFLAGS')
-    '-fno-strict-aliasing -fno-common -dynamic -arch x86_64 -arch i386 -g -Os -pipe -fno-common -fno-strict-aliasing -fwrapv -DENABLE_DTRACE -DMACOSX -DNDEBUG -Wall -Wstrict-prototypes -Wshorten-64-to-32 -DNDEBUG -g -fwrapv -Os -Wall -Wstrict-prototypes -DENABLE_DTRACE'
+    '-fno-strict-overflow -Wsign-compare -Wunreachable-code -fno-common -dynamic -DNDEBUG -g -O3 -Wall -arch arm64 -arch x86_64 -g'
     >>> import pprint
     >>> pprint.pprint(sysconfig.get_paths())
-    {'data': '/System/Library/Frameworks/Python.framework/Versions/2.7',
-     'include': '/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7',
-     'platinclude': '/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7',
-     'platlib': '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages',
-     'platstdlib': '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7',
-     'purelib': '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages',
-     'scripts': '/System/Library/Frameworks/Python.framework/Versions/2.7/bin',
-     'stdlib': '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7'}
+    {'data': '/Library/Frameworks/Python.framework/Versions/3.13',
+     'include': '/Library/Frameworks/Python.framework/Versions/3.13/include/python3.13',
+     'platinclude': '/Library/Frameworks/Python.framework/Versions/3.13/include/python3.13',
+     'platlib': '/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages',
+     'platstdlib': '/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13',
+     'purelib': '/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages',
+     'scripts': '/Library/Frameworks/Python.framework/Versions/3.13/bin',
+     'stdlib': '/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13'}
     >>> sysconfig.get_paths()['include']
-    '/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7'
+    '/Library/Frameworks/Python.framework/Versions/3.13/include/python3.13'
 
 --------------------------------------------------
 From the Command Line using ``sysconfig``
@@ -65,49 +72,41 @@ This very verbose output will give you a complete picture of your environment:
 .. code-block:: sh
 
     $ python3 -m sysconfig
-    Platform: "macosx-10.6-intel"
-    Python version: "3.4"
+    Platform: "macosx-10.13-universal2"
+    Python version: "3.13"
     Current installation scheme: "posix_prefix"
 
-    Paths: 
-        data = "/Library/Frameworks/Python.framework/Versions/3.4"
-        include = "/Library/Frameworks/Python.framework/Versions/3.4/include/python3.4m"
-        platinclude = "/Library/Frameworks/Python.framework/Versions/3.4/include/python3.4m"
-        platlib = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages"
-        platstdlib = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4"
-        purelib = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages"
-        scripts = "/Library/Frameworks/Python.framework/Versions/3.4/bin"
-        stdlib = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4"
+    Paths:
+        data = "/Library/Frameworks/Python.framework/Versions/3.13"
+        include = "/Library/Frameworks/Python.framework/Versions/3.13/include/python3.13"
+        platinclude = "/Library/Frameworks/Python.framework/Versions/3.13/include/python3.13"
+        platlib = "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages"
+        platstdlib = "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13"
+        purelib = "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages"
+        scripts = "/Library/Frameworks/Python.framework/Versions/3.13/bin"
+        stdlib = "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13"
 
-    Variables: 
-        ABIFLAGS = "m"
-        AC_APPLE_UNIVERSAL_BUILD = "1"
+    Variables:
+        ABIFLAGS = ""
+        AC_APPLE_UNIVERSAL_BUILD = "0"
+        AIX_BUILDDATE = "0"
         AIX_GENUINE_CPLUSPLUS = "0"
-        AR = "ar"
-        ARFLAGS = "rc"
-        ASDLGEN = "python /Users/sysadmin/build/v3.4.4/Parser/asdl_c.py"
-        ASDLGEN_FILES = "/Users/sysadmin/build/v3.4.4/Parser/asdl.py /Users/sysadmin/build/v3.4.4/Parser/asdl_c.py"
-        AST_ASDL = "/Users/sysadmin/build/v3.4.4/Parser/Python.asdl"
-        AST_C = "Python/Python-ast.c"
-        AST_C_DIR = "Python"
-        AST_H = "Include/Python-ast.h"
-        AST_H_DIR = "Include"
-        BASECFLAGS = "-fno-strict-aliasing -fno-common -dynamic"
-        BASECPPFLAGS = ""
-        BASEMODLIBS = ""
-        BINDIR = "/Library/Frameworks/Python.framework/Versions/3.4/bin"
-        BINLIBDEST = "/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4"
-    ...
+        ALIGNOF_LONG = "8"
+        ALIGNOF_MAX_ALIGN_T = "8"
+        ALIGNOF_SIZE_T = "8"
+        ALT_SOABI = "0"
+        ANDROID_API_LEVEL = "0"
+        AR = "/usr/bin/xcrun ar"
+        ...
 
 
 --------------------------------------------------
 Setting Flags Automatically in ``setup.py``
 --------------------------------------------------
 
-The sysconfig module allows you to create a generic ``setup.py`` script for Python C extensions (see highlighted line):
+The sysconfig module allows you to create a generic ``setup.py`` script for Python C extensions, something along these lines:
 
 .. code-block:: python
-    :emphasize-lines: 15
 
     from distutils.core import setup, Extension
     import os
@@ -154,6 +153,7 @@ The sysconfig module allows you to create a generic ``setup.py`` script for Pyth
                     '.',
                     '...',
                     os.path.join(os.getcwd(), 'include'),
+                    sysconfig.get_paths()['include'],
                 ],
                 library_dirs = [os.getcwd(),],  # path to .a or .so file(s)
                 extra_compile_args=extra_compile_args,

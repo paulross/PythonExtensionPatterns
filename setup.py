@@ -41,6 +41,10 @@ if DEBUG:
 else:
     extra_compile_args_cpp += ["-DNDEBUG", "-O3"]
 
+PYTHON_INCLUDE_DIRECTORIES = [
+    sysconfig.get_paths()['include'],
+]
+
 PACKAGE_NAME = 'cPyExtPatt'
 
 # For keywords see: https://setuptools.pypa.io/en/latest/references/keywords.html
