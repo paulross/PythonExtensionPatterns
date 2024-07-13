@@ -16,15 +16,13 @@ extern "C" {
 /* Total number of C API pointers */
 #define PySpam_API_pointers 1
 
-
 #ifdef SPAM_CAPSULE
-/* This section is used when compiling spammodule.c */
 
+/* This section is used when compiling spam_capsule.c */
 static PySpam_System_RETURN PySpam_System PySpam_System_PROTO;
 
 #else
-/* This section is used in modules that use spammodule's API */
-
+/* This section is used in modules that use spam_capsule's API */
 static void **PySpam_API;
 
 #define PySpam_System \
@@ -38,11 +36,8 @@ import_spam_capsule(void) {
     PySpam_API = (void **)PyCapsule_Import("cPyExtPatt.Capsules.spam_capsule._C_API", 0);
     return (PySpam_API != NULL) ? 0 : -1;
 }
-
 #endif
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* !defined(Py_SPAM_CAPSULE_H) */

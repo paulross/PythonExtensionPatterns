@@ -7,6 +7,7 @@
 // Lightly edited.
 
 #define PY_SSIZE_T_CLEAN
+
 #include <Python.h>
 #include "spam_capsule.h"
 
@@ -23,8 +24,8 @@ spam_system(PyObject *Py_UNUSED(self), PyObject *args) {
 
 static PyMethodDef SpamMethods[] = {
         /* ... */
-        {"system",  spam_system, METH_VARARGS,
-                    "Execute a shell command."},
+        {"system", spam_system, METH_VARARGS,
+                "Execute a shell command."},
         /* ... */
         {NULL, NULL, 0, NULL}        /* Sentinel */
 };
@@ -36,15 +37,11 @@ static struct PyModuleDef spam_clientmodule = {
         -1,       /* size of per-interpreter state of the module,
                  or -1 if the module keeps state in global variables. */
         SpamMethods,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
+        NULL, NULL, NULL, NULL,
 };
 
 PyMODINIT_FUNC
-PyInit_spam_client(void)
-{
+PyInit_spam_client(void) {
     PyObject *m;
 
     m = PyModule_Create(&spam_clientmodule);

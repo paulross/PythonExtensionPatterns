@@ -96,7 +96,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/File/PythonFileWrapper.cpp
         src/cpy/Capsules/spam.c
         src/cpy/Capsules/spam_capsule.h
-)
+        src/cpy/Capsules/spam_capsule.c src/cpy/Capsules/spam_client.c)
 
 link_directories(
         ${PYTHON_LINK_LIBRARY}

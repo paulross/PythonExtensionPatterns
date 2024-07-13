@@ -7,8 +7,11 @@
 // Lightly edited.
 
 #define PY_SSIZE_T_CLEAN
+
 #include <Python.h>
+
 #define SPAM_CAPSULE
+
 #include "spam_capsule.h"
 
 static int
@@ -29,7 +32,7 @@ spam_system(PyObject *Py_UNUSED(self), PyObject *args) {
 
 static PyMethodDef SpamMethods[] = {
         /* ... */
-        {"system",  spam_system, METH_VARARGS,
+        {"system", spam_system, METH_VARARGS,
                 "Execute a shell command."},
         /* ... */
         {NULL, NULL, 0, NULL}        /* Sentinel */
@@ -42,15 +45,11 @@ static struct PyModuleDef spammodule = {
         -1,       /* size of per-interpreter state of the module,
                  or -1 if the module keeps state in global variables. */
         SpamMethods,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
+        NULL, NULL, NULL, NULL,
 };
 
 PyMODINIT_FUNC
-PyInit_spam_capsule(void)
-{
+PyInit_spam_capsule(void) {
     PyObject *m;
     static void *PySpam_API[PySpam_API_pointers];
     PyObject *c_api_object;
@@ -60,16 +59,15 @@ PyInit_spam_capsule(void)
         return NULL;
 
     /* Initialize the C API pointer array */
-    PySpam_API[PySpam_System_NUM] = (void *)PySpam_System;
+    PySpam_API[PySpam_System_NUM] = (void *) PySpam_System;
 
     /* Create a Capsule containing the API pointer array's address */
-    c_api_object = PyCapsule_New((void *)PySpam_API, "cPyExtPatt.Capsules.spam_capsule._C_API", NULL);
+    c_api_object = PyCapsule_New((void *) PySpam_API, "cPyExtPatt.Capsules.spam_capsule._C_API", NULL);
 
     if (PyModule_AddObject(m, "_C_API", c_api_object) < 0) {
         Py_XDECREF(c_api_object);
         Py_DECREF(m);
         return NULL;
     }
-
     return m;
 }
