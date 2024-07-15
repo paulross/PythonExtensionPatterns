@@ -38,21 +38,30 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     DateTimeTZ *self = (DateTimeTZ *)PyDateTimeAPI->DateTimeType->tp_new(type, args, kwds);
     if (self) {
-        // Raise if no TZ.
-        if (self->datetime.tzinfo == NULL || Py_IsNone(self->datetime.tzinfo)) {
-            PyErr_SetString(PyExc_ValueError, "No time zone provided.");
-            Py_DECREF(self);
-            self = NULL;
-        }
         fprintf(stdout, "DateTimeTZ_new() self:\n");
         PyObject_Print((PyObject *)self, stdout, Py_PRINT_RAW);
         fprintf(stdout, "\n");
         fprintf(stdout, "DateTimeTZ_new() self->datetime:\n");
-        PyObject_Print((PyObject*)(&self->datetime), stdout, 0);
+        PyObject_Print((PyObject*)(&self->datetime), stdout, Py_PRINT_RAW);
         fprintf(stdout, "\n");
         fprintf(stdout, "DateTimeTZ_new() self->datetime.tzinfo:\n");
-        PyObject_Print((PyObject*)(&self->datetime.tzinfo), stdout, Py_PRINT_RAW);
+        PyObject_Print((PyObject*)(self->datetime.tzinfo), stdout, Py_PRINT_RAW);
         fprintf(stdout, "\n");
+        // Raise if no TZ.
+//        if (self->datetime.tzinfo == NULL || Py_IsNone(self->datetime.tzinfo)) {
+//            PyErr_SetString(PyExc_ValueError, "No time zone provided.");
+//            Py_DECREF(self);
+//            self = NULL;
+//        }
+        if (self->datetime.tzinfo == NULL) {
+            PyErr_SetString(PyExc_TypeError, "No time zone provided (self->datetime.tzinfo == NULL).");
+            Py_DECREF(self);
+            self = NULL;
+        } else if (Py_IsNone(self->datetime.tzinfo)) {
+            PyErr_SetString(PyExc_TypeError, "No time zone provided (self->datetime.tzinfo is None).");
+            Py_DECREF(self);
+            self = NULL;
+        }
     }
     return (PyObject *)self;
 //    if (self == NULL) {
