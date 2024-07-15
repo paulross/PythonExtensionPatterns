@@ -57,7 +57,7 @@ The code is in ``src/cpy/Capsules/spam.c``.
     static struct PyModuleDef spammodule = {
             PyModuleDef_HEAD_INIT,
             "spam",   /* name of module */
-            PyDoc_STR("Documentation for the spam module"), /* module documentation, may be NULL */
+            PyDoc_STR("Documentation for the spam module"),
             -1,       /* size of per-interpreter state of the module,
                      or -1 if the module keeps state in global variables. */
             SpamMethods,
@@ -193,7 +193,7 @@ The full code is in ``src/cpy/Capsules/spam_capsule.c``:
     static struct PyModuleDef spammodule = {
             PyModuleDef_HEAD_INIT,
             "spam_capsule",   /* name of module */
-            PyDoc_STR("Documentation for the spam module"), /* module documentation, may be NULL */
+            PyDoc_STR("Documentation for the spam module"),
             -1,       /* size of per-interpreter state of the module,
                      or -1 if the module keeps state in global variables. */
             SpamMethods,
@@ -228,9 +228,10 @@ This can be built by adding this Extension to ``setup.py``:
 
 .. code-block:: python
 
-        Extension(f"{PACKAGE_NAME}.Capsules.spam_capsule", sources=['src/cpy/Capsules/spam_capsule.c',],
-                  include_dirs=['/usr/local/include', 'src/cpy/Capsules',],  # os.path.join(os.getcwd(), 'include'),],
-                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+        Extension(f"{PACKAGE_NAME}.Capsules.spam_capsule",
+                  sources=['src/cpy/Capsules/spam_capsule.c',],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules',],
+                  library_dirs=[os.getcwd(), ],
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
@@ -292,7 +293,7 @@ Here is the complete C code:
     static struct PyModuleDef spam_clientmodule = {
             PyModuleDef_HEAD_INIT,
             "spam_client",   /* name of module */
-            PyDoc_STR("Documentation for the spam module"), /* module documentation, may be NULL */
+            PyDoc_STR("Documentation for the spam module"),
             -1,       /* size of per-interpreter state of the module,
                      or -1 if the module keeps state in global variables. */
             SpamMethods,
@@ -316,9 +317,10 @@ This can be built by adding this Extension to ``setup.py``:
 
 .. code-block:: python
 
-        Extension(f"{PACKAGE_NAME}.Capsules.spam_client", sources=['src/cpy/Capsules/spam_client.c',],
-                  include_dirs=['/usr/local/include', 'src/cpy/Capsules',],  # os.path.join(os.getcwd(), 'include'),],
-                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+        Extension(f"{PACKAGE_NAME}.Capsules.spam_client",
+                  sources=['src/cpy/Capsules/spam_client.c',],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules',],
+                  library_dirs=[os.getcwd(), ],
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
@@ -343,8 +345,9 @@ In this case we want to create a subclass of the ``datetime.datetime`` object th
 `naive` datetimes.
 
 Here is the C Extension code to create a ``datetimetz`` module and a ``datetimetz.datetimetz`` object.
-This code is lightly edited for clarity.
-The actual code is in ``src/cpy/Capsules/datetimetz.c`` and the tests are in ``tests/unit/test_c_capsules.py``.
+This code is lightly edited for clarity and works with Python 3.10+.
+The actual code is in ``src/cpy/Capsules/datetimetz.c`` (which works with Python 3.9 as well)
+and the tests are in ``tests/unit/test_c_capsules.py``.
 
 .. code-block:: c
 
@@ -358,15 +361,13 @@ The actual code is in ``src/cpy/Capsules/datetimetz.c`` and the tests are in ``t
 
     static PyObject *
     DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-        DateTimeTZ *self = (DateTimeTZ *)PyDateTimeAPI->DateTimeType->tp_new(type, args, kwds);
+        DateTimeTZ *self = (DateTimeTZ *)PyDateTimeAPI->DateTimeType->tp_new(
+            type, args, kwds
+        );
         if (self) {
             // Raise if no TZ.
-            if (self->datetime.tzinfo == NULL) {
-                PyErr_SetString(PyExc_TypeError, "No time zone provided (self->datetime.tzinfo == NULL).");
-                Py_DECREF(self);
-                self = NULL;
-            } else if (Py_IsNone(self->datetime.tzinfo)) {
-                PyErr_SetString(PyExc_TypeError, "No time zone provided (self->datetime.tzinfo is None).");
+            if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
+                PyErr_SetString(PyExc_TypeError, "No time zone provided.");
                 Py_DECREF(self);
                 self = NULL;
             }
@@ -387,7 +388,10 @@ The actual code is in ``src/cpy/Capsules/datetimetz.c`` and the tests are in ``t
     static PyModuleDef datetimetzmodule = {
             PyModuleDef_HEAD_INIT,
             .m_name = "datetimetz",
-            .m_doc = "Module that contains a datetimetz, a datetime.datetime with a mandatory time zone.",
+            .m_doc = (
+                "Module that contains a datetimetz,"
+                "a datetime.datetime with a mandatory time zone."
+            ),
             .m_size = -1,
     };
 
@@ -419,7 +423,8 @@ The extension is created with this in ``setup.py``:
 
 .. code-block:: python
 
-        Extension(f"{PACKAGE_NAME}.Capsules.datetimetz", sources=['src/cpy/Capsules/datetimetz.c', ],
+        Extension(f"{PACKAGE_NAME}.Capsules.datetimetz",
+                  sources=['src/cpy/Capsules/datetimetz.c', ],
                   include_dirs=['/usr/local/include', 'src/cpy/Capsules', ],
                   library_dirs=[os.getcwd(), ],
                   extra_compile_args=extra_compile_args_c,

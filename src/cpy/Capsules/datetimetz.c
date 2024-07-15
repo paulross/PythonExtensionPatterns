@@ -98,7 +98,10 @@ static PyTypeObject DatetimeTZType = {
 static PyModuleDef datetimetzmodule = {
         PyModuleDef_HEAD_INIT,
         .m_name = "datetimetz",
-        .m_doc = "Module that contains a datetimetz, a datetime.datetime with a mandatory time zone.",
+        .m_doc = (
+            "Module that contains a datetimetz,"
+            "a datetime.datetime with a mandatory time zone."
+        ),
         .m_size = -1,
 };
 
