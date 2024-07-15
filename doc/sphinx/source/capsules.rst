@@ -61,10 +61,7 @@ The code is in ``src/cpy/Capsules/spam.c``.
             -1,       /* size of per-interpreter state of the module,
                      or -1 if the module keeps state in global variables. */
             SpamMethods,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
+            NULL, NULL, NULL, NULL,
     };
 
     PyMODINIT_FUNC
@@ -335,3 +332,98 @@ This can be tested with the code in ``tests/unit/test_c_capsules.py``:
     def test_spam_client():
         result = spam_client.system("ls -l")
         assert result == 0
+
+
+================================
+Using an Existing Capsule
+================================
+
+Here is an example of using an existing Capsule, the ``datetime`` C API.
+In this case we want to create a subclass of the ``datetime.datetime`` object that always has a time zone i.e. no
+`naive` datetimes.
+
+Here is the C Extension code to create a ``datetimetz`` module and a ``datetimetz.datetimetz`` object.
+This code is lightly edited for clarity.
+The actual code is in ``src/cpy/Capsules/datetimetz.c`` and the tests are in ``tests/unit/test_c_capsules.py``.
+
+.. code-block:: c
+
+    #define PY_SSIZE_T_CLEAN
+    #include <Python.h>
+    #include "datetime.h"
+
+    typedef struct {
+        PyDateTime_DateTime datetime;
+    } DateTimeTZ;
+
+    static PyObject *
+    DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+        DateTimeTZ *self = (DateTimeTZ *)PyDateTimeAPI->DateTimeType->tp_new(type, args, kwds);
+        if (self) {
+            // Raise if no TZ.
+            if (self->datetime.tzinfo == NULL) {
+                PyErr_SetString(PyExc_TypeError, "No time zone provided (self->datetime.tzinfo == NULL).");
+                Py_DECREF(self);
+                self = NULL;
+            } else if (Py_IsNone(self->datetime.tzinfo)) {
+                PyErr_SetString(PyExc_TypeError, "No time zone provided (self->datetime.tzinfo is None).");
+                Py_DECREF(self);
+                self = NULL;
+            }
+        }
+        return (PyObject *)self;
+    }
+
+    static PyTypeObject DatetimeTZType = {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            .tp_name = "datetimetz.datetimetz",
+            .tp_doc = "A datetime that requires a time zone.",
+            .tp_basicsize = sizeof(DateTimeTZ),
+            .tp_itemsize = 0,
+            .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+            .tp_new = DateTimeTZ_new,
+    };
+
+    static PyModuleDef datetimetzmodule = {
+            PyModuleDef_HEAD_INIT,
+            .m_name = "datetimetz",
+            .m_doc = "Module that contains a datetimetz, a datetime.datetime with a mandatory time zone.",
+            .m_size = -1,
+    };
+
+    PyMODINIT_FUNC
+    PyInit_datetimetz(void) {
+        PyObject *m = PyModule_Create(&datetimetzmodule);
+        if (m == NULL) {
+            return NULL;
+        }
+        // datetime.datetime_CAPI
+        PyDateTime_IMPORT;
+        if (!PyDateTimeAPI) {
+            Py_DECREF(m);
+            return NULL;
+        }
+        // Set inheritance.
+        DatetimeTZType.tp_base = PyDateTimeAPI->DateTimeType;
+        if (PyType_Ready(&DatetimeTZType) < 0) {
+            Py_DECREF(m);
+            return NULL;
+        }
+        Py_INCREF(&DatetimeTZType);
+        PyModule_AddObject(m, "datetimetz", (PyObject *) &DatetimeTZType);
+        /* additional initialization can happen here */
+        return m;
+    }
+
+The extension is created with this in ``setup.py``:
+
+.. code-block:: python
+
+        Extension(f"{PACKAGE_NAME}.Capsules.datetimetz", sources=['src/cpy/Capsules/datetimetz.c', ],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules', ],
+                  library_dirs=[os.getcwd(), ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
+
+Extensive tests are in ``tests/unit/test_c_capsules.py``.

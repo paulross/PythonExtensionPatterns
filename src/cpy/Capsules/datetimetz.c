@@ -5,27 +5,32 @@
 // This is an example of using Capsules and the datetime Capsule API.
 
 #define PY_SSIZE_T_CLEAN
-#include <Python.h>
 
+#include <Python.h>
 #include "datetime.h"
+
+#define FPRINTF_DEBUG 0
+
+/* From /Library/Frameworks/Python.framework/Versions/3.13/include/python3.13/object.h
+ * These were introduced in Python 3.10: https://docs.python.org/3/c-api/structures.html#c.Py_IsNone
+ * */
+#if PY_MINOR_VERSION < 10
+// Test if the 'x' object is the 'y' object, the same as "x is y" in Python.
+PyAPI_FUNC(int) Py_Is(PyObject *x, PyObject *y);
+#define Py_Is(x, y) ((x) == (y))
+
+// Test if an object is the None singleton, the same as "x is None" in Python.
+PyAPI_FUNC(int) Py_IsNone(PyObject *x);
+#define Py_IsNone(x) Py_Is((x), Py_None)
+#endif
 
 typedef struct {
     PyDateTime_DateTime datetime;
 } DateTimeTZ;
 
-// Forward reference
-//typedef struct DatetimeTZType DatetimeTZType;
-
 static PyObject *
-DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-//    DateTimeTZ* self;
-//    self = (DateTimeTZ*)type->tp_alloc(type, 0);
-//    if (self != NULL) {
-//        self->number = 0;
-//    }
-//    return (PyObject*)self;
-
+DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+#if FPRINTF_DEBUG
     fprintf(stdout, "DateTimeTZ_new() type:\n");
     PyObject_Print((PyObject *)type, stdout, Py_PRINT_RAW);
     fprintf(stdout, "\n");
@@ -35,59 +40,50 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     fprintf(stdout, "DateTimeTZ_new() kwds:\n");
     PyObject_Print(kwds, stdout, Py_PRINT_RAW);
     fprintf(stdout, "\n");
-
-    DateTimeTZ *self = (DateTimeTZ *)PyDateTimeAPI->DateTimeType->tp_new(type, args, kwds);
+#endif
+    DateTimeTZ *self = (DateTimeTZ *) PyDateTimeAPI->DateTimeType->tp_new(type, args, kwds);
     if (self) {
+#if FPRINTF_DEBUG
         fprintf(stdout, "DateTimeTZ_new() self:\n");
         PyObject_Print((PyObject *)self, stdout, Py_PRINT_RAW);
         fprintf(stdout, "\n");
-        fprintf(stdout, "DateTimeTZ_new() self->datetime:\n");
+        fprintf(stdout, "DateTimeTZ_new() &self->datetime:\n");
         PyObject_Print((PyObject*)(&self->datetime), stdout, Py_PRINT_RAW);
         fprintf(stdout, "\n");
+#if PY_MINOR_VERSION >= 10
+        fprintf(stdout, "DateTimeTZ_new() _PyDateTime_HAS_TZINFO(&self->datetime): %d\n", _PyDateTime_HAS_TZINFO(&self->datetime));
+#else // PY_MINOR_VERSION >= 10
         fprintf(stdout, "DateTimeTZ_new() self->datetime.tzinfo:\n");
-        PyObject_Print((PyObject*)(self->datetime.tzinfo), stdout, Py_PRINT_RAW);
+        if ((void *)&self->datetime != NULL && (&self->datetime)->tzinfo) {
+//            fprintf(stdout, "tzinfo %p %s\n", (void *)(&self->datetime)->tzinfo, Py_TYPE((&self->datetime)->tzinfo)->tp_name);
+            PyObject_Print((PyObject *) ((&self->datetime)->tzinfo), stdout, Py_PRINT_RAW);
+        } else {
+            fprintf(stdout, "No tzinfo\n");
+        }
         fprintf(stdout, "\n");
+#endif // PY_MINOR_VERSION < 10
+#endif
         // Raise if no TZ.
-//        if (self->datetime.tzinfo == NULL || Py_IsNone(self->datetime.tzinfo)) {
-//            PyErr_SetString(PyExc_ValueError, "No time zone provided.");
-//            Py_DECREF(self);
-//            self = NULL;
-//        }
-        if (self->datetime.tzinfo == NULL) {
-            PyErr_SetString(PyExc_TypeError, "No time zone provided (self->datetime.tzinfo == NULL).");
-            Py_DECREF(self);
-            self = NULL;
-        } else if (Py_IsNone(self->datetime.tzinfo)) {
-            PyErr_SetString(PyExc_TypeError, "No time zone provided (self->datetime.tzinfo is None).");
+#if PY_MINOR_VERSION >= 10
+        if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
+            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
             Py_DECREF(self);
             self = NULL;
         }
+#else // PY_MINOR_VERSION >= 10
+        if (self->datetime.tzinfo == NULL) {
+            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+            Py_DECREF(self);
+            self = NULL;
+        } else if (Py_IsNone(self->datetime.tzinfo)) {
+            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+            Py_DECREF(self);
+            self = NULL;
+        }
+#endif // PY_MINOR_VERSION < 10
     }
-    return (PyObject *)self;
-//    if (self == NULL) {
-//        return -1;
-//    }
-//    // Raise if no TZ.
-//    if (self->datetime.tzinfo == NULL || Py_IsNone(self->datetime.tzinfo)) {
-//        PyErr_SetString(PyExc_ValueError, "No time zone provided.");
-//    }
-//    return 0;
+    return (PyObject *) self;
 }
-
-#if 0
-static int
-DateTimeTZ_init(DateTimeTZ *self, PyObject *args, PyObject *kwds)
-{
-    if (PyDateTimeAPI->DateTimeType->tp_init((PyObject *)self, args, kwds) < 0) {
-        return -1;
-    }
-    // Raise if no TZ.
-    if (self->datetime.tzinfo == NULL || Py_IsNone(self->datetime.tzinfo)) {
-        PyErr_SetString(PyExc_ValueError, "No time zone provided.");
-    }
-    return 0;
-}
-#endif
 
 static PyTypeObject DatetimeTZType = {
         PyVarObject_HEAD_INIT(NULL, 0)
@@ -97,11 +93,6 @@ static PyTypeObject DatetimeTZType = {
         .tp_itemsize = 0,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_new = DateTimeTZ_new,
-//        .tp_init = (initproc) DateTimeTZ_init,
-//        .tp_dealloc = (destructor) DateTimeTZ_dealloc,
-//        .tp_members = DateTimeTZ_members,
-//        .tp_methods = DateTimeTZ_methods,
-//        .tp_getset = DateTimeTZ_getsetters,
 };
 
 static PyModuleDef datetimetzmodule = {
@@ -112,30 +103,25 @@ static PyModuleDef datetimetzmodule = {
 };
 
 PyMODINIT_FUNC
-PyInit_datetimetz(void)
-{
-    PyObject *m;
-
-    m = PyModule_Create(&datetimetzmodule);
-    if (m == NULL)
+PyInit_datetimetz(void) {
+    PyObject *m = PyModule_Create(&datetimetzmodule);
+    if (m == NULL) {
         return NULL;
-//    if (import_spam_capsule() < 0)
-//        return NULL;
+    }
     // datetime.datetime_CAPI
     PyDateTime_IMPORT;
     if (!PyDateTimeAPI) {
         Py_DECREF(m);
         return NULL;
     }
-
+    // Set inheritance.
     DatetimeTZType.tp_base = PyDateTimeAPI->DateTimeType;
     if (PyType_Ready(&DatetimeTZType) < 0) {
+        Py_DECREF(m);
         return NULL;
     }
-
     Py_INCREF(&DatetimeTZType);
     PyModule_AddObject(m, "datetimetz", (PyObject *) &DatetimeTZType);
     /* additional initialization can happen here */
     return m;
 }
-
