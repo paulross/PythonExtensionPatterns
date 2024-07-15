@@ -47,7 +47,12 @@ PYTHON_INCLUDE_DIRECTORIES = [
 
 PACKAGE_NAME = 'cPyExtPatt'
 
-# TODO: Make directory cPyExtPatt/ and sub-directories such as Capsules/
+# Make directory cPyExtPatt/ and sub-directories such as Capsules/
+for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
+                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Capsules')):
+    if not os.path.exists(dir_path):
+        print(f'Making directory {dir_path}')
+        os.makedirs(dir_path)
 
 # For keywords see: https://setuptools.pypa.io/en/latest/references/keywords.html
 setup(
@@ -131,20 +136,26 @@ setup(
                   extra_compile_args=extra_compile_args_cpp,
                   language='c++11',
                   ),
-        Extension(f"{PACKAGE_NAME}.Capsules.spam", sources=['src/cpy/Capsules/spam.c',],
+        Extension(f"{PACKAGE_NAME}.Capsules.spam", sources=['src/cpy/Capsules/spam.c', ],
                   include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
-        Extension(f"{PACKAGE_NAME}.Capsules.spam_capsule", sources=['src/cpy/Capsules/spam_capsule.c',],
-                  include_dirs=['/usr/local/include', 'src/cpy/Capsules',],  # os.path.join(os.getcwd(), 'include'),],
+        Extension(f"{PACKAGE_NAME}.Capsules.spam_capsule", sources=['src/cpy/Capsules/spam_capsule.c', ],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
-        Extension(f"{PACKAGE_NAME}.Capsules.spam_client", sources=['src/cpy/Capsules/spam_client.c',],
-                  include_dirs=['/usr/local/include', 'src/cpy/Capsules',],  # os.path.join(os.getcwd(), 'include'),],
+        Extension(f"{PACKAGE_NAME}.Capsules.spam_client", sources=['src/cpy/Capsules/spam_client.c', ],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules', ],  # os.path.join(os.getcwd(), 'include'),],
+                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
+        Extension(f"{PACKAGE_NAME}.Capsules.datetimetz", sources=['src/cpy/Capsules/datetimetz.c', ],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules', ],  # os.path.join(os.getcwd(), 'include'),],
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
                   extra_compile_args=extra_compile_args_c,
                   language='c',
