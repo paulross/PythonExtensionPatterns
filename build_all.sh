@@ -12,13 +12,7 @@ set -o nounset  # abort on unbound variable
 set -o pipefail # don't hide errors within pipes
 
 # For current versions see https://devguide.python.org/versions/
-#PYTHON_VERSIONS=('3.7' '3.8' '3.9' '3.10' '3.11' '3.12' '3.13')
 PYTHON_VERSIONS=('3.9' '3.10' '3.11' '3.12' '3.13')
-#PYTHON_VERSIONS=('3.6')
-#PYTHON_VERSIONS=('3.11' '3.12' '3.13')
-#PYTHON_VERSIONS=('3.9' '3.10')
-#PYTHON_VERSIONS=('3.6' '3.7' '3.8' '3.9' '3.10')
-#PYTHON_VERSIONS=('3.8' '3.9' '3.10')
 # Used for venvs
 PYTHON_VENV_ROOT="${HOME}/pyenvs"
 PROJECT_NAME="PyExtPatt"
@@ -47,18 +41,6 @@ OPT_REMOVE_REBUILD_VENVS=false
 OPT_BUILD_DOCUMENTATION=false
 
 if [[ "$#" -gt 0 ]]; then
-#while [ -n "$1" ]; do # while loop starts
-#    case "$1" in
-#    -r) OPT_REMOVE_REBUILD_VENVS=true ;; # Remove existing venvs and rebuild them.
-#    -d) OPT_BUILD_DOCUMENTATION=true ;; # Build documentation.
-#    --)
-#        shift # The double dash which separates options from parameters
-#        break
-#        ;;
-#    *) break;;
-#    esac
-#    shift
-#done
 for arg in "$@"
 do
     case "$arg" in
