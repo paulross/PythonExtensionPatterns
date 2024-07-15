@@ -145,352 +145,511 @@ Suppose we have the Python function signature of ``def function(encoding='utf8',
 Homogeneous Python Containers and C++
 ============================================
 
-Here are some useful generic functions that can convert homogeneous Python containers to and from their C++ STL equivalents. They use templates to identify the C++ type and function pointers to convert from Python to C++ objects and back. These functions must have a these characteristics on error:
+Here are some useful generic functions that can convert homogeneous Python containers to and from their C++ STL
+equivalents in this project:
+`Python/C++ homogeneous containers on GitHub <https://github.com/paulross/PyCppContainers>`_
+The project uses a mixture of templates and code generation to provide 200+ functions to convert to and from
+C++ and Python containers.
 
-* Converting from C++ to Python, on error set a Python error (e.g with ``PyErr_SetString`` or ``PyErr_Format``) and return NULL.
-* Converting from Python to C++ set a Python error and return a default C++ object (for example an empty ``std::string``).
+Here is the introduction to that project:
 
-For illustration here are a couple of such functions that convert ``PyBytesObject*`` to and from ``std::string``:
+Python is well known for it's ability to handle *heterogeneous* data in containers such as lists.
+But what if you need to interact with C++ containers such as ``std::vector<T>`` that require *homogeneous* data types?
 
-.. code-block:: cpp
 
-    std::string py_bytes_to_std_string(PyObject *py_str) {
-        std::string r;
-        if (PyBytes_Check(py_str)) {
-            r = std::string(PyBytes_AS_STRING(py_str));
-        } else {
-            PyErr_Format(PyExc_TypeError,
-                         "Argument %s must be bytes not \"%s\"",
-                         __FUNCTION__, Py_TYPE(py_str)->tp_name);
-        }
-        return r;
-    }
+This project is about converting Python containers (``list``, ``tuple``, ``dict``, ``set``, ``frozenset``) containing
+homogeneous types (``bool``, ``int``, ``float``, ``complex``, ``bytes``, ``str``) or user defined types to and from
+their C++ equivalent.
 
-    PyObject *std_string_to_py_bytes(const std::string &str) {
-        return PyBytes_FromStringAndSize(str.c_str(), str.size());
-    }
 
-We can use this for a variety of containers, first Python lists of ``bytes``.
+------------------------------
+A Problematic Example
+------------------------------
 
---------------------------------------------
-Python Lists and C++ ``std::vector<T>``
---------------------------------------------
+Suppose that you have a Python list of floats and need to pass it to a C++ library that expects a ``std::vector<double>``.
+If the result of that call modifies the C++ vector, or creates a new one, you need to return a Python list of floats
+from the result.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Python ``list`` to C++ ``std::vector<T>``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This converts a python list to a ``std::vector<T>``. ``ConvertToT`` is a function pointer to a function that takes a ``PyObject*`` and returns an instance of a ``T`` type. On failure to to convert a ``PyObject*`` this function should set a Python error (making ``PyErr_Occurred()`` non-NULL) and return a default ``T``. On failure this function sets ``PyErr_Occurred()`` and the return value will be an empty vector.
+Your code might look like this:
 
 .. code-block:: cpp
 
-    template <typename T>
-    std::vector<T>
-    py_list_to_std_vector(PyObject *py_list, T (*ConvertToT)(PyObject *)) {
-        assert(cpython_asserts(py_list));
-        std::vector<T> cpp_vector;
-
-        if (PyList_Check(py_list)) {
-            cpp_vector.reserve(PyList_GET_SIZE(py_list));
-            for (Py_ssize_t i = 0; i < PyList_GET_SIZE(py_list); ++i) {
-                cpp_vector.emplace(cpp_vector.end(),
-                                   (*ConvertToT)(PyList_GetItem(py_list, i)));
-                if (PyErr_Occurred()) {
-                   cpp_vector.clear();
-                   break;
-                }
-            }
-        } else {
-            PyErr_Format(PyExc_TypeError,
-                         "Argument \"py_list\" to %s must be list not \"%s\"",
-                         __FUNCTION__, Py_TYPE(py_list)->tp_name);
-        }
-        return cpp_vector;
+    PyObject *example(PyObject *op) {
+        std::vector<double> vec;
+        // Populate the vector, function to be defined...
+        write_to_vector(op, vec);
+        // Do something in C++ with the vector
+        // ...
+        // Convert the vector back to a Python list.
+        // Function to be defined...
+        return read_from_vector(vec);
     }
 
-If we have a function ``std::string py_bytes_to_std_string(PyObject *py_str);`` (above) we can use this thus, we have to specify the C++ template specialisation:
+What should the implementation of ``write_to_vector()`` and ``read_from_vector()`` look like?
+
+The answer seems fairly simple; firstly ``write_to_vector`` converting a Python list to a C++ ``std::vector<double>``:
 
 .. code-block:: cpp
 
-    std::vector<std::string> result = py_list_to_std_vector<std::string>(py_list, &py_bytes_to_std_string);
-    if (PyErr_Occurred()) {
-        // Handle error condition.
-    } else {
-        // All good.
+    void write_to_vector(PyObject *op, std::vector<double> &vec) {
+        vec.clear();
+        for (Py_ssize_t i = 0; i < PyList_Size(op); ++i) {
+            vec.push_back(PyFloat_AsDouble(PyList_GET_ITEM(op, i)));
+        }
     }
 
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-C++ ``std::vector<T>`` to Python ``list``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-And the inverse that takes a C++ ``std::vector<T>`` and makes a Python ``list``. ``ConvertToPy`` is a pointer to a function that takes an instance of a ``T`` type and returns a ``PyObject*``, this should return NULL on failure and set ``PyErr_Occurred()``. On failure this function sets ``PyErr_Occurred()`` and returns NULL.
+And the inverse, ``read_from_vector`` creating a new Python list from a C++ ``std::vector<double>``:
 
 .. code-block:: cpp
 
-    template <typename T>
-    PyObject*
-    std_vector_to_py_list(const std::vector<T> &cpp_vec,
-                          PyObject *(*ConvertToPy)(const T&)
-                          ) {
-        assert(cpython_asserts());
-        PyObject *r = PyList_New(cpp_vec.size());
-        if (! r) {
-            goto except;
+    PyObject *read_from_vector(const std::vector<double> &vec) {
+        PyObject *ret = PyList_New(vec.size());
+        for (size_t i = 0; i < vec.size(); ++i) {
+            PyList_SET_ITEM(ret, i, PyFloat_FromDouble(vec[i]));
         }
-        for (Py_ssize_t i = 0; i < cpp_vec.size(); ++i) {
-            PyObject *item = (*ConvertToPy)(cpp_vec[i]);
-            if (! item || PyErr_Occurred() || PyList_SetItem(r, i, item)) {
-                goto except;
-            }
-        }
-        assert(! PyErr_Occurred());
-        assert(r);
-        goto finally;
-    except:
-        assert(PyErr_Occurred());
-        // Clean up list
-        if (r) {
-            // No PyList_Clear().
-            for (Py_ssize_t i = 0; i < PyList_GET_SIZE(r); ++i) {
-                Py_XDECREF(PyList_GET_ITEM(r, i));
-            }
-            Py_DECREF(r);
-            r = NULL;
-        }
-    finally:
-        return r;
+        return ret;
     }
 
-If we have a function ``PyObject *std_string_to_py_bytes(const std::string &str);`` (above) we can use this thus:
+
+There is no error handling here, all errors would be runtime errors.
+
+However if you need to support other object types, say lists of ``int``, ``str``, ``bytes`` then each one needs a pair of hand written functions.
+It gets worse when you want to support other containers such as (``tuple``, ``list``, ``set``, ``frozenset``, ``dict``).
+Then you have to write individual conversion functions for all the combinations of object types *and* containers.
+This is tedious and error prone.
+
+Why This Project
+=========================
+
+This project makes extensive use of C++ templates, partial template specialisation and code generation to reduce
+dramatically the amount of hand maintained code.
+It also converts many runtime errors to compile time errors.
+
+This project supports two way conversion of this set of containers:
+
+.. list-table:: Supported Containers.
+   :widths: 50 50
+   :header-rows: 1
+
+   * - C++ Container
+     - Python Equivalent
+   * - ``std::vector``
+     - Either a ``tuple`` or ``list``
+   * - ``std::list``
+     - Either a ``tuple`` or ``list``
+   * - ``std::unordered_set``
+     - Either a ``set`` or ``frozenset``
+   * - ``std::unordered_map``
+     - ``dict``
+   * - ``std::map``
+     - ``dict``
+
+Which contain any of this set of types:
+
+.. list-table:: Supported Object types.
+   :widths: 30 30
+   :header-rows: 1
+
+   * - C++ Type
+     - Python Equivalent
+   * - ``bool``
+     - ``True``, ``False``
+   * - ``long``
+     - ``int``
+   * - ``double``
+     - ``float``
+   * - ``std::complex<double>``
+     - ``complex``
+   * - ``std::vector<char>``
+     - ``bytes``
+   * - ``std::string``
+     - ``str``
+
+The number of possible conversion functions is worse than the cartesian product of the types and containers as in the case of a
+dict the types can appear as either a key or a value.
+
+Supporting all these conversions would normally require 216 conversion functions to be written, tested and documented [#]_ .
+
+This project simplifies this by using a mix of C++ templates and code generators to reduce this number to just
+**six** hand written templates for all 216 cases.
+
+* Two C++ templates for Python ``tuple`` / ``list`` to and from ``std::list`` or ``std::vector`` for all types.
+* Two C++ templates for Python ``set`` / ``frozenset`` to and from ``std::unordered_set`` for all types.
+* Two C++ templates for Python ``dict`` to and from ``std::map`` or ``std::unordered_map`` for all type combinations.
+
+These six handwritten templates are fairly simple and comprehensible.
+Then, for simplicity, a Python script is used to create the final, instantiated, 216 functions.
+
+Hand Written Functions
+=============================
+
+There are only six non-trivial hand written functions along with a much larger of generated functions that successively
+specialise these functions.
+
+As an example, here how the function is developed that converts a Python list of ``float`` to and from a C++
+``std::vector<double>`` or ``std::list<double>``.
+
+First C++ to Python.
+
+Converting a C++ ``std::vector<T>`` or ``std::list<T>`` to a Python ``tuple`` or ``list``
+--------------------------------------------------------------------------------------------------------------------
+
+The generic function signature looks like this:
 
 .. code-block:: cpp
 
-    std::vector<std::string> cpp_vector;
-    // Initialise cpp_vector...
-    PyObject *py_list = std_vector_to_py_list(cpp_vector, &std_string_to_py_bytes);
-    if (! py_list) {
-        // Handle error condition.
-    } else {
-        // All good.
+    template<
+        template<typename ...> class ListLike,
+        typename T,
+        PyObject *(*ConvertCppToPy)(const T &),
+        PyObject *(*PyUnaryContainer_New)(size_t),
+        int(*PyUnaryContainer_Set)(PyObject *, size_t, PyObject *)
+    >
+    PyObject *
+    very_generic_cpp_std_list_like_to_py_unary(const ListLike<T> &list_like) {
+        // Handwritten
+        // ...
     }
 
-------------------------------------------------------------
-Python Sets, Frozensets and C++ ``std::unordered_set<T>``
-------------------------------------------------------------
+.. list-table:: ``very_generic_cpp_std_list_like_to_py_unary()`` template parameters.
+   :widths: 20 50
+   :header-rows: 1
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Python ``set`` to C++ ``std::unordered_set<T>``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   * - Template Parameter
+     - Notes
+   * - ``ListLike``
+     - The C++ container type, either a ``std::vector<T>`` or ``std::list<T>``.
+   * - ``T``
+     - The C++ type of the objects in the target C++ container.
+   * - ``ConvertCppToPy``
+     - A pointer to a function that converts any C++ ``T`` to a ``PyObject *``, for example from ``double`` -> ``float``.
+   * - ``PyUnaryContainer_New``
+     - A pointer to a function that creates a new Python container, for example a ``list``, of a particular length.
+   * - ``PyUnaryContainer_Set``
+     - A pointer to a function that sets a ``PyObject *`` in the Python container at a given index.
 
-Convert a Python ``set`` or ``frozenset`` to a ``std::unordered_set<T>``. ``ConvertToT`` is a function pointer to a function that takes a ``PyObject*`` and returns an instance of a ``T`` type. This function should make ``PyErr_Occurred()`` true on failure to convert a ``PyObject*`` and return a default ``T``. On failure this sets ``PyErr_Occurred()`` and the return value will be an empty container.
+And the function has the following parameters.
+
+.. list-table:: ``very_generic_cpp_std_list_like_to_py_unary()`` parameters.
+   :widths: 20 20 50
+   :header-rows: 1
+
+   * - Type
+     - Name
+     - Notes
+   * - ``ListLike<T> &``
+     - ``list_like``
+     - The C++ list like container to read from to.
+
+The return value is non-NULL on success or NULL if there is a runtime error.
+These errors could be:
+
+* ``PyObject *`` container can not be created.
+* A member of the Python container can not be created from the C++ type ``T``.
+* The ``PyObject *`` can not be inserted into the Python container.
+
+
+Partial Specialisation to Convert a C++ ``std::vector<T>`` or ``std::list<T>`` to a Python ``list```
+-------------------------------------------------------------------------------------------------------
+
+As an example this is specialised for Python ``list`` with a handwritten oneliner:
 
 .. code-block:: cpp
 
-    template <typename T>
-    std::unordered_set<T>
-    py_set_to_std_unordered_set(PyObject *py_set, T (*ConvertToT)(PyObject *)) {
-        assert(cpython_asserts(py_set));
-        std::unordered_set<T> cpp_set;
-
-        if (PySet_Check(py_set) || PyFrozenSet_Check(py_set)) {
-            // The C API does not allow direct access to an item in a set so we
-            // make a copy and pop from that.
-            PyObject *set_copy = PySet_New(py_set);
-            if (set_copy) {
-                while (PySet_GET_SIZE(set_copy)) {
-                    PyObject *item = PySet_Pop(set_copy);
-                    if (! item || PyErr_Occurred()) {
-                        PySet_Clear(set_copy);
-                        cpp_set.clear();
-                        break;
-                    }
-                    cpp_set.emplace((*ConvertToT)(item));
-                    Py_DECREF(item);
-                }
-                Py_DECREF(set_copy);
-            } else {
-                assert(PyErr_Occurred());
-            }
-        } else {
-            PyErr_Format(PyExc_TypeError,
-                 "Argument \"py_set\" to %s must be set or frozenset not \"%s\"",
-                 __FUNCTION__, Py_TYPE(py_set)->tp_name);
-        }
-        return cpp_set;
+    template<
+        typename T,
+        PyObject *(*ConvertCppToPy)(const T &)
+    >
+    PyObject *
+    generic_cpp_std_list_like_to_py_list(const std::vector<T> &container) {
+        return very_generic_cpp_std_list_like_to_py_unary<
+            std::vector,
+            T,
+            ConvertCppToPy,
+            &py_list_new,
+            &py_list_set
+        >(container);
     }
 
+.. note::
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-C++ ``std::unordered_set<T>`` to Python ``set`` or ``frozenset``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    The use of the function pointers to ``py_list_new``, and ``py_list_set`` that are defined in this
+    project namespace.
+    These are thin wrappers around existing functions or macros in ``"Python.h"``.
 
-Convert a ``std::unordered_set<T>`` to a new Python ``set`` or ``frozenset``. ``ConvertToPy`` is a pointer to a function that takes an instance of a ``T`` type and returns a ``PyObject*``, this function should return NULL on failure. On failure this function sets ``PyErr_Occurred()`` and returns NULL.
+There is a similar partial specialisation for ``tuple``.
+
+Converting a Python ``tuple`` or ``list`` to a C++ ``std::vector<T>`` or ``std::list<T>``
+--------------------------------------------------------------------------------------------------
+
+The reverse is converting Python to C++.
+This generic function that converts unary Python indexed containers (``tuple`` and ``list``) to a C++ ``std::vector<T>``
+or ``std::list<T>`` for any type has this signature:
 
 .. code-block:: cpp
 
-    template <typename T>
-    PyObject*
-    std_unordered_set_to_py_set(const std::unordered_set<T> &cpp_set,
-                                PyObject *(*ConvertToPy)(const T&),
-                                bool is_frozen=false) {
-        assert(cpython_asserts());
-        PyObject *r = NULL;
-        if (is_frozen) {
-            r = PyFrozenSet_New(NULL);
-        } else {
-            r = PySet_New(NULL);
-        }
-        if (! r) {
-            goto except;
-        }
-        for (auto &iter: cpp_set) {
-            PyObject *item = (*ConvertToPy)(iter);
-            if (! item || PyErr_Occurred() || PySet_Add(r, item)) {
-                goto except;
-            }
-        }
-        assert(! PyErr_Occurred());
-        assert(r);
-        goto finally;
-    except:
-        assert(PyErr_Occurred());
-        // Clean up set
-        if (r) {
-            PySet_Clear(r);
-            Py_DECREF(r);
-            r = NULL;
-        }
-    finally:
-        return r;
+    template<
+            template<typename ...> class ListLike,
+            typename T,
+            int (*PyObject_Check)(PyObject *),
+            T (*PyObject_Convert)(PyObject *),
+            int(*PyUnaryContainer_Check)(PyObject *),
+            Py_ssize_t(*PyUnaryContainer_Size)(PyObject *),
+            PyObject *(*PyUnaryContainer_Get)(PyObject *, size_t)>
+    int very_generic_py_unary_to_cpp_std_list_like(
+        PyObject *op, ListLike<T> &list_like
+    ) {
+        // Hand written code.
+        // ...
     }
 
------------------------------------------------------
-Python Dicts and C++ ``std::unordered_map<K, V>``
------------------------------------------------------
+This template has these parameters:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Python ``dict`` to C++ ``std::unordered_map<K, V>``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. list-table:: ``very_generic_py_unary_to_cpp_std_list_like()`` template parameters.
+   :widths: 20 50
+   :header-rows: 1
 
-Convert a Python ``dict`` to a ``std::unordered_map<K, V>``. ``PyKeyConvertToK`` and ``PyKeyConvertToK`` are function pointers to functions that takes a ``PyObject*`` and returns an instance of a ``K`` or ``V`` type. On failure to convert a ``PyObject*`` this function should make ``PyErr_Occurred()`` true and return a default value.
+   * - Template Parameter
+     - Notes
+   * - ``ListLike``
+     - The C++ container type, either a ``std::vector<T>`` or ``std::list<T>``.
+   * - ``T``
+     - The C++ type of the objects in the target C++ container.
+   * - ``PyObject_Check``
+     - A pointer to a function that checks that any ``PyObject *`` in the Python container is the correct type, for example that it is a ``bytes`` object.
+   * - ``PyObject_Convert``
+     - A pointer to a function that converts any ``PyObject *`` in the Python container to the C++ type, for example from ``bytes`` -> ``std::vector<char>``.
+   * - ``PyUnaryContainer_Check``
+     - A pointer to a function that checks that the ``PyObject *`` argument is the correct container type, for example a ``tuple``.
+   * - ``PyUnaryContainer_Size``
+     - A pointer to a function that returns the size of the Python container.
+   * - ``PyUnaryContainer_Get``
+     - A pointer to a function that gets a ``PyObject *`` from the Python container at a given index.
 
-On failure this function will make ``PyErr_Occurred()`` non-NULL and return an empty map.
+And the function has the following parameters.
+
+.. list-table:: ``generic_py_unary_to_cpp_std_list_like()`` parameters.
+   :widths: 20 20 50
+   :header-rows: 1
+
+   * - Type
+     - Name
+     - Notes
+   * - ``PyObject *``
+     - ``op``
+     - The Python container to read from.
+   * - ``ListLike<T> &``
+     - ``list_like``
+     - The C++ list like container to write to.
+
+The return value is zero on success or non-zero if there is a runtime error.
+These errors could be:
+
+* ``PyObject *op`` is not a container of the required type.
+* A member of the Python container can not be converted to the C++ type ``T`` (``PyObject_Check`` fails).
+
+Partial Specialisation to Convert a Python ``list`` to a C++ ``std::vector<T>`` or ``std::list<T>``
+-------------------------------------------------------------------------------------------------------
+
+This template can be partially specialised for converting Python *lists* of any type to C++ ``std::vector<T>`` or ``std::list<T>``.
+This is hand written code but it is trivial by wrapping a single function call.
+
+In the particular case of a ``std::vector`` we can use ``.reserve()`` as an optimisations to avoid excessive re-allocations.
 
 .. code-block:: cpp
 
-    template <typename K, typename V>
-    std::unordered_map<K, V>
-    py_dict_to_std_unordered_map(PyObject *dict,
-                                 K (*PyKeyConvertToK)(PyObject *),
-                                 V (*PyValConvertToV)(PyObject *)
-                                 ) {
-        Py_ssize_t pos = 0;
-        PyObject *key = NULL;
-        PyObject *val = NULL;
-        std::unordered_map<K, V> cpp_map;
-
-        if (! PyDict_Check(dict)) {
-            PyErr_Format(PyExc_TypeError,
-                         "Argument \"dict\" to %s must be dict not \"%s\"",
-                         __FUNCTION__, Py_TYPE(dict)->tp_name);
-            return cpp_map;
+    template<
+        typename T,
+        int (*PyObject_Check)(PyObject *),
+        T (*PyObject_Convert)(PyObject *)
+    >
+    int generic_py_list_to_cpp_std_list_like(
+        PyObject *op, std::vector<T> &container
+    ) {
+        // Reserve the vector, but only if it is a list.
+        // If it is any other Python object then ignore it as py_list_len()
+        // may give undefined behaviour.
+        // Leave it to very_generic_py_unary_to_cpp_std_list_like() to error
+        if (py_list_check(op)) {
+            container.reserve(py_list_len(op));
         }
-        while (PyDict_Next(dict, &pos, &key, &val)) {
-            K cpp_key = (*PyKeyConvertToK)(key);
-            if (PyErr_Occurred()) {
-                cpp_map.clear();
-                break;
-            }
-            V cpp_val = (*PyValConvertToV)(val);
-            if (PyErr_Occurred()) {
-                cpp_map.clear();
-                break;
-            }
-            cpp_map.emplace(cpp_key, cpp_val);
-        }
-        return cpp_map;
+        return very_generic_py_unary_to_cpp_std_list_like<
+            std::vector,
+            T,
+            PyObject_Check,
+            PyObject_Convert,
+            &py_list_check,
+            &py_list_len,
+            &py_list_get
+        >(op, container);
     }
 
-The following expects a Python dict of ``{bytes : bytes}`` and will convert it to a ``std::unordered_map<std::string, std::string>``:
+.. note::
+
+    The use of the function pointers to ``py_list_check``, ``py_list_len`` and ``py_list_get`` that are defined in this
+    project namespace.
+    These are thin wrappers around existing functions or macros in ``"Python.h"``.
+
+There is a similar partial specialisation for ``tuple``.
+
+Generated Functions
+=============================
+
+The particular function specialisations are created by a script that takes the cartesian product of object types and
+container types and creates functions for each container/object.
+
+C++ to Python
+----------------------------
+
+For example, to convert a C++ ``std::vector<double>`` to a Python ``list`` of ``float`` the following are created:
+
+A base declaration in *auto_py_convert_internal.h*:
 
 .. code-block:: cpp
 
-    std::unordered_map<std::string, std::string> result;
-    result = py_dict_to_std_unordered_map(py_dict,
-                                          &py_bytes_to_std_string,
-                                          &py_bytes_to_std_string);
-    if (PyErr_Occurred()) {
-        // Handle failure...
-    } else {
-        // Success...
-    }
+    template<typename T>
+    PyObject *
+    cpp_std_list_like_to_py_list(const std::vector<T> &container);
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-C++ ``std::unordered_map<K, V>`` to Python ``dict``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This generic function converts a ``std::unordered_map<K, V>`` to a new Python ``dict``. ``KeyConvertToPy``, ``ValConvertToPy`` are pointers to functions that takes an instance of a ``K`` or ``V`` type and returns a ``PyObject*``. These should return a new reference on success, NULL on failure.
+And a concrete declaration for each C++ target type ``T`` in *auto_py_convert_internal.h*:
 
 .. code-block:: cpp
 
-    template <typename K, typename V>
-    PyObject*
-    std_unordered_map_to_py_dict(const std::unordered_map<K, V> &cpp_map,
-                                 PyObject *(*KeyConvertToPy)(const K&),
-                                 PyObject *(*ValConvertToPy)(const V&)
-                                 ) {
-        PyObject *key = NULL;
-        PyObject *val = NULL;
-        PyObject *r = PyDict_New();
+    template <>
+    PyObject *
+    cpp_std_list_like_to_py_list<double>(const std::vector<double> &container);
 
-        if (!r) {
-            goto except;
-        }
-        for (auto &iter: cpp_map) {
-            key = (*KeyConvertToPy)(iter.first);
-            if (! key || PyErr_Occurred()) {
-                goto except;
-            }
-            val = (*ValConvertToPy)(iter.second);
-            if (! val || PyErr_Occurred()) {
-                goto except;
-            }
-            /* TODO: Fix PyDict_SetItem leak. */
-            if (PyDict_SetItem(r, key, val)) {
-                goto except;
-            }
-        }
-        assert(! PyErr_Occurred());
-        assert(r);
-        goto finally;
-    except:
-        assert(PyErr_Occurred());
-        // Clean up dict
-        if (r) {
-            PyDict_Clear(r);
-            Py_DECREF(r);
-        }
-        r = NULL;
-    finally:
-        return r;
-    }
-
-The following will convert a ``std::unordered_map<std::string, std::string>`` to a Python dict ``{bytes : bytes}``:
+And the concrete definition is in *auto_py_convert_internal.cpp*, this simply calls the generic function:
 
 .. code-block:: cpp
 
-    std::unordered_map<std::string, std::string> cpp_map {
-        {"Foo", "Bar"}
-    };
-    PyObject *py_dict = std_unordered_map_to_py_dict<std::string, std::string>(
-            cpp_map,
-            &std_string_to_py_bytes,
-            &std_string_to_py_bytes
-    );
-    if (! py_dict) {
-        // Handle failure...
-    } else {
-        // All good...
+    template <>
+    PyObject *
+    cpp_std_list_like_to_py_list<double>(const std::vector<double> &container) {
+        return generic_cpp_std_list_like_to_py_list<
+            double, &cpp_double_to_py_float
+        >(container);
     }
- 
+
+Here is the function hierarchy for converting lists to C++ ``std::vector<T>`` or ``std::list<T>``:
+This is the function hierarchy for the code that converts C++ ``std::vector<T>`` or ``std::list<T>`` to Python
+``list`` and ``tuple`` for all supported object types.
+
+.. code-block:: none
+
+                      very_generic_cpp_std_list_like_to_py_unary <-- Hand written
+                                           |
+                            /--------------------------\
+                            |                          |             Hand written partial
+            generic_cpp_std_list_like_to_py_list    tuples...    <-- specialisation for
+                            |                          |             std::vector
+                            |                          |             and std::list
+                            |                          |             (generally trivial).
+                            |                          |
+              cpp_std_list_like_to_py_list<T>         ...        <-- Generated
+                            |                          |
+            /-------------------------------\      /-------\
+            |                               |      |       |         Generated declaration
+    cpp_std_list_like_to_py_list<double>   ...    ...     ...    <-- and implementation
+                                                                     (one liners)
+
+Python to C++
+----------------------------
+
+For example, to convert a Python ``list`` of ``float`` to a C++ ``std::vector<double>`` the following are generated:
+
+A base declaration in *auto_py_convert_internal.h*:
+
+.. code-block:: cpp
+
+    template<typename T>
+    int
+    py_list_to_cpp_std_list_like(PyObject *op, std::list<T> &container);
+
+And a concrete declaration for each C++ target type ``T`` in *auto_py_convert_internal.h*:
+
+.. code-block:: cpp
+
+    template <>
+    int
+    py_list_to_cpp_std_list_like<double>(PyObject *op, std::list<double> &container);
+
+
+And the concrete definition is in *auto_py_convert_internal.cpp*:
+
+.. code-block:: cpp
+
+    template <>
+    int
+    py_list_to_cpp_std_list_like<double>(PyObject *op, std::vector<double> &container) {
+        return generic_py_list_to_cpp_std_list_like<
+            double, &py_float_check, &py_float_to_cpp_double
+        >(op, container);
+    }
+
+This is the function hierarchy for the code that converts Python ``list`` and ``tuple`` to C++ ``std::vector<T>`` or
+``std::list<T>`` for all supported object types.
+
+.. code-block:: none
+
+                      very_generic_py_unary_to_cpp_std_list_like <-- Hand written
+                                           |
+                            /--------------------------\
+                            |                          |             Hand written partial
+            generic_py_list_to_cpp_std_list_like    tuples...    <-- specialisation for
+                            |                          |             std::vector
+                            |                          |             and std::list
+                            |                          |             (generally trivial).
+                            |                          |
+              py_list_to_cpp_std_list_like<T>         ...        <-- Generated
+                            |                          |
+            /-------------------------------\      /-------\
+            |                               |      |       |         Generated declaration
+    py_list_to_cpp_std_list_like<double>   ...    ...     ...    <-- and implementation
+                                                                     (one liners)
+
+Usage
+========================
+
+Using the concrete function is as simple as this:
+
+.. code-block:: cpp
+
+    using namespace Python_Cpp_Containers;
+    // Create a PyObject* representing a list of Python floats.
+    PyObject *op = PyList_New(3);
+    PyList_SetItem(op, 0, PyFloat_FromDouble(21.0));
+    PyList_SetItem(op, 1, PyFloat_FromDouble(42.0));
+    PyList_SetItem(op, 2, PyFloat_FromDouble(3.0));
+
+    // Create the output vector...
+    std::vector<double> cpp_vector;
+
+    // Template specialisation will automatically invoke the appropriate
+    // function call.
+    // It will be a compile time error if the container/type function
+    // is not available.
+    // At run time this will return zero on success, non-zero on failure,
+    // for example if op is not a Python tuple or members of op can not be
+    // converted to C++ doubles.
+    int err = py_list_to_cpp_std_list_like(op, cpp_vector);
+    // Handle error checking...
+
+    // Now convert back.
+    // Again this will be a compile time error if the C++ type is not supported.
+    PyObject *new_op  = cpp_std_list_like_to_py_list(cpp_vector);
+    // new_op is a Python list of floats.
+    // new_op will be null on failure and a Python exception will have been set.
+
+
+.. rubric:: Footnotes
+.. [#] There are six unary container pairings (``tuple`` <-> ``std::list``, ``tuple`` <-> ``std::vector``,
+    ``list`` <-> ``std::list``, ``list`` <-> ``std::vector``,
+    ``set`` <-> ``std::unordered_set``, ``frozenset`` <-> ``std::unordered_set``) with six types
+    (``bool``, ``int``, ``float``, ``complex``, ``bytes``, ``str``).
+    Each container/type combination requires two functions to give two way conversion from Python to C++ and back.
+    Thus 6 (container pairings) * 6 (types) * 2 (way conversion) = 72 required functions.
+    For ``dict`` there are two container pairings (``dict`` <-> ``std::map``, ``dict`` <-> ``std::unordered_map``)
+    with the six types either of which can be the key or the value so 36 possible variations.
+    Thus 2 (container pairings) * 36 (type pairs) * 2 (way conversion) = 144 required functions.
+    Thus is a total of 72 + 144 = 216 functions.
