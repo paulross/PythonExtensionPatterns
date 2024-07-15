@@ -10,10 +10,13 @@
 Further Reading
 ============================================
 
-
 --------------------------------------------
 Useful Links
 --------------------------------------------
+
+* The CPython Internals book (RealPython): https://www.amazon.co.uk/CPython-Internals-Guide-Python-Interpreter/dp/1775093344
+* Python memory tracing: https://github.com/paulross/pymemtrace
+* Python/C++ homogeneous containers: https://github.com/paulross/PyCppContainers
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 C Extensions
@@ -24,4 +27,3 @@ C Extensions
 * Joe Jevnik's "How to Write and Debug C Extension Modules":
     * Documentation: `https://llllllllll.github.io/c-extension-tutorial/index.html <https://llllllllll.github.io/c-extension-tutorial/index.html>`_
     * Code: `https://github.com/llllllllll/c-extension-tutorial <https://github.com/llllllllll/c-extension-tutorial>`_
-

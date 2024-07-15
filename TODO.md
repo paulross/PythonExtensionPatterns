@@ -24,9 +24,9 @@ At least Python 3.9 to 3.13
 
 There is lots of good stuff here:
 
-- File handling such as `src/FileObjectToStdout/cFileObjectToStdout.c` and `src/FilePath/FilePath.cpp`
-- File wrapper between Python/C++ `src/PythonFile/PythonFileWrapper.h`
-- Capsules
+- ~~File handling such as `src/FileObjectToStdout/cFileObjectToStdout.c` and `src/FilePath/FilePath.cpp`~~
+- ~~File wrapper between Python/C++ `src/PythonFile/PythonFileWrapper.h`~~
+- ~~Capsules~~
 - C++ placement new.
 - ~~Pickling~~
 - Generators
@@ -48,9 +48,9 @@ Maturin: https://github.com/PyO3/maturin
 
 ## Reference Other Projects
 
-- The CPython Internals book (RealPython)
-- Python memory tracing: https://github.com/paulross/pymemtrace
-- Python/C++ homogeneous containers: https://github.com/paulross/PyCppContainers
+- ~~The CPython Internals book (RealPython)~~
+- ~~Python memory tracing: https://github.com/paulross/pymemtrace~~
+- ~~Python/C++ homogeneous containers: https://github.com/paulross/PyCppContainers~~
 
 
 ## Other
