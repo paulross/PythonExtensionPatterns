@@ -10,7 +10,7 @@ Target 3.8 as near end of life?
 
 At least Python 3.9 to 3.13
 
-Remove any reference to Python 2, for example "Porting to Python 3".
+~~Remove any reference to Python 2, for example "Porting to Python 3".~~
 
 ## General Improvements
 

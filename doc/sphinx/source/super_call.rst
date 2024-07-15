@@ -8,11 +8,11 @@
 Calling ``super()`` from C 
 =================================
 
-I needed to call super() from a C extension and I couldn't find a good description of how to do this online so I am including this here.
+I needed to call super() from a C extension and I couldn't find a good description of how to do this online so I am
+including this here.
 
-TODO: This code is specific to Python 3, add Python 2 support.
-
-Suppose we wanted to subclass a list and record how many times ``append()`` was called. This is simple enough in pure Python:
+Suppose we wanted to subclass a list and record how many times ``append()`` was called. This is simple enough in pure
+Python:
 
 .. code-block:: python
 
