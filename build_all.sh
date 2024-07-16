@@ -225,7 +225,7 @@ show_results_of_dist() {
 #run_cpp_tests
 echo "===> Removing build/ and dist/"
 #rm --recursive --force -- "build" "dist"
-rm -rf -- "build" "dist"
+rm -rf -- "build" "dist" "cPyExtPatt"
 
 if [ $OPT_REMOVE_REBUILD_VENVS = true ]; then
 echo "===> Removing virtual environments"

@@ -13,52 +13,42 @@
 #include <iostream>
 #include <string>
 
-/*** Converting Python bytes and Unicode to and from std::string ***/
-/* Convert a PyObject to a std::string and return 0 if succesful.
+/** Converting Python bytes and Unicode to and from std::string
+ * Convert a PyObject to a std::string and return 0 if successful.
  * If py_str is Unicode than treat it as UTF-8.
  * This works with Python 2.7 and Python 3.4 onwards.
  */
 static int
-py_string_to_std_string(const PyObject *py_str,
-                        std::string &result,
-                        bool utf8_only = true) {
+py_object_to_std_string(const PyObject *py_object, std::string &result, bool utf8_only = true) {
     result.clear();
-    if (PyBytes_Check(py_str)) {
-        result = std::string(PyBytes_AS_STRING(py_str));
+    if (PyBytes_Check(py_object)) {
+        result = std::string(PyBytes_AS_STRING(py_object));
         return 0;
     }
-    if (PyByteArray_Check(py_str)) {
-        result = std::string(PyByteArray_AS_STRING(py_str));
+    if (PyByteArray_Check(py_object)) {
+        result = std::string(PyByteArray_AS_STRING(py_object));
         return 0;
     }
     // Must be unicode then.
-    if (!PyUnicode_Check(py_str)) {
+    if (!PyUnicode_Check(py_object)) {
         PyErr_Format(PyExc_ValueError,
                      "In %s \"py_str\" failed PyUnicode_Check()",
                      __FUNCTION__);
         return -1;
     }
-    if (PyUnicode_READY(py_str)) {
+    if (PyUnicode_READY(py_object)) {
         PyErr_Format(PyExc_ValueError,
                      "In %s \"py_str\" failed PyUnicode_READY()",
                      __FUNCTION__);
         return -2;
     }
-    if (utf8_only && PyUnicode_KIND(py_str) != PyUnicode_1BYTE_KIND) {
+    if (utf8_only && PyUnicode_KIND(py_object) != PyUnicode_1BYTE_KIND) {
         PyErr_Format(PyExc_ValueError,
                      "In %s \"py_str\" not utf-8",
                      __FUNCTION__);
         return -3;
     }
-    // Python 3 and its minor versions (they vary)
-    //    const Py_UCS1 *pChrs = PyUnicode_1BYTE_DATA(pyStr);
-    //    result = std::string(reinterpret_cast<const char*>(pChrs));
-#if PY_MAJOR_VERSION >= 3
-    result = std::string((char *) PyUnicode_1BYTE_DATA(py_str));
-#else
-    // Nasty cast away constness because PyString_AsString takes non-const in Py2
-    result = std::string((char *) PyString_AsString(const_cast<PyObject *>(py_str)));
-#endif
+    result = std::string((char *) PyUnicode_1BYTE_DATA(py_object));
     return 0;
 }
 
@@ -80,14 +70,36 @@ std_string_to_py_utf8(const std::string &str) {
 }
 
 static PyObject *
-object_to_string_and_back(PyObject *Py_UNUSED(module), PyObject *args) {
-    PyObject *py_str = NULL;
-    PyObject *ret_val = NULL;
-    if (!PyArg_ParseTuple(args, "U", &py_str)) {
+py_object_to_string_and_back(PyObject *Py_UNUSED(module), PyObject *args) {
+    PyObject *py_object = NULL;
+
+    if (!PyArg_ParseTuple(args, "O", &py_object)) {
         return NULL;
     }
     std::string str_result;
-    int result = py_string_to_std_string(py_str, str_result, false);
+    int err_code = py_object_to_std_string(py_object, str_result, false);
+    if (err_code) {
+        PyErr_Format(PyExc_ValueError,
+                     "In %s \"py_object_to_std_string\" failed with error code %d",
+                     __FUNCTION__,
+                     err_code
+        );
+        return NULL;
+    }
+    if (PyBytes_Check(py_object)) {
+        return std_string_to_py_bytes(str_result);
+    }
+    if (PyByteArray_Check(py_object)) {
+        return std_string_to_py_bytearray(str_result);
+    }
+    if (PyUnicode_Check(py_object)) {
+        return std_string_to_py_utf8(str_result);
+    }
+    PyErr_Format(PyExc_ValueError,
+                 "In %s does not support python type %s",
+                 __FUNCTION__,
+                 Py_TYPE(py_object)->tp_name
+    );
     return NULL;
 }
 
@@ -145,19 +157,14 @@ unicode_dump_as_1byte_string(PyObject *py_str) {
 }
 
 static PyObject *
-unicode_to_string_and_back(PyObject *Py_UNUSED(module),
-                           PyObject *args
-) {
+unicode_to_string_and_back(PyObject *Py_UNUSED(module), PyObject *args) {
     PyObject *py_str = NULL;
     PyObject *ret_val = NULL;
-    if (!
-            PyArg_ParseTuple(args,
-                             "U", &py_str)) {
+    if (! PyArg_ParseTuple(args, "U", &py_str)) {
         return NULL;
     }
     unicode_dump_as_1byte_string(py_str);
-    std::cout << "Native:" <<
-              std::endl;
+    std::cout << "Native:" << std::endl;
     switch (PyUnicode_KIND(py_str)) {
         case PyUnicode_1BYTE_KIND:
             ret_val = unicode_1_to_string_and_back(py_str);
@@ -175,19 +182,8 @@ unicode_to_string_and_back(PyObject *Py_UNUSED(module),
             ret_val = NULL;
             break;
     }
-    return
-            ret_val;
+    return ret_val;
 }
-
-//PyObject *
-//parse_str_object(PyObject */* module */, PyObject * args) {
-//    PyObject * py_str = NULL;
-//    if (!PyArg_ParseTuple(args, "s", &py_str)) {
-//        return NULL;
-//    }
-//    Py_INCREF(Py_None);
-//    return Py_None;
-//}
 
 static PyMethodDef cUnicode_Methods[] = {
         {
@@ -196,12 +192,12 @@ static PyMethodDef cUnicode_Methods[] = {
                      METH_VARARGS,
                 "Convert a Python unicode string to std::string and back."
         },
-//        {
-//            "str",
-//            (PyCFunction) parse_str_object,
-//            METH_VARARGS,
-//            "Just parse a Python string."
-//        },
+        {
+                "py_object_to_string_and_back",
+                (PyCFunction) py_object_to_string_and_back,
+                     METH_VARARGS,
+                "Convert a Python unicode string, bytes, bytearray to std::string and back."
+        },
         {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

@@ -6,6 +6,7 @@ import psutil
 import pytest
 
 from cPyExtPatt.cpp import placement_new
+from cPyExtPatt.cpp import cUnicode
 
 
 # (PythonExtPatt3.11_A) ➜  PythonExtensionPatterns git:(develop) ✗ python
@@ -84,3 +85,30 @@ def test_placement_new_memory_no_del(count):
     rss = proc.memory_info().rss
     print(f'  RSS end: {rss:,d} {rss - rss_start:+,d}')
     assert abs(rss - rss_start) < (rss_margin + buffer_size)
+
+
+@pytest.mark.parametrize(
+    'input, expected',
+    (
+            ('String', 'String',),
+            ("a\xac\u1234\u20ac\U00008000", 'a¬ሴ€耀',),
+            ("a\xac\u1234\u20ac\U00018000", 'a¬ሴ€𘀀',),
+    )
+)
+def test_unicode_to_string_and_back(input, expected):
+    result = cUnicode.unicode_to_string_and_back(input)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'input, expected',
+    (
+            ('String', 'String',),
+            (b'String', b'String',),
+            (bytearray('String', 'ascii'), bytearray(b'String'),),
+    )
+)
+def test_py_object_to_string_and_back(input, expected):
+    result = cUnicode.py_object_to_string_and_back(input)
+    assert result == expected
+
