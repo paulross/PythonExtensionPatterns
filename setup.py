@@ -162,9 +162,9 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
-        Extension(f"{PACKAGE_NAME}.cpp.CppCtorDtorInPyObject",
+        Extension(f"{PACKAGE_NAME}.cpp.placement_new",
                   sources=[
-                      'src/cpy/cpp/CppCtorDtorInPyObject.cpp',
+                      'src/cpy/cpp/placement_new.cpp',
                   ],
                   include_dirs=['/usr/local/include', 'src/cpy/cpp', ],
                   library_dirs=[os.getcwd(), ],

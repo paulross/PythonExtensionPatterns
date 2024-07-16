@@ -20,16 +20,17 @@ public:
         std::cout << " with argument \"" << m_str << "\"" << std::endl;
     }
 
-    explicit Verbose(const std::string &str) : m_str(str), m_buffer(1024 * 1024 * 64, ' ') {
+    /// Constructor reserves 256MB to illustrate memory usage visible in the process RSS.
+    explicit Verbose(const std::string &str) : m_str(str), m_buffer(1024 * 1024 * 256, ' ') {
         std::cout << "Constructor at " << std::hex << (void *) this << std::dec;
-        std::cout << " with argument \"" << m_str << "\"" << std::endl;
+        std::cout << " with argument \"" << m_str << "\"" << " buffer len: " << m_buffer.size() << std::endl;
     }
 
     Verbose &operator=(const Verbose &rhs) {
         std::cout << "operator= at " << std::hex << (void *) this << std::dec;
         std::cout << " m_str: \"" << m_str << "\"";
         std::cout << " rhs at " << std::hex << (void *) &rhs << std::dec;
-        std:: cout << " rhs.m_str: \"" << rhs.m_str << "\"" << std::endl;
+        std::cout << " rhs.m_str: \"" << rhs.m_str << "\"" << std::endl;
         if (this != &rhs) {
             m_str = rhs.m_str;
         }
@@ -44,6 +45,10 @@ public:
             std::cout << " Verbose object at " << std::hex << (void *) this << std::dec;
             std::cout << " m_str: \"" << m_str << "\"" << std::endl;
         }
+    }
+
+    [[nodiscard]] ssize_t buffer_size() const {
+        return sizeof(Verbose) + 2 * sizeof(std::string) + m_str.size() + m_buffer.size();
     }
 
     ~Verbose() {
@@ -69,9 +74,10 @@ CppCtorDtorInPyObject_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObjec
     CppCtorDtorInPyObject *self;
     self = (CppCtorDtorInPyObject *) type->tp_alloc(type, 0);
     if (self != NULL) {
-        // Placement new
+        // Placement new used for direct allocation.
         new(&self->Attr) Verbose;
         self->Attr.print("Initial self->Attr");
+        // Dynamically allocated new.
         self->pAttr = new Verbose("pAttr");
         if (self->pAttr == NULL) {
             Py_DECREF(self);
@@ -94,10 +100,12 @@ static void
 CppCtorDtorInPyObject_dealloc(CppCtorDtorInPyObject *self) {
     printf("-- %s()\n", __FUNCTION__);
     self->Attr.print("self->Attr before delete");
+    // For self->Attr call the destructor directly.
     self->Attr.~Verbose();
 //    delete (&self->Attr);// self->Attr;
 //    ::operator delete (&self->Attr);// self->Attr;
     self->pAttr->print("self->pAttr before delete");
+    // For self->pAttr use delete.
     delete self->pAttr;
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
@@ -110,16 +118,35 @@ CppCtorDtorInPyObject_print(CppCtorDtorInPyObject *self, PyObject *Py_UNUSED(ign
     Py_RETURN_NONE;
 }
 
+/// Best guess of the size of the Verbose object(s).
+static PyObject *
+CppCtorDtorInPyObject_buffer_size(CppCtorDtorInPyObject *self, PyObject *Py_UNUSED(ignored)) {
+    printf("-- %s()\n", __FUNCTION__);
+    Py_ssize_t ret = 0;
+    ret += self->Attr.buffer_size();
+    ret += self->pAttr->buffer_size();
+    return Py_BuildValue("n", ret);
+}
+
 static PyMethodDef CppCtorDtorInPyObject_methods[] = {
-        {"print", (PyCFunction) CppCtorDtorInPyObject_print, METH_NOARGS,
+        {
+                "print",
+                (PyCFunction) CppCtorDtorInPyObject_print,
+                METH_NOARGS,
                 "Print the contents of the object."
+        },
+        {
+                "buffer_size",
+                (PyCFunction) CppCtorDtorInPyObject_buffer_size,
+                METH_NOARGS,
+                "The memory usage of the object."
         },
         {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
 static PyTypeObject CppCtorDtorInPyObjectType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        .tp_name = "CppCtorDtorInPyObject.CppCtorDtorInPyObject",
+        .tp_name = "CppCtorDtorInPyObject",
         .tp_basicsize = sizeof(CppCtorDtorInPyObject),
         .tp_itemsize = 0,
         .tp_dealloc = (destructor) CppCtorDtorInPyObject_dealloc,
@@ -130,17 +157,17 @@ static PyTypeObject CppCtorDtorInPyObjectType = {
         .tp_new = CppCtorDtorInPyObject_new,
 };
 
-static PyModuleDef cpp_module = {
+static PyModuleDef placement_new_module = {
         PyModuleDef_HEAD_INIT,
-        .m_name = "CppCtorDtorInPyObject",
+        .m_name = "placement_new",
         .m_doc = "Example module that creates an C++ extension type containing custom objects.",
         .m_size = -1,
 };
 
 PyMODINIT_FUNC
-PyInit_CppCtorDtorInPyObject(void) {
+PyInit_placement_new(void) {
 //    printf("-- %s()\n", __FUNCTION__);
-    PyObject * m = PyModule_Create(&cpp_module);
+    PyObject * m = PyModule_Create(&placement_new_module);
     if (m == NULL) {
         return NULL;
     }
