@@ -49,7 +49,9 @@ PACKAGE_NAME = 'cPyExtPatt'
 
 # Make directory cPyExtPatt/ and sub-directories such as Capsules/
 for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
-                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Capsules')):
+                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Capsules'),
+                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'cpp'),
+                 ):
     if not os.path.exists(dir_path):
         print(f'Making directory {dir_path}')
         os.makedirs(dir_path)
@@ -159,6 +161,15 @@ setup(
                   library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
                   extra_compile_args=extra_compile_args_c,
                   language='c',
+                  ),
+        Extension(f"{PACKAGE_NAME}.cpp.CppCtorDtorInPyObject",
+                  sources=[
+                      'src/cpy/cpp/CppCtorDtorInPyObject.cpp',
+                  ],
+                  include_dirs=['/usr/local/include', 'src/cpy/cpp', ],
+                  library_dirs=[os.getcwd(), ],
+                  extra_compile_args=extra_compile_args_cpp,
+                  language='c++11',
                   ),
     ]
 )

@@ -99,7 +99,8 @@ add_executable(PythonExtensionPatterns
         src/cpy/Capsules/spam_capsule.c
         src/cpy/Capsules/spam_client.c
         src/cpy/Capsules/datetimetz.c
-        )
+        src/cpy/cpp/CppCtorDtorInPyObject.cpp
+)
 
 link_directories(
         ${PYTHON_LINK_LIBRARY}
