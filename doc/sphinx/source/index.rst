@@ -35,5 +35,6 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
 Indices and tables
 ==================
 
+* :ref:`genindex`
+* :ref:`modindex`
 * :ref:`search`
-

@@ -163,13 +163,20 @@ setup(
                   language='c',
                   ),
         Extension(f"{PACKAGE_NAME}.cpp.placement_new",
-                  sources=[
-                      'src/cpy/cpp/placement_new.cpp',
-                  ],
+                  sources=['src/cpy/cpp/placement_new.cpp',],
                   include_dirs=['/usr/local/include', 'src/cpy/cpp', ],
                   library_dirs=[os.getcwd(), ],
                   extra_compile_args=extra_compile_args_cpp,
                   language='c++11',
                   ),
+        Extension(f"{PACKAGE_NAME}.cpp.cUnicode",
+                  sources=['src/cpy/cpp/cUnicode.cpp',],
+                  include_dirs=['/usr/local/include', ],
+                  library_dirs = [os.getcwd(),],
+                  extra_compile_args=extra_compile_args_cpp,
+                  language='c++11',
+                  # undef_macros=undef_macros,
+                  ),
+
     ]
 )

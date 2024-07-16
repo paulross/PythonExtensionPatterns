@@ -27,9 +27,12 @@ There is lots of good stuff here:
 - ~~File handling such as `src/FileObjectToStdout/cFileObjectToStdout.c` and `src/FilePath/FilePath.cpp`~~
 - ~~File wrapper between Python/C++ `src/PythonFile/PythonFileWrapper.h`~~
 - ~~Capsules~~
-- C++ placement new.
+- ~~C++ placement new.~~
 - ~~Pickling~~
 - Generators
+- C++ snippets as testable code: Unicode, .
+- Buffer protocol (from RaPiVot).
+- Index.
 
 ## Other Projects to Merge Here
 

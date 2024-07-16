@@ -100,7 +100,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/Capsules/spam_client.c
         src/cpy/Capsules/datetimetz.c
         src/cpy/cpp/placement_new.cpp
-)
+        src/cpy/cpp/cUnicode.cpp src/cpy/cpp/cUnicode.cpp)
 
 link_directories(
         ${PYTHON_LINK_LIBRARY}

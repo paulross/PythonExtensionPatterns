@@ -13,7 +13,8 @@ A CPython Extension containing C++ Objects
 Here is an example of using C++ classes within a CPython extension type (Python object).
 It shows the various stages of construction and destruction.
 
-Only the important code is shown here. The complete code is in ``src/cpy/cpp/placement_new.cpp`` and the tests are in ``tests/unit/test_c_cpp.py``
+Only the important code is shown here. The complete code is in ``src/cpy/cpp/placement_new.cpp`` and the tests are
+in ``tests/unit/test_c_cpp.py``
 
 -----------------------------------------------
 Allocation of C++ Objects and Placement new
@@ -24,7 +25,7 @@ In ``src/cpy/cpp/placement_new.cpp`` there is a C++ class ``Verbose`` which:
 - Reports on ``stdout`` construction and destruction events.
 - Allocates an in-memory buffer of 256MB so that the memory usage, and any leaks, will show up in the process RSS.
 
-We are gpoing to create a Python extension that has a Python class that contains the C++ ``Verbose`` objects in two
+We are going to create a Python extension that has a Python class that contains the C++ ``Verbose`` objects in two
 ways:
 
 - Directly.
@@ -52,7 +53,7 @@ Allocates sufficient, uninitialised, space for the ``CppCtorDtorInPyObject`` obj
 This will mean that both the ``Verbose Attr;`` and ``Verbose *pAttr;`` are uninitialised.
 To initialise them two different techniques must be used:
 
-- For ``Verbose Attr;`` this must be initialised with *placement new*: ``new(&self->Attr) Verbose;``.
+- For ``Verbose Attr;`` this must be initialised with *placement new* :index:`placement new`: ``new(&self->Attr) Verbose;``.
 - For ``Verbose *pAttr;`` this must be initialised with a dynamic new: ``self->pAttr = new Verbose("pAttr");``.
 
 Here is the complete code:
