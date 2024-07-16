@@ -22,6 +22,16 @@ PyAPI_FUNC(int) Py_Is(PyObject *x, PyObject *y);
 // Test if an object is the None singleton, the same as "x is None" in Python.
 PyAPI_FUNC(int) Py_IsNone(PyObject *x);
 #define Py_IsNone(x) Py_Is((x), Py_None)
+
+//PyAPI_FUNC(int) _PyDateTime_HAS_TZINFO(PyObject *datetime) {
+//    if (datetime->tzinfo == NULL) {
+//        return -1;
+//    } else if (Py_IsNone(datetime->tzinfo)) {
+//        PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+//        return -2;
+//    }
+//    return 0;
+//}
 #endif
 
 typedef struct {

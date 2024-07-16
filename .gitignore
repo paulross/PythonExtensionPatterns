@@ -16,3 +16,5 @@ cmake-build-release/
 cPyExtPatt.egg-info/
 
 dist/
+
+cPyExtPatt/

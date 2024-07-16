@@ -8,6 +8,7 @@ Created on May 30, 2013
 import os
 
 import os
+import pathlib
 from setuptools import setup, Extension
 import sysconfig
 
@@ -55,6 +56,7 @@ for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
     if not os.path.exists(dir_path):
         print(f'Making directory {dir_path}')
         os.makedirs(dir_path)
+        pathlib.Path(os.path.join(dir_path, '__init__.py')).touch()
 
 # For keywords see: https://setuptools.pypa.io/en/latest/references/keywords.html
 setup(
