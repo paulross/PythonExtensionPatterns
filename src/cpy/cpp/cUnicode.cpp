@@ -129,7 +129,7 @@ unicode_1_to_string_and_back(PyObject *py_str) {
 static PyObject *
 unicode_2_to_string_and_back(PyObject *py_str) {
     assert(PyUnicode_KIND(py_str) == PyUnicode_2BYTE_KIND);
-    // std::u16string is a std::basic_string<char16_t>
+    // NOTE: std::u16string is a std::basic_string<char16_t>
     std::u16string result = std::u16string((char16_t *) PyUnicode_2BYTE_DATA(py_str));
     dump_string(result);
     return PyUnicode_FromKindAndData(PyUnicode_2BYTE_KIND,
@@ -140,7 +140,7 @@ unicode_2_to_string_and_back(PyObject *py_str) {
 static PyObject *
 unicode_4_to_string_and_back(PyObject *py_str) {
     assert(PyUnicode_KIND(py_str) == PyUnicode_4BYTE_KIND);
-    // std::u32string is a std::basic_string<char32_t>
+    // NOTE: std::u32string is a std::basic_string<char32_t>
     std::u32string result = std::u32string((char32_t *) PyUnicode_4BYTE_DATA(py_str));
     dump_string(result);
     return PyUnicode_FromKindAndData(PyUnicode_4BYTE_KIND,

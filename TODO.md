@@ -30,7 +30,7 @@ There is lots of good stuff here:
 - ~~C++ placement new.~~
 - ~~Pickling~~
 - Generators
-- C++ snippets as testable code: Unicode, .
+- C++ snippets as testable code: ~~Unicode~~, .
 - Buffer protocol (from RaPiVot).
 - Index.
 
