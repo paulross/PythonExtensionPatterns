@@ -78,10 +78,10 @@ Some examples are:
   An advantage that distinguishes it from other projects is its multi-language support.
 - `Cython <https://cython.org>`_ is another well established project.
   You write in Python-like pseudo code that is translated into C which is then compiled into a Python module.
-  A notable feature is its excellent support for interfacing efficiently with ``numpy``.
+  A notable feature is its excellent support for working with ``numpy``.
   If you are using Cython you might find another project of mine,
   `Notes on Cython <https://github.com/paulross/NotesOnCython>`_, useful.
-- `PyBibd11 <https://github.com/pybind/pybind11>`_ is an excellent and ingenious project that uses C++ template to do
+- `PyBind11 <https://github.com/pybind/pybind11>`_ is an excellent and ingenious project that uses C++ template to do
   the bulk of the work in generating code for a Python module.
 
 There are common drawbacks of code generators:

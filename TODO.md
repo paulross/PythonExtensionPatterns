@@ -6,9 +6,9 @@ This is a plan for a refresh of this project to version 0.2.0.
 
 See: https://devguide.python.org/versions/
 
-Target 3.8 as near end of life?
+~~Target 3.8 as near end of life?~~ No.
 
-At least Python 3.9 to 3.13
+At least Python 3.9 to 3.13. Yes.
 
 ~~Remove any reference to Python 2, for example "Porting to Python 3".~~
 
@@ -19,6 +19,8 @@ At least Python 3.9 to 3.13
 - Different Python versions - use tox.ini?
 - Add tests.
 - Standardise code such as filenames, function names etc.
+- ~~Improve the introduction with a discussion of reasons for doing this.~~
+- ~~Add a 'simple example' section after the introduction.~~
 
 ## Merge `PythonExtensionsBasic`
 
@@ -48,13 +50,11 @@ Maybe rewrite the example Custom class from the Python documentation in Rust?
 Link: https://github.com/PyO3/pyo3
 Maturin: https://github.com/PyO3/maturin
 
-
 ## Reference Other Projects
 
 - ~~The CPython Internals book (RealPython)~~
 - ~~Python memory tracing: https://github.com/paulross/pymemtrace~~
 - ~~Python/C++ homogeneous containers: https://github.com/paulross/PyCppContainers~~
-
 
 ## Other
 
@@ -64,5 +64,3 @@ Add section on using CMake.
 
 - On Python announce mailing list.
 - Propose change to the Python dev page for Python versions: https://devguide.python.org/internals/exploring/#exploring
-
-

@@ -45,7 +45,7 @@ The C Equivalent Function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Firstly we can write the C equivalent to ``fibonacci()`` in the file ``cFibA.c``, note the inclusion of ``"Python.h"``
-which will give us access to the whole Python C API:
+which will give us access to the whole Python C API (we will use that later on):
 
 .. code-block:: c
 
@@ -63,8 +63,9 @@ which will give us access to the whole Python C API:
 The Python Interface to C
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is a pure C function, we now write a C function that takes Python objects as arguments, converts them to C objects
-(so-called 'un-boxing'), calls ``fibonacci()`` then converts the C result to a Python object (so-called 'boxing').
+So far we have a pure C function, we now write a C function that takes Python objects as arguments, converts them to C
+objects (so-called 'un-boxing'), calls ``fibonacci()`` then converts the C result to a Python object
+(so-called 'boxing').
 
 .. code-block:: c
 
@@ -83,7 +84,8 @@ This is a pure C function, we now write a C function that takes Python objects a
 The Python Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Then we need to write some C code that defines the Python module that contains this function:
+Then we need to write some C code that defines the Python module that contains this function.
+The first is a data structure to define the Python functions in the module:
 
 .. code-block:: c
 
@@ -97,6 +99,11 @@ Then we need to write some C code that defines the Python module that contains t
         {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
+Then we have a structure that defines the module itself, its name and so on.
+Note that this references the ``module_methods`` structure above:
+
+.. code-block:: c
+
     static PyModuleDef cFibA = {
         PyModuleDef_HEAD_INIT,
         .m_name = "cFibA",
@@ -104,6 +111,10 @@ Then we need to write some C code that defines the Python module that contains t
         .m_size = -1,
         .m_methods = module_methods,
     };
+
+Lastly a function to to initialise the module:
+
+.. code-block:: c
 
     PyMODINIT_FUNC PyInit_cFibA(void) {
         PyObject *m = PyModule_Create(&cFibA);
@@ -193,7 +204,7 @@ We put this in the file ``pFibB.py``:
             return index
         return fibonacci(index - 2) + fibonacci(index - 1)
 
-Now what does our timeing code say?
+Now what does our timing code say?
 
 .. code-block:: bash
 
@@ -241,8 +252,10 @@ Now what does our timeing code say?
 
 So our C code is back in the game but still slower.
 What is more the C code has added significant complexity to our codebase.
-And this codebase has to be maintained, at what cost given the options?
+And this codebase has to be maintained, and at what cost?
 The C code has also added significant risk as well as identified by the ``/* FIXME */`` comment above.
+
+So while the options are available there are tradeoffs to be made.
 
 --------------------------
 Summary
