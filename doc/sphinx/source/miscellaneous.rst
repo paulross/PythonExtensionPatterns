@@ -4,6 +4,7 @@
 .. toctree::
     :maxdepth: 2
 
+.. _miscellaneous:
 ====================================
 Miscellaneous
 ====================================
@@ -39,3 +40,12 @@ And the binary now looks like this:
 
     $ nm -m Foo.cpython-36m-darwin.so | grep Init
     00000000000010d0 (__TEXT,__text) external _PyInit_Foo
+
+.. _miscellaneous_migration_python_c:
+---------------------------------------
+Migrating from Python to a C Extension
+---------------------------------------
+
+
+
+

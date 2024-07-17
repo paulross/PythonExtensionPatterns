@@ -14,6 +14,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
 
     headings
     introduction
+    simple_example
     refcount
     exceptions
     canonical_function
