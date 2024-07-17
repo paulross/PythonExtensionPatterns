@@ -31,8 +31,8 @@ There is lots of good stuff here:
 - ~~Pickling~~
 - Generators
 - C++ snippets as testable code: ~~Unicode~~, .
-- Buffer protocol (from RaPiVot).
-- Index.
+- ~~Mark Buffer protocol (from RaPiVot) as TODO~~.
+- ~~Index, with entries such as :index:`Unicode`:~~ Abandoned because Sphinx does not support this in a sane way.
 
 ## Other Projects to Merge Here
 

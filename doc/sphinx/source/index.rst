@@ -13,6 +13,7 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
     :maxdepth: 3
 
     headings
+    introduction
     refcount
     exceptions
     canonical_function
@@ -32,9 +33,8 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
     miscellaneous
     further_reading
 
-Indices and tables
+
+Search
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

@@ -53,7 +53,7 @@ Allocates sufficient, uninitialised, space for the ``CppCtorDtorInPyObject`` obj
 This will mean that both the ``Verbose Attr;`` and ``Verbose *pAttr;`` are uninitialised.
 To initialise them two different techniques must be used:
 
-- For ``Verbose Attr;`` this must be initialised with *placement new* :index:`placement new`: ``new(&self->Attr) Verbose;``.
+- For ``Verbose Attr;`` this must be initialised with *placement new* ``new(&self->Attr) Verbose;``.
 - For ``Verbose *pAttr;`` this must be initialised with a dynamic new: ``self->pAttr = new Verbose("pAttr");``.
 
 Here is the complete code:

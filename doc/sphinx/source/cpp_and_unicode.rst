@@ -6,7 +6,6 @@
 
 .. _cpp_and_unicode:
 
-:index:`Unicode`:
 ====================================
 Python Unicode Strings and C++
 ====================================

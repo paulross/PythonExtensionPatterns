@@ -4,16 +4,6 @@
 .. toctree::
     :maxdepth: 3
 
-============
-Introduction 
-============
-
-Writing Python C Extensions can be daunting; you have to cast aside the security and fluidity of Python and embrace C, not just C but Pythons C API, which is huge [#]_. Not only do you have to worry about just your standard ``malloc()`` and ``free()`` cases but now you have to contend with how CPython's does its memory management which is by *reference counting*. 
-
-I describe some of the pitfalls you (I am thinking of you as a savvy C coder) can encounter and some of the coding patterns that you can use to avoid them.
-
-First up: understanding reference counts and Python's terminology.
-
 =================================
 PyObjects and Reference Counting 
 =================================
@@ -460,7 +450,6 @@ Type            Contract
 
 .. rubric:: Footnotes
 
-.. [#] Huge, but pretty consistent once mastered.
 .. [#] To be picky we just need to decrement the use of *our* reference to it. Other code that has incremented the same reference is responsible for decrementing their use of the reference.
 .. [#] Of course we never *remove* items in a list we merely decrement their reference count (and if that hits zero then they are deleted). Such as:
 .. code-block:: python
