@@ -33,7 +33,17 @@ In the repl we can measure its performance with ``timeit``:
     Python timeit: 1.459842
     >>>
 
+-----------------------
+Faster Please
+-----------------------
+
 Now we want something faster so we turn to creating a C extension.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The C Equivalent Function
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Firstly we can write the C equivalent to ``fibonacci()`` in the file ``cFibA.c``, note the inclusion of ``"Python.h"``
 which will give us access to the whole Python C API:
 
@@ -49,8 +59,12 @@ which will give us access to the whole Python C API:
         return fibonacci(index - 2) + fibonacci(index - 1);
     }
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The Python Interface to C
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 This is a pure C function, we now write a C function that takes Python objects as arguments, converts them to C objects
-(so-called 'un-boxing'), calls ``fibonacci()`` then converts teh C result to a Python object (so-called 'boxing').
+(so-called 'un-boxing'), calls ``fibonacci()`` then converts the C result to a Python object (so-called 'boxing').
 
 .. code-block:: c
 
@@ -65,31 +79,40 @@ This is a pure C function, we now write a C function that takes Python objects a
         return Py_BuildValue("l", result);
     }
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The Python Module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Then we need to write some C code that defines the Python module that contains this function:
 
 .. code-block:: c
 
     static PyMethodDef module_methods[] = {
-            {"fibonacci",
-                    (PyCFunction) py_fibonacci,
-                    METH_VARARGS,
-                    "Returns the Fibonacci value."
-            },
-            {NULL, NULL, 0, NULL} /* Sentinel */
+        {
+            "fibonacci",
+            (PyCFunction) py_fibonacci,
+            METH_VARARGS,
+            "Returns the Fibonacci value."
+        },
+        {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
     static PyModuleDef cFibA = {
-            PyModuleDef_HEAD_INIT,
-            .m_name = "cFibA",
-            .m_doc = "Fibonacci in C.",
-            .m_size = -1,
-            .m_methods = module_methods,
+        PyModuleDef_HEAD_INIT,
+        .m_name = "cFibA",
+        .m_doc = "Fibonacci in C.",
+        .m_size = -1,
+        .m_methods = module_methods,
     };
 
     PyMODINIT_FUNC PyInit_cFibA(void) {
         PyObject *m = PyModule_Create(&cFibA);
         return m;
     }
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``setup.py`` File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Finally we add a ``setup.py`` that specifies how to compile this code:
 
@@ -121,11 +144,22 @@ Finally we add a ``setup.py`` that specifies how to compile this code:
 
 Running ``python setup.py develop`` will compile and build the module which can be used thus:
 
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Trying it Out
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. code-block:: python
 
     >>> from cPyExtPatt.SimpleExample import cFibA
     >>> cFibA.fibonacci(8)
     21
+
+Great, it works!
+
+----------------------------
+How Did We Do?
+----------------------------
 
 There is a test file that uses ``timeit`` to check the performance of the Python and C code at
 ``src/cpy/SimpleExample/timeit_test.py``.
@@ -133,25 +167,91 @@ There is a test file that uses ``timeit`` to check the performance of the Python
 
 .. code-block:: bash
 
-    (PythonExtPatt3.11_A) ➜  SimpleExample git:(develop) ✗ python timeit_test.py
+    (PythonExtPatt3.11_A) SimpleExample git:(develop) $ python timeit_test.py
     Index: 32 number of times: 20
     Version A, no cacheing:
     Python timeit: 7.321638
          C timeit: 0.131115
     C is 55.8 times FASTER.
 
+So with a small bit of work we have got a performance improvement of 55x.
+
+----------------------------
+It's Not Over Yet
+----------------------------
+
+Suppose we change the Python code by adding a couple of lines thus that uses a local cache for the results.
+We put this in the file ``pFibB.py``:
+
+.. code-block:: python
+
+    import functools
+
+    @functools.cache
+    def fibonacci(index: int) -> int:
+        if index < 2:
+            return index
+        return fibonacci(index - 2) + fibonacci(index - 1)
+
+Now what does our timeing code say?
+
+.. code-block:: bash
+
     Version A with Python cache, no C cache:
     Python timeit: 0.000012
          C timeit: 0.130394
     C is 11058.7 times SLOWER.
+
+So our Python code is now vastly faster than our C code.
+This emphasises that performance can also come from a good choice of libraries, data structures, algorithms,
+cacheing and other techniques as well as the choice of the language of the implementation.
+
+-------------------------------
+C Fights Back
+-------------------------------
+
+Whatever we can do in Python we can do in C so what if we write ``cFibB.c`` to change the ``fibonacci()`` function to
+have a cache as well?
+
+.. code-block:: c
+
+    long fibonacci(long index) {
+        static long *cache = NULL;
+        if (!cache) {
+            /* FIXME */
+            cache = calloc(1000, sizeof(long));
+        }
+        if (index < 2) {
+            return index;
+        }
+        if (!cache[index]) {
+            cache[index] = fibonacci(index - 2) + fibonacci(index - 1);
+        }
+        return cache[index];
+    }
+
+Now what does our timeing code say?
+
+.. code-block:: bash
 
     Version B, both are cached:
     Python timeit: 0.000004
          C timeit: 0.000007
     C is 1.9 times SLOWER.
 
+So our C code is back in the game but still slower.
+What is more the C code has added significant complexity to our codebase.
+And this codebase has to be maintained, at what cost given the options?
+The C code has also added significant risk as well as identified by the ``/* FIXME */`` comment above.
 
+--------------------------
+Summary
+--------------------------
 
-
+- C Extensions can give vastly improved performance.
+- A good choice of Python libraries, algorithms, code architecture and design can improve performance more cheaply
+  than going to C.
+- All of this exposes the possible tradeoffs between the techniques.
+- It is very useful in software engineering to have tradeoffs such as these that are explicit and visible.
 
 Next up: understanding reference counts and Python's terminology.

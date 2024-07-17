@@ -9,7 +9,7 @@ from cPyExtPatt.cpp import placement_new
 from cPyExtPatt.cpp import cUnicode
 
 
-# (PythonExtPatt3.11_A) ➜  PythonExtensionPatterns git:(develop) ✗ python
+# (PythonExtPatt3.11_A) $ PythonExtensionPatterns git:(develop) ✗ python
 # Python 3.11.6 (v3.11.6:8b6ee5ba3b, Oct  2 2023, 11:18:21) [Clang 13.0.0 (clang-1300.0.29.30)] on darwin
 # Type "help", "copyright", "credits" or "license" for more information.
 # >>> from cPyExtPatt.cpp import placement_new

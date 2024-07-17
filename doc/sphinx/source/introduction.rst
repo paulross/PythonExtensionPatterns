@@ -27,27 +27,26 @@ There are several reasons why you might want to write a C extension:
 Performance
 ^^^^^^^^^^^^^^^^^^^
 
-This is the most compelling reason
-
-50x or 100x improvement over pure Python is not unusual
+This is the most compelling reason, a 50x or 100x improvement over pure Python is not unusual.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Interface with C/C++ libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-C, but C++ (any version) works well.
+If you have a library in C or C++ you will have to write a C extension to give a Python interface to that library.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Less memory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A float in Python is 24 bytes, a double in C is 8 bytes.
+Python is pretty memory hungry, for example a float in Python is 24 bytes, the corresponding double in C is 8 bytes.
+C and C++ have more specific deallocation policies than with a garbage collected language.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The GIL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Flee from the Global Interpreter Lock (GIL)
+C Extensions do not need the Global Interpreter Lock (GIL) when working with C/C++ code.
 
 Against all of these there is the additional skill, time, and resulting complexity involved in writing C extensions.
 
@@ -94,6 +93,10 @@ There are common drawbacks of code generators:
   many small objects, code generators can create a performance overhead compared to C extensions.
   An example is shown here with my project on `XML creation <https://github.com/paulross/xmlwriter>`_.
 
+
+There are many other alternatives such as ``pypy``, ``numba`` that are worth knowing about.
+
+.. _introduction_summary_advice:
 
 ------------------------------------
 Summary Advice

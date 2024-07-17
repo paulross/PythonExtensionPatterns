@@ -5,6 +5,7 @@
     :maxdepth: 2
 
 .. _miscellaneous:
+
 ====================================
 Miscellaneous
 ====================================
@@ -42,9 +43,32 @@ And the binary now looks like this:
     00000000000010d0 (__TEXT,__text) external _PyInit_Foo
 
 .. _miscellaneous_migration_python_c:
+
 ---------------------------------------
 Migrating from Python to a C Extension
 ---------------------------------------
+
+Suppose you have followed my advice in :ref:`introduction_summary_advice` in that you write you code in Python first
+then, when profiling shows the slow spots, rewrite in C.
+You might not want to do this all at once so here is a technique that allows you to migrate to C in a flexible way, say
+over a number of releases, without you users having to change *their* code.
+
+Suppose you have a bunch of functions and classes in a Python module ``spam.py``.
+Then take all that code an put it in a file, say, ``py_spam.py``.
+Now create an empty C Extension calling it, say, ``c_spam``.
+
+Change ``spam.py`` to be merely:
+
+.. code-block:: python
+
+    from py_spam import *
+    from c_spam import *
+
+Your users, including your test code, just uses ``import spam`` and they get all of ``py_spam`` for now and nothing
+from ``c_spam`` as it is empty.
+
+You can now, judiciously, add functionality and classes to ``c_spam`` and your users will automatically get those as
+``spam`` overwrites the appropriate imports from ``py_spam`` with the ones from ``c_spam``.
 
 
 
