@@ -159,9 +159,10 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
-        Extension(f"{PACKAGE_NAME}.Capsules.datetimetz", sources=['src/cpy/Capsules/datetimetz.c', ],
-                  include_dirs=['/usr/local/include', 'src/cpy/Capsules', ],  # os.path.join(os.getcwd(), 'include'),],
-                  library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
+        Extension(f"{PACKAGE_NAME}.Capsules.datetimetz",
+                  sources=['src/cpy/Capsules/datetimetz.c', 'src/cpy/Util/py_call_super.c', ],
+                  include_dirs=['/usr/local/include', 'src/cpy/Capsules', 'src/cpy/Util', ],
+                  library_dirs=[os.getcwd(), ],
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),

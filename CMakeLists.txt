@@ -102,7 +102,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/cpp/placement_new.cpp
         src/cpy/cpp/cUnicode.cpp src/cpy/cpp/cUnicode.cpp
         src/cpy/SimpleExample/cFibA.c
-        src/cpy/SimpleExample/cFibA.h)
+        src/cpy/SimpleExample/cFibA.h src/cpy/Util/py_call_super.h src/cpy/Util/py_call_super.c)
 
 link_directories(
         ${PYTHON_LINK_LIBRARY}

@@ -8,6 +8,8 @@
 
 #include <Python.h>
 #include "datetime.h"
+#include "py_call_super.h"
+
 
 #define FPRINTF_DEBUG 0
 
@@ -39,11 +41,11 @@ typedef struct {
 } DateTimeTZ;
 
 
-static PyObject *
+static DateTimeTZ *
 raise_if_no_tzinfo(DateTimeTZ *self) {
     // Raise if no TZ.
 #if PY_MINOR_VERSION >= 10
-    if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
+    if (!_PyDateTime_HAS_TZINFO(&self->datetime)) {
         PyErr_SetString(PyExc_TypeError, "No time zone provided.");
         Py_DECREF(self);
         self = NULL;
@@ -59,7 +61,7 @@ raise_if_no_tzinfo(DateTimeTZ *self) {
             self = NULL;
         }
 #endif // PY_MINOR_VERSION < 10
-    return (PyObject *)self;
+    return self;
 }
 
 
@@ -99,7 +101,7 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 #endif // PY_MINOR_VERSION < 10
 #endif
         // Raise if no TZ.
-        return raise_if_no_tzinfo(self);
+        self = raise_if_no_tzinfo(self);
 //#if PY_MINOR_VERSION >= 10
 //        if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
 //            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
@@ -123,6 +125,7 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 PyObject *
 DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
+#if 0
     PyObject *super     = NULL;
     PyObject *super_args = NULL;
     PyObject *func      = NULL;
@@ -176,23 +179,47 @@ DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
         goto except;
     }
     result = PyObject_Call(func, args, kwargs);
+#endif
+
+    PyObject *result = call_super_name(self, "replace", args, kwargs);
+    if (! result) {
+        assert(PyErr_Occurred());
+//        PyErr_Format(
+//                PyExc_RuntimeError,
+//                "Failed to execute super() call to \"%S\" is not callable.", "result"
+//        );
+        goto except;
+    }
     /* Raise if no tzinfo */
-    result = raise_if_no_tzinfo((DateTimeTZ *)result);
+    result = (PyObject *) raise_if_no_tzinfo((DateTimeTZ *) result);
     if (!result) {
         goto except;
     }
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     goto finally;
-except:
+    except:
     assert(PyErr_Occurred());
     Py_XDECREF(result);
     result = NULL;
-finally:
+    finally:
+#if 0
     Py_XDECREF(super);
     Py_XDECREF(super_args);
     Py_XDECREF(func);
+#endif
     return result;
 }
+
+static PyMethodDef DateTimeTZ_methods[] = {
+        /* Class methods: */
+        {
+                "replace",
+                (PyCFunction) DateTimeTZ_replace,
+                METH_VARARGS | METH_KEYWORDS,
+                PyDoc_STR("Return datetime with new specified fields.")
+        },
+        {NULL, NULL, 0, NULL}  /* Sentinel */
+};
 
 
 static PyTypeObject DatetimeTZType = {
@@ -203,14 +230,15 @@ static PyTypeObject DatetimeTZType = {
         .tp_itemsize = 0,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_new = DateTimeTZ_new,
+        .tp_methods = DateTimeTZ_methods,
 };
 
 static PyModuleDef datetimetzmodule = {
         PyModuleDef_HEAD_INIT,
         .m_name = "datetimetz",
         .m_doc = (
-            "Module that contains a datetimetz,"
-            "a datetime.datetime with a mandatory time zone."
+                "Module that contains a datetimetz,"
+                "a datetime.datetime with a mandatory time zone."
         ),
         .m_size = -1,
 };

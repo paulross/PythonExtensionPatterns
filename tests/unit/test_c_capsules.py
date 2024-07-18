@@ -10,9 +10,6 @@ from cPyExtPatt.Capsules import spam_client
 from cPyExtPatt.Capsules import datetimetz
 
 
-# d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14)
-
-
 def test_spam():
     result = spam.system("ls -l")
     assert result == 0
@@ -182,11 +179,27 @@ def test_datetimetz_datetimetz_subtract_raises(d_tz, d, expected):
         d_tz - d
     assert err.value.args[0] == "can't subtract offset-naive and offset-aware datetimes"
 
-def test_datetimetz_datetimetz_replace():
+
+def test_datetimetz_datetimetz_replace_year():
     d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
-    d_replace = d.replace(tzinfo=None)
+    d_replace = d.replace(year=2025)
     print()
     print(type(d_replace))
     assert type(d_replace) == datetimetz.datetimetz
-    print(repr(d_replace))
     assert d_replace.tzinfo is not None
+    assert d_replace.year == 2025
+    assert d_replace == datetimetz.datetimetz(2025, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+
+
+def test_datetimetz_datetimetz_replace_raises_tzinfo():
+    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    with pytest.raises(TypeError) as err:
+        d.replace(tzinfo=None)
+    assert err.value.args[0] == 'No time zone provided.'
+
+
+def test_datetimetz_datetimetz_replace_raises_year_none():
+    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    with pytest.raises(TypeError) as err:
+        d.replace(year=None)
+    assert err.value.args[0] == "'NoneType' object cannot be interpreted as an integer"
