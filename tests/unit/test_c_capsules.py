@@ -181,3 +181,12 @@ def test_datetimetz_datetimetz_subtract_raises(d_tz, d, expected):
     with pytest.raises(TypeError) as err:
         d_tz - d
     assert err.value.args[0] == "can't subtract offset-naive and offset-aware datetimes"
+
+def test_datetimetz_datetimetz_replace():
+    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d_replace = d.replace(tzinfo=None)
+    print()
+    print(type(d_replace))
+    assert type(d_replace) == datetimetz.datetimetz
+    print(repr(d_replace))
+    assert d_replace.tzinfo is not None

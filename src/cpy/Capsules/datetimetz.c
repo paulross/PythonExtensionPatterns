@@ -38,6 +38,31 @@ typedef struct {
     PyDateTime_DateTime datetime;
 } DateTimeTZ;
 
+
+static PyObject *
+raise_if_no_tzinfo(DateTimeTZ *self) {
+    // Raise if no TZ.
+#if PY_MINOR_VERSION >= 10
+    if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
+        PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+        Py_DECREF(self);
+        self = NULL;
+    }
+#else // PY_MINOR_VERSION >= 10
+    if (self->datetime.tzinfo == NULL) {
+            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+            Py_DECREF(self);
+            self = NULL;
+        } else if (Py_IsNone(self->datetime.tzinfo)) {
+            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+            Py_DECREF(self);
+            self = NULL;
+        }
+#endif // PY_MINOR_VERSION < 10
+    return (PyObject *)self;
+}
+
+
 static PyObject *
 DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 #if FPRINTF_DEBUG
@@ -74,26 +99,101 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 #endif // PY_MINOR_VERSION < 10
 #endif
         // Raise if no TZ.
-#if PY_MINOR_VERSION >= 10
-        if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
-            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-            Py_DECREF(self);
-            self = NULL;
-        }
-#else // PY_MINOR_VERSION >= 10
-        if (self->datetime.tzinfo == NULL) {
-            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-            Py_DECREF(self);
-            self = NULL;
-        } else if (Py_IsNone(self->datetime.tzinfo)) {
-            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-            Py_DECREF(self);
-            self = NULL;
-        }
-#endif // PY_MINOR_VERSION < 10
+        return raise_if_no_tzinfo(self);
+//#if PY_MINOR_VERSION >= 10
+//        if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
+//            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+//            Py_DECREF(self);
+//            self = NULL;
+//        }
+//#else // PY_MINOR_VERSION >= 10
+//        if (self->datetime.tzinfo == NULL) {
+//            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+//            Py_DECREF(self);
+//            self = NULL;
+//        } else if (Py_IsNone(self->datetime.tzinfo)) {
+//            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+//            Py_DECREF(self);
+//            self = NULL;
+//        }
+//#endif // PY_MINOR_VERSION < 10
     }
     return (PyObject *) self;
 }
+
+PyObject *
+DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
+    PyObject *super     = NULL;
+    PyObject *super_args = NULL;
+    PyObject *func      = NULL;
+    PyObject *result    = NULL;
+
+    // Error check input
+//    if (! PyUnicode_Check(func_name)) {
+//        PyErr_Format(PyExc_TypeError,
+//                     "super() must be called with unicode attribute not %s",
+//                     func_name->ob_type->tp_name);
+//    }
+
+//    super_args = PyTuple_New(2);
+//    // Py_XDECREF(super_args) will decref self->ob_type
+//    Py_INCREF(self->ob_type);
+//    if (PyTuple_SetItem(super_args, 0, (PyObject*)self->ob_type)) {
+//        assert(PyErr_Occurred());
+//        goto except;
+//    }
+//    // Py_XDECREF(super_args) will decref self
+//    Py_INCREF(self);
+//    if (PyTuple_SetItem(super_args, 1, self)) {
+//        assert(PyErr_Occurred());
+//        goto except;
+//    }
+
+    // Will be decremented when super_args is decremented.
+    Py_INCREF(self->ob_type);
+    Py_INCREF(self);
+    super_args = Py_BuildValue("OO", (PyObject*)self->ob_type, self);
+    super = PyType_GenericNew(&PySuper_Type, super_args, NULL);
+    if (! super) {
+        Py_DECREF(self->ob_type);
+        Py_DECREF(self);
+        PyErr_SetString(PyExc_RuntimeError, "Could not create super().");
+        goto except;
+    }
+    // Use tuple as first arg, super() second arg (i.e. kwargs) should be NULL
+    super->ob_type->tp_init(super, super_args, NULL);
+    if (PyErr_Occurred()) {
+        goto except;
+    }
+    func = PyObject_GetAttrString(super, "replace");
+    if (! func) {
+        assert(PyErr_Occurred());
+        goto except;
+    }
+    if (! PyCallable_Check(func)) {
+        PyErr_Format(PyExc_AttributeError,
+                     "super() attribute \"%S\" is not callable.", "result");
+        goto except;
+    }
+    result = PyObject_Call(func, args, kwargs);
+    /* Raise if no tzinfo */
+    result = raise_if_no_tzinfo((DateTimeTZ *)result);
+    if (!result) {
+        goto except;
+    }
+    assert(! PyErr_Occurred());
+    goto finally;
+except:
+    assert(PyErr_Occurred());
+    Py_XDECREF(result);
+    result = NULL;
+finally:
+    Py_XDECREF(super);
+    Py_XDECREF(super_args);
+    Py_XDECREF(func);
+    return result;
+}
+
 
 static PyTypeObject DatetimeTZType = {
         PyVarObject_HEAD_INIT(NULL, 0)
