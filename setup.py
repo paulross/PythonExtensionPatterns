@@ -160,8 +160,15 @@ setup(
                   language='c',
                   ),
         Extension(f"{PACKAGE_NAME}.Capsules.datetimetz",
-                  sources=['src/cpy/Capsules/datetimetz.c', 'src/cpy/Util/py_call_super.c', ],
-                  include_dirs=['/usr/local/include', 'src/cpy/Capsules', 'src/cpy/Util', ],
+                  sources=[
+                      'src/cpy/Capsules/datetimetz.c',
+                      'src/cpy/Util/py_call_super.c',
+                  ],
+                  include_dirs=[
+                      '/usr/local/include',
+                      'src/cpy/Capsules',
+                      'src/cpy/Util',
+                  ],
                   library_dirs=[os.getcwd(), ],
                   extra_compile_args=extra_compile_args_c,
                   language='c',
@@ -199,6 +206,7 @@ setup(
                   include_dirs=[],
                   library_dirs=[],
                   libraries=[],
+                  # For best performance.
                   extra_compile_args=[
                       '-Wall', '-Wextra', '-Werror', '-Wfatal-errors', '-Wpedantic',
                       '-Wno-unused-function', '-Wno-unused-parameter',
@@ -207,5 +215,11 @@ setup(
                   ],
                   language='c',
                   ),
+        # Extension(name=f"{PACKAGE_NAME}.Generators.gen_cpp",
+        #           include_dirs=[],
+        #           sources=["src/cpy/Generators/cGenerator.cpp", ],
+        #           extra_compile_args=extra_compile_args_cpp,
+        #           language='c++11',
+        #           ),
     ]
 )

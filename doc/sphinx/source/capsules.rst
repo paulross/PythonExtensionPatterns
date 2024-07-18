@@ -349,6 +349,8 @@ This code is lightly edited for clarity and works with Python 3.10+.
 The actual code is in ``src/cpy/Capsules/datetimetz.c`` (which works with Python 3.9 as well)
 and the tests are in ``tests/unit/test_c_capsules.py``.
 
+Firstly the declaration of the timezone aware datetime:
+
 .. code-block:: c
 
     #define PY_SSIZE_T_CLEAN
@@ -359,21 +361,68 @@ and the tests are in ``tests/unit/test_c_capsules.py``.
         PyDateTime_DateTime datetime;
     } DateTimeTZ;
 
+Then a function that sets an error if the ``DateTimeTZ`` lacks a tzinfo, this will be used in a couple of places.
+
+.. code-block:: c
+
+    /* This function sets an error if a tzinfo is not set and returns NULL.
+     * In practice this would use Python version specific calls.
+     * For simplicity this uses Python 3.10+ code.
+     */
+    static DateTimeTZ *
+    raise_if_no_tzinfo(DateTimeTZ *self) {
+        if (!_PyDateTime_HAS_TZINFO(&self->datetime)) {
+            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+            Py_DECREF(self);
+            self = NULL;
+        }
+        return self;
+    }
+
+Now the code for creating a new instance:
+
+.. code-block:: c
+
     static PyObject *
     DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-        DateTimeTZ *self = (DateTimeTZ *)PyDateTimeAPI->DateTimeType->tp_new(
-            type, args, kwds
-        );
+        DateTimeTZ *self = (DateTimeTZ *) PyDateTimeAPI->DateTimeType->tp_new(type, args, kwds);
         if (self) {
-            // Raise if no TZ.
-            if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
-                PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-                Py_DECREF(self);
-                self = NULL;
-            }
+            self = raise_if_no_tzinfo(self);
         }
-        return (PyObject *)self;
+        return (PyObject *) self;
     }
+
+So far a new ``datetimetz`` object must be created with a ``tzinfo`` but the ``datetime.datetime`` has an API
+``replace`` that creates a new datetime with different properties, including ``tzinfo``.
+We need to guard against the user trying to change the timezone.
+To do this we call the super class function and then check, and raise, if a ``tzinfo`` is absent.
+This uses the utility function that call Python's ``super()`` function.
+That code is in ``src/cpy/Util/py_call_super.h`` and ``src/cpy/Util/py_call_super.c``:
+
+.. code-block:: c
+
+    static PyObject *
+    DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
+        PyObject *result = call_super_name(self, "replace", args, kwargs);
+        if (result) {
+            result = (PyObject *) raise_if_no_tzinfo((DateTimeTZ *) result);
+        }
+        return result;
+    }
+
+Finally the module code:
+
+.. code-block:: c
+
+    static PyMethodDef DateTimeTZ_methods[] = {
+            {
+                "replace",
+                (PyCFunction) DateTimeTZ_replace,
+                METH_VARARGS | METH_KEYWORDS,
+                PyDoc_STR("Return datetime with new specified fields.")
+            },
+            {NULL, NULL, 0, NULL}  /* Sentinel */
+    };
 
     static PyTypeObject DatetimeTZType = {
             PyVarObject_HEAD_INIT(NULL, 0)
@@ -383,6 +432,7 @@ and the tests are in ``tests/unit/test_c_capsules.py``.
             .tp_itemsize = 0,
             .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .tp_new = DateTimeTZ_new,
+            .tp_methods = DateTimeTZ_methods,
     };
 
     static PyModuleDef datetimetzmodule = {
@@ -424,8 +474,15 @@ The extension is created with this in ``setup.py``:
 .. code-block:: python
 
         Extension(f"{PACKAGE_NAME}.Capsules.datetimetz",
-                  sources=['src/cpy/Capsules/datetimetz.c', ],
-                  include_dirs=['/usr/local/include', 'src/cpy/Capsules', ],
+                  sources=[
+                      'src/cpy/Capsules/datetimetz.c',
+                      'src/cpy/Util/py_call_super.c',
+                  ],
+                  include_dirs=[
+                      '/usr/local/include',
+                      'src/cpy/Capsules',
+                      'src/cpy/Util',
+                  ],
                   library_dirs=[os.getcwd(), ],
                   extra_compile_args=extra_compile_args_c,
                   language='c',

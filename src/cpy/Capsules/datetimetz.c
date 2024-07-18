@@ -106,7 +106,7 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     return (PyObject *) self;
 }
 
-PyObject *
+static PyObject *
 DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
     PyObject *result = call_super_name(self, "replace", args, kwargs);
     if (result) {
@@ -124,7 +124,6 @@ static PyMethodDef DateTimeTZ_methods[] = {
         },
         {NULL, NULL, 0, NULL}  /* Sentinel */
 };
-
 
 static PyTypeObject DatetimeTZType = {
         PyVarObject_HEAD_INIT(NULL, 0)

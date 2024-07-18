@@ -198,6 +198,15 @@ def test_datetimetz_datetimetz_replace_raises_tzinfo():
     assert err.value.args[0] == 'No time zone provided.'
 
 
+@pytest.mark.skipif(not (sys.version_info.minor <= 9), reason='Python 3.9')
+def test_datetimetz_datetimetz_replace_raises_year_none_39_310():
+    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    with pytest.raises(TypeError) as err:
+        d.replace(year=None)
+    assert err.value.args[0] == "an integer is required (got type NoneType)"
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 10), reason='Python 3.10+')
 def test_datetimetz_datetimetz_replace_raises_year_none():
     d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
     with pytest.raises(TypeError) as err:
