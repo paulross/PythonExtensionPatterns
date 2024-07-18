@@ -5,9 +5,8 @@
 // Provides C functions to call the Python super() class.
 //
 //  Created by Paul Ross on 03/05/2016.
-//  Copyright (c) 2016 Paul Ross. All rights reserved.
+//  Copyright (c) 2016-2024 Paul Ross. All rights reserved.
 //
-
 
 #include "py_call_super.h"
 
@@ -33,12 +32,14 @@ call_super_pyname(PyObject *self, PyObject *func_name,
                      "super() must be called with unicode attribute not %s",
                      Py_TYPE(func_name)->tp_name);
     }
-    // Will be decremented when super_args is decremented.
+    // Will be decremented when super_args is decremented if Py_BuildValue succeeds.
     Py_INCREF(self->ob_type);
     Py_INCREF(self);
     super_args = Py_BuildValue("OO", (PyObject *) self->ob_type, self);
     if (!super_args) {
-        PyErr_SetString(PyExc_RuntimeError, "Could not create super().");
+        Py_DECREF(self->ob_type);
+        Py_DECREF(self);
+        PyErr_SetString(PyExc_RuntimeError, "Could not create arguments for super().");
         goto except;
     }
     super_func = PyType_GenericNew(&PySuper_Type, super_args, NULL);
@@ -63,6 +64,7 @@ call_super_pyname(PyObject *self, PyObject *func_name,
     }
     result = PyObject_Call(func, args, kwargs);
     if (!result) {
+        assert(PyErr_Occurred());
         goto except;
     }
     assert(!PyErr_Occurred());
@@ -132,17 +134,14 @@ call_super_pyname_lookup(PyObject *self, PyObject *func_name,
         assert(PyErr_Occurred());
         goto except;
     }
-    super_args = PyTuple_New(2);
-    // Py_XDECREF(super_args) will decref self->ob_type
+    // Will be decremented when super_args is decremented if Py_BuildValue succeeds.
     Py_INCREF(self->ob_type);
-    if (PyTuple_SetItem(super_args, 0, (PyObject *) self->ob_type)) {
-        assert(PyErr_Occurred());
-        goto except;
-    }
-    // Py_XDECREF(super_args) will decref self
     Py_INCREF(self);
-    if (PyTuple_SetItem(super_args, 1, self)) {
-        assert(PyErr_Occurred());
+    super_args = Py_BuildValue("OO", (PyObject *) self->ob_type, self);
+    if (!super_args) {
+        Py_DECREF(self->ob_type);
+        Py_DECREF(self);
+        PyErr_SetString(PyExc_RuntimeError, "Could not create arguments for super().");
         goto except;
     }
     super = PyObject_Call(super_type, super_args, NULL);
@@ -162,13 +161,17 @@ call_super_pyname_lookup(PyObject *self, PyObject *func_name,
         goto except;
     }
     result = PyObject_Call(func, args, kwargs);
+    if (!result) {
+        assert(PyErr_Occurred());
+        goto except;
+    }
     assert(!PyErr_Occurred());
     goto finally;
-    except:
+except:
     assert(PyErr_Occurred());
     Py_XDECREF(result);
     result = NULL;
-    finally:
+finally:
     Py_XDECREF(builtins);
     Py_XDECREF(super_args);
     Py_XDECREF(super_type);
@@ -200,5 +203,3 @@ call_super_name_lookup(PyObject *self, const char *func_cname,
     Py_DECREF(func_name);
     return result;
 }
-
-

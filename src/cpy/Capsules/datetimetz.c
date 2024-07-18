@@ -10,7 +10,6 @@
 #include "datetime.h"
 #include "py_call_super.h"
 
-
 #define FPRINTF_DEBUG 0
 
 /* From /Library/Frameworks/Python.framework/Versions/3.13/include/python3.13/object.h
@@ -40,7 +39,10 @@ typedef struct {
     PyDateTime_DateTime datetime;
 } DateTimeTZ;
 
-
+/**
+ * Does a version dependent check to see if a datatimetz has a tzinfo.
+ * If not, sets an error and returns NULL.
+ */
 static DateTimeTZ *
 raise_if_no_tzinfo(DateTimeTZ *self) {
     // Raise if no TZ.
@@ -63,7 +65,6 @@ raise_if_no_tzinfo(DateTimeTZ *self) {
 #endif // PY_MINOR_VERSION < 10
     return self;
 }
-
 
 static PyObject *
 DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
@@ -100,99 +101,21 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
         fprintf(stdout, "\n");
 #endif // PY_MINOR_VERSION < 10
 #endif
-        // Raise if no TZ.
         self = raise_if_no_tzinfo(self);
-//#if PY_MINOR_VERSION >= 10
-//        if (! _PyDateTime_HAS_TZINFO(&self->datetime)) {
-//            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-//            Py_DECREF(self);
-//            self = NULL;
-//        }
-//#else // PY_MINOR_VERSION >= 10
-//        if (self->datetime.tzinfo == NULL) {
-//            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-//            Py_DECREF(self);
-//            self = NULL;
-//        } else if (Py_IsNone(self->datetime.tzinfo)) {
-//            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-//            Py_DECREF(self);
-//            self = NULL;
-//        }
-//#endif // PY_MINOR_VERSION < 10
     }
     return (PyObject *) self;
 }
 
 PyObject *
 DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
-#if 0
-    PyObject *super     = NULL;
-    PyObject *super_args = NULL;
-    PyObject *func      = NULL;
-    PyObject *result    = NULL;
-
-    // Error check input
-//    if (! PyUnicode_Check(func_name)) {
-//        PyErr_Format(PyExc_TypeError,
-//                     "super() must be called with unicode attribute not %s",
-//                     func_name->ob_type->tp_name);
-//    }
-
-//    super_args = PyTuple_New(2);
-//    // Py_XDECREF(super_args) will decref self->ob_type
-//    Py_INCREF(self->ob_type);
-//    if (PyTuple_SetItem(super_args, 0, (PyObject*)self->ob_type)) {
-//        assert(PyErr_Occurred());
-//        goto except;
-//    }
-//    // Py_XDECREF(super_args) will decref self
-//    Py_INCREF(self);
-//    if (PyTuple_SetItem(super_args, 1, self)) {
-//        assert(PyErr_Occurred());
-//        goto except;
-//    }
-
-    // Will be decremented when super_args is decremented.
-    Py_INCREF(self->ob_type);
-    Py_INCREF(self);
-    super_args = Py_BuildValue("OO", (PyObject*)self->ob_type, self);
-    super = PyType_GenericNew(&PySuper_Type, super_args, NULL);
-    if (! super) {
-        Py_DECREF(self->ob_type);
-        Py_DECREF(self);
-        PyErr_SetString(PyExc_RuntimeError, "Could not create super().");
-        goto except;
-    }
-    // Use tuple as first arg, super() second arg (i.e. kwargs) should be NULL
-    super->ob_type->tp_init(super, super_args, NULL);
-    if (PyErr_Occurred()) {
-        goto except;
-    }
-    func = PyObject_GetAttrString(super, "replace");
-    if (! func) {
-        assert(PyErr_Occurred());
-        goto except;
-    }
-    if (! PyCallable_Check(func)) {
-        PyErr_Format(PyExc_AttributeError,
-                     "super() attribute \"%S\" is not callable.", "result");
-        goto except;
-    }
-    result = PyObject_Call(func, args, kwargs);
-#endif
-
     PyObject *result = call_super_name(self, "replace", args, kwargs);
-    if (! result) {
+    if (!result) {
         assert(PyErr_Occurred());
-//        PyErr_Format(
-//                PyExc_RuntimeError,
-//                "Failed to execute super() call to \"%S\" is not callable.", "result"
-//        );
         goto except;
     }
-    /* Raise if no tzinfo */
     result = (PyObject *) raise_if_no_tzinfo((DateTimeTZ *) result);
     if (!result) {
+        assert(PyErr_Occurred());
         goto except;
     }
     assert(!PyErr_Occurred());
@@ -202,16 +125,10 @@ DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
     Py_XDECREF(result);
     result = NULL;
     finally:
-#if 0
-    Py_XDECREF(super);
-    Py_XDECREF(super_args);
-    Py_XDECREF(func);
-#endif
     return result;
 }
 
 static PyMethodDef DateTimeTZ_methods[] = {
-        /* Class methods: */
         {
                 "replace",
                 (PyCFunction) DateTimeTZ_replace,
