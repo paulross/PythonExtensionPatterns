@@ -109,22 +109,9 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 PyObject *
 DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
     PyObject *result = call_super_name(self, "replace", args, kwargs);
-    if (!result) {
-        assert(PyErr_Occurred());
-        goto except;
+    if (result) {
+        result = (PyObject *) raise_if_no_tzinfo((DateTimeTZ *) result);
     }
-    result = (PyObject *) raise_if_no_tzinfo((DateTimeTZ *) result);
-    if (!result) {
-        assert(PyErr_Occurred());
-        goto except;
-    }
-    assert(!PyErr_Occurred());
-    goto finally;
-    except:
-    assert(PyErr_Occurred());
-    Py_XDECREF(result);
-    result = NULL;
-    finally:
     return result;
 }
 
