@@ -4,6 +4,8 @@
 .. toctree::
     :maxdepth: 2
 
+.. _chapter_capsules:
+
 ***************
 Capsules
 ***************
@@ -335,6 +337,8 @@ This can be tested with the code in ``tests/unit/test_c_capsules.py``:
         result = spam_client.system("ls -l")
         assert result == 0
 
+
+.. _chapter_capsules_using_an_existing_capsule:
 
 ================================
 Using an Existing Capsule

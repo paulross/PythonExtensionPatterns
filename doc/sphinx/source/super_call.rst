@@ -25,9 +25,12 @@ Python:
             self.appends += 1
             return super().append(v)
 
-To do it in C is a bit trickier. Taking as our starting point the `example of sub-classing a list <https://docs.python.org/3/extending/newtypes.html#subclassing-other-types>`_ in the Python documentation, amended a little bit for our example.
+To do it in C is a bit trickier. Taking as our starting point the
+`example of sub-classing a list <https://docs.python.org/3/extending/newtypes.html#subclassing-other-types>`_
+in the Python documentation, amended a little bit for our example.
 
-Our type contains an integer count of the number of appends. That is set to zero on construction and can be accesssed like a normal member. 
+Our type contains an integer count of the number of appends.
+That is set to zero on construction and can be accessed like a normal member.
 
 .. code-block:: c
 
@@ -55,7 +58,8 @@ Our type contains an integer count of the number of appends. That is set to zero
         {NULL, 0, 0, 0, NULL}  /* Sentinel */
     };
 
-We now need to create the ``append()`` function, this function will call the superclass ``append()`` and increment the ``appends`` counter:
+We now need to create the ``append()`` function, this function will call the superclass ``append()`` and increment the
+``appends`` counter:
 
 .. code-block:: c
 
@@ -93,7 +97,8 @@ A first attempt might do something like a method call on the ``PyListObject``:
         return result;
     }
 
-This leads to infinite recursion as the address of the first element of a C struct (``list``) is the address of the struct so ``self`` is the same as ``&self->list``. This function is recursive with no base case.
+This leads to infinite recursion as the address of the first element of a C struct (``list``) is the address of the
+struct so ``self`` is the same as ``&self->list``. This function is recursive with no base case.
 
 --------------------------
 Doing it Right
@@ -106,6 +111,8 @@ Here are a couple of ways of calling ``super()`` correctly:
 * Construct a ``super`` object directly and call that.
 * Extract the ``super`` object from the builtins module and call that.
 
+The full code is in ``src/cpy/Util/py_call_super.h`` and ``src/cpy/Util/py_call_super.c``.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Construct a ``super`` object directly
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -115,41 +122,49 @@ The plan is to do this:
 * Create the arguments to initialise an instance of the class ``super``.
 * Call ``super.__new__`` with those arguments.
 * Call ``super.__init__`` with those arguments.
-* With that ``super`` object then search for the method we want to call. This is ``append`` in our case. This calls the ``super_getattro`` method that performs the search and returns the Python function.
+* With that ``super`` object then search for the method we want to call.
+  This is ``append`` in our case.
+  This calls the ``super_getattro`` method that performs the search and returns the Python function.
 * Call that Python function and return the result.
 
 Our function is defined thus, for simplicity there is no error checking here. For the full function see below:
 
 .. code-block:: c
 
+    /* Call func_name on the super classes of self with the arguments and
+     * keyword arguments.
+     *
+     * Equivalent to getattr(super(type(self), self), func_name)(*args, **kwargs)
+     *
+     * func_name is a Python string.
+     * The implementation creates a new super object on each call.
+     */
     PyObject *
-    call_super_pyname(PyObject *self, PyObject *func_name, PyObject *args, PyObject *kwargs) {
-        PyObject *super      = NULL;
+    call_super_pyname(PyObject *self, PyObject *func_name,
+                      PyObject *args, PyObject *kwargs) {
+        PyObject *super_func = NULL;
         PyObject *super_args = NULL;
-        PyObject *func       = NULL;
-        PyObject *result     = NULL;
+        PyObject *func = NULL;
+        PyObject *result = NULL;
 
-        // Create the arguments for super()
-        super_args = PyTuple_New(2);
-        Py_INCREF(self->ob_type); // Py_INCREF(&ShoddyType); in our specific case
-        PyTuple_SetItem(super_args, 0, (PyObject*)self->ob_type)); // PyTuple_SetItem(super_args, 0, (PyObject*)&ShoddyType) in our specific case
+        // Will be decremented when super_args is decremented if Py_BuildValue succeeds.
+        Py_INCREF(self->ob_type);
         Py_INCREF(self);
-        PyTuple_SetItem(super_args, 1, self));
-        // Creat the class super()
-        super = PyType_GenericNew(&PySuper_Type, super_args, NULL);
-        // Instantiate it with the tuple as first arg, no kwargs passed to super() so NULL
-        super->ob_type->tp_init(super, super_args, NULL);
-        // Use super to find the 'append' method
-        func = PyObject_GetAttr(super, func_name);
-        // Call that method
+        super_args = Py_BuildValue("OO", (PyObject *) self->ob_type, self);
+        super_func = PyType_GenericNew(&PySuper_Type, super_args, NULL);
+        // Use tuple as first arg, super() second arg (i.e. kwargs) should be NULL
+        super_func->ob_type->tp_init(super_func, super_args, NULL);
+        func = PyObject_GetAttr(super_func, func_name);
         result = PyObject_Call(func, args, kwargs);
-        Py_XDECREF(super);
+        Py_XDECREF(super_func);
         Py_XDECREF(super_args);
         Py_XDECREF(func);
         return result;
     }
 
-We can make this function quite general to be used in the CPython type system. For convenience we can create two functions, one calls the super function by a C NTS, the other by a PyObject string. The following code is essentially the same as above but with error checking.
+We can make this function quite general to be used in the CPython type system.
+For convenience we can create two functions, one calls the super function by a C NTS, the other by a PyObject string.
+The following code is essentially the same as above but with error checking.
 
 The header file might be py_call_super.h which just declares our two functions:
 
@@ -173,63 +188,71 @@ And the implementation file would be py_call_super.c, this is the code above wit
 
 .. code-block:: c
 
+    /* Call func_name on the super classes of self with the arguments and
+     * keyword arguments.
+     *
+     * Equivalent to getattr(super(type(self), self), func_name)(*args, **kwargs)
+     *
+     * func_name is a Python string.
+     * The implementation creates a new super object on each call.
+     */
     PyObject *
     call_super_pyname(PyObject *self, PyObject *func_name,
                       PyObject *args, PyObject *kwargs) {
-        PyObject *super      = NULL;
+        PyObject *super_func = NULL;
         PyObject *super_args = NULL;
-        PyObject *func       = NULL;
-        PyObject *result     = NULL;
-    
-        if (! PyUnicode_Check(func_name)) {
+        PyObject *func = NULL;
+        PyObject *result = NULL;
+
+        // Error check input
+        if (!PyUnicode_Check(func_name)) {
             PyErr_Format(PyExc_TypeError,
                          "super() must be called with unicode attribute not %s",
-                         func_name->ob_type->tp_name);
+                         Py_TYPE(func_name)->tp_name);
         }
-    
-        super_args = PyTuple_New(2);
-        //    Py_INCREF(&ShoddyType);
+        // Will be decremented when super_args is decremented if Py_BuildValue succeeds.
         Py_INCREF(self->ob_type);
-        //    if (PyTuple_SetItem(super_args, 0, (PyObject*)&ShoddyType)) {
-        if (PyTuple_SetItem(super_args, 0, (PyObject*)self->ob_type)) {
-            assert(PyErr_Occurred());
-            goto except;
-        }
         Py_INCREF(self);
-        if (PyTuple_SetItem(super_args, 1, self)) {
-            assert(PyErr_Occurred());
+        super_args = Py_BuildValue("OO", (PyObject *) self->ob_type, self);
+        if (!super_args) {
+            Py_DECREF(self->ob_type);
+            Py_DECREF(self);
+            PyErr_SetString(PyExc_RuntimeError, "Could not create arguments for super().");
             goto except;
         }
-    
-        super = PyType_GenericNew(&PySuper_Type, super_args, NULL);
-        if (! super) {
+        super_func = PyType_GenericNew(&PySuper_Type, super_args, NULL);
+        if (!super_func) {
             PyErr_SetString(PyExc_RuntimeError, "Could not create super().");
             goto except;
         }
-        // Make tuple as first arg, second arg (i.e. kwargs) should be NULL
-        super->ob_type->tp_init(super, super_args, NULL);
+        // Use tuple as first arg, super() second arg (i.e. kwargs) should be NULL
+        super_func->ob_type->tp_init(super_func, super_args, NULL);
         if (PyErr_Occurred()) {
             goto except;
         }
-        func = PyObject_GetAttr(super, func_name);
-        if (! func) {
+        func = PyObject_GetAttr(super_func, func_name);
+        if (!func) {
             assert(PyErr_Occurred());
             goto except;
         }
-        if (! PyCallable_Check(func)) {
+        if (!PyCallable_Check(func)) {
             PyErr_Format(PyExc_AttributeError,
                          "super() attribute \"%S\" is not callable.", func_name);
             goto except;
         }
         result = PyObject_Call(func, args, kwargs);
-        assert(! PyErr_Occurred());
+        if (!result) {
+            assert(PyErr_Occurred());
+            goto except;
+        }
+        assert(!PyErr_Occurred());
         goto finally;
     except:
         assert(PyErr_Occurred());
         Py_XDECREF(result);
         result = NULL;
     finally:
-        Py_XDECREF(super);
+        Py_XDECREF(super_func);
         Py_XDECREF(super_args);
         Py_XDECREF(func);
         return result;
@@ -239,7 +262,8 @@ And the implementation file would be py_call_super.c, this is the code above wit
 Extract the ``super`` object from the builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Another way to do this is to fish out the `super` class from the builtins module and use that. Incidentially this is how Cython does it.
+Another way to do this is to fish out the `super` class from the builtins module and use that.
+Incidentally this is how Cython does it.
 
 The steps are:
 
@@ -256,18 +280,25 @@ Again this code has no error checking for simplicity:
     extern PyObject *
     call_super_pyname_lookup(PyObject *self, PyObject *func_name,
                              PyObject *args, PyObject *kwargs) {
-        PyObject *builtins = PyImport_AddModule("builtins");
+        PyObject *result = NULL;
+        PyObject *builtins = NULL;
+        PyObject *super_type = NULL;
+        PyObject *super = NULL;
+        PyObject *super_args = NULL;
+        PyObject *func = NULL;
+
+        builtins = PyImport_AddModule("builtins");
         // Borrowed reference
         Py_INCREF(builtins);
-        PyObject *super_type = PyObject_GetAttrString(builtins, "super");
-        PyObject *super_args = PyTuple_New(2);
+        super_type = PyObject_GetAttrString(builtins, "super");
+        // Will be decremented when super_args is decremented if Py_BuildValue succeeds.
         Py_INCREF(self->ob_type);
-        PyTuple_SetItem(super_args, 0, (PyObject*)self->ob_type);
         Py_INCREF(self);
-        PyTuple_SetItem(super_args, 1, self);
-        PyObject *super = PyObject_Call(super_type, super_args, NULL);
-        PyObject *func = PyObject_GetAttr(super, func_name);
-        PyObject *result = PyObject_Call(func, args, kwargs);
+        super_args = Py_BuildValue("OO", (PyObject *) self->ob_type, self);
+        super = PyObject_Call(super_type, super_args, NULL);
+        // The following code is the same as call_super_pyname()
+        func = PyObject_GetAttr(super, func_name);
+        result = PyObject_Call(func, args, kwargs);
         Py_XDECREF(builtins);
         Py_XDECREF(super_args);
         Py_XDECREF(super_type);
@@ -280,56 +311,68 @@ Here is the function with full error checking:
 
 .. code-block:: c
 
+    /* Call func_name on the super classes of self with the arguments and
+     * keyword arguments.
+     *
+     * Equivalent to getattr(super(type(self), self), func_name)(*args, **kwargs)
+     *
+     * func_name is a Python string.
+     * The implementation uses the builtin super().
+     */
     extern PyObject *
     call_super_pyname_lookup(PyObject *self, PyObject *func_name,
                              PyObject *args, PyObject *kwargs) {
-        PyObject *result        = NULL;
-        PyObject *builtins      = NULL;
-        PyObject *super_type    = NULL;
-        PyObject *super         = NULL;
-        PyObject *super_args    = NULL;
-        PyObject *func          = NULL;
-    
+        PyObject *result = NULL;
+        PyObject *builtins = NULL;
+        PyObject *super_type = NULL;
+        PyObject *super = NULL;
+        PyObject *super_args = NULL;
+        PyObject *func = NULL;
+
         builtins = PyImport_AddModule("builtins");
-        if (! builtins) {
+        if (!builtins) {
             assert(PyErr_Occurred());
             goto except;
         }
         // Borrowed reference
         Py_INCREF(builtins);
         super_type = PyObject_GetAttrString(builtins, "super");
-        if (! super_type) {
+        if (!super_type) {
             assert(PyErr_Occurred());
             goto except;
         }
-        super_args = PyTuple_New(2);
+        // Will be decremented when super_args is decremented if Py_BuildValue succeeds.
         Py_INCREF(self->ob_type);
-        if (PyTuple_SetItem(super_args, 0, (PyObject*)self->ob_type)) {
-            assert(PyErr_Occurred());
-            goto except;
-        }
         Py_INCREF(self);
-        if (PyTuple_SetItem(super_args, 1, self)) {
-            assert(PyErr_Occurred());
+        super_args = Py_BuildValue("OO", (PyObject *) self->ob_type, self);
+        if (!super_args) {
+            Py_DECREF(self->ob_type);
+            Py_DECREF(self);
+            PyErr_SetString(PyExc_RuntimeError, "Could not create arguments for super().");
             goto except;
         }
         super = PyObject_Call(super_type, super_args, NULL);
-        if (! super) {
+        if (!super) {
             assert(PyErr_Occurred());
             goto except;
         }
+        // The following code is the same as call_super_pyname()
         func = PyObject_GetAttr(super, func_name);
-        if (! func) {
+        if (!func) {
             assert(PyErr_Occurred());
             goto except;
         }
-        if (! PyCallable_Check(func)) {
+        if (!PyCallable_Check(func)) {
             PyErr_Format(PyExc_AttributeError,
                          "super() attribute \"%S\" is not callable.", func_name);
             goto except;
         }
         result = PyObject_Call(func, args, kwargs);
-        assert(! PyErr_Occurred());
+        if (!result) {
+            assert(PyErr_Occurred());
+            goto except;
+        }
+        assert(!PyErr_Occurred());
         goto finally;
     except:
         assert(PyErr_Occurred());
@@ -341,5 +384,26 @@ Here is the function with full error checking:
         Py_XDECREF(super_type);
         Py_XDECREF(super);
         Py_XDECREF(func);
+        return result;
+    }
+
+--------------------------------------
+An Example of Using this API
+--------------------------------------
+
+Here is a real example of using this see overloading ``replace()`` when subclassing a ``datetime`` in
+:ref:`chapter_capsules_using_an_existing_capsule` in the chapter :ref:`chapter_capsules`.
+
+The code here calls the ``super()`` function then raises if the given arguments are unacceptable (trying to set the
+``tzinfo`` property to ``None``):
+
+.. code-block:: c
+
+    static PyObject *
+    DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
+        PyObject *result = call_super_name(self, "replace", args, kwargs);
+        if (result) {
+            result = (PyObject *) raise_if_no_tzinfo((DateTimeTZ *) result);
+        }
         return result;
     }
