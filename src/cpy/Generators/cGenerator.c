@@ -12,7 +12,7 @@ typedef struct {
     PyObject_HEAD
     long *array_long;
     ssize_t size;
-} GeneratorObject;
+} SequenceOfLong;
 
 // Forward reference
 int is_generator_type(PyObject *op);
@@ -60,7 +60,7 @@ GeneratorIterator_init(GeneratorIterator *self, PyObject *args, PyObject *kwds) 
 
 static PyObject *
 GeneratorIterator_next(GeneratorIterator *self) {
-    size_t size = ((GeneratorObject *) self->generator)->size;
+    size_t size = ((SequenceOfLong *) self->generator)->size;
     if (self->index < size) {
         size_t index;
         if (self->forward) {
@@ -69,7 +69,7 @@ GeneratorIterator_next(GeneratorIterator *self) {
             index = size - self->index - 1;
         }
         self->index += 1;
-        PyObject *ret = PyLong_FromLong(((GeneratorObject *) self->generator)->array_long[index]);
+        PyObject *ret = PyLong_FromLong(((SequenceOfLong *) self->generator)->array_long[index]);
         return ret;
     }
     // End iteration.
@@ -90,12 +90,12 @@ GeneratorIterator___str__(GeneratorIterator *self, PyObject *Py_UNUSED(ignored))
     assert(!PyErr_Occurred());
     if (self->generator) {
         return PyUnicode_FromFormat(
-                "<GeneratorObject generator @: %p of size %ld index %ld",
-                self->generator, ((GeneratorObject *) self->generator)->size, self->index
+                "<SequenceOfLong generator @: %p of size %ld index %ld",
+                self->generator, ((SequenceOfLong *) self->generator)->size, self->index
         );
     } else {
         return PyUnicode_FromFormat(
-                "<GeneratorObject generator @: %p of size NULL generator (exhausted) index %ld",
+                "<SequenceOfLong generator @: %p of size NULL generator (exhausted) index %ld",
                 self->generator, self->index
         );
     }
@@ -119,21 +119,21 @@ static PyTypeObject GeneratorIteratorType = {
 };
 
 static void
-Generator_dealloc(GeneratorObject *self) {
+Generator_dealloc(SequenceOfLong *self) {
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 static PyObject *
 Generator_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
-    GeneratorObject *self;
-    self = (GeneratorObject *) type->tp_alloc(type, 0);
+    SequenceOfLong *self;
+    self = (SequenceOfLong *) type->tp_alloc(type, 0);
     if (self != NULL) {
     }
     return (PyObject *) self;
 }
 
 static int
-Generator_init(GeneratorObject *self, PyObject *args, PyObject *kwds) {
+Generator_init(SequenceOfLong *self, PyObject *args, PyObject *kwds) {
     static char *kwlist[] = {"sequence", NULL};
     PyObject *sequence = NULL;
 
@@ -167,12 +167,12 @@ static PyMemberDef Generator_members[] = {
 };
 
 static PyObject *
-Generator_size(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
+Generator_size(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
     return Py_BuildValue("n", self->size);
 }
 
 static PyObject *
-Generator_iter_forward(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
+Generator_iter_forward(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
     PyObject *ret = GeneratorIterator_new(&GeneratorIteratorType, NULL, NULL);
     if (ret) {
         PyObject *args = Py_BuildValue("OO", self, Py_True);
@@ -186,7 +186,7 @@ Generator_iter_forward(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
 }
 
 static PyObject *
-Generator_iter_reverse(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
+Generator_iter_reverse(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
     PyObject *ret = GeneratorIterator_new(&GeneratorIteratorType, NULL, NULL);
     if (ret) {
         PyObject *args = Py_BuildValue("OO", self, Py_False);
@@ -221,16 +221,16 @@ static PyMethodDef Generator_methods[] = {
 };
 
 static PyObject *
-Generator___str__(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
+Generator___str__(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
     assert(!PyErr_Occurred());
 
-    return PyUnicode_FromFormat("<GeneratorObject sequence size: %ld>", self->size);
+    return PyUnicode_FromFormat("<SequenceOfLong sequence size: %ld>", self->size);
 }
 
 static PyTypeObject GeneratorType = {
         PyVarObject_HEAD_INIT(NULL, 0)
         .tp_name = "Generator",
-        .tp_basicsize = sizeof(GeneratorObject),
+        .tp_basicsize = sizeof(SequenceOfLong),
         .tp_itemsize = 0,
         .tp_dealloc = (destructor) Generator_dealloc,
         .tp_str = (reprfunc) Generator___str__,
