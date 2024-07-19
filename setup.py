@@ -53,6 +53,7 @@ for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Capsules'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'cpp'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'SimpleExample'),
+                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Generators'),
                  ):
     if not os.path.exists(dir_path):
         print(f'Making directory {dir_path}')
@@ -221,5 +222,11 @@ setup(
         #           extra_compile_args=extra_compile_args_cpp,
         #           language='c++11',
         #           ),
+        Extension(name=f"{PACKAGE_NAME}.Generators.gen_c",
+                  include_dirs=[],
+                  sources=["src/cpy/Generators/cGenerator.c", ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
     ]
 )

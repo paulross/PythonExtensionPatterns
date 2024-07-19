@@ -106,6 +106,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/Util/py_call_super.h
         src/cpy/Util/py_call_super.c
         src/cpy/Generators/cGenerator.cpp
+        src/cpy/Generators/cGenerator.c
 )
 
 link_directories(

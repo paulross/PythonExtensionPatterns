@@ -6,7 +6,8 @@
 Coding Patterns for Python Extensions
 =====================================================
 
-This describes reliable patterns of coding Python Extensions in C. It covers the essentials of reference counts, exceptions and creating functions that are safe and efficient.
+This describes reliable patterns of coding Python Extensions in C.
+It covers the essentials of reference counts, exceptions and creating functions that are safe and efficient.
 
 .. toctree::
     :numbered:
@@ -22,15 +23,16 @@ This describes reliable patterns of coding Python Extensions in C. It covers the
     new_types
     module_globals
     files
-    capsules
     super_call
+    capsules
+    generators
+    pickle
     compiler_flags
     debugging/debug
     memory_leaks
     thread_safety
     code_layout
     cpp
-    pickle
     miscellaneous
     further_reading
 
