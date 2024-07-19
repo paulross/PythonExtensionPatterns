@@ -33,25 +33,25 @@ typedef struct {
     PyObject *generator;
     size_t index;
     int forward;
-} GeneratorForwardIterator;
+} GeneratorIterator;
 
 static void
-GeneratorForwardIterator_dealloc(GeneratorForwardIterator *self) {
+GeneratorIterator_dealloc(GeneratorIterator *self) {
     Py_XDECREF(self->generator);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 static PyObject *
-GeneratorForwardIterator_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
-    GeneratorForwardIterator *self;
-    self = (GeneratorForwardIterator *) type->tp_alloc(type, 0);
+GeneratorIterator_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
+    GeneratorIterator *self;
+    self = (GeneratorIterator *) type->tp_alloc(type, 0);
     if (self != NULL) {
     }
     return (PyObject *) self;
 }
 
 static int
-GeneratorForwardIterator_init(GeneratorForwardIterator *self, PyObject *args, PyObject *kwds) {
+GeneratorIterator_init(GeneratorIterator *self, PyObject *args, PyObject *kwds) {
     static const char *kwlist[] = {"generator", "forward", NULL};
     PyObject *generator = NULL;
     int forward = 1; // Default is forward.
@@ -70,7 +70,7 @@ GeneratorForwardIterator_init(GeneratorForwardIterator *self, PyObject *args, Py
 }
 
 static PyObject *
-GeneratorForwardIterator_next(GeneratorForwardIterator *self) {
+GeneratorIterator_next(GeneratorIterator *self) {
     size_t size = ((GeneratorObject *)self->generator)->generator->size();
     if (self->index < size) {
         size_t index;
@@ -88,16 +88,16 @@ GeneratorForwardIterator_next(GeneratorForwardIterator *self) {
     return NULL;
 }
 
-static PyMemberDef GeneratorForwardIterator_members[] = {
+static PyMemberDef GeneratorIterator_members[] = {
         {NULL, 0, 0, 0, NULL}  /* Sentinel */
 };
 
-static PyMethodDef GeneratorForwardIterator_methods[] = {
+static PyMethodDef GeneratorIterator_methods[] = {
         {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
 static PyObject *
-GeneratorForwardIterator___str__(GeneratorForwardIterator *self, PyObject *Py_UNUSED(ignored)) {
+GeneratorIterator___str__(GeneratorIterator *self, PyObject *Py_UNUSED(ignored)) {
     assert(!PyErr_Occurred());
     std::ostrstream oss;
     oss << "<GeneratorObject generator @: " << self->generator;
@@ -111,21 +111,21 @@ GeneratorForwardIterator___str__(GeneratorForwardIterator *self, PyObject *Py_UN
     return PyUnicode_FromStringAndSize(str.c_str(), str.size());
 }
 
-static PyTypeObject GeneratorForwardIteratorType = {
+static PyTypeObject GeneratorIteratorType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        .tp_name = "gen.GeneratorForwardIterator",
-        .tp_basicsize = sizeof(GeneratorForwardIterator),
+        .tp_name = "gen.GeneratorIterator",
+        .tp_basicsize = sizeof(GeneratorIterator),
         .tp_itemsize = 0,
-        .tp_dealloc = (destructor) GeneratorForwardIterator_dealloc,
-        .tp_str = (reprfunc) GeneratorForwardIterator___str__,
+        .tp_dealloc = (destructor) GeneratorIterator_dealloc,
+        .tp_str = (reprfunc) GeneratorIterator___str__,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-        .tp_doc = "GeneratorForwardIterator object.",
+        .tp_doc = "GeneratorIterator object.",
         .tp_iter = PyObject_SelfIter,
-        .tp_iternext = (iternextfunc) GeneratorForwardIterator_next,
-        .tp_methods = GeneratorForwardIterator_methods,
-        .tp_members = GeneratorForwardIterator_members,
-        .tp_init = (initproc) GeneratorForwardIterator_init,
-        .tp_new = GeneratorForwardIterator_new,
+        .tp_iternext = (iternextfunc) GeneratorIterator_next,
+        .tp_methods = GeneratorIterator_methods,
+        .tp_members = GeneratorIterator_members,
+        .tp_init = (initproc) GeneratorIterator_init,
+        .tp_new = GeneratorIterator_new,
 };
 
 static void
@@ -180,10 +180,10 @@ Generator_size(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
 
 static PyObject *
 Generator_iter_forward(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
-    PyObject *ret = GeneratorForwardIterator_new(&GeneratorForwardIteratorType, NULL, NULL);
+    PyObject *ret = GeneratorIterator_new(&GeneratorIteratorType, NULL, NULL);
     if (ret) {
         PyObject *args = Py_BuildValue("OO", self, Py_True);
-        if(!args || GeneratorForwardIterator_init((GeneratorForwardIterator *)ret, args, NULL)) {
+        if(!args || GeneratorIterator_init((GeneratorIterator *)ret, args, NULL)) {
             Py_DECREF(ret);
             ret = NULL;
         }
@@ -194,10 +194,10 @@ Generator_iter_forward(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
 
 static PyObject *
 Generator_iter_reverse(GeneratorObject *self, PyObject *Py_UNUSED(ignored)) {
-    PyObject *ret = GeneratorForwardIterator_new(&GeneratorForwardIteratorType, NULL, NULL);
+    PyObject *ret = GeneratorIterator_new(&GeneratorIteratorType, NULL, NULL);
     if (ret) {
         PyObject *args = Py_BuildValue("OO", self, Py_False);
-        if(! args || GeneratorForwardIterator_init((GeneratorForwardIterator *)ret, args, NULL)) {
+        if(! args || GeneratorIterator_init((GeneratorIterator *)ret, args, NULL)) {
             Py_DECREF(ret);
             ret = NULL;
         }
@@ -267,15 +267,15 @@ PyInit_gen_cpp(void) {
         return NULL;
     }
 
-    if (PyType_Ready(&GeneratorForwardIteratorType) < 0) {
+    if (PyType_Ready(&GeneratorIteratorType) < 0) {
         Py_DECREF(m);
         return NULL;
     }
-    Py_INCREF(&GeneratorForwardIteratorType);
+    Py_INCREF(&GeneratorIteratorType);
     /* Do not add this to the module, they are only created by Generator.iter_forward() and Generator.iter_reverse(). */
-//    if (PyModule_AddObject(m, "GeneratorForwardIteratorType", (PyObject *) &GeneratorForwardIteratorType) < 0) {
+//    if (PyModule_AddObject(m, "GeneratorIteratorType", (PyObject *) &GeneratorIteratorType) < 0) {
 //        Py_DECREF(&GeneratorType);
-//        Py_DECREF(&GeneratorForwardIteratorType);
+//        Py_DECREF(&GeneratorIteratorType);
 //        Py_DECREF(m);
 //        return NULL;
 //    }
