@@ -64,6 +64,19 @@ def test_gen_c_ctor_iter_forward_next_raises():
         next(iterator)
 
 
+def yield_from_a_generator(gen):
+    for value in gen:
+        yield value
+
+
+def test_gen_c_yield():
+    generator_object = gen_c.Generator([1, 7, 4])
+    iterator = generator_object.iter_forward()
+    result = []
+    for v in yield_from_a_generator(iterator):
+        result.append(v)
+    assert result == [1, 7, 4]
+
 # @pytest.mark.parametrize(
 #     'index, expected',
 #     (
