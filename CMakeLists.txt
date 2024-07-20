@@ -105,8 +105,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/SimpleExample/cFibA.h
         src/cpy/Util/py_call_super.h
         src/cpy/Util/py_call_super.c
-        src/cpy/Generators/cGenerator.cpp
-        src/cpy/Generators/cGenerator.c
+        src/cpy/Iterators/cIterator.c
 )
 
 link_directories(
