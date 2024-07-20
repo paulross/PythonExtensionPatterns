@@ -25,7 +25,7 @@ It covers the essentials of reference counts, exceptions and creating functions 
     files
     super_call
     capsules
-    generators
+    iterators_generators
     pickle
     compiler_flags
     debugging/debug
