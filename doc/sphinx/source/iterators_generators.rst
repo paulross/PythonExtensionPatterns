@@ -463,7 +463,7 @@ Delete the underlying object, the iteration still works:
     result = [v for v in iterator]
     assert result == [1, 7, 4]
 
-Explicit builtin ``next()``:
+Using the builtin ``next()``:
 
 .. code-block:: python
 
@@ -473,7 +473,7 @@ Explicit builtin ``next()``:
     assert next(iterator) == 4
     # next() will raise a StopIteration.
 
-Explicit builtin ``sorted()``:
+Using the builtin ``sorted()``:
 
 .. code-block:: python
 
@@ -487,8 +487,40 @@ Explicit builtin ``sorted()``:
 Generators
 ===========================
 
-Iterators are a very powerful requirement for `Generators <https://docs.python.org/3/glossary.html#term-generator>`_,
+Iterators are a requirement for `Generators <https://docs.python.org/3/glossary.html#term-generator>`_,
 the secret weapon in Pythons toolbox.
-If you don't believe me then ask David Beazley who has done some very fine and informative presentations on
-`Generators <https://www.dabeaz.com/generators/>`_
+If you don't believe me then ask David Beazley who has done some very fine and informative
+`presentations on Generators <https://www.dabeaz.com/generators/>`_
 
+
+---------------------------------
+Our Iterator as a Generator
+---------------------------------
+
+Now we have an iterator we can write generator:
+
+.. code-block:: python
+
+    def yield_from_an_iterator_times_two(iterator):
+        for value in iterator:
+            yield 2 * value
+
+And test it:
+
+.. code-block:: python
+
+    def test_c_iterator_yield_forward():
+        sequence = cIterator.SequenceOfLong([1, 7, 4])
+        iterator = iter(sequence)
+        result = []
+        for v in yield_from_an_iterator_times_two(iterator):
+            result.append(v)
+        assert result == [2, 14, 8]
+
+And create a `generator expression <https://docs.python.org/3/glossary.html#term-generator-expression>`_:
+
+.. code-block:: python
+
+    sequence = cIterator.SequenceOfLong([1, 7, 4])
+    result = sum(v * 4 for v in sequence)
+    assert result == 4 * (1 + 7 + 4)

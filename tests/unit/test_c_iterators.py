@@ -210,6 +210,13 @@ def test_c_iterator_sorted():
     assert original == [1, 7, 4, ]
 
 
+def test_c_iterator_generator_expression_sum():
+    """https://docs.python.org/3/glossary.html#term-generator-expression"""
+    sequence = cIterator.SequenceOfLong([1, 7, 4])
+    result = sum(v * 4 for v in sequence)
+    assert result == 4 * (1 + 7 + 4)
+
+
 def test_modify_list_during_iteration_a():
     lst = list(range(8))
     print()

@@ -21,6 +21,7 @@ At least Python 3.9 to 3.13. Yes.
 - Standardise code such as filenames, function names etc.
 - ~~Improve the introduction with a discussion of reasons for doing this.~~
 - ~~Add a 'simple example' section after the introduction.~~
+- Standardise headings/subheadings etc.
 
 ## Merge `PythonExtensionsBasic`
 
@@ -31,7 +32,7 @@ There is lots of good stuff here:
 - ~~Capsules~~
 - ~~C++ placement new.~~
 - ~~Pickling~~
-- Generators
+- ~~Iterators and Generators.~~
 - C++ snippets as testable code: ~~Unicode~~, .
 - ~~Mark Buffer protocol (from RaPiVot) as TODO~~.
 - ~~Index, with entries such as :index:`Unicode`:~~ Abandoned because Sphinx does not support this in a sane way.
@@ -55,6 +56,17 @@ Maturin: https://github.com/PyO3/maturin
 - ~~The CPython Internals book (RealPython)~~
 - ~~Python memory tracing: https://github.com/paulross/pymemtrace~~
 - ~~Python/C++ homogeneous containers: https://github.com/paulross/PyCppContainers~~
+- ~~The Python Cookbook https://www.amazon.co.uk/Python-Cookbook-David-Beazley/dp/1449340377/~~.
+
+## Project
+
+- Resolve all issues on master.
+- Resolve all pull requests on master.
+- Rebase off master.
+- Complete README.md
+- Use README.md as `long_description` in `setup.py`.
+- Fix `long_description_content_type` in `setup.py` to `text/markdown` REST is `text/x-rst`.
+- Use HISTORY.rst in `setup.py`, where? Maybe convert to markdown and add to README.
 
 ## Other
 
