@@ -69,7 +69,6 @@ def test_c_iterator_sequence_of_long_dir_311_plus():
                       '__lt__',
                       '__ne__',
                       '__new__',
-                      '__next__',
                       '__reduce__',
                       '__reduce_ex__',
                       '__repr__',

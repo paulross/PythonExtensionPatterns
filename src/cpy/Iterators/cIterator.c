@@ -20,13 +20,6 @@ typedef struct {
     size_t index;
 } SequenceOfLongIterator;
 
-static void
-SequenceOfLongIterator_dealloc(SequenceOfLongIterator *self) {
-    // Decrement borrowed reference.
-    Py_XDECREF(self->sequence);
-    Py_TYPE(self)->tp_free((PyObject *) self);
-}
-
 static PyObject *
 SequenceOfLongIterator_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
     SequenceOfLongIterator *self;
@@ -62,6 +55,13 @@ SequenceOfLongIterator_init(SequenceOfLongIterator *self, PyObject *args, PyObje
     self->sequence = sequence;
     self->index = 0;
     return 0;
+}
+
+static void
+SequenceOfLongIterator_dealloc(SequenceOfLongIterator *self) {
+    // Decrement borrowed reference.
+    Py_XDECREF(self->sequence);
+    Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 static PyObject *
@@ -209,7 +209,7 @@ static PyTypeObject SequenceOfLongType= {
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = "Sequence of long integers.",
         .tp_iter = (getiterfunc) SequenceOfLong_iter,
-        .tp_iternext = (iternextfunc) SequenceOfLongIterator_next,
+//        .tp_iternext = (iternextfunc) SequenceOfLongIterator_next,
         .tp_methods = SequenceOfLong_methods,
         .tp_init = (initproc) SequenceOfLong_init,
         .tp_new = SequenceOfLong_new,
@@ -257,6 +257,8 @@ PyInit_cIterator(void) {
         return NULL;
     }
     Py_INCREF(&SequenceOfLongIteratorType);
+    // Not strictly necessary unless you need to expose this type.
+    // For type checking for example.
     if (PyModule_AddObject(
             m,
             "SequenceOfLongIterator",
