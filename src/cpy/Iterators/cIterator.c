@@ -18,11 +18,11 @@ typedef struct {
     PyObject_HEAD
     PyObject *sequence;
     size_t index;
-    int forward;
 } SequenceOfLongIterator;
 
 static void
 SequenceOfLongIterator_dealloc(SequenceOfLongIterator *self) {
+    // Decrement borrowed reference.
     Py_XDECREF(self->sequence);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
@@ -42,11 +42,9 @@ static int is_sequence_of_long_type(PyObject *op);
 
 static int
 SequenceOfLongIterator_init(SequenceOfLongIterator *self, PyObject *args, PyObject *kwds) {
-    static char *kwlist[] = {"sequence", "forward", NULL};
+    static char *kwlist[] = {"sequence", NULL};
     PyObject *sequence = NULL;
-    int forward = 1; // Default is forward.
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|p", kwlist, &sequence, &forward)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &sequence)) {
         return -1;
     }
     if (!is_sequence_of_long_type(sequence)) {
@@ -57,10 +55,12 @@ SequenceOfLongIterator_init(SequenceOfLongIterator *self, PyObject *args, PyObje
                 );
         return -2;
     }
+    // Borrowed reference
+    // Keep the sequence alive as long as the iterator is alive.
+    // Decrement on iterator de-allocation.
     Py_INCREF(sequence);
     self->sequence = sequence;
     self->index = 0;
-    self->forward = forward;
     return 0;
 }
 
@@ -68,28 +68,13 @@ static PyObject *
 SequenceOfLongIterator_next(SequenceOfLongIterator *self) {
     size_t size = ((SequenceOfLong *) self->sequence)->size;
     if (self->index < size) {
-        size_t index;
-        if (self->forward) {
-            index = self->index;
-        } else {
-            index = size - self->index - 1;
-        }
-        PyObject *ret = PyLong_FromLong(((SequenceOfLong *) self->sequence)->array_long[index]);
+        PyObject *ret = PyLong_FromLong(((SequenceOfLong *) self->sequence)->array_long[self->index]);
         self->index += 1;
         return ret;
     }
     // End iteration.
-//    Py_CLEAR(self->sequence);
     return NULL;
 }
-
-//static PyMemberDef SequenceOfLongIterator_members[] = {
-//        {NULL, 0, 0, 0, NULL}  /* Sentinel */
-//};
-//
-//static PyMethodDef SequenceOfLongIterator_methods[] = {
-//        {NULL, NULL, 0, NULL}  /* Sentinel */
-//};
 
 static PyObject *
 SequenceOfLongIterator___str__(SequenceOfLongIterator *self, PyObject *Py_UNUSED(ignored)) {
@@ -118,17 +103,9 @@ static PyTypeObject SequenceOfLongIteratorType = {
         .tp_doc = "SequenceOfLongIterator object.",
         .tp_iter = PyObject_SelfIter,
         .tp_iternext = (iternextfunc) SequenceOfLongIterator_next,
-//        .tp_methods = SequenceOfLongIterator_methods,
-//        .tp_members = SequenceOfLongIterator_members,
         .tp_init = (initproc) SequenceOfLongIterator_init,
         .tp_new = SequenceOfLongIterator_new,
 };
-
-static void
-SequenceOfLong_dealloc(SequenceOfLong *self) {
-    free(self->array_long);
-    Py_TYPE(self)->tp_free((PyObject *) self);
-}
 
 static PyObject *
 SequenceOfLong_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
@@ -136,6 +113,8 @@ SequenceOfLong_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_U
     self = (SequenceOfLong *) type->tp_alloc(type, 0);
     if (self != NULL) {
         assert(!PyErr_Occurred());
+        self->size = 0;
+        self->array_long = NULL;
     }
     return (PyObject *) self;
 }
@@ -163,6 +142,15 @@ SequenceOfLong_init(SequenceOfLong *self, PyObject *args, PyObject *kwds) {
             self->array_long[i] = PyLong_AsLong(py_value);
             Py_DECREF(py_value);
         } else {
+            PyErr_Format(
+                    PyExc_TypeError,
+                    "Argument [%zd] must be a int, not type %s",
+                    i,
+                    Py_TYPE(sequence)->tp_name
+            );
+            // Clean up on error.
+            free(self->array_long);
+            self->array_long = NULL;
             Py_DECREF(py_value);
             return -4;
         }
@@ -170,9 +158,11 @@ SequenceOfLong_init(SequenceOfLong *self, PyObject *args, PyObject *kwds) {
     return 0;
 }
 
-//static PyMemberDef SequenceOfLong_members[] = {
-//        {NULL, 0, 0, 0, NULL}  /* Sentinel */
-//};
+static void
+SequenceOfLong_dealloc(SequenceOfLong *self) {
+    free(self->array_long);
+    Py_TYPE(self)->tp_free((PyObject *) self);
+}
 
 static PyObject *
 SequenceOfLong_size(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
@@ -180,26 +170,10 @@ SequenceOfLong_size(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
 }
 
 static PyObject *
-SequenceOfLong_iter_forward(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
+SequenceOfLong_iter(SequenceOfLong *self) {
     PyObject *ret = SequenceOfLongIterator_new(&SequenceOfLongIteratorType, NULL, NULL);
     if (ret) {
-        PyObject *args = Py_BuildValue("OO", self, Py_True);
-        if (!args || SequenceOfLongIterator_init((SequenceOfLongIterator *) ret, args, NULL)) {
-            Py_DECREF(ret);
-            ret = NULL;
-        }
-        Py_DECREF(args);
-    }
-    return ret;
-}
-
-static PyObject *
-SequenceOfLong_iter_reverse(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
-    PyObject *ret = SequenceOfLongIterator_new(
-            &SequenceOfLongIteratorType, NULL, NULL
-    );
-    if (ret) {
-        PyObject *args = Py_BuildValue("OO", self, Py_False);
+        PyObject *args = Py_BuildValue("(O)", self);
         if (!args || SequenceOfLongIterator_init((SequenceOfLongIterator *) ret, args, NULL)) {
             Py_DECREF(ret);
             ret = NULL;
@@ -216,17 +190,6 @@ static PyMethodDef SequenceOfLong_methods[] = {
             METH_NOARGS,
             "Return the size of the sequence."
         },
-//        {
-//            "iter_forward",
-//                (PyCFunction) SequenceOfLong_iter_forward,
-//            METH_NOARGS,
-//            "Forward iterator across the sequence."
-//        },
-//        {
-//            "iter_reverse",
-//                (PyCFunction) SequenceOfLong_iter_reverse,
-//            METH_NOARGS,"Reverse iterator across the sequence."
-//        },
         {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
@@ -245,10 +208,9 @@ static PyTypeObject SequenceOfLongType= {
         .tp_str = (reprfunc) SequenceOfLong___str__,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = "Sequence of long integers.",
-        .tp_iter = (getiterfunc) SequenceOfLong_iter_forward,
+        .tp_iter = (getiterfunc) SequenceOfLong_iter,
         .tp_iternext = (iternextfunc) SequenceOfLongIterator_next,
         .tp_methods = SequenceOfLong_methods,
-//        .tp_members = SequenceOfLong_members,
         .tp_init = (initproc) SequenceOfLong_init,
         .tp_new = SequenceOfLong_new,
 };

@@ -52,17 +52,17 @@ raise_if_no_tzinfo(DateTimeTZ *self) {
         Py_DECREF(self);
         self = NULL;
     }
-#else // PY_MINOR_VERSION >= 10
+#else // PY_MINOR_VERSION < 10
     if (self->datetime.tzinfo == NULL) {
-            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-            Py_DECREF(self);
-            self = NULL;
-        } else if (Py_IsNone(self->datetime.tzinfo)) {
-            PyErr_SetString(PyExc_TypeError, "No time zone provided.");
-            Py_DECREF(self);
-            self = NULL;
-        }
-#endif // PY_MINOR_VERSION < 10
+        PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+        Py_DECREF(self);
+        self = NULL;
+    } else if (Py_IsNone(self->datetime.tzinfo)) {
+        PyErr_SetString(PyExc_TypeError, "No time zone provided.");
+        Py_DECREF(self);
+        self = NULL;
+    }
+#endif // PY_MINOR_VERSION
     return self;
 }
 
@@ -108,7 +108,9 @@ DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 static PyObject *
 DateTimeTZ_replace(PyObject *self, PyObject *args, PyObject *kwargs) {
+//    PyObject_Print(self, stdout, 0);
     PyObject *result = call_super_name(self, "replace", args, kwargs);
+//    PyObject_Print(self, stdout, 0);
     if (result) {
         result = (PyObject *) raise_if_no_tzinfo((DateTimeTZ *) result);
     }

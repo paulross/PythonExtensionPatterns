@@ -118,7 +118,9 @@ def test_datetimetz_datetimetz_set_tzinfo_raises():
 )
 def test_datetimetz_datetimetz_raises(args, kwargs, expected):
     with pytest.raises(TypeError) as err:
-        datetimetz.datetimetz(*args, **kwargs)
+        d = datetimetz.datetimetz(*args, **kwargs)
+        print()
+        print(f'ERROR: {repr(d)}')
     assert err.value.args[0] == expected
 
 
@@ -195,6 +197,8 @@ def test_datetimetz_datetimetz_replace_raises_tzinfo():
     d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
     with pytest.raises(TypeError) as err:
         d.replace(tzinfo=None)
+        print()
+        print(f'ERROR: {repr(d)}')
     assert err.value.args[0] == 'No time zone provided.'
 
 
