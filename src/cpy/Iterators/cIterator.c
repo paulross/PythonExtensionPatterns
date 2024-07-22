@@ -79,7 +79,7 @@ SequenceOfLongIterator_next(SequenceOfLongIterator *self) {
         return ret;
     }
     // End iteration.
-    Py_CLEAR(self->sequence);
+//    Py_CLEAR(self->sequence);
     return NULL;
 }
 
@@ -216,17 +216,17 @@ static PyMethodDef SequenceOfLong_methods[] = {
             METH_NOARGS,
             "Return the size of the sequence."
         },
-        {
-            "iter_forward",
-                (PyCFunction) SequenceOfLong_iter_forward,
-            METH_NOARGS,
-            "Forward iterator across the sequence."
-        },
-        {
-            "iter_reverse",
-                (PyCFunction) SequenceOfLong_iter_reverse,
-            METH_NOARGS,"Reverse iterator across the sequence."
-        },
+//        {
+//            "iter_forward",
+//                (PyCFunction) SequenceOfLong_iter_forward,
+//            METH_NOARGS,
+//            "Forward iterator across the sequence."
+//        },
+//        {
+//            "iter_reverse",
+//                (PyCFunction) SequenceOfLong_iter_reverse,
+//            METH_NOARGS,"Reverse iterator across the sequence."
+//        },
         {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
@@ -245,6 +245,8 @@ static PyTypeObject SequenceOfLongType= {
         .tp_str = (reprfunc) SequenceOfLong___str__,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = "Sequence of long integers.",
+        .tp_iter = (getiterfunc) SequenceOfLong_iter_forward,
+        .tp_iternext = (iternextfunc) SequenceOfLongIterator_next,
         .tp_methods = SequenceOfLong_methods,
 //        .tp_members = SequenceOfLong_members,
         .tp_init = (initproc) SequenceOfLong_init,

@@ -99,8 +99,9 @@ def test_c_iterator_ctor_iter_reverse_type():
 
 def test_c_iterator_ctor_iter_forward():
     sequence = cIterator.SequenceOfLong([1, 7, 4])
-    iterator = sequence.iter_forward()
-    result = [v for v in iterator]
+    # iterator = sequence.iter_forward()
+    # result = [v for v in iterator]
+    result = [v for v in sequence]
     assert result == [1, 7, 4]
 
 
