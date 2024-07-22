@@ -54,6 +54,8 @@ for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'cpp'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'SimpleExample'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Iterators'),
+                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'SubClass'),
+                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Threads'),
                  ):
     if not os.path.exists(dir_path):
         print(f'Making directory {dir_path}')
@@ -227,6 +229,32 @@ setup(
                   sources=["src/cpy/Iterators/cIterator.c", ],
                   extra_compile_args=extra_compile_args_c,
                   language='c',
+                  ),
+        Extension(name=f"{PACKAGE_NAME}.SubClass.sublist",
+                  include_dirs=[
+                      '/usr/local/include',
+                      'src/cpy/Util',
+                  ],
+                  sources=[
+                      "src/cpy/SubClass/sublist.c",
+                      'src/cpy/Util/py_call_super.c',
+                  ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
+        Extension(name=f"{PACKAGE_NAME}.Threads.sublist",
+                  include_dirs=[
+                      '/usr/local/include',
+                      'src/cpy/Util',
+                      "src/cpy/Threads",
+                  ],
+                  sources=[
+                      "src/cpy/Threads/sublist.cpp",
+                      'src/cpy/Util/py_call_super.c',
+                  ],
+                  # TODO: Why does removing this work?
+                  # extra_compile_args=extra_compile_args_cpp,
+                  language='c++11',
                   ),
     ]
 )

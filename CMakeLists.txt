@@ -106,6 +106,9 @@ add_executable(PythonExtensionPatterns
         src/cpy/Util/py_call_super.h
         src/cpy/Util/py_call_super.c
         src/cpy/Iterators/cIterator.c
+        src/cpy/Threads/cThreadLock.h
+        src/cpy/SubClass/sublist.c
+        src/cpy/Threads/sublist.cpp
 )
 
 link_directories(

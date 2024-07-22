@@ -22,6 +22,8 @@ At least Python 3.9 to 3.13. Yes.
 - ~~Improve the introduction with a discussion of reasons for doing this.~~
 - ~~Add a 'simple example' section after the introduction.~~
 - Standardise headings/subheadings etc.
+- Add sub-classing examples.
+- Review thread safety, add example code and tests.
 
 ## Merge `PythonExtensionsBasic`
 
