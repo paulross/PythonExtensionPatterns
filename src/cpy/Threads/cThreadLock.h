@@ -46,4 +46,22 @@ public:
 };
 #endif
 
+// From https://github.com/python/cpython/blob/main/Modules/_bz2module.c
+// #define ACQUIRE_LOCK(obj) do { \
+//    if (!PyThread_acquire_lock((obj)->lock, 0)) { \
+//        Py_BEGIN_ALLOW_THREADS \
+//        PyThread_acquire_lock((obj)->lock, 1); \
+//        Py_END_ALLOW_THREADS \
+//    } } while (0)
+//#define RELEASE_LOCK(obj) PyThread_release_lock((obj)->lock)
+
+// /Library/Frameworks/Python.framework/Versions/3.11/include/python3.11/ceval.h
+// #define Py_BEGIN_ALLOW_THREADS { \
+//                        PyThreadState *_save; \
+//                        _save = PyEval_SaveThread();
+//#define Py_BLOCK_THREADS        PyEval_RestoreThread(_save);
+//#define Py_UNBLOCK_THREADS      _save = PyEval_SaveThread();
+//#define Py_END_ALLOW_THREADS    PyEval_RestoreThread(_save); \
+//                 }
+
 #endif //PYTHONEXTENSIONPATTERNS_CTHREADLOCK_H

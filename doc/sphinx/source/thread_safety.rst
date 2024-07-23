@@ -8,22 +8,49 @@
 Thread Safety
 ====================================
 
-If your Extension is likely to be exposed to a multi-threaded environment then you need to think about thread safety. I had this problem in a separate project which was a C++ `SkipList <https://github.com/paulross/skiplist/>`_ which could contain an ordered list of arbitrary Python objects. The problem in a multi-threaded environment was that the following sequence of events could happen:
+If your Extension is likely to be exposed to a multi-threaded environment then you need to think about thread safety.
+I had this problem in a separate project which was a C++ `SkipList <https://github.com/paulross/skiplist/>`_
+which could contain an ordered list of arbitrary Python objects.
+The problem in a multi-threaded environment was that the following sequence of events could happen:
 
-* Thread A tries to insert a Python object into the SkipList. The C++ code searches for a place to insert it preserving the existing order. To do so it must call back into Python code for the user defined comparison function (using ``functools.total_ordering`` for example).
-* At this point the Python interpreter is free to make a context switch allowing thread B to, say, remove an element from the SkipList. This removal may well invalidate C++ pointers held by thread A.
+* Thread A tries to insert a Python object into the SkipList.
+  The C++ code searches for a place to insert it preserving the existing order.
+  To do so it must call back into Python code for the user defined comparison function
+  (using ``functools.total_ordering`` for example).
+* At this point the Python interpreter is free to make a context switch allowing thread B to, say, remove an element
+  from the SkipList. This removal may well invalidate C++ pointers held by thread A.
 * When the interpreter switches back to thread A it accesses an invalid pointer and a segfault happens.
 
-The solution, of course, is to use a lock to prevent a context switch until A has completed its insertion, but how? I found the existing Python documentation misleading and I couldn't get it to work reliably, if at all. It was only when I stumbled upon the `source code <https://github.com/python/cpython/blob/master/Modules/_bz2module.c>`_ for the `bz module <https://docs.python.org/3/library/bz2.html#module-bz2>`_ that I realised there was a whole other, low level way of doing this, largely undocumented.
+The solution, of course, is to use a lock to prevent a context switch until A has completed its insertion, but how?
+I found the existing Python documentation misleading and I couldn't get it to work reliably, if at all.
+It was only when I stumbled upon the `source code <https://github.com/python/cpython/blob/master/Modules/_bz2module.c>`_
+for the `bz module <https://docs.python.org/3/library/bz2.html#module-bz2>`_ that I realised there was a whole other,
+low level way of doing this, largely undocumented.
+
+.. code-block:: c
+
+    #define ACQUIRE_LOCK(obj) do { \
+        if (!PyThread_acquire_lock((obj)->lock, 0)) { \
+            Py_BEGIN_ALLOW_THREADS \
+            PyThread_acquire_lock((obj)->lock, 1); \
+            Py_END_ALLOW_THREADS \
+        } } while (0)
+    #define RELEASE_LOCK(obj) PyThread_release_lock((obj)->lock)
+
+
 
 .. note::
 
-    Your Python may have been compiled without thread support in which case we don't have to concern ourselves with thread locking. We can discover this from the presence of the macro ``WITH_THREAD`` so all our thread support code is conditional on the definition of this macro.
+    Your Python may have been compiled without thread support in which case we don't have to concern ourselves with
+    thread locking.
+    We can discover this from the presence of the macro ``WITH_THREAD`` so all our thread support code is conditional
+    on the definition of this macro.
 
 Coding up the Lock
 ----------------------------
 
-First we need to include `pythread.h <https://github.com/python/cpython/blob/master/Include/pythread.h>`_ as well as the usual includes:
+First we need to include `pythread.h <https://github.com/python/cpython/blob/master/Include/pythread.h>`_
+as well as the usual includes:
 
 .. code-block:: c
     :emphasize-lines: 4-6
