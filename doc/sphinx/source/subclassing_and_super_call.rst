@@ -4,15 +4,182 @@
 .. toctree::
     :maxdepth: 3
 
+**************************************
+Subclassing and Using ``super()``
+**************************************
+
+This chapter describes how to subclass existing types and how to call ``super()`` in C where necessary.
+
 =================================
-Calling ``super()`` from C 
+Basic Subclassing
+=================================
+
+In this example we are going to subclass the built in ``list`` object and just add a new attribute.
+The code is based on
+`Python documentation on subclassing <https://docs.python.org/3/extending/newtypes_tutorial.html#subclassing-other-types>`_
+The full code is in ``src/cpy/SubClass/sublist.c`` and the tests are in ``tests/unit/test_c_subclass.py``.
+
+-----------------------------
+Writing the C Extension
+-----------------------------
+
+First the declaration of the ``SubListObject``:
+
+.. code-block:: c
+
+    #define PY_SSIZE_T_CLEAN
+    #include <Python.h>
+    #include "structmember.h"
+
+    typedef struct {
+        PyListObject list;
+        int state;
+    } SubListObject;
+
+The ``__init__`` method:
+
+.. code-block:: c
+
+    static int
+    SubList_init(SubListObject *self, PyObject *args, PyObject *kwds) {
+        if (PyList_Type.tp_init((PyObject *) self, args, kwds) < 0) {
+            return -1;
+        }
+        self->state = 0;
+        return 0;
+    }
+
+Now add an ``increment()`` method and the method table:
+
+.. code-block:: c
+
+    static PyObject *
+    SubList_increment(SubListObject *self, PyObject *Py_UNUSED(unused)) {
+        self->state++;
+        return PyLong_FromLong(self->state);
+    }
+
+    static PyMethodDef SubList_methods[] = {
+            {"increment", (PyCFunction) SubList_increment, METH_NOARGS,
+                    PyDoc_STR("increment state counter")},
+            {NULL, NULL, 0, NULL},
+    };
+
+Add the ``state`` attribute:
+
+.. code-block:: c
+
+    static PyMemberDef SubList_members[] = {
+            {"state", T_INT, offsetof(SubListObject, state), 0,
+                    "Value of the state."},
+            {NULL, 0, 0, 0, NULL}  /* Sentinel */
+    };
+
+Declare the type.
+
+Note that we do not initialise ``tp_base`` just yet.
+The reason is that C99 requires the initializers to be “address constants”.
+This is best described in the
+`tp_base documentation <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_base>`_.
+
+.. code-block:: c
+
+    static PyTypeObject SubListType = {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            .tp_name = "sublist.SubList",
+            .tp_doc = PyDoc_STR("SubList objects"),
+            .tp_basicsize = sizeof(SubListObject),
+            .tp_itemsize = 0,
+            .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+            .tp_init = (initproc) SubList_init,
+            .tp_methods = SubList_methods,
+            .tp_members = SubList_members,
+    };
+
+Declare the module:
+
+.. code-block:: c
+
+    static PyModuleDef sublistmodule = {
+            PyModuleDef_HEAD_INIT,
+            .m_name = "sublist",
+            .m_doc = "Module that contains a subclass of a list.",
+            .m_size = -1,
+    };
+
+Initialise the module, this is where we set ``tp_base``:
+
+.. code-block:: c
+
+    PyMODINIT_FUNC
+    PyInit_sublist(void) {
+        PyObject *m;
+        SubListType.tp_base = &PyList_Type;
+        if (PyType_Ready(&SubListType) < 0) {
+            return NULL;
+        }
+        m = PyModule_Create(&sublistmodule);
+        if (m == NULL) {
+            return NULL;
+        }
+        Py_INCREF(&SubListType);
+        if (PyModule_AddObject(m, "SubList", (PyObject *) &SubListType) < 0) {
+            Py_DECREF(&SubListType);
+            Py_DECREF(m);
+            return NULL;
+        }
+        return m;
+    }
+
+-----------------------------
+Setup and Build
+-----------------------------
+
+In the ``setup.py`` add an Extension such as:
+
+.. code-block:: python
+
+    Extension(name=f"cPyExtPatt.SubClass.sublist",
+              include_dirs=[
+                  '/usr/local/include',
+              ],
+              sources=[
+                  "src/cpy/SubClass/sublist.c",
+              ],
+              extra_compile_args=extra_compile_args_c,
+              language='c',
+              ),
+
+The extension can be built with ``python setup.py develop``.
+
+-----------------------------
+Test
+-----------------------------
+
+The extension can used like this:
+
+.. code-block:: python
+
+    from cPyExtPatt.SubClass import sublist
+
+    obj = sublist.SubList()
+    assert obj.state == 0
+    obj.increment()
+    assert obj.state == 1
+
+This is fine for subclasses that just add some functionality however if you want to overload the super class
+you need to be able to call ``super()`` from C which is described next.
+
+=================================
+Calling ``super()`` from C
 =================================
 
 I needed to call super() from a C extension and I couldn't find a good description of how to do this online so I am
 including this here.
+The ability to call ``super()`` is needed when you want to modify the behaviour of inherited classes.
 
-Suppose we wanted to subclass a list and record how many times ``append()`` was called. This is simple enough in pure
-Python:
+Suppose we wanted to subclass a list and record how many times ``append()`` was called.
+This is simple enough in pure Python:
 
 .. code-block:: python
 
@@ -37,11 +204,11 @@ That is set to zero on construction and can be accessed like a normal member.
     typedef struct {
         PyListObject list;
         int appends;
-    } Shoddy;
+    } SubListObject;
 
 
     static int
-    Shoddy_init(Shoddy *self, PyObject *args, PyObject *kwds)
+    SubListObject_init(SubListObject *self, PyObject *args, PyObject *kwds)
     {
         if (PyList_Type.tp_init((PyObject *)self, args, kwds) < 0) {
             return -1;
@@ -50,9 +217,9 @@ That is set to zero on construction and can be accessed like a normal member.
         return 0;
     }
 
-    static PyMemberDef Shoddy_members[] = {
+    static PyMemberDef SubListObject_members[] = {
         ...
-        {"appends", T_INT, offsetof(Shoddy, appends), 0,
+        {"appends", T_INT, offsetof(SubListObject, appends), 0,
             "Number of append operations."},
         ...
         {NULL, 0, 0, 0, NULL}  /* Sentinel */
@@ -63,15 +230,15 @@ We now need to create the ``append()`` function, this function will call the sup
 
 .. code-block:: c
 
-    static PyMethodDef Shoddy_methods[] = {
+    static PyMethodDef SubListObject_methods[] = {
         ...
-        {"append", (PyCFunction)Shoddy_append, METH_VARARGS,
+        {"append", (PyCFunction)SubListObject_append, METH_VARARGS,
             PyDoc_STR("Append to the list")},
         ...
         {NULL,	NULL, 0, NULL},
     };
 
-This is where it gets tricky, how do we implement ``Shoddy_append``?
+This is where it gets tricky, how do we implement ``SubListObject_append``?
 
 --------------------------
 The Obvious Way is Wrong
@@ -84,12 +251,12 @@ A first attempt might do something like a method call on the ``PyListObject``:
     typedef struct {
         PyListObject list;
         int appends;
-    } Shoddy;
+    } SubListObject;
 
     /* Other stuff here. */
     
     static PyObject *
-    Shoddy_append(Shoddy *self, PyObject *args) {
+    SubListObject_append(SubListObject *self, PyObject *args) {
         PyObject *result = PyObject_CallMethod((PyObject *)&self->list, "append", "O", args);
         if (result) {
             self->appends++;
@@ -387,12 +554,161 @@ Here is the function with full error checking:
         return result;
     }
 
+=====================================
+Subclassing with Overloading
+=====================================
+
+Lets revisit our subclass of the builtin ``list`` that counts how many time ``append()`` is called and we will use
+the C ``super()`` API described above.
+
+The full code is in ``src/cpy/SubClass/sublist.c`` and the tests are in ``tests/unit/test_c_subclass.py``.
+
+-----------------------------
+Writing the C Extension
+-----------------------------
+
+First the declaration and initialisation of ``SubListObject`` that has an ``appends`` counter.
+Note the inclusion of ``py_call_super.h``:
+
+.. code-block:: c
+
+    #define PY_SSIZE_T_CLEAN
+    #include <Python.h>
+    #include "structmember.h"
+
+    #include "py_call_super.h"
+
+    typedef struct {
+        PyListObject list;
+        int appends;
+    } SubListObject;
+
+    static int
+    SubList_init(SubListObject *self, PyObject *args, PyObject *kwds) {
+        if (PyList_Type.tp_init((PyObject *) self, args, kwds) < 0) {
+            return -1;
+        }
+        self->appends = 0;
+        return 0;
+    }
+
+Now the implementation of ``append`` that makes the ``super()`` call and then increments the ``appends`` attribute
+and returning the value of the ``super()`` call:
+
+.. code-block:: c
+
+    static PyObject *
+    SubList_append(SubListObject *self, PyObject *args) {
+        PyObject *result = call_super_name((PyObject *)self, "append",
+                                           args, NULL);
+        if (result) {
+            self->appends++;
+        }
+        return result;
+    }
+
+The declaration of methods, members and the type:
+
+.. code-block:: c
+
+    static PyMethodDef SubList_methods[] = {
+            {"append", (PyCFunction) SubList_append, METH_VARARGS,
+                    PyDoc_STR("append an item")},
+            {NULL, NULL, 0, NULL},
+    };
+
+    static PyMemberDef SubList_members[] = {
+            {"appends", T_INT, offsetof(SubListObject, appends), 0,
+                    "Number of append operations."},
+            {NULL, 0, 0, 0, NULL}  /* Sentinel */
+    };
+
+    static PyTypeObject SubListType = {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            .tp_name = "sublist.SubList",
+            .tp_doc = PyDoc_STR("SubList objects"),
+            .tp_basicsize = sizeof(SubListObject),
+            .tp_itemsize = 0,
+            .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+            .tp_init = (initproc) SubList_init,
+            .tp_methods = SubList_methods,
+            .tp_members = SubList_members,
+    };
+
+Finally the module definition which is very similar to before:
+
+.. code-block:: c
+
+    static PyModuleDef sublistmodule = {
+            PyModuleDef_HEAD_INIT,
+            .m_name = "sublist",
+            .m_doc = "Module that contains a subclass of a list.",
+            .m_size = -1,
+    };
+
+    PyMODINIT_FUNC
+    PyInit_sublist(void) {
+        PyObject *m;
+        SubListType.tp_base = &PyList_Type;
+        if (PyType_Ready(&SubListType) < 0) {
+            return NULL;
+        }
+        m = PyModule_Create(&sublistmodule);
+        if (m == NULL) {
+            return NULL;
+        }
+        Py_INCREF(&SubListType);
+        if (PyModule_AddObject(m, "SubList", (PyObject *) &SubListType) < 0) {
+            Py_DECREF(&SubListType);
+            Py_DECREF(m);
+            return NULL;
+        }
+        return m;
+    }
+
+-----------------------------
+Setup and Build
+-----------------------------
+
+In the ``setup.py`` add an Extension such as:
+
+.. code-block:: python
+
+    Extension(name=f"cPyExtPatt.SubClass.sublist",
+              include_dirs=[
+                  '/usr/local/include',
+              ],
+              sources=[
+                  "src/cpy/SubClass/sublist.c",
+              ],
+              extra_compile_args=extra_compile_args_c,
+              language='c',
+              ),
+
+The extension can be built with ``python setup.py develop``.
+
+-----------------------------
+Test
+-----------------------------
+
+The extension can used like this:
+
+.. code-block:: python
+
+    from cPyExtPatt.SubClass import sublist
+
+    obj = sublist.SubList()
+    assert obj.appends == 0
+    obj.append(42)
+    assert obj.appends == 1
+    assert obj == [42, ]
+
 --------------------------------------
-An Example of Using this API
+Another Example of Using this API
 --------------------------------------
 
 Here is a real example of using this see overloading ``replace()`` when subclassing a ``datetime`` in
-:ref:`chapter_capsules_using_an_existing_capsule` in the chapter :ref:`chapter_capsules`.
+:ref:`chapter_capsules_using_an_existing_capsule` from the chapter :ref:`chapter_capsules`.
 
 The code here calls the ``super()`` function then raises if the given arguments are unacceptable (trying to set the
 ``tzinfo`` property to ``None``):

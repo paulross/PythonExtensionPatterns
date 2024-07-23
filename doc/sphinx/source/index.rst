@@ -23,7 +23,7 @@ It covers the essentials of reference counts, exceptions and creating functions 
     new_types
     module_globals
     files
-    super_call
+    subclassing_and_super_call
     capsules
     iterators_generators
     pickle

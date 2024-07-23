@@ -80,7 +80,7 @@ static PyTypeObject SubListType = {
 static PyModuleDef sublistmodule = {
         PyModuleDef_HEAD_INIT,
         .m_name = "sublist",
-        .m_doc = "Example module that creates an extension type.",
+        .m_doc = "Module that contains a subclass of a list.",
         .m_size = -1,
 };
 
