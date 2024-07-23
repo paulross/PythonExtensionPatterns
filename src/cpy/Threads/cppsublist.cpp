@@ -142,39 +142,39 @@ static PyMemberDef SubList_members[] = {
         {NULL, 0, 0,                                         0, NULL}  /* Sentinel */
 };
 
-static PyTypeObject SubListType = {
+static PyTypeObject cppSubListType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        .tp_name = "sublist.SubList",
+        .tp_name = "cppsublist.cppSubList",
         .tp_basicsize = sizeof(SubListObject),
         .tp_itemsize = 0,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-        .tp_doc = PyDoc_STR("SubList objects"),
+        .tp_doc = PyDoc_STR("C++ SubList object"),
         .tp_methods = SubList_methods,
         .tp_members = SubList_members,
         .tp_init = (initproc) SubList_init,
 };
 
-static PyModuleDef sublistmodule = {
+static PyModuleDef cppsublistmodule = {
         PyModuleDef_HEAD_INIT,
-        .m_name = "sublist",
+        .m_name = "cppsublist",
         .m_doc = "Example module that creates an extension type.",
         .m_size = -1,
 };
 
 PyMODINIT_FUNC
-PyInit_sublist(void) {
+PyInit_cppsublist(void) {
     PyObject * m;
-    SubListType.tp_base = &PyList_Type;
-    if (PyType_Ready(&SubListType) < 0) {
+    cppSubListType.tp_base = &PyList_Type;
+    if (PyType_Ready(&cppSubListType) < 0) {
         return NULL;
     }
-    m = PyModule_Create(&sublistmodule);
+    m = PyModule_Create(&cppsublistmodule);
     if (m == NULL) {
         return NULL;
     }
-    Py_INCREF(&SubListType);
-    if (PyModule_AddObject(m, "SubList", (PyObject *) &SubListType) < 0) {
-        Py_DECREF(&SubListType);
+    Py_INCREF(&cppSubListType);
+    if (PyModule_AddObject(m, "cppSubList", (PyObject *) &cppSubListType) < 0) {
+        Py_DECREF(&cppSubListType);
         Py_DECREF(m);
         return NULL;
     }

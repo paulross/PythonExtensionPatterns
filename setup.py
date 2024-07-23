@@ -242,14 +242,27 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
-        Extension(name=f"{PACKAGE_NAME}.Threads.sublist",
+        Extension(name=f"{PACKAGE_NAME}.Threads.csublist",
                   include_dirs=[
                       '/usr/local/include',
                       'src/cpy/Util',
                       "src/cpy/Threads",
                   ],
                   sources=[
-                      "src/cpy/Threads/sublist.cpp",
+                      "src/cpy/Threads/csublist.c",
+                      'src/cpy/Util/py_call_super.c',
+                  ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
+        Extension(name=f"{PACKAGE_NAME}.Threads.cppsublist",
+                  include_dirs=[
+                      '/usr/local/include',
+                      'src/cpy/Util',
+                      "src/cpy/Threads",
+                  ],
+                  sources=[
+                      "src/cpy/Threads/cppsublist.cpp",
                       'src/cpy/Util/py_call_super.c',
                   ],
                   # TODO: Why does removing this work?

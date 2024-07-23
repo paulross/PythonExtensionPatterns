@@ -108,7 +108,8 @@ add_executable(PythonExtensionPatterns
         src/cpy/Iterators/cIterator.c
         src/cpy/Threads/cThreadLock.h
         src/cpy/SubClass/sublist.c
-        src/cpy/Threads/sublist.cpp
+        src/cpy/Threads/cppsublist.cpp
+        src/cpy/Threads/csublist.c
 )
 
 link_directories(
