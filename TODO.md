@@ -22,7 +22,7 @@ At least Python 3.9 to 3.13. Yes.
 - ~~Improve the introduction with a discussion of reasons for doing this.~~
 - ~~Add a 'simple example' section after the introduction.~~
 - Standardise headings/subheadings etc.
-- Add sub-classing examples.
+- ~~Add sub-classing examples.~~
 - Review thread safety, add example code and tests.
 
 ## Merge `PythonExtensionsBasic`
@@ -69,6 +69,10 @@ Maturin: https://github.com/PyO3/maturin
 - Use README.md as `long_description` in `setup.py`.
 - Fix `long_description_content_type` in `setup.py` to `text/markdown` REST is `text/x-rst`.
 - Use HISTORY.rst in `setup.py`, where? Maybe convert to markdown and add to README.
+
+Contributors:
+
+https://github.com/nnathan - Section on Logging.
 
 ## Other
 
