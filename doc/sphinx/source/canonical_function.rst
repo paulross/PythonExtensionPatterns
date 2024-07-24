@@ -71,7 +71,7 @@ If you are willing to accept NULL arguments then this pattern would be more suit
         Py_INCREF(arg_1);
     }
     
-Of course the same test must be used when calling ``Py_DECFREF``, or just use ``Py_XDECREF``.
+Of course the same test must be used when calling ``Py_DECREF``, or just use ``Py_XDECREF``.
 
 Now we create any local objects, if they are "Borrowed" references we need to incref them. With any abnormal behaviour we do a local jump straight to the cleanup code.
 

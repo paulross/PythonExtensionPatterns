@@ -88,7 +88,49 @@ The other thing to note is that if there are multiple calls to ``PyErr_SetString
     }
 
 ---------------------------------
-Creating Specialised Excpetions
+Common Exception Patterns
+---------------------------------
+
+Here are some common use cases for raising exceptions.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type Checking
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A common requirement is to check the types of the arguments and raise a ``TypeError`` if they are wrong. Here is an example where we require a ``bytes`` object:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 4-9
+
+    static PyObject*
+    function(PyObject *self, PyObject *arg) {
+        /* ... */
+        if (! PyBytes_Check(arg)) {
+            PyErr_Format(PyExc_TypeError,
+                         "Argument \"value\" to %s must be a bytes object not a \"%s\"",
+                         __FUNCTION__, Py_TYPE(arg)->tp_name);
+            goto except;
+        }
+        /* ... */
+    }
+
+Thats fine if you have a macro such as ``PyBytes_Check`` and for your own types you can create a couple of suitable macros:
+
+.. code-block:: c
+
+    #define PyMyType_CheckExact(op) (Py_TYPE(op) == &PyMyType_Type)
+    #define PyMyType_Check(op) PyObject_TypeCheck(op, &PyMyType_Type)
+
+Incidentially ``PyObject_TypeCheck`` is defined as:
+
+.. code-block:: c
+
+    #define PyObject_TypeCheck(ob, tp) \
+        (Py_TYPE(ob) == (tp) || PyType_IsSubtype(Py_TYPE(ob), (tp)))
+
+---------------------------------
+Creating Specialised Exceptions
 ---------------------------------
 
 Often you need to create an Exception class that is specialised to a particular module. This can be done quite easily using either the ``PyErr_NewException`` or the ``PyErr_NewExceptionWithDoc`` functions. These create new exception classes that can be added to a module. For example:
@@ -113,17 +155,11 @@ Often you need to create an Exception class that is specialised to a particular 
     {
         PyObject* m;
 
-        noddy_NoddyType.tp_new = PyType_GenericNew;
-        if (PyType_Ready(&noddy_NoddyType) < 0)
-            return NULL;
-
         m = PyModule_Create(&noddymodule);
         if (m == NULL)
             return NULL;
 
-        Py_INCREF(&noddy_NoddyType);
-        PyModule_AddObject(m, "Noddy", (PyObject *)&noddy_NoddyType);
-        
+   
         /* Initialise exceptions here.
          *
          * Firstly a base class exception that inherits from the builtin Exception.

@@ -40,7 +40,7 @@ Here is an example of a normal ``PyObject`` creation and deallocation:
         PyObject *pObj = NULL;
         
         pObj = PyBytes_FromString("Hello world\n"); /* Object creation, ref count = 1. */
-        PyObject_Print(pLast, stdout, 0);        
+        PyObject_Print(pObj, stdout, 0);        
         Py_DECREF(pObj);    /* ref count becomes 0, object deallocated.
                              * Miss this step and you have a memory leak. */
     }
@@ -64,7 +64,7 @@ Taking the above example of a normal ``PyObject`` creation and deallocation then
     #include "Python.h"
     
     void print_hello_world(void) {
-        PyObject *pObj = NULL:
+        PyObject *pObj = NULL;
     
         pObj = PyBytes_FromString("Hello world\n");   /* Object creation, ref count = 1. */
         PyObject_Print(pLast, stdout, 0);        
@@ -198,7 +198,7 @@ The contract with *new* references is: either you decref it or give it to someon
 
 This is also to do with object creation but where another object takes responsibility for decref'ing (possibly freeing) the object. Typical examples are when you create a ``PyObject`` that is then inserted into an existing container such as a tuple list, dict etc.
 
-The analogy with C code is malloc'ing some memory, populating it and then passing that pointer to a linked list which then takes on the responsibility to free the memory if that item in the list is removed.
+The analogy with C code is malloc'ing some memory, populating it and then passing that pointer to a linked list which then takes on the responsibility to free the memory if that item in the list is removed. If you were to free the memory you had malloc'd then you will get a double free when the linked list (eventually) frees its members.
 
 Here is an example of creating a 3-tuple, the comments describe what is happening contractually:
 
@@ -290,32 +290,30 @@ If we try a different string::
 
 At least this will get your attention!
 
-.. note::
+Incidentially from Python 3.3 onwards there is a module `faulthandler <https://docs.python.org/3.3/library/faulthandler.html#module-faulthandler>`_ that can give useful debugging information (file ``FaultHandlerExample.py``):
 
-    Incidentially from Python 3.3 onwards there is a module `faulthandler <https://docs.python.org/3.3/library/faulthandler.html#module-faulthandler>`_ that can give useful debugging information (file ``FaultHandlerExample.py``):
+.. code-block:: python
+	:linenos:
+	:emphasize-lines: 5
 
-    .. code-block:: python
-        :linenos:
-        :emphasize-lines: 7
-    
-        import faulthandler
-        faulthandler.enable()
+	import faulthandler
+	faulthandler.enable()
+	import cPyRefs
+	l = ['abc' * 200]
+	cPyRefs.popBAD(l)
 
-        import cPyRefs
+And this is what you get:
 
-        l = ['abc' * 200]
-        cPyRefs.popBAD(l)
+.. code-block:: console
 
-    And this is what you get::
+	$ python3 FaultHandlerExample.py 
+	Ref count was: 1
+	Ref count now: 2305843009213693952
+	Fatal Python error: Segmentation fault
 
-        $ python3 FaultHandlerExample.py 
-        Ref count was: 1
-        Ref count now: 2305843009213693952
-        Fatal Python error: Segmentation fault
-
-        Current thread 0x00007fff73c88310:
-          File "FaultHandlerExample.py", line 7 in <module>
-        Segmentation fault: 11
+	Current thread 0x00007fff73c88310:
+	  File "FaultHandlerExample.py", line 7 in <module>
+	Segmentation fault: 11
 
 There is a more subtle issue; suppose that in your Python code there is a reference to the last item in the list, then the problem suddenly "goes away"::
 
@@ -370,9 +368,63 @@ The ``pLast = NULL;`` line is not necessary but is good coding style as it will 
 
 An important takeaway here is that incrementing and decrementing reference counts is a cheap operation but the consequences of getting it wrong can be expensive. A precautionary approach in your code might be to *always* increment borrowed references when they are instantiated and then *always* decrement them before they go out of scope. That way you incur two cheap operations but eliminate a vastly more expensive one.
 
-^^^^^^^^^^^^^^^^^^
+-----------------------
+An Example Leak Problem
+-----------------------
+
+Here is an example that exhibits a leak. The object is to add the integers 400 to 404 to the end of a list. You  might want to study it to see if you can spot the problem:
+
+.. code-block:: c
+    
+    static PyObject *
+    list_append_one_to_four(PyObject *list) {
+        for (int i = 400; i < 405; ++i) {
+            PyList_Append(list, PyLong_FromLong(i));
+        }
+        Py_RETURN_NONE;
+    }
+
+The problem is that ``PyLong_FromLong`` creates  ``PyObject`` (an int) with a reference count of 1 **but** ``PyList_Append`` increments the reference count of the object passed to it by 1 to 2. This means when the list is destroyed the list element reference counts drop by one (to 1) but *no lower* as nothing else references them. Therefore they never get deallocated so there is a memory leak.
+
+
+The append operation *must* behave this way, consider this Python code
+
+.. code-block:: python
+    
+    l = []
+    a = 400
+    # The integer object '400' has a reference count of 1 as only
+    # one symbol references it: a.
+    l.append(a)
+    # The integer object '400' must now have a reference count of
+    # 2 as two symbols reference it: a and l, specifically l[-1].
+
+The fix is to create a temporary item and then decref *that* once appended (error checking omitted):
+
+.. code-block:: c
+    
+    static PyObject *
+    list_append_one_to_four(PyObject *list) {
+        PyObject *temporary_item = NULL;
+        
+        for (int i = 400; i < 405; ++i) {
+            /* Create the object to append to the list. */
+            temporary_item = PyLong_FromLong(i);
+            /* temporary_item->ob_refcnt == 1 now */
+            /* Append it. This will increment the reference count to 2. */
+            PyList_Append(list, temporary_item);
+            /* Decrement our reference to it leaving the list having the only reference. */
+            Py_DECREF(temporary_item);
+            /* temporary_item->ob_refcnt == 1 now */
+            temporary_item =  NULL; /* Good practice... */
+        }
+        Py_RETURN_NONE;
+    }
+
+
+-----------------------
 Summary
-^^^^^^^^^^^^^^^^^^
+-----------------------
 
 The contracts you enter into with these three reference types are:
 
