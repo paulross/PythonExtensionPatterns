@@ -276,6 +276,65 @@ Here is some Python code that exercises our module:
 
 So we have pickled one object and recreated a different, but equivalent, instance from the pickle of the original object which is what we set out to do.
 
+The Pickled Object in Detail
+-------------------------------------
+
+If you are curious about the contents of the pickled object the the Python standard library provides the `pickletools <https://docs.python.org/3/library/pickletools.html#module-pickletools>`_ module.
+This allows you to inspect the pickled object.
+So if we run this code:
+
+.. code-block:: python
+
+    import pickle
+    import pickletools
+
+    import custom2
+
+    original = custom2.Custom('FIRST', 'LAST', 11)
+    pickled_value = pickle.dumps(original)
+    print(f'Pickled original is {pickled_value}')
+    # NOTE: Here we are adding annotations.
+    pickletools.dis(pickled_value, annotate=1)
+
+The output will be something like this:
+
+.. code-block:: text
+
+    Pickled original is b'\x80\x04\x95[\x00\x00\x00\x00\x00\x00\x00\x8c\x07custom2\x94\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_version\x94K\x01ub.'
+        0: \x80 PROTO      4 Protocol version indicator.
+        2: \x95 FRAME      91 Indicate the beginning of a new frame.
+       11: \x8c SHORT_BINUNICODE 'custom2' Push a Python Unicode string object.
+       20: \x94 MEMOIZE    (as 0)          Store the stack top into the memo.  The stack is not popped.
+       21: \x8c SHORT_BINUNICODE 'Custom'  Push a Python Unicode string object.
+       29: \x94 MEMOIZE    (as 1)          Store the stack top into the memo.  The stack is not popped.
+       30: \x93 STACK_GLOBAL               Push a global object (module.attr) on the stack.
+       31: \x94 MEMOIZE    (as 2)          Store the stack top into the memo.  The stack is not popped.
+       32: )    EMPTY_TUPLE                Push an empty tuple.
+       33: \x81 NEWOBJ                     Build an object instance.
+       34: \x94 MEMOIZE    (as 3)          Store the stack top into the memo.  The stack is not popped.
+       35: }    EMPTY_DICT                 Push an empty dict.
+       36: \x94 MEMOIZE    (as 4)          Store the stack top into the memo.  The stack is not popped.
+       37: (    MARK                       Push markobject onto the stack.
+       38: \x8c     SHORT_BINUNICODE 'first' Push a Python Unicode string object.
+       45: \x94     MEMOIZE    (as 5)        Store the stack top into the memo.  The stack is not popped.
+       46: \x8c     SHORT_BINUNICODE 'FIRST' Push a Python Unicode string object.
+       53: \x94     MEMOIZE    (as 6)        Store the stack top into the memo.  The stack is not popped.
+       54: \x8c     SHORT_BINUNICODE 'last'  Push a Python Unicode string object.
+       60: \x94     MEMOIZE    (as 7)        Store the stack top into the memo.  The stack is not popped.
+       61: \x8c     SHORT_BINUNICODE 'LAST'  Push a Python Unicode string object.
+       67: \x94     MEMOIZE    (as 8)        Store the stack top into the memo.  The stack is not popped.
+       68: \x8c     SHORT_BINUNICODE 'number' Push a Python Unicode string object.
+       76: \x94     MEMOIZE    (as 9)         Store the stack top into the memo.  The stack is not popped.
+       77: K        BININT1    11             Push a one-byte unsigned integer.
+       79: \x8c     SHORT_BINUNICODE '_pickle_version' Push a Python Unicode string object.
+       96: \x94     MEMOIZE    (as 10)                 Store the stack top into the memo.  The stack is not popped.
+       97: K        BININT1    1                       Push a one-byte unsigned integer.
+       99: u        SETITEMS   (MARK at 37)            Add an arbitrary number of key+value pairs to an existing dict.
+      100: b    BUILD                                  Finish building an object, via __setstate__ or dict update.
+      101: .    STOP                                   Stop the unpickling machine.
+    highest protocol among opcodes = 4
+
+
 Pickling Objects with External State
 -----------------------------------------
 

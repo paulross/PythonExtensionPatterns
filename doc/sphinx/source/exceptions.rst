@@ -130,7 +130,7 @@ Incidentially ``PyObject_TypeCheck`` is defined as:
         (Py_TYPE(ob) == (tp) || PyType_IsSubtype(Py_TYPE(ob), (tp)))
 
 ---------------------------------
-Creating Specialised Excpetions
+Creating Specialised Exceptions
 ---------------------------------
 
 Often you need to create an Exception class that is specialised to a particular module. This can be done quite easily using either the ``PyErr_NewException`` or the ``PyErr_NewExceptionWithDoc`` functions. These create new exception classes that can be added to a module. For example:
@@ -155,17 +155,11 @@ Often you need to create an Exception class that is specialised to a particular 
     {
         PyObject* m;
 
-        noddy_NoddyType.tp_new = PyType_GenericNew;
-        if (PyType_Ready(&noddy_NoddyType) < 0)
-            return NULL;
-
         m = PyModule_Create(&noddymodule);
         if (m == NULL)
             return NULL;
 
-        Py_INCREF(&noddy_NoddyType);
-        PyModule_AddObject(m, "Noddy", (PyObject *)&noddy_NoddyType);
-        
+   
         /* Initialise exceptions here.
          *
          * Firstly a base class exception that inherits from the builtin Exception.
