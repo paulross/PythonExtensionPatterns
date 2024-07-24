@@ -73,9 +73,6 @@ Macro               Description                                             Must
                     module and this returns the total number of references.
 ``Py_TRACE_REFS``   Turns on reference tracing.                             Yes
                     Sets ``Py_REF_DEBUG``.
-``COUNT_ALLOCS``    Keeps track of the number of objects of each type have  Yes
-                    been allocated and how many freed.
-                    See: :ref:`debug-version-of-python-COUNT_ALLOCS-label`
 ``WITH_PYMALLOC``   Enables Pythons small memory allocator. For Valgrind    No
                     this must be disabled, if using Pythons malloc
                     debugger (using ``PYMALLOC_DEBUG``) this must be
@@ -258,54 +255,6 @@ I have no special knowledge about the output you see when running Python this wa
     Total                              =          166,985,728
     loose_new_reference: DONE
 
-
-.. _debug-version-of-python-COUNT_ALLOCS-label:
-
------------------------------------------------
-Python Debug build with ``COUNT_ALLOCS``
------------------------------------------------
-
-A Python debug build with ``COUNT_ALLOCS`` give some additional information about each object *type* (not the individual objects themselves). A ``PyObject`` grows some extra fields that track the reference counts for that type. The fields are:
-
-=============== ====================================================================
-Field           Description
-=============== ====================================================================
-``tp_allocs``   The number of times an object of this type was allocated.
-``tp_frees``    The number of times an object of this type was freed.
-``tp_maxalloc`` The maximum seen value of ``tp_allocs - tp_frees`` so this is the
-                maximum count of this type allocated at the same time.
-=============== ====================================================================
-
-The ``sys`` module also gets an extra function ``sys.getcounts()`` that returns a list of tuples: ``[(tp_typename, tp_allocs, tp_frees, tp_maxalloc), ...]``.
-
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Building the Python Executable with ``COUNT_ALLOCS``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Either:
-
-.. code-block:: bash
-
-    ../configure CFLAGS='-DCOUNT_ALLOCS' --with-pydebug
-    make
-
-Or:
-
-.. code-block:: bash
-
-    ../configure --with-pydebug
-    make EXTRA_CFLAGS="-DCOUNT_ALLOCS"
-
-.. warning::
-
-    When using ``COUNT_ALLOCS`` any Python extensions now need to be rebuilt with this Python executable as it fundementally changes the structure of a ``PyObject``.
-    
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Using the Python Executable with ``COUNT_ALLOCS``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-An example of using this build is here: :ref:`leaked-new-references-usingCOUNT_ALLOCS-label`
 
 -----------------------------------------------------------
 Identifying the Python Build Configuration from the Runtime

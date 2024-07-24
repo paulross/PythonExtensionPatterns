@@ -175,63 +175,6 @@ And those references are not collectable::
     1055519
 
 
-.. _leaked-new-references-usingCOUNT_ALLOCS-label:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Observing the Reference Counts for a Particular Type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you have a debug build with ``COUNT_ALLOCS`` [See: :ref:`debug-version-of-python-COUNT_ALLOCS-label`] defined you can see the references counts for each type. This build will have a new function ``sys.getcounts()`` which returns a list of tuples ``(tp_name, tp_allocs, tp_frees, tp_maxalloc)`` where ``tp_maxalloc`` is the maximum ever seen value of the reference ``tp_allocs - tp_frees``. The list is ordered by time of first object allocation:
-
-.. code-block:: python
-
-    >>> import pprint
-    >>> import sys
-    >>> pprint.pprint(sys.getcounts())
-    [('Repr', 1, 0, 1),
-     ('symtable entry', 3, 3, 1),
-     ('OSError', 1, 1, 1),
-     ...
-     ('int', 3342, 2630, 712),
-     ...
-     ('dict', 1421, 714, 714),
-     ('tuple', 13379, 9633, 3746)]
-
-We can try our leaky code:
-
-.. code-block:: python
-
-    >>> import cPyRefs
-    >>> cPyRefs.leakNewRefs(1000, 1000000)
-    loose_new_reference: value=1000 count=1000000
-    loose_new_reference: DONE
-    >>> pprint.pprint(sys.getcounts())
-    [('memoryview', 103, 103, 1),
-     ...
-     ('int', 1004362, 3650, 1000712),
-     ...
-     ('dict', 1564, 853, 718),
-     ('tuple', 22986, 19236, 3750)]
-
-There is a big jump in ``tp_maxalloc`` for ints that is worth investigating.
-
-When the Python process finishes you get a dump of this list as the interpreter is broken down:
-
-.. code-block:: console
-    
-    memoryview alloc'd: 210, freed: 210, max in use: 1
-    managedbuffer alloc'd: 210, freed: 210, max in use: 1
-    PrettyPrinter alloc'd: 2, freed: 2, max in use: 1
-    ...
-    int alloc'd: 1005400, freed: 4887, max in use: 1000737
-    ...
-    str alloc'd: 21920, freed: 19019, max in use: 7768
-    dict alloc'd: 1675, freed: 1300, max in use: 718
-    tuple alloc'd: 32731, freed: 31347, max in use: 3754
-    fast tuple allocs: 28810, empty: 2101
-    fast int allocs: pos: 7182, neg: 20
-    null strings: 69, 1-strings: 5
-
 
 .. _leaked-new-references-valgrind-label:
 
