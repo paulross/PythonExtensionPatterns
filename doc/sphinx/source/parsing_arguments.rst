@@ -62,8 +62,11 @@ There is no parsing required here, a single ``PyObject`` is expected:
                                     ) {
         PyObject *ret = NULL;
         assert(arg);
-        /* Treat arg as a borrowed reference. */
-        Py_INCREF(arg);
+        /* arg as a borrowed reference and the general rule is that you Py_INCREF them
+         * whilst you have an interest in them. We do _not_ do that here for reasons
+         * explained below.
+         */
+        // Py_INCREF(arg);
     
         /* Your code here...*/
     
@@ -76,8 +79,9 @@ There is no parsing required here, a single ``PyObject`` is expected:
         Py_XDECREF(ret);
         ret = NULL;
     finally:
-        /* Treat arg as a borrowed reference. */
-        Py_DECREF(arg);
+        /* If we were to treat arg as a borrowed reference and had Py_INCREF'd above we
+         * should do this. See below. */
+        // Py_DECREF(arg);
         return ret;
     }
 
@@ -93,6 +97,46 @@ This function can be added to the module with the ``METH_O`` flag:
         /* Other functions here... */
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Arguments as Borrowed References
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There is some subtlety here as indicated by the comments. ``*arg`` is not our reference, it is a borrowed reference so why don't we increment it at the beginning of this function and decrement it at the end? After all we are trying to protect against calling into some malicious/badly written code that could hurt us. For example:
+
+.. code-block:: c
+
+    static PyObject *foo(PyObject *module,
+                         PyObject *arg
+                         ) {
+        /* arg has a minimum recount of 1. */
+        call_malicious_code_that_decrefs_by_one_this_argument(arg);
+        /* arg potentially could have had a ref count of 0 and been deallocated. */
+        /* ... */
+        /* So now doing something with arg could be undefined. */
+    }
+
+A solution would be, since ``arg`` is a 'borrowed' reference and borrowed references should always be incremented whilst in use and decremented when done with. This would suggest the following:
+
+.. code-block:: c
+
+    static PyObject *foo(PyObject *module,
+                         PyObject *arg
+                         ) {
+        /* arg has a minimum recount of 1. */
+        Py_INCREF(arg);
+        /* arg now has a minimum recount of 2. */
+        call_malicious_code_that_decrefs_by_one_this_argument(arg);
+        /* arg can not have a ref count of 0 so is safe to use. */
+        /* Use arg to your hearts content... */
+        /* Do a matching decref. */
+        Py_DECREF(arg);
+        /* But now arg could have had a ref count of 0 so is unsafe to use by the caller. */
+    }
+
+But now we have just pushed the burden onto our caller. They created ``arg`` and passed it to us in good faith and whilst we have protected ourselves have not protected the caller and they can fail unexpectedly. So it is best to fail fast, an near the error site, that dastardly ``call_malicious_code_that_decrefs_by_one_this_argument()``.
+
+Side note: Of course this does not protect you from malicious/badly written code that decrements by more than one :-)
 
 ----------------------------------------------------
 Variable Number of Arguments
@@ -232,16 +276,36 @@ If you want the function signature to be ``argsKwargs(theString, theOptInt=8)`` 
 
 .. code-block:: c
 
-        ...
+        /* ... */
         static char *kwlist[] = {
             "",
             "theOptInt",
             NULL
         };
-        ...
+        /* ... */
 
 .. note::
     If you use ``|`` in the parser format string you have to set the default values for those optional arguments yourself in the C code. This is pretty straightforward if they are fundamental C types as ``arg2 = 8`` above. For Python values is a bit more tricky as described next.
+    
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Keyword Arguments and C++11
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+C++11 compilers warn when creating non-const ``char*`` from string literals as we have done with the keyword array above. The solution is to declare these ``const char*`` however ``PyArg_ParseTupleAndKeywords`` expects a ``char **``. The solution is to cast away const in the call:
+
+.. code-block:: c
+
+    /* ... */
+    static const char *kwlist[] = { "foo", "bar", "baz", NULL };
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "OOO",
+                                      const_cast<char**>(kwlist),
+                                      &foo, &bar, &baz)) {
+        return NULL;
+    }
+    /* ... */
+
+
+.. _cpython_default_arguments:
 
 --------------------------------------------------------------------------
 Being Pythonic with Default Arguments
@@ -253,7 +317,7 @@ If the arguments default to some C fundamental type the code above is fine. Howe
 
     def function(arg_0=(42, "this"), arg_1={}):
 
-The first argument is immmutable, the second is mutable and so we need to mimic the well known behaviour of Python with mutable arguments. Mutable default arguments are evaluated once only at function definition time and then becomes a (mutable) property of the function. For example:
+The first argument is immutable, the second is mutable and so we need to mimic the well known behaviour of Python with mutable arguments. Mutable default arguments are evaluated once only at function definition time and then becomes a (mutable) property of the function. For example:
 
 .. code-block:: python
 
@@ -436,4 +500,177 @@ Here is the complete C code:
         Py_XDECREF(pyObjArg_0);
         Py_XDECREF(pyObjArg_1);
         return ret;
+    }
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Simplifying Macros
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+For simple default values some macros may help. The first one declares and initialises the default value. It takes three arguments:
+
+* The name of the argument variable, a static ``PyObject`` named ``default_<name>`` will also be created.
+* The default value which should return a new reference.
+* The value to return on failure to create a default value, usually -1 or ``NULL``.
+
+.. code-block:: c
+
+    #define PY_DEFAULT_ARGUMENT_INIT(name, value, ret) \
+        PyObject *name = NULL; \
+        static PyObject *default_##name = NULL; \
+        if (! default_##name) { \
+            default_##name = value; \
+            if (! default_##name) { \
+                PyErr_SetString(PyExc_RuntimeError, "Can not create default value for " #name); \
+                return ret; \
+            } \
+        }
+
+The second one assigns the argument to the default if it is not initialised and increments the reference count. It just takes the name of the argument:
+
+.. code-block:: c
+
+    #define PY_DEFAULT_ARGUMENT_SET(name) if (! name) name = default_##name; \
+        Py_INCREF(name)
+
+And they can be used like this when implementing a Python function signature such as::
+    
+    def do_something(self, encoding='utf-8', the_id=0, must_log=True):
+        # ...
+        return None
+
+Here is that function implemented in C:
+
+.. code-block:: c
+
+    static PyObject*
+    do_something(something *self, PyObject *args, PyObject *kwds) {
+        PyObject *ret = NULL;
+        /* Initialise default arguments. Note: these might cause an early return. */
+        PY_DEFAULT_ARGUMENT_INIT(encoding,  PyUnicode_FromString("utf-8"),  NULL);
+        PY_DEFAULT_ARGUMENT_INIT(the_id,    PyLong_FromLong(0L),            NULL);
+        PY_DEFAULT_ARGUMENT_INIT(must_log,  PyBool_FromLong(1L),            NULL);
+
+        static const char *kwlist[] = { "encoding", "the_id", "must_log", NULL };
+        if (! PyArg_ParseTupleAndKeywords(args, kwds, "|Oip",
+                                          const_cast<char**>(kwlist),
+                                          &encoding, &the_id, &must_log)) {
+            return NULL;
+        }
+        /* 
+         * Assign absent arguments to defaults and increment the reference count.
+         * Don't forget to decrement the reference count before returning!
+         */
+        PY_DEFAULT_ARGUMENT_SET(encoding);
+        PY_DEFAULT_ARGUMENT_SET(the_id);
+        PY_DEFAULT_ARGUMENT_SET(must_log);
+
+        /*
+         * Use encoding, the_id, must_log from here on...
+         */
+
+        Py_INCREF(Py_None);
+        ret = Py_None;
+        assert(! PyErr_Occurred());
+        assert(ret);
+        goto finally;
+    except:
+        assert(PyErr_Occurred());
+        Py_XDECREF(ret);
+        ret = NULL;
+    finally:
+        Py_DECREF(encoding);
+        Py_DECREF(the_id);
+        Py_DECREF(must_log);
+        return ret;
+    }
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Simplifying C++11 class
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+With C++ we can make this a bit smoother. We declare a class thus:
+
+.. code-block:: cpp
+
+    /** Class to simplify default arguments.
+     *
+     * Usage:
+     *
+     * static DefaultArg arg_0(PyLong_FromLong(1L));
+     * static DefaultArg arg_1(PyUnicode_FromString("Default string."));
+     * if (! arg_0 || ! arg_1) {
+     *      return NULL;
+     * }
+     *
+     * if (! PyArg_ParseTupleAndKeywords(args, kwargs, "...",
+                                         const_cast<char**>(kwlist),
+                                         &arg_0, &arg_1, ...)) {
+            return NULL;
+        }
+     *
+     * Then just use arg_0, arg_1 as if they were a PyObject* (possibly
+     * might need to be cast to some specific PyObject*).
+     *
+     * WARN: This class is designed to be statically allocated. If allocated
+     * on the heap or stack it will leak memory. That could be fixed by
+     * implementing:
+     *
+     * ~DefaultArg() { Py_XDECREF(m_default); }
+     *
+     * But this will be highly dangerous when statically allocated as the
+     * destructor will be invoked with the Python interpreter in an
+     * uncertain state and will, most likely, segfault:
+     * "Python(39158,0x7fff78b66310) malloc: *** error for object 0x100511300: pointer being freed was not allocated"
+     */
+    class DefaultArg {
+    public:
+        DefaultArg(PyObject *new_ref) : m_arg { NULL }, m_default { new_ref } {}
+        // Allow setting of the (optional) argument with
+        // PyArg_ParseTupleAndKeywords
+        PyObject **operator&() { m_arg = NULL; return &m_arg; }
+        // Access the argument or the default if default.
+        operator PyObject*() const {
+            return m_arg ? m_arg : m_default;
+        }
+        // Test if constructed successfully from the new reference.
+        explicit operator bool() { return m_default != NULL; }
+    protected:
+        PyObject *m_arg;
+        PyObject *m_default;
+    };
+
+
+And we can use ``DefaultArg`` like this:
+
+.. code-block:: c
+
+    static PyObject*
+    do_something(something *self, PyObject *args, PyObject *kwds) {
+        PyObject *ret = NULL;
+        /* Initialise default arguments. */
+        static DefaultArg encoding { PyUnicode_FromString("utf-8") };
+        static DefaultArg the_id { PyLong_FromLong(0L) };
+        static DefaultArg must_log { PyBool_FromLong(1L) };
+        
+        /* Check that the defaults are non-NULL i.e. succesful. */
+        if (!encoding || !the_id || !must_log) {
+            return NULL;
+        }
+        
+        static const char *kwlist[] = { "encoding", "the_id", "must_log", NULL };
+        /* &encoding etc. accesses &m_arg in DefaultArg because of PyObject **operator&() */
+        if (! PyArg_ParseTupleAndKeywords(args, kwds, "|Oip",
+                                          const_cast<char**>(kwlist),
+                                          &encoding, &the_id, &must_log)) {
+            return NULL;
+        }
+        /*
+         * Use encoding, the_id, must_log from here on as PyObject* since we have
+         * operator PyObject*() const ...
+         *
+         * So if we have a function:
+         * set_encoding(PyObject *obj) { ... }
+         */
+         set_encoding(encoding);
+        /* ... */
     }

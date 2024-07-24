@@ -9,18 +9,18 @@
 /* Begin PBXBuildFile section */
 		C376B9971AD07F4A0040BB9C /* scratch.c in Sources */ = {isa = PBXBuildFile; fileRef = C376B9961AD07F4A0040BB9C /* scratch.c */; };
 		C38238D119253638002B27B7 /* cObjmodule.c in Sources */ = {isa = PBXBuildFile; fileRef = C38238D019253638002B27B7 /* cObjmodule.c */; };
-		C39468E919264D6D004B5C26 /* noddy.c in Sources */ = {isa = PBXBuildFile; fileRef = C39468E319264D6D004B5C26 /* noddy.c */; };
-		C39468EA19264D6D004B5C26 /* noddy2.c in Sources */ = {isa = PBXBuildFile; fileRef = C39468E419264D6D004B5C26 /* noddy2.c */; };
-		C39468EB19264D6D004B5C26 /* noddy3.c in Sources */ = {isa = PBXBuildFile; fileRef = C39468E519264D6D004B5C26 /* noddy3.c */; };
-		C39468EC19264D6D004B5C26 /* noddy4.c in Sources */ = {isa = PBXBuildFile; fileRef = C39468E619264D6D004B5C26 /* noddy4.c */; };
-		C39468EE19264D6D004B5C26 /* shoddy.c in Sources */ = {isa = PBXBuildFile; fileRef = C39468E819264D6D004B5C26 /* shoddy.c */; };
+		C3A41230209A39B200A6C2C1 /* noddy.c in Sources */ = {isa = PBXBuildFile; fileRef = C3A4122A209A39B200A6C2C1 /* noddy.c */; };
+		C3A41231209A39B200A6C2C1 /* noddy2.c in Sources */ = {isa = PBXBuildFile; fileRef = C3A4122B209A39B200A6C2C1 /* noddy2.c */; };
+		C3A41232209A39B200A6C2C1 /* noddy3.c in Sources */ = {isa = PBXBuildFile; fileRef = C3A4122C209A39B200A6C2C1 /* noddy3.c */; };
+		C3A41233209A39B200A6C2C1 /* noddy4.c in Sources */ = {isa = PBXBuildFile; fileRef = C3A4122D209A39B200A6C2C1 /* noddy4.c */; };
+		C3A41234209A39B200A6C2C1 /* shoddy.c in Sources */ = {isa = PBXBuildFile; fileRef = C3A4122E209A39B200A6C2C1 /* shoddy.c */; };
+		C3A41236209A39D800A6C2C1 /* cExceptions.c in Sources */ = {isa = PBXBuildFile; fileRef = C3A41235209A39D800A6C2C1 /* cExceptions.c */; };
 		C3BEEEC6191AB448007D7F35 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = C3BEEEC5191AB448007D7F35 /* main.c */; };
 		C3BEEEC8191AB448007D7F35 /* PythonExtensionPatterns.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C3BEEEC7191AB448007D7F35 /* PythonExtensionPatterns.1 */; };
 		C3BEEECF191AB46E007D7F35 /* Python in Frameworks */ = {isa = PBXBuildFile; fileRef = C3BEEECE191AB46E007D7F35 /* Python */; };
 		C3BEEED1191AB49D007D7F35 /* PythonExtensionPatterns.c in Sources */ = {isa = PBXBuildFile; fileRef = C3BEEED0191AB49D007D7F35 /* PythonExtensionPatterns.c */; };
 		C3BEEED7191B737E007D7F35 /* cPyRefs.c in Sources */ = {isa = PBXBuildFile; fileRef = C3BEEED6191B737E007D7F35 /* cPyRefs.c */; };
 		C3BEEED9191BD3D3007D7F35 /* cParseArgs.c in Sources */ = {isa = PBXBuildFile; fileRef = C3BEEED8191BD3D3007D7F35 /* cParseArgs.c */; };
-		C3BEEEDB191BFC1D007D7F35 /* cExcep.c in Sources */ = {isa = PBXBuildFile; fileRef = C3BEEEDA191BFC1D007D7F35 /* cExcep.c */; };
 		C3BEEEDD191CBB9D007D7F35 /* cCanonical.c in Sources */ = {isa = PBXBuildFile; fileRef = C3BEEEDC191CBB9D007D7F35 /* cCanonical.c */; };
 		C3BEEEDF191CFA9B007D7F35 /* cModuleGlobals.c in Sources */ = {isa = PBXBuildFile; fileRef = C3BEEEDE191CFA9B007D7F35 /* cModuleGlobals.c */; };
 /* End PBXBuildFile section */
@@ -42,11 +42,14 @@
 		C376B9961AD07F4A0040BB9C /* scratch.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = scratch.c; path = ../../src/scratch.c; sourceTree = "<group>"; };
 		C382388B1925321C002B27B7 /* floatobject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = floatobject.h; path = ../../../../../../../Library/Frameworks/Python.framework/Versions/3.3/include/python3.3m/floatobject.h; sourceTree = "<group>"; };
 		C38238D019253638002B27B7 /* cObjmodule.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cObjmodule.c; path = ../../src/cObjmodule.c; sourceTree = "<group>"; };
-		C39468E319264D6D004B5C26 /* noddy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = noddy.c; path = "../../../../../Downloads/Python-3.3.5/Doc/includes/noddy.c"; sourceTree = "<group>"; };
-		C39468E419264D6D004B5C26 /* noddy2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = noddy2.c; path = "../../../../../Downloads/Python-3.3.5/Doc/includes/noddy2.c"; sourceTree = "<group>"; };
-		C39468E519264D6D004B5C26 /* noddy3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = noddy3.c; path = "../../../../../Downloads/Python-3.3.5/Doc/includes/noddy3.c"; sourceTree = "<group>"; };
-		C39468E619264D6D004B5C26 /* noddy4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = noddy4.c; path = "../../../../../Downloads/Python-3.3.5/Doc/includes/noddy4.c"; sourceTree = "<group>"; };
-		C39468E819264D6D004B5C26 /* shoddy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = shoddy.c; path = "../../../../../Downloads/Python-3.3.5/Doc/includes/shoddy.c"; sourceTree = "<group>"; };
+		C3A41229209A39B200A6C2C1 /* capsulethunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = capsulethunk.h; path = "../../../../../dev/Python/Python-3.6.2/Doc/includes/capsulethunk.h"; sourceTree = "<group>"; };
+		C3A4122A209A39B200A6C2C1 /* noddy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = noddy.c; path = "../../../../../dev/Python/Python-3.6.2/Doc/includes/noddy.c"; sourceTree = "<group>"; };
+		C3A4122B209A39B200A6C2C1 /* noddy2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = noddy2.c; path = "../../../../../dev/Python/Python-3.6.2/Doc/includes/noddy2.c"; sourceTree = "<group>"; };
+		C3A4122C209A39B200A6C2C1 /* noddy3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = noddy3.c; path = "../../../../../dev/Python/Python-3.6.2/Doc/includes/noddy3.c"; sourceTree = "<group>"; };
+		C3A4122D209A39B200A6C2C1 /* noddy4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = noddy4.c; path = "../../../../../dev/Python/Python-3.6.2/Doc/includes/noddy4.c"; sourceTree = "<group>"; };
+		C3A4122E209A39B200A6C2C1 /* shoddy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = shoddy.c; path = "../../../../../dev/Python/Python-3.6.2/Doc/includes/shoddy.c"; sourceTree = "<group>"; };
+		C3A4122F209A39B200A6C2C1 /* typestruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = typestruct.h; path = "../../../../../dev/Python/Python-3.6.2/Doc/includes/typestruct.h"; sourceTree = "<group>"; };
+		C3A41235209A39D800A6C2C1 /* cExceptions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cExceptions.c; path = ../../src/cExceptions.c; sourceTree = "<group>"; };
 		C3B868121BA964670082493C /* setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = setup.py; path = ../../src/setup.py; sourceTree = "<group>"; };
 		C3BEEEC2191AB448007D7F35 /* PythonExtensionPatterns */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PythonExtensionPatterns; sourceTree = BUILT_PRODUCTS_DIR; };
 		C3BEEEC5191AB448007D7F35 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
@@ -55,7 +58,6 @@
 		C3BEEED0191AB49D007D7F35 /* PythonExtensionPatterns.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PythonExtensionPatterns.c; sourceTree = "<group>"; };
 		C3BEEED6191B737E007D7F35 /* cPyRefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cPyRefs.c; path = ../../src/cPyRefs.c; sourceTree = "<group>"; };
 		C3BEEED8191BD3D3007D7F35 /* cParseArgs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cParseArgs.c; path = ../../src/cParseArgs.c; sourceTree = "<group>"; };
-		C3BEEEDA191BFC1D007D7F35 /* cExcep.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cExcep.c; path = ../../src/cExcep.c; sourceTree = "<group>"; };
 		C3BEEEDC191CBB9D007D7F35 /* cCanonical.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cCanonical.c; path = ../../src/cCanonical.c; sourceTree = "<group>"; };
 		C3BEEEDE191CFA9B007D7F35 /* cModuleGlobals.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cModuleGlobals.c; path = ../../src/cModuleGlobals.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -91,15 +93,17 @@
 		C3BEEEC4191AB448007D7F35 /* PythonExtensionPatterns */ = {
 			isa = PBXGroup;
 			children = (
+				C3A41235209A39D800A6C2C1 /* cExceptions.c */,
+				C3A41229209A39B200A6C2C1 /* capsulethunk.h */,
+				C3A4122A209A39B200A6C2C1 /* noddy.c */,
+				C3A4122B209A39B200A6C2C1 /* noddy2.c */,
+				C3A4122C209A39B200A6C2C1 /* noddy3.c */,
+				C3A4122D209A39B200A6C2C1 /* noddy4.c */,
+				C3A4122E209A39B200A6C2C1 /* shoddy.c */,
+				C3A4122F209A39B200A6C2C1 /* typestruct.h */,
 				C3B868121BA964670082493C /* setup.py */,
-				C39468E319264D6D004B5C26 /* noddy.c */,
 				C376B9961AD07F4A0040BB9C /* scratch.c */,
-				C39468E419264D6D004B5C26 /* noddy2.c */,
-				C39468E519264D6D004B5C26 /* noddy3.c */,
-				C39468E619264D6D004B5C26 /* noddy4.c */,
-				C39468E819264D6D004B5C26 /* shoddy.c */,
 				C3BEEEDC191CBB9D007D7F35 /* cCanonical.c */,
-				C3BEEEDA191BFC1D007D7F35 /* cExcep.c */,
 				C3BEEEDE191CFA9B007D7F35 /* cModuleGlobals.c */,
 				C38238D019253638002B27B7 /* cObjmodule.c */,
 				C3BEEED8191BD3D3007D7F35 /* cParseArgs.c */,
@@ -165,19 +169,19 @@
 			buildActionMask = 2147483647;
 			files = (
 				C376B9971AD07F4A0040BB9C /* scratch.c in Sources */,
-				C39468EB19264D6D004B5C26 /* noddy3.c in Sources */,
+				C3A41236209A39D800A6C2C1 /* cExceptions.c in Sources */,
 				C3BEEED9191BD3D3007D7F35 /* cParseArgs.c in Sources */,
-				C39468EA19264D6D004B5C26 /* noddy2.c in Sources */,
+				C3A41230209A39B200A6C2C1 /* noddy.c in Sources */,
 				C3BEEED1191AB49D007D7F35 /* PythonExtensionPatterns.c in Sources */,
 				C3BEEEDD191CBB9D007D7F35 /* cCanonical.c in Sources */,
 				C38238D119253638002B27B7 /* cObjmodule.c in Sources */,
-				C39468EE19264D6D004B5C26 /* shoddy.c in Sources */,
-				C3BEEEDB191BFC1D007D7F35 /* cExcep.c in Sources */,
+				C3A41234209A39B200A6C2C1 /* shoddy.c in Sources */,
+				C3A41231209A39B200A6C2C1 /* noddy2.c in Sources */,
+				C3A41233209A39B200A6C2C1 /* noddy4.c in Sources */,
 				C3BEEED7191B737E007D7F35 /* cPyRefs.c in Sources */,
-				C39468E919264D6D004B5C26 /* noddy.c in Sources */,
 				C3BEEEC6191AB448007D7F35 /* main.c in Sources */,
 				C3BEEEDF191CFA9B007D7F35 /* cModuleGlobals.c in Sources */,
-				C39468EC19264D6D004B5C26 /* noddy4.c in Sources */,
+				C3A41232209A39B200A6C2C1 /* noddy3.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

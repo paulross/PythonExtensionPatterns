@@ -356,6 +356,33 @@ And you should get something like this:
 
 The full code for this is in *src/debugging/XcodeExample/PythonSubclassList/*.
 
+
+--------------------------------------------
+Using a Debug Version of Python C with Xcode
+--------------------------------------------
+
+To get Xcode to use a debug version of Python first build Python from source assumed here to be ``<SOURCE_DIR>`` with, as a minimum, ``--with-pydebug``. This example is using Python 3.6:
+
+.. code-block:: console
+
+    cd <SOURCE_DIR>
+    mkdir debug-framework
+    cd debug-framework/
+    ../configure --with-pydebug --without-pymalloc --with-valgrind --enable-framework
+    make
+
+Then in Xcode select the project and "Add files to ..." and add:
+
+* ``<SOURCE_DIR>/debug-framework/Python.framework/Versions/3.6/Python``
+* ``<SOURCE_DIR>/debug-framework/libpython3.6d.a``
+
+In "Build Settings":
+
+* add ``/Library/Frameworks/Python.framework/Versions/3.6/include/python3.6m/`` to "Header Search Paths". Alternatively add both ``<SOURCE_DIR>/Include`` *and* ``<SOURCE_DIR>/debug-framework`` to "Header Search Paths", the latter is needed for ``pyconfig.h``.
+* add ``<SOURCE_DIR>/debug-framework`` to "Library Search Paths".
+
+Now you should be able to step into the CPython code.
+
 --------------------------------------------
 Debugging Python C Extensions in Eclipse
 --------------------------------------------
