@@ -22,6 +22,7 @@ It covers the essentials of reference counts, exceptions and creating functions 
     parsing_arguments
     new_types
     module_globals
+    logging
     files
     subclassing_and_super_call
     capsules
