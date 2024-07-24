@@ -1,6 +1,8 @@
 # Update Python Extension Patterns 2024-06
 
-This is a plan for a refresh of this project to version 0.2.0.
+This is a plan for a refresh of this project to version 0.2.0+.
+
+~~strikethrough~~ means done.
 
 ## Update Python Versions
 
@@ -62,9 +64,9 @@ Maturin: https://github.com/PyO3/maturin
 
 ## Project
 
-- Resolve all issues on master.
-- Resolve all pull requests on master.
-- Rebase off master.
+- ~~Resolve all issues on master.~~
+- ~~Resolve all pull requests on master.~~
+- ~~Rebase off master.~~
 - Complete README.md
 - Use README.md as `long_description` in `setup.py`.
 - Fix `long_description_content_type` in `setup.py` to `text/markdown` REST is `text/x-rst`.
