@@ -19,14 +19,13 @@ History
 - All the documentation has been extensively reviewed and corrected where necessary.
 - Development Status :: 5 - Production/Stable
 
--------------------------
 Contributors
 -------------------------
 
 Many thanks!
 
 Pull Requests
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - https://github.com/marioemmanuel
 - https://github.com/miurahr
@@ -39,7 +38,7 @@ Pull Requests
 
 
 Issues
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - https://github.com/ngoldbaum
 - https://github.com/niki-sp
