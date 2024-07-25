@@ -10,22 +10,22 @@ See: https://devguide.python.org/versions/
 
 ~~Target 3.8 as near end of life?~~ No.
 
-At least Python 3.9 to 3.13. Yes.
+~~At least Python 3.9 to 3.13.~~ Yes.
 
 ~~Remove any reference to Python 2, for example "Porting to Python 3".~~
 
 ## General Improvements
 
-- Reorganise source code so that all C/C++ examples are included in source files.
-- Make that all buildable.
-- Different Python versions - use tox.ini?
-- Add tests.
-- Standardise code such as filenames, function names etc.
+- ~~Reorganise source code so that all C/C++ examples are included in source files.~~
+- ~~Make that all buildable.~~
+- ~~Different Python versions - use tox.ini?~~ No, build_all.sh
+- ~~Add tests.~~
+- ~~Standardise code such as filenames, function names etc.~~
 - ~~Improve the introduction with a discussion of reasons for doing this.~~
 - ~~Add a 'simple example' section after the introduction.~~
 - Standardise headings/subheadings etc.
 - ~~Add sub-classing examples.~~
-- Review thread safety, add example code and tests.
+- ~~Review thread safety, add example code and tests.~~
 
 ## Merge `PythonExtensionsBasic`
 
@@ -67,14 +67,14 @@ Maturin: https://github.com/PyO3/maturin
 - ~~Resolve all issues on master.~~
 - ~~Resolve all pull requests on master.~~
 - ~~Rebase off master.~~
-- Complete README.md
-- Use README.md as `long_description` in `setup.py`.
-- Fix `long_description_content_type` in `setup.py` to `text/markdown` REST is `text/x-rst`.
-- Use HISTORY.rst in `setup.py`, where? Maybe convert to markdown and add to README.
+- ~~Complete README.md~~
+- ~~Use README.md as `long_description` in `setup.py`.~~
+- ~~Fix `long_description_content_type` in `setup.py` to `text/markdown` REST is `text/x-rst`.~~
+- ~~Use HISTORY.rst in `setup.py`, where? Maybe convert to markdown and add to README.~~
 
-Contributors:
+~~Contributors:~~
 
-https://github.com/nnathan - Section on Logging.
+~~https://github.com/nnathan - Section on Logging.~~
 
 ## Other
 

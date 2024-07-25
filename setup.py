@@ -6,11 +6,22 @@ Created on May 30, 2013
 @author: paulross
 """
 import os
-
-import os
 import pathlib
 from setuptools import setup, Extension
 import sysconfig
+
+here = pathlib.Path(__file__).parent.resolve()
+
+# Get the long description from the README file
+long_description = (
+        (here / 'README.rst').read_text(encoding='utf-8')
+        + '\n\n'
+        + (here / 'INSTALL.rst').read_text(encoding='utf-8')
+        + '\n\n'
+        + (here / 'HISTORY.rst').read_text(encoding='utf-8')
+)
+
+licence = (here / 'LICENCE').read_text(encoding='utf-8')
 
 DEBUG = True
 # Generally I write code so that if DEBUG is defined as 0 then all optimisations
@@ -72,15 +83,15 @@ setup(
     maintainer='Paul Ross',
     maintainer_email='apaulross@gmail.com',
     description='Python C Extension Patterns.',
-    long_description="""Examples of good and bad practice with Python C Extensions.""",
-    long_description_content_type='text/plain',
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
     platforms=['Mac OSX', 'POSIX', ],
     packages=[PACKAGE_NAME, ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: C',
@@ -88,7 +99,7 @@ setup(
         'Programming Language :: Python',
         'Topic :: Programming',
     ],
-    licence='GNU General Public License v2 (GPLv2)',
+    licence=licence,
     # See: https://setuptools.pypa.io/en/latest/userguide/ext_modules.html
     # language='c' or language='c++',
     ext_modules=[
