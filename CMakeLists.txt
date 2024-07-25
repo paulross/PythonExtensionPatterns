@@ -110,6 +110,8 @@ add_executable(PythonExtensionPatterns
         src/cpy/SubClass/sublist.c
         src/cpy/Threads/cppsublist.cpp
         src/cpy/Threads/csublist.c
+        src/cpy/Logging/cLogging.c
+        src/cpy/SimpleExample/cFibB.c
 )
 
 link_directories(

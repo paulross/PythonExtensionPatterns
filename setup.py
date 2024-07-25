@@ -56,6 +56,7 @@ for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Iterators'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'SubClass'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Threads'),
+                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Logging'),
                  ):
     if not os.path.exists(dir_path):
         print(f'Making directory {dir_path}')
@@ -196,6 +197,7 @@ setup(
                   include_dirs=[],
                   library_dirs=[],
                   libraries=[],
+                  # For best performance.
                   extra_compile_args=[
                       '-Wall', '-Wextra', '-Werror', '-Wfatal-errors', '-Wpedantic',
                       '-Wno-unused-function', '-Wno-unused-parameter',
@@ -268,6 +270,12 @@ setup(
                   # TODO: Why does removing this work?
                   # extra_compile_args=extra_compile_args_cpp,
                   language='c++11',
+                  ),
+        Extension(name=f"{PACKAGE_NAME}.Logging.cLogging",
+                  include_dirs=[],
+                  sources=["src/cpy/Logging/cLogging.c", ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
                   ),
     ]
 )
