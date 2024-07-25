@@ -21,7 +21,7 @@ long_description = (
         + (here / 'HISTORY.rst').read_text(encoding='utf-8')
 )
 
-licence = (here / 'LICENCE').read_text(encoding='utf-8')
+licence = (here / 'LICENSE.txt').read_text(encoding='utf-8')
 
 DEBUG = True
 # Generally I write code so that if DEBUG is defined as 0 then all optimisations
