@@ -262,8 +262,8 @@ Summary
 --------------------------
 
 - C Extensions can give vastly improved performance.
-- A good choice of Python libraries, algorithms, code architecture and design can improve performance more cheaply
-  than going to C.
+- A good choice of Python libraries, algorithms, code architecture and design can improve performance less
+  expensively than going to C.
 - All of this exposes the possible tradeoffs between the techniques.
 - It is very useful in software engineering to have tradeoffs such as these that are explicit and visible.
 
