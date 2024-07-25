@@ -10,6 +10,8 @@ Logging
 
 This presents a recipe for using the Python logging module in C.
 
+Many thanks to `nnathan <https://github.com/nnathan>`_ for this.
+
 We import the module and define C equivalent logging functions that are
 compatible with the `*printf` family.
 
