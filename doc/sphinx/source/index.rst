@@ -6,14 +6,10 @@
 Coding Patterns for Python Extensions
 =====================================================
 
-This describes reliable patterns of coding Python Extensions in C.
-It covers the essentials of reference counts, exceptions and creating functions that are safe and efficient.
-
 .. toctree::
     :numbered:
     :maxdepth: 3
 
-    headings
     introduction
     simple_example
     refcount

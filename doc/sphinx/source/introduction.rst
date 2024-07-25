@@ -8,14 +8,19 @@
 Introduction
 ============
 
+This projects explores reliable patterns of coding Python Extensions in C.
+It covers the essentials of reference counts, exceptions and creating functions that are safe and efficient.
+
 Writing Python C Extensions can be daunting; you have to cast aside the security and fluidity of Python and embrace C,
-not just C but Pythons C API, which is huge [#]_.
+not just C but Pythons C API, which is huge [#]_ and changes between versions [#]_.
 Not only do you have to worry about just your standard ``malloc()`` and ``free()`` cases but now you have to contend
 with how CPython's does its memory management which is by *reference counting*.
 
 I describe some of the pitfalls you (I am thinking of you as a savvy C coder) can encounter and some of the coding
 patterns that you can use to avoid them.
 
+This also might help if you are considering code to submit to the Python standard library which depends extensively on
+C extensions.
 
 ---------------------
 Firstly Why?
@@ -48,13 +53,26 @@ The GIL
 
 C Extensions do not need the Global Interpreter Lock (GIL) when working with C/C++ code.
 
-Against all of these there is the additional skill, time, and resulting complexity involved in writing C extensions.
+---------------------
+Why Not?
+---------------------
+
+Like everything, there are disadvantages, here are some:
+
+- C Extensions are something of a niche skill.
+  Achieving and maintaining that skill has costs.
+  Hopefully this project reduces those.
+- Writing C Extensions is more time consuming than pure Python.
+  There is also the intellectual problem that you are dealing with Pure C/CPython/Python code which expects
+  a lot of context switching.
+  This project proposes patterns of code that should reduce the cognitive overhead of all of that.
+- Testing C Extensions, whilst excellent at a high level, can be really tricky at a line-of-code level.
 
 ------------------------------------
 Alternatives to C Extensions
 ------------------------------------
 
-There are several alternatives to writing an extension directly in C:
+There are several alternatives to writing an extension directly in C, here are some:
 
 ^^^^^^^^^^^^^^^^^^^
 ``ctypes``
@@ -64,7 +82,7 @@ There are several alternatives to writing an extension directly in C:
 for Python and is part of Python's standard library.
 The module allows direct access to C/C++ libraries (such as ``libc``).
 If you need this functionality, for example you need to access a binary library where you do not have the original
-source code so you can not build the library into your own module.
+source code so you can not build the library into your own code.
 
 ^^^^^^^^^^^^^^^^^^^
 Code Generators
@@ -74,7 +92,7 @@ There are a number of projects out there that take high level code and generate 
 a Python module.
 Some examples are:
 
-- `SWIG <https://swig.org>`_ is a well established project.
+- `SWIG <https://swig.org>`_ is a very well established project.
   An advantage that distinguishes it from other projects is its multi-language support.
 - `Cython <https://cython.org>`_ is another well established project.
   You write in Python-like pseudo code that is translated into C which is then compiled into a Python module.
@@ -117,3 +135,4 @@ Next up: a simple example showing the effect on code performance.
 .. rubric:: Footnotes
 
 .. [#] Huge, but pretty consistent once mastered.
+.. [#] Version 0.2.0 of this project supports Python versions: 3.9, 3.10, 3.11, 3.12, 3.13.
