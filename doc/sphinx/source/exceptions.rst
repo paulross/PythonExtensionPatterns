@@ -8,8 +8,9 @@
 Exception Raising 
 =================================
 
-A brief interlude on how to communicate error conditions from C code to Python.
-The example code for this is at ``src/cpy/cExceptions.c`` and the test examples are in ``tests/unit/test_c_exceptions.py``.
+This is a brief interlude on how to communicate error conditions from C code to Python.
+The example code for this is at ``src/cpy/cExceptions.c`` and the test examples are in
+``tests/unit/test_c_exceptions.py``.
 
 These CPython calls are the most useful:
 
@@ -22,7 +23,8 @@ These CPython calls are the most useful:
 * ``PyErr_Clear()`` - Clearing any set exceptions, have good reason to do this!
   `PyErr_Clear() documentation <https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Clear>`_
 
-Indicating an error condition is a two stage process; your code must register an exception and then indicate failure by returning ``NULL``. Here is a C function doing just that:
+Indicating an error condition is a two stage process; your code must register an exception and then indicate failure
+by returning ``NULL``. Here is a C function doing just that:
 
 .. code-block:: c
 
@@ -43,7 +45,9 @@ You might want some dynamic information in the exception object, in that case ``
         return NULL;
     }
 
-If one of the two actions is missing then the exception will not be raised correctly. For example returning ``NULL`` without setting an exception type:
+If one of the two actions is missing then the exception will not be raised correctly.
+For example returning ``NULL`` without setting an exception type will raise a ``SystemError``.
+For example:
 
 .. code-block:: c
 
@@ -52,10 +56,9 @@ If one of the two actions is missing then the exception will not be raised corre
         return NULL;
     }
 
-Executing this from Python will produce a clear error message (the C function ``raise_error_bad()`` is mapped to the
-Python function ``cExceptions.raise_error_bad()``::
+Executing this from Python will produce a clear error message::
 
-    >>> cExcep.raiseErrBad()
+    >>> cException.raise_error_bad()
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     SystemError: error return without exception set
@@ -71,7 +74,8 @@ a later runtime error:
     }
 
 The confusion can arise is that if a subsequent function then tests to see if an exception is set, if so signal it.
-It will appear that the error is coming from the second function when actually it is from the first:
+It will appear to the Python interpreter that the error is coming from the second function when actually it is from
+the first:
 
 .. code-block:: c
 
@@ -121,17 +125,18 @@ Here is an example where we require a ``bytes`` object:
             PyErr_Format(PyExc_TypeError,
                          "Argument \"value\" to %s must be a bytes object not a \"%s\"",
                          __FUNCTION__, Py_TYPE(arg)->tp_name);
-            goto except;
+            return NULL;
         }
         /* ... */
     }
 
-That's fine if you have a macro such as ``PyBytes_Check`` and for your own types you can create a couple of suitable macros:
+That's fine if you have a macro such as ``PyBytes_Check`` and for your own types you can create a couple of suitable
+macros:
 
 .. code-block:: c
 
-    #define PyMyType_CheckExact(op) (Py_TYPE(op) == &PyMyType_Type)
-    #define PyMyType_Check(op) PyObject_TypeCheck(op, &PyMyType_Type)
+    #define PyMyType_CheckExact(op) (Py_TYPE(op) == &PyMyType_Type)     /* Exact match. */
+    #define PyMyType_Check(op) PyObject_TypeCheck(op, &PyMyType_Type)   /* Exact or derived. */
 
 Incidentally ``PyObject_TypeCheck`` is defined as:
 
@@ -164,10 +169,7 @@ For example:
             "Examples of raising exceptions.",
             -1,
             cExceptions_methods,
-            NULL, /* inquiry m_reload */
-            NULL, /* traverseproc m_traverse */
-            NULL, /* inquiry m_clear */
-            NULL, /* freefunc m_free */
+            NULL, NULL, NULL, NULL,
     };
 
     PyMODINIT_FUNC
@@ -185,7 +187,7 @@ For example:
          */
         ExceptionBase = PyErr_NewExceptionWithDoc(
                 "cExceptions.ExceptionBase", /* char *name */
-                "Base exception class for the noddy module.", /* char *doc */
+                "Base exception class for the module.", /* char *doc */
                 NULL, /* PyObject *base, resolves to PyExc_Exception. */
                 NULL /* PyObject *dict */);
         /* Error checking: this is oversimplified as it should decref
@@ -222,17 +224,22 @@ To illustrate how you raise one of these exceptions suppose we have a function t
 .. code-block:: c
 
     static PyMethodDef Noddy_module_methods[] = {
-        ...
+        // ...
         {
-         "raise_exception_base",    (PyCFunction) raise_exception_base,    METH_NOARGS, "Raises a ExceptionBase."
+            "raise_exception_base",
+            (PyCFunction) raise_exception_base,
+            METH_NOARGS,
+            "Raises a ExceptionBase."
         },
         {
-         "raise_specialised_error", (PyCFunction) raise_specialised_error, METH_NOARGS, "Raises a SpecialisedError."
+            "raise_specialised_error",
+            (PyCFunction) raise_specialised_error,
+            METH_NOARGS,
+            "Raises a SpecialisedError."
         },
-        ...
+        // ...
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
-
 
 We can either access the exception type directly:
 
@@ -243,7 +250,10 @@ We can either access the exception type directly:
         if (ExceptionBase) {
             PyErr_Format(ExceptionBase, "One %d two %d three %d.", 1, 2, 3);
         } else {
-            PyErr_SetString(PyExc_RuntimeError, "Can not raise exception, module not initialised correctly");
+            PyErr_SetString(
+                PyExc_RuntimeError,
+                "Can not raise exception, module not initialised correctly"
+            );
         }
         return NULL;
     }
@@ -253,7 +263,10 @@ We can either access the exception type directly:
         if (SpecialisedError) {
             PyErr_Format(SpecialisedError, "One %d two %d three %d.", 1, 2, 3);
         } else {
-            PyErr_SetString(PyExc_RuntimeError, "Can not raise exception, module not initialised correctly");
+            PyErr_SetString(
+                PyExc_RuntimeError,
+                "Can not raise exception, module not initialised correctly"
+            );
         }
         return NULL;
     }
