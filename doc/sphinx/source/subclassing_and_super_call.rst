@@ -4,6 +4,8 @@
 .. toctree::
     :maxdepth: 3
 
+.. _chapter_subclassing_and_using_super:
+
 **************************************
 Subclassing and Using ``super()``
 **************************************

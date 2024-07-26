@@ -99,6 +99,12 @@ And the type struct must reference this array of ``PyMemberDef`` thus:
 `Reference to PyGetSetDef. <https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef>`_
 
 ---------------
+Subclassing
+---------------
+
+This large subject gets it own chapter: :ref:`chapter_subclassing_and_using_super`.
+
+---------------
 Examples
 ---------------
 
