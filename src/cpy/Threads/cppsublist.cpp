@@ -43,6 +43,18 @@ SubList_init(SubListObject *self, PyObject *args, PyObject *kwds) {
     return 0;
 }
 
+static void
+SubList_dealloc(SubListObject *self) {
+    /* Deallocate other fields here. */
+#ifdef WITH_THREAD
+    if (self->lock) {
+        PyThread_free_lock(self->lock);
+        self->lock = NULL;
+    }
+#endif
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
 void sleep_milliseconds(long ms) {
     struct timespec tim_request, tim_remain;
     tim_request.tv_sec = 0;
@@ -90,12 +102,14 @@ SubList_max(PyObject *self, PyObject *Py_UNUSED(unused)) {
                 } else if (result > 0) {
                     ret = item;
                 }
+                // 2ms delay to demonstrate holding on to the thread.
+                sleep_milliseconds(2L);
             }
         }
         Py_INCREF(ret);
     }
-    // 0.25s delay to demonstrate holding on to the thread.
-    sleep_milliseconds(250L);
+//    // 0.25s delay to demonstrate holding on to the thread.
+//    sleep_milliseconds(250L);
     return ret;
 }
 
@@ -121,6 +135,7 @@ static PyTypeObject cppSubListType = {
         .tp_methods = SubList_methods,
         .tp_members = SubList_members,
         .tp_init = (initproc) SubList_init,
+        .tp_dealloc = (destructor) SubList_dealloc,
 };
 
 static PyModuleDef cppsublistmodule = {
