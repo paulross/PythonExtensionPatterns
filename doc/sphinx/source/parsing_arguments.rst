@@ -16,7 +16,7 @@ Specifying the Function Arguments
 ====================================
 
 Python has a myriad of ways of function arguments and the C API reflects that.
-Two important features of C functions are:
+Two important features of CPython C functions are:
 
 - Declaring them correctly with the right signature and flags.
 - Parsing the arguments and checking their types.
@@ -29,30 +29,39 @@ C Function Declaration
 The C function signature must be declared correctly depending on the arguments it is expected to work with.
 Here is a small summary of the required declaration.
 
-.. list-table:: Function Arguments
-   :widths: 10 10 30 20
-   :header-rows: 1
+No Arguments
+^^^^^^^^^^^^^^^^^^
 
-   * - Arguments
-     - Flags
-     - C Function Signature
-     - Description
-   * - None
-     - `METH_NOARGS <https://docs.python.org/3/c-api/structures.html#c.METH_NOARGS>`_
-     - ``PyObject *PyCFunction(PyObject *self, PyObject *args);`` `Docs <https://docs.python.org/3/c-api/structures.html#c.PyCFunction>`_
-     - Second argument will be ``NULL``.
-   * - One
-     - `METH_O <https://docs.python.org/3/c-api/structures.html#c.METH_O>`_
-     - ``PyObject *PyCFunction(PyObject *self, PyObject *args);`` `Docs <https://docs.python.org/3/c-api/structures.html#c.PyCFunction>`_
-     - Second argument will be the single argument.
-   * - Positional
-     - `METH_VARARGS <https://docs.python.org/3/c-api/structures.html#c.METH_VARARGS>`_
-     - ``PyObject *PyCFunction(PyObject *self, PyObject *args);`` `Docs <https://docs.python.org/3/c-api/structures.html#c.PyCFunction>`_
-     - Second value will be a sequence of arguments.
-   * - Positional and keywords
-     - `METH_NOARGS | METH_KEYWORDS <https://docs.python.org/3/c-api/structures.html#c.METH_KEYWORDS>`_
-     - ``PyObject *PyCFunctionWithKeywords(PyObject *self, PyObject *args, PyObject *kwargs);`` `Docs <https://docs.python.org/3/c-api/structures.html#c.PyCFunctionWithKeywords>`_
-     -
+- The flags will be `METH_NOARGS <https://docs.python.org/3/c-api/structures.html#c.METH_NOARGS>`_
+- The C Function Signature will be ``PyObject *PyCFunction(PyObject *self, PyObject *args);``
+- The second argument will be ``NULL``.
+
+One Argument
+^^^^^^^^^^^^^^^^^^
+
+- The flags will be `METH_O <https://docs.python.org/3/c-api/structures.html#c.METH_O>`_
+- The C Function Signature will be ``PyObject *PyCFunction(PyObject *self, PyObject *args);``
+- The second argument will be the single argument.
+
+Multiple Positional Arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The flags will be `METH_VARARGS <https://docs.python.org/3/c-api/structures.html#c.METH_VARARGS>`_
+- The C Function Signature will be ``PyObject *PyCFunction(PyObject *self, PyObject *args);``
+- Second value will be a sequence of arguments.
+
+Multiple Positional and Keyword Arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The flags will be `METH_NOARGS | METH_KEYWORDS <https://docs.python.org/3/c-api/structures.html#c.METH_KEYWORDS>`_
+- The C Function Signature will be ``PyObject *PyCFunctionWithKeywords(PyObject *self, PyObject *args, PyObject *kwargs);``
+- Second value will be a sequence of arguments, the third the dictionary of arguments.
+
+Documentation:
+
+- No arguments, single or multiple arguments:
+  `PyCFunction <https://docs.python.org/3/c-api/structures.html#c.PyCFunction>`_
+- Multiple argument and keywords `PyCFunctionWithKeywords <https://docs.python.org/3/c-api/structures.html#c.PyCFunctionWithKeywords>`_
 
 .. note::
 
