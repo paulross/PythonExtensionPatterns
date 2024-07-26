@@ -137,20 +137,17 @@ def test_cppsublist_cppsublist_dir_post_310():
                       '__str__',
                       '__subclasshook__',
                       'append',
-                      'appends',
                       'clear',
                       'copy',
                       'count',
                       'extend',
-                      'increment',
                       'index',
                       'insert',
                       'max',
                       'pop',
                       'remove',
                       'reverse',
-                      'sort',
-                      'state']
+                      'sort']
 
 
 @pytest.mark.skipif(not (sys.version_info.minor <= 10), reason='Python 3.9, 3.10')
@@ -252,41 +249,23 @@ def test_cppsublist_csublist_dir_post_310():
                       '__str__',
                       '__subclasshook__',
                       'append',
-                      'appends',
                       'clear',
                       'copy',
                       'count',
                       'extend',
-                      'increment',
                       'index',
                       'insert',
                       'max',
                       'pop',
                       'remove',
                       'reverse',
-                      'sort',
-                      'state']
-
-
-def test_cppsublist_cppsublist_ctor_range():
-    obj = cppsublist.cppSubList(range(128))
-    assert obj.appends == 0
-    assert obj == list(range(128))
+                      'sort']
 
 
 def test_cppsublist_cppsublist_append():
     obj = cppsublist.cppSubList()
-    assert obj.appends == 0
     obj.append(42)
-    assert obj.appends == 1
     assert obj == [42, ]
-
-
-def test_cppsublist_cppsublist_state():
-    obj = cppsublist.cppSubList()
-    assert obj.state == 0
-    obj.increment()
-    assert obj.state == 1
 
 
 @pytest.mark.parametrize(
@@ -299,10 +278,8 @@ def test_cppsublist_cppsublist_state():
 )
 def test_cppsublist_cppsublist_max(values, expected):
     obj = cppsublist.cppSubList()
-    assert obj.appends == 0
     for value in values:
         obj.append(value)
-    assert obj.appends == len(values)
     assert obj.max() == expected
 
 
@@ -317,7 +294,7 @@ def cppsublist_max(obj, count):
 def cppsublist_append(obj, count):
     print(f'sublist_append(): Thread name {threading.current_thread().name}', flush=True)
     for _i in range(count):
-        print(f'sublist_append(): Thread name {threading.current_thread().name} appends was: {obj.appends}', flush=True)
+        print(f'sublist_append(): Thread name {threading.current_thread().name}', flush=True)
         obj.append(len(obj))
         time.sleep(0.25)
     print(f'sublist_append(): Thread name {threading.current_thread().name} DONE', flush=True)
@@ -347,23 +324,13 @@ def test_threaded_cpp():
 
 def test_csublist_csublist_ctor_range():
     obj = csublist.cSubList(range(128))
-    assert obj.appends == 0
     assert obj == list(range(128))
 
 
 def test_csublist_csublist_append():
     obj = csublist.cSubList()
-    assert obj.appends == 0
     obj.append(42)
-    assert obj.appends == 1
     assert obj == [42, ]
-
-
-def test_csublist_csublist_state():
-    obj = csublist.cSubList()
-    assert obj.state == 0
-    obj.increment()
-    assert obj.state == 1
 
 
 @pytest.mark.parametrize(
@@ -376,10 +343,8 @@ def test_csublist_csublist_state():
 )
 def test_csublist_csublist_max(values, expected):
     obj = csublist.cSubList()
-    assert obj.appends == 0
     for value in values:
         obj.append(value)
-    assert obj.appends == len(values)
     assert obj.max() == expected
 
 
@@ -394,7 +359,7 @@ def csublist_max(obj, count):
 def csublist_append(obj, count):
     print(f'sublist_append(): Thread name {threading.current_thread().name}', flush=True)
     for _i in range(count):
-        print(f'sublist_append(): Thread name {threading.current_thread().name} appends was: {obj.appends}', flush=True)
+        print(f'sublist_append(): Thread name {threading.current_thread().name}', flush=True)
         obj.append(len(obj))
         time.sleep(0.25)
     print(f'sublist_append(): Thread name {threading.current_thread().name} DONE', flush=True)

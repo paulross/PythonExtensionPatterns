@@ -21,23 +21,25 @@ The problem in a multi-threaded environment was that the following sequence of e
   from the SkipList. This removal may well invalidate C++ pointers held by thread A.
 * When the interpreter switches back to thread A it accesses an invalid pointer and a segfault happens.
 
-The solution, of course, is to use a lock to prevent a context switch until A has completed its insertion, but how?
+The solution is to use a lock to prevent a Python context switch until A has completed its insertion, but how?
+
 I found the existing Python documentation misleading and I couldn't get it to work reliably, if at all.
 It was only when I stumbled upon the `source code <https://github.com/python/cpython/blob/master/Modules/_bz2module.c>`_
 for the `bz module <https://docs.python.org/3/library/bz2.html#module-bz2>`_ that I realised there was a whole other,
 low level way of doing this, largely undocumented.
 
-.. code-block:: c
+Here is a version that concentrates on those essentials.
+As an example here is a subclass of a list that has a ``max()`` method that returns the maximum value in the list.
+To do the comparison it must call
+`PyObject_RichCompareBool <https://docs.python.org/3/c-api/object.html#c.PyObject_RichCompareBool>`_
+to decide which of two objects is the maximum.
+This class deliberately has ``sleep()`` calls to allow a thread switch to take place.
+So during that call the Python interpreter is free too switch to another thread that might alter the list we are
+inspecting.
+What we need to do is to block that thread with a lock so that can't happen.
+Then once the result of ``max()`` is known we can relases that lock.
 
-    #define ACQUIRE_LOCK(obj) do { \
-        if (!PyThread_acquire_lock((obj)->lock, 0)) { \
-            Py_BEGIN_ALLOW_THREADS \
-            PyThread_acquire_lock((obj)->lock, 1); \
-            Py_END_ALLOW_THREADS \
-        } } while (0)
-    #define RELEASE_LOCK(obj) PyThread_release_lock((obj)->lock)
-
-
+Lets walk through it.
 
 .. note::
 
@@ -65,74 +67,26 @@ as well as the usual includes:
 Adding a ``PyThread_type_lock`` to our object
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Then we add a ``PyThread_type_lock`` (an opaque pointer) to the Python structure we are intending to protect. I'll use the example of the `SkipList source code <https://github.com/paulross/skiplist/blob/master/src/cpy/cSkipList.cpp>`_. Here is a fragment with the important lines highlighted:
+Then we add a ``PyThread_type_lock`` (an opaque pointer) to the Python structure we are intending to protect.
+I'll use the example of the
+`SkipList source code <https://github.com/paulross/skiplist/blob/master/src/cpy/cSkipList.cpp>`_.
+Here is a fragment with the important lines highlighted:
 
 .. code-block:: c
-    :emphasize-lines: 4-6
 
     typedef struct {
-        PyObject_HEAD
-        /* Other stuff here... */
+        PyListObject list;
     #ifdef WITH_THREAD
         PyThread_type_lock lock;
     #endif
-    } SkipList;
+    } SubListObject;
 
-Creating a class to Acquire and Release the Lock
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now we add some code to acquire and release the lock. We can do this in a RAII fashion in C++ where the constructor blocks until the lock is acquired and the destructor releases the lock. The important lines are highlighted:
-
-.. code-block:: c
-    :emphasize-lines: 8-12,17
-
-    #ifdef WITH_THREAD
-    /* A RAII wrapper around the PyThread_type_lock. */
-    class AcquireLock {
-    public:
-        AcquireLock(SkipList *pSL) : _pSL(pSL) {
-            assert(_pSL);
-            assert(_pSL->lock);
-            if (! PyThread_acquire_lock(_pSL->lock, NOWAIT_LOCK)) {
-                Py_BEGIN_ALLOW_THREADS
-                PyThread_acquire_lock(_pSL->lock, WAIT_LOCK);
-                Py_END_ALLOW_THREADS
-            }
-        }
-        ~AcquireLock() {
-            assert(_pSL);
-            assert(_pSL->lock);
-            PyThread_release_lock(_pSL->lock);
-        }
-    private:
-        SkipList *_pSL;
-    };
-    #else
-    /* Make the class a NOP which should get optimised out. */
-    class AcquireLock {
-    public:
-        AcquireLock(SkipList *) {}
-    };
-    #endif
-
-The code that acquires the lock is slightly clearer if the `Py_BEGIN_ALLOW_THREADS <https://docs.python.org/3/c-api/init.html#c.Py_BEGIN_ALLOW_THREADS>`_ and `Py_END_ALLOW_THREADS <https://docs.python.org/3/c-api/init.html#c.Py_END_ALLOW_THREADS>`_ macros are fully expanded [#f1]_:
-
-.. code-block:: c
-
-    if (! PyThread_acquire_lock(_pSL->lock, NOWAIT_LOCK)) {
-        {
-            PyThreadState *_save;
-            _save = PyEval_SaveThread();
-            PyThread_acquire_lock(_pSL->lock, WAIT_LOCK);
-            PyEval_RestoreThread(_save);
-        }
-    }
-    
 
 Initialising and Deallocating the Lock
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now we need to set the lock pointer to ``NULL`` in the ``_new`` function:
+Now we need to set the lock pointer to ``NULL`` in the ``__new__`` function:
 
 .. code-block:: c
     :linenos:
@@ -154,7 +108,7 @@ Now we need to set the lock pointer to ``NULL`` in the ``_new`` function:
         return (PyObject *)self;
     }
 
-In the ``__init__`` method we allocate the lock by calling ``PyThread_allocate_lock()`` [#f2]_ A lot of this code is specific to the SkipList but the lock allocation code is highlighted:
+In the ``__init__`` method we allocate the lock by calling ``PyThread_allocate_lock()`` [#f1]_ A lot of this code is specific to the SkipList but the lock allocation code is highlighted:
 
 .. code-block:: c
     :linenos:
@@ -194,7 +148,7 @@ In the ``__init__`` method we allocate the lock by calling ``PyThread_allocate_l
         return ret_val;
     }
 
-When deallocating the object we should free the lock pointer with ``PyThread_free_lock`` [#f3]_:
+When deallocating the object we should free the lock pointer with ``PyThread_free_lock`` [#f2]_:
 
 .. code-block:: c
     :linenos:
@@ -216,7 +170,102 @@ When deallocating the object we should free the lock pointer with ``PyThread_fre
     }
 
 Using the Lock
+------------------------
+
+
+The Lock in C
 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: c
+
+    #define ACQUIRE_LOCK(obj) do { \
+        if (!PyThread_acquire_lock((obj)->lock, 0)) { \
+            Py_BEGIN_ALLOW_THREADS \
+            PyThread_acquire_lock((obj)->lock, 1); \
+            Py_END_ALLOW_THREADS \
+        } } while (0)
+    #define RELEASE_LOCK(obj) PyThread_release_lock((obj)->lock)
+
+The code that acquires the lock is slightly clearer if the
+`Py_BEGIN_ALLOW_THREADS <https://docs.python.org/3/c-api/init.html#c.Py_BEGIN_ALLOW_THREADS>`_
+and `Py_END_ALLOW_THREADS <https://docs.python.org/3/c-api/init.html#c.Py_END_ALLOW_THREADS>`_
+macros are fully expanded:
+
+.. code-block:: c
+
+    if (! PyThread_acquire_lock(_pSL->lock, NOWAIT_LOCK)) {
+        {
+            PyThreadState *_save;
+            _save = PyEval_SaveThread();
+            PyThread_acquire_lock(_pSL->lock, WAIT_LOCK);
+            PyEval_RestoreThread(_save);
+        }
+    }
+
+
+
+
+
+
+
+The Lock In C++
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Creating a class to Acquire and Release the Lock
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now we add some code to acquire and release the lock.
+We can do this in a RAII fashion in C++ where the constructor blocks until the lock is acquired and the destructor
+releases the lock.
+This is a template class for generality.
+
+The code is in ``src/cpy/Threads/cThreadLock.h``
+
+.. code-block:: c++
+
+    #include <Python.h>
+    #include "structmember.h"
+
+    #ifdef WITH_THREAD
+    #include "pythread.h"
+    #endif
+
+    #ifdef WITH_THREAD
+        /* A RAII wrapper around the PyThread_type_lock. */
+        template<typename T>
+        class AcquireLock {
+        public:
+            AcquireLock(T *pObject) : m_pObject(pObject) {
+                assert(m_pObject);
+                assert(m_pObject->lock);
+                Py_INCREF(m_pObject);
+                if (!PyThread_acquire_lock(m_pObject->lock, NOWAIT_LOCK)) {
+                    Py_BEGIN_ALLOW_THREADS
+                        PyThread_acquire_lock(m_pObject->lock, WAIT_LOCK);
+                    Py_END_ALLOW_THREADS
+                }
+            }
+            ~AcquireLock() {
+                assert(m_pObject);
+                assert(m_pObject->lock);
+                PyThread_release_lock(m_pObject->lock);
+                Py_DECREF(m_pObject);
+            }
+        private:
+            T *m_pObject;
+        };
+
+    #else
+        /* Make the class a NOP which should get optimised out. */
+        template<typename T>
+        class AcquireLock {
+        public:
+            AcquireLock(T *) {}
+        };
+    #endif
+
+
 
 Before any critical code we create an ``AcquireLock`` object which blocks until we have the lock. Once the lock is obtained we can make any calls, including calls into the Python interpreter without preemption. The lock is automatically freed when we exit the code block:
 
@@ -255,6 +304,15 @@ And that is pretty much it.
 
 .. rubric:: Footnotes
 
-.. [#f1] I won't pretend to understand all that is going on here, it does work however.
-.. [#f2] What I don't understand is why putting this code in the ``SkipList_new`` function does not work, the lock does not get initialised and segfaults typically in ``_pthread_mutex_check_init``. The order has to be: set the lock pointer NULL in ``_new``, allocate it in ``_init``, free it in ``_dealloc``.
-.. [#f3] A potential weakness of this code is that we might be deallocating the lock *whilst the lock is acquired* which could lead to deadlock. This is very much implementation defined in ``pythreads`` and may vary from platform to platform. There is no obvious API in ``pythreads`` that allows us to determine if a lock is held so we can release it before deallocation. I notice that in the Python threading module (*Modules/_threadmodule.c*) there is an additional ``char`` field that acts as a flag to say when the lock is held so that the ``lock_dealloc()`` function in that module can release the lock before freeing the lock.
+.. [#f1] The order has to be: set the lock pointer NULL in ``_new``, allocate it in ``_init``, free it in ``_dealloc``.
+   If you don't do this then the lock does not get initialised and segfaults typically in ``_pthread_mutex_check_init``.
+.. [#f2] A potential weakness of this code is that we might be deallocating the lock *whilst the lock is acquired*
+   which could lead to deadlock.
+
+   This is very much implementation defined in ``pythreads`` and may vary from platform to platform.
+   There is no obvious API in ``pythreads`` that allows us to determine if a lock is held so we can release it before
+   deallocation.
+
+   I notice that in the Python threading module (*Modules/_threadmodule.c*) there is an additional ``char`` field that
+   acts as a flag to say when the lock is held so that the ``lock_dealloc()`` function in that module can release the
+   lock before freeing the lock.

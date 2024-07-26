@@ -1,17 +1,15 @@
 //
-//  sublist.c
+//  cppsublist.cpp
 //  Subclassing a Python list.
 //
 //  Created by Paul Ross on 22/07/2024.
 //  Copyright (c) 2024 Paul Ross. All rights reserved.
 //
 // Based on: https://docs.python.org/3/extending/newtypes_tutorial.html#subclassing-other-types
-// That describes sub-classing a list.
-// However as well as the increment function this counts how many times
-// append() is called and uses the super() class to call the base class append.
 //
 // This is very like src/cpy/SubClass/sublist.c but it includes a slow max() method
 // to illustrate thread contention.
+// So it needs a thread lock.
 
 #define PY_SSIZE_T_CLEAN
 
@@ -25,8 +23,6 @@
 
 typedef struct {
     PyListObject list;
-    int state;
-    int appends;
 #ifdef WITH_THREAD
     PyThread_type_lock lock;
 #endif
@@ -37,8 +33,6 @@ SubList_init(SubListObject *self, PyObject *args, PyObject *kwds) {
     if (PyList_Type.tp_init((PyObject *) self, args, kwds) < 0) {
         return -1;
     }
-    self->state = 0;
-    self->appends = 0;
 #ifdef WITH_THREAD
     self->lock = PyThread_allocate_lock();
     if (self->lock == NULL) {
@@ -48,22 +42,6 @@ SubList_init(SubListObject *self, PyObject *args, PyObject *kwds) {
 #endif
     return 0;
 }
-
-static PyObject *
-SubList_increment(SubListObject *self, PyObject *Py_UNUSED(unused)) {
-    self->state++;
-    return PyLong_FromLong(self->state);
-}
-
-// From https://github.com/python/cpython/blob/main/Modules/_bz2module.c
-#define ACQUIRE_LOCK(obj) do { \
-    if (!PyThread_acquire_lock((obj)->lock, 0)) { \
-        Py_BEGIN_ALLOW_THREADS \
-        PyThread_acquire_lock((obj)->lock, 1); \
-        Py_END_ALLOW_THREADS \
-    } } while (0)
-#define RELEASE_LOCK(obj) PyThread_release_lock((obj)->lock)
-
 
 void sleep_milliseconds(long ms) {
     struct timespec tim_request, tim_remain;
@@ -79,9 +57,6 @@ SubList_append(SubListObject *self, PyObject *args) {
     PyObject *result = call_super_name(
             (PyObject *) self, "append", args, NULL
     );
-    if (result) {
-        self->appends++;
-    }
     // 0.25s delay to demonstrate holding on to the thread.
     sleep_milliseconds(250L);
     return result;
@@ -125,8 +100,6 @@ SubList_max(PyObject *self, PyObject *Py_UNUSED(unused)) {
 }
 
 static PyMethodDef SubList_methods[] = {
-        {"increment", (PyCFunction) SubList_increment, METH_NOARGS,
-                        PyDoc_STR("increment state counter.")},
         {"append",    (PyCFunction) SubList_append,    METH_VARARGS,
                         PyDoc_STR("append an item with sleep(1).")},
         {"max",       (PyCFunction) SubList_max,       METH_NOARGS,
@@ -135,11 +108,7 @@ static PyMethodDef SubList_methods[] = {
 };
 
 static PyMemberDef SubList_members[] = {
-        {"state",   T_INT, offsetof(SubListObject, state),   0,
-                "Value of the state."},
-        {"appends", T_INT, offsetof(SubListObject, appends), 0,
-                "Number of append operations."},
-        {NULL, 0, 0,                                         0, NULL}  /* Sentinel */
+        {NULL, 0, 0, 0, NULL}  /* Sentinel */
 };
 
 static PyTypeObject cppSubListType = {
