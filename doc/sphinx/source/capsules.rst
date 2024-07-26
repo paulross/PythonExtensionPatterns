@@ -353,6 +353,10 @@ This code is lightly edited for clarity and works with Python 3.10+.
 The actual code is in ``src/cpy/Capsules/datetimetz.c`` (which works with Python 3.9 as well)
 and the tests are in ``tests/unit/test_c_capsules.py``.
 
+--------------------------------
+Writing the Code for the Object
+--------------------------------
+
 Firstly the declaration of the timezone aware datetime:
 
 .. code-block:: c
@@ -493,3 +497,225 @@ The extension is created with this in ``setup.py``:
                   ),
 
 Extensive tests are in ``tests/unit/test_c_capsules.py``.
+
+--------------------------------
+Building
+--------------------------------
+
+Running ``python setup.py develop`` will build the extension(s) and then ``dtatetimetz`` can be imported:
+
+.. code-block:: python
+
+    from cPyExtPatt.Capsules import datetimetz
+
+
+--------------------------------
+Testing
+--------------------------------
+
+All the ests are in ``tests/unit/test_c_capsules.py``, but here is a relevant selection.
+All depend on:
+
+.. code-block:: python
+
+    import datetime
+    import zoneinfo
+
+    import pytest
+
+    from cPyExtPatt.Capsules import datetimetz
+
+A check on the ``__mro__``:
+
+.. code-block:: python
+
+    def test_datetimetz_datetimetz_mro():
+        mro = datetimetz.datetimetz.__mro__
+        assert [str(v) for v in mro] == [
+            "<class 'datetimetz.datetimetz'>",
+            "<class 'datetime.datetime'>",
+            "<class 'datetime.date'>",
+            "<class 'object'>",
+        ]
+
+A check on construction, first with a timezone, then without:
+
+.. code-block:: python
+
+    @pytest.mark.parametrize(
+        'args, kwargs, expected',
+        (
+            (
+                (2024, 7, 15, 10, 21, 14),
+                {'tzinfo': zoneinfo.ZoneInfo('Europe/London')},
+                '2024-07-15 10:21:14+01:00',
+            ),
+        )
+    )
+    def test_datetimetz_datetimetz_str(args, kwargs, expected):
+        d = datetimetz.datetimetz(*args, **kwargs)
+        assert str(d) == expected
+
+
+    @pytest.mark.parametrize(
+        'args, kwargs, expected',
+        (
+            (
+                (2024, 7, 15, 10, 21, 14),
+                {},
+                'No time zone provided.',
+            ),
+            (
+                (2024, 7, 15, 10, 21, 14),
+                {'tzinfo': None, },
+                'No time zone provided.',
+            ),
+        )
+    )
+    def test_datetimetz_datetimetz_raises(args, kwargs, expected):
+        with pytest.raises(TypeError) as err:
+            d = datetimetz.datetimetz(*args, **kwargs)
+            print()
+            print(f'ERROR: {repr(d)}')
+        assert err.value.args[0] == expected
+
+
+Check the ``repr()``.
+Note how this uses inheritance correctly whilst getting the type right:
+
+.. code-block:: python
+
+
+    @pytest.mark.parametrize(
+        'args, kwargs, expected',
+        (
+            (
+                (2024, 7, 15, 10, 21, 14),
+                {'tzinfo': zoneinfo.ZoneInfo('Europe/London')},
+                (
+                    "datetimetz.datetimetz(2024, 7, 15, 10, 21, 14,"
+                    " tzinfo=zoneinfo.ZoneInfo(key='Europe/London'))"
+                ),
+            ),
+        )
+    )
+    def test_datetimetz_datetimetz_repr(args, kwargs, expected):
+        d = datetimetz.datetimetz(*args, **kwargs)
+        assert repr(d) == expected
+
+Here is a test for setting the ``tzinfo`` directly.
+The error is handled correctly by the superclass.
+
+.. code-block:: python
+
+    def test_datetimetz_datetimetz_set_tzinfo_raises():
+        d = datetimetz.datetimetz(
+            2024, 7, 15, 10, 21, 14,
+            tzinfo=zoneinfo.ZoneInfo('Europe/London')
+        )
+        with pytest.raises(AttributeError) as err:
+            d.tzinfo = None
+        assert err.value.args[0] == "attribute 'tzinfo' of 'datetime.datetime' objects is not writable"
+
+Some equality tests.
+We want to fail when comparing our ``datetimetz`` with a naive ``datatime`` object.
+
+.. code-block:: python
+
+    def test_datetimetz_datetimetz_equal():
+        d_tz = datetimetz.datetimetz(
+            2024, 7, 15, 10, 21, 14,
+            tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+        d = datetime.datetime(
+            2024, 7, 15, 10, 21, 14,
+            tzinfo=zoneinfo.ZoneInfo('Europe/London')
+        )
+        assert d_tz == d
+
+
+    def test_datetime_datetime_equal_naive():
+        d = datetime.datetime(
+            2024, 7, 15, 10, 21, 14,
+            tzinfo=zoneinfo.ZoneInfo('Europe/London')
+        )
+        d_no_tz = datetime.datetime(2024, 7, 15, 10, 21, 14)
+        assert d_no_tz != d
+
+Some datetime comparison tests that show our ``datetimetz`` inter-operates correctly with itself and a ``datetime``
+object.
+
+.. code-block:: python
+
+    @pytest.mark.parametrize(
+        'd_tz, d, expected',
+        (
+            (
+                datetimetz.datetimetz(
+                    2024, 7, 15, 10, 21, 14,
+                    tzinfo=zoneinfo.ZoneInfo('Europe/London')
+                ),
+                datetime.datetime(
+                    2024, 7, 15, 10, 21, 14,
+                    tzinfo=zoneinfo.ZoneInfo('Europe/London')
+                ),
+                datetime.timedelta(0),
+            ),
+            (
+                datetimetz.datetimetz(
+                    2024, 7, 15, 10, 21, 14,
+                    tzinfo=zoneinfo.ZoneInfo('Europe/London')
+                ),
+                datetime.datetime(
+                    2024, 7, 15, 10, 21, 14,
+                    tzinfo=zoneinfo.ZoneInfo('America/New_York')
+                ),
+                datetime.timedelta(seconds=-5 * 60 * 60),
+            ),
+            (
+                datetimetz.datetimetz(
+                    2024, 7, 15, 10, 21, 14,
+                    tzinfo=zoneinfo.ZoneInfo('America/New_York')
+                ),
+                datetime.datetime(
+                    2024, 7, 15, 10, 21, 14,
+                    tzinfo=zoneinfo.ZoneInfo('Europe/London')
+                ),
+                datetime.timedelta(seconds=5 * 60 * 60),
+            ),
+        )
+    )
+    def test_datetimetz_datetimetz_subtract(d_tz, d, expected):
+        assert (d_tz - d) == expected
+
+
+    @pytest.mark.parametrize(
+        'd_tz, d, expected',
+        (
+            (
+                datetimetz.datetimetz(
+                    2024, 7, 15, 10, 21, 14,
+                    tzinfo=zoneinfo.ZoneInfo('Europe/London')
+                ),
+                datetime.datetime(2024, 7, 15, 10, 21, 14),
+                '',
+            ),
+        )
+    )
+    def test_datetimetz_datetimetz_subtract_raises(d_tz, d, expected):
+        with pytest.raises(TypeError) as err:
+            d_tz - d
+        assert err.value.args[0] == "can't subtract offset-naive and offset-aware datetimes"
+
+Check that ``.replace()`` works as expected with ``tzinfo``:
+
+.. code-block:: python
+
+    def test_datetimetz_datetimetz_replace_raises_tzinfo():
+        d = datetimetz.datetimetz(
+            2024, 7, 15, 10, 21, 14,
+            tzinfo=zoneinfo.ZoneInfo('Europe/London')
+        )
+        with pytest.raises(TypeError) as err:
+            d.replace(tzinfo=None)
+        assert err.value.args[0] == 'No time zone provided.'
+

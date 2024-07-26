@@ -57,14 +57,22 @@ def test_spam_client():
 
 def test_datetimetz_datetimetz_mro():
     mro = datetimetz.datetimetz.__mro__
-    assert str(
-        mro) == "(<class 'datetimetz.datetimetz'>, <class 'datetime.datetime'>, <class 'datetime.date'>, <class 'object'>)"
+    assert [str(v) for v in mro] == [
+        "<class 'datetimetz.datetimetz'>",
+        "<class 'datetime.datetime'>",
+        "<class 'datetime.date'>",
+        "<class 'object'>",
+    ]
 
 
 @pytest.mark.parametrize(
     'args, kwargs, expected',
     (
-            ((2024, 7, 15, 10, 21, 14), {'tzinfo': zoneinfo.ZoneInfo('Europe/London')}, '2024-07-15 10:21:14+01:00',),
+        (
+            (2024, 7, 15, 10, 21, 14),
+            {'tzinfo': zoneinfo.ZoneInfo('Europe/London')},
+            '2024-07-15 10:21:14+01:00',
+        ),
     )
 )
 def test_datetimetz_datetimetz_str(args, kwargs, expected):
@@ -75,10 +83,14 @@ def test_datetimetz_datetimetz_str(args, kwargs, expected):
 @pytest.mark.parametrize(
     'args, kwargs, expected',
     (
+        (
+            (2024, 7, 15, 10, 21, 14),
+            {'tzinfo': zoneinfo.ZoneInfo('Europe/London')},
             (
-                    (2024, 7, 15, 10, 21, 14), {'tzinfo': zoneinfo.ZoneInfo('Europe/London')},
-                    "datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo(key='Europe/London'))",
+                "datetimetz.datetimetz(2024, 7, 15, 10, 21, 14,"
+                " tzinfo=zoneinfo.ZoneInfo(key='Europe/London'))"
             ),
+        ),
     )
 )
 def test_datetimetz_datetimetz_repr(args, kwargs, expected):
@@ -87,7 +99,10 @@ def test_datetimetz_datetimetz_repr(args, kwargs, expected):
 
 
 def test_datetimetz_datetimetz_get_attributes():
-    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d = datetimetz.datetimetz(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     assert d.year == 2024
     assert d.month == 7
     assert d.day == 15
@@ -99,7 +114,10 @@ def test_datetimetz_datetimetz_get_attributes():
 
 
 def test_datetimetz_datetimetz_set_tzinfo_raises():
-    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d = datetimetz.datetimetz(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     with pytest.raises(AttributeError) as err:
         d.tzinfo = None
     assert err.value.args[0] == "attribute 'tzinfo' of 'datetime.datetime' objects is not writable"
@@ -108,12 +126,16 @@ def test_datetimetz_datetimetz_set_tzinfo_raises():
 @pytest.mark.parametrize(
     'args, kwargs, expected',
     (
-            (
-                    (2024, 7, 15, 10, 21, 14), {}, 'No time zone provided.',
-            ),
-            (
-                    (2024, 7, 15, 10, 21, 14), {'tzinfo': None, }, 'No time zone provided.',
-            ),
+        (
+            (2024, 7, 15, 10, 21, 14),
+            {},
+            'No time zone provided.',
+        ),
+        (
+            (2024, 7, 15, 10, 21, 14),
+            {'tzinfo': None, },
+            'No time zone provided.',
+        ),
     )
 )
 def test_datetimetz_datetimetz_raises(args, kwargs, expected):
@@ -125,19 +147,30 @@ def test_datetimetz_datetimetz_raises(args, kwargs, expected):
 
 
 def test_datetimetz_datetimetz_equal():
-    d_tz = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
-    d = datetime.datetime(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d_tz = datetimetz.datetimetz(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d = datetime.datetime(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     assert d_tz == d
 
 
 def test_datetime_datetime_equal_naive():
-    d = datetime.datetime(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d = datetime.datetime(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     d_no_tz = datetime.datetime(2024, 7, 15, 10, 21, 14)
     assert d_no_tz != d
 
 
 def test_datetimetz_datetimetz_equal_naive():
-    d_tz = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d_tz = datetimetz.datetimetz(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     d = datetime.datetime(2024, 7, 15, 10, 21, 14)
     assert d_tz != d
 
@@ -145,21 +178,21 @@ def test_datetimetz_datetimetz_equal_naive():
 @pytest.mark.parametrize(
     'd_tz, d, expected',
     (
-            (
-                    datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
-                    datetime.datetime(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
-                    datetime.timedelta(0),
-            ),
-            (
-                    datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
-                    datetime.datetime(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('America/New_York')),
-                    datetime.timedelta(seconds=-5 * 60 * 60),
-            ),
-            (
-                    datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('America/New_York')),
-                    datetime.datetime(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
-                    datetime.timedelta(seconds=5 * 60 * 60),
-            ),
+        (
+            datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
+            datetime.datetime(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
+            datetime.timedelta(0),
+        ),
+        (
+            datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
+            datetime.datetime(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('America/New_York')),
+            datetime.timedelta(seconds=-5 * 60 * 60),
+        ),
+        (
+            datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('America/New_York')),
+            datetime.datetime(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
+            datetime.timedelta(seconds=5 * 60 * 60),
+        ),
     )
 )
 def test_datetimetz_datetimetz_subtract(d_tz, d, expected):
@@ -169,11 +202,11 @@ def test_datetimetz_datetimetz_subtract(d_tz, d, expected):
 @pytest.mark.parametrize(
     'd_tz, d, expected',
     (
-            (
-                    datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
-                    datetime.datetime(2024, 7, 15, 10, 21, 14),
-                    '',
-            ),
+        (
+            datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London')),
+            datetime.datetime(2024, 7, 15, 10, 21, 14),
+            '',
+        ),
     )
 )
 def test_datetimetz_datetimetz_subtract_raises(d_tz, d, expected):
@@ -183,28 +216,40 @@ def test_datetimetz_datetimetz_subtract_raises(d_tz, d, expected):
 
 
 def test_datetimetz_datetimetz_replace_year():
-    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d = datetimetz.datetimetz(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     d_replace = d.replace(year=2025)
     print()
     print(type(d_replace))
     assert type(d_replace) == datetimetz.datetimetz
     assert d_replace.tzinfo is not None
     assert d_replace.year == 2025
-    assert d_replace == datetimetz.datetimetz(2025, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    assert d_replace == datetimetz.datetimetz(
+        2025, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
 
 
 def test_datetimetz_datetimetz_replace_raises_tzinfo():
-    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d = datetimetz.datetimetz(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     with pytest.raises(TypeError) as err:
         d.replace(tzinfo=None)
-        print()
-        print(f'ERROR: {repr(d)}')
+        # print()
+        # print(f'ERROR: {repr(d)}')
     assert err.value.args[0] == 'No time zone provided.'
 
 
 @pytest.mark.skipif(not (sys.version_info.minor <= 9), reason='Python 3.9')
 def test_datetimetz_datetimetz_replace_raises_year_none_39_310():
-    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d = datetimetz.datetimetz(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     with pytest.raises(TypeError) as err:
         d.replace(year=None)
     assert err.value.args[0] == "an integer is required (got type NoneType)"
@@ -212,7 +257,10 @@ def test_datetimetz_datetimetz_replace_raises_year_none_39_310():
 
 @pytest.mark.skipif(not (sys.version_info.minor >= 10), reason='Python 3.10+')
 def test_datetimetz_datetimetz_replace_raises_year_none():
-    d = datetimetz.datetimetz(2024, 7, 15, 10, 21, 14, tzinfo=zoneinfo.ZoneInfo('Europe/London'))
+    d = datetimetz.datetimetz(
+        2024, 7, 15, 10, 21, 14,
+        tzinfo=zoneinfo.ZoneInfo('Europe/London')
+    )
     with pytest.raises(TypeError) as err:
         d.replace(year=None)
     assert err.value.args[0] == "'NoneType' object cannot be interpreted as an integer"
