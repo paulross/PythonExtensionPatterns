@@ -32,6 +32,7 @@ Coding Patterns for Python Extensions
     cpp
     miscellaneous
     further_reading
+    todo
 
 
 Search
