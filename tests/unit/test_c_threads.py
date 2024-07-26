@@ -79,20 +79,17 @@ def test_cppsublist_cppsublist_dir_pre_311():
                       '__str__',
                       '__subclasshook__',
                       'append',
-                      'appends',
                       'clear',
                       'copy',
                       'count',
                       'extend',
-                      'increment',
                       'index',
                       'insert',
                       'max',
                       'pop',
                       'remove',
                       'reverse',
-                      'sort',
-                      'state']
+                      'sort']
 
 
 @pytest.mark.skipif(not (sys.version_info.minor > 10), reason='Python 3.11+')
@@ -191,20 +188,17 @@ def test_cppsublist_csublist_dir_pre_311():
                       '__str__',
                       '__subclasshook__',
                       'append',
-                      'appends',
                       'clear',
                       'copy',
                       'count',
                       'extend',
-                      'increment',
                       'index',
                       'insert',
                       'max',
                       'pop',
                       'remove',
                       'reverse',
-                      'sort',
-                      'state']
+                      'sort']
 
 
 @pytest.mark.skipif(not (sys.version_info.minor > 10), reason='Python 3.11+')
