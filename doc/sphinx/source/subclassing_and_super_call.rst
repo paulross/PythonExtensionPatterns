@@ -16,7 +16,7 @@ This chapter describes how to subclass existing types and how to call ``super()`
 Basic Subclassing
 =================================
 
-In this example we are going to subclass the built in ``list`` object and just add a new attribute.
+In this example we are going to subclass the built in ``list`` object and just add a new attribute ``state``.
 The code is based on
 `Python documentation on subclassing <https://docs.python.org/3/extending/newtypes_tutorial.html#subclassing-other-types>`_
 The full code is in ``src/cpy/SubClass/sublist.c`` and the tests are in ``tests/unit/test_c_subclass.py``.
@@ -34,8 +34,8 @@ First the declaration of the ``SubListObject``:
     #include "structmember.h"
 
     typedef struct {
-        PyListObject list;
-        int state;
+        PyListObject list; // The superclass.
+        int state;         // Our new attribute.
     } SubListObject;
 
 The ``__init__`` method:
@@ -169,7 +169,7 @@ The extension can used like this:
     obj.increment()
     assert obj.state == 1
 
-This is fine for subclasses that just add some functionality however if you want to overload the super class
+This is fine for subclasses that just add some additional functionality however if you want to overload the super class
 you need to be able to call ``super()`` from C which is described next.
 
 =================================
@@ -196,7 +196,7 @@ This is simple enough in pure Python:
 
 To do it in C is a bit trickier. Taking as our starting point the
 `example of sub-classing a list <https://docs.python.org/3/extending/newtypes.html#subclassing-other-types>`_
-in the Python documentation, amended a little bit for our example.
+in the Python documentation (amended a little bit for our example).
 
 Our type contains an integer count of the number of appends.
 That is set to zero on construction and can be accessed like a normal member.
@@ -227,7 +227,7 @@ That is set to zero on construction and can be accessed like a normal member.
         {NULL, 0, 0, 0, NULL}  /* Sentinel */
     };
 
-We now need to create the ``append()`` function, this function will call the superclass ``append()`` and increment the
+We now need to create the ``append()`` function, which will call the superclass ``append()`` and then increment the
 ``appends`` counter:
 
 .. code-block:: c
