@@ -144,7 +144,7 @@ The dict is added in a separate C function merely for readability:
     }
 
 ------------------------------------
-Getting and Setting Module Globals
+Getting and Setting
 ------------------------------------
 
 ^^^^^^^^^^^^^^^^^^
