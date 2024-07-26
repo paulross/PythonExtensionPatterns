@@ -76,7 +76,7 @@ Each tool can be characterised by:
 Clearly there are trade-offs between these depending on the problem you are trying to solve.
 
 .. list-table:: **Tool Characteristics**
-   :widths: 15 30 30 30 30
+   :widths: 30 30 30 20 20
    :header-rows: 1
 
    * - Tool
