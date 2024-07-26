@@ -9,7 +9,7 @@
 File Paths and Files
 **********************
 
-This chapter discusses reading and writing files from C extensions.
+This chapter describes reading and writing files from C extensions.
 
 ====================================
 File Paths
@@ -18,8 +18,8 @@ File Paths
 There are several builtin functions that allow conversion between Python and C described in the
 `File System Encoding <https://docs.python.org/3/c-api/unicode.html#file-system-encoding>`_
 API which uses the
-`filesystem encoding and error handler <https://docs.python.org/3/glossary.html#term-filesystem-encoding-and-error-handler>`_
-See also `File Objects <https://docs.python.org/3/c-api/file.html>`_
+`filesystem encoding and error handler <https://docs.python.org/3/glossary.html#term-filesystem-encoding-and-error-handler>`_,
+see also `File Objects <https://docs.python.org/3/c-api/file.html>`_
 
 In summary:
 
@@ -40,7 +40,7 @@ The Python API provides functionality for converting Python file paths (a ``str`
 to C file paths (``char *``).
 From Python to C;
 `PyUnicode_FSConverter <https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FSConverter>`_
-and the reverse
+and the reverse from C to Python
 `PyUnicode_DecodeFSDefaultAndSize <https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_DecodeFSDefaultAndSize>`_
 
 Here is an example of taking a Python Unicode string representing a file path, converting it to C and then back
@@ -102,7 +102,7 @@ Here is the C code:
         Py_XDECREF(ret);
         ret = NULL;
     finally:
-        // Assert all temporary locals are NULL and thus have been transferred if used.
+        // Decref temporary locals.
         Py_XDECREF(py_path);
         return ret;
     }
@@ -221,7 +221,7 @@ This will write a C ``char *`` to a Python file.
     ``PyFile_WriteString()`` creates a unicode string and then calls ``PyFile_WriteObject()``
     so the Python file object must be capable of writing strings.
 
-Here is an example of taking a Python bytees object, extracting the ``char *`` C buffere and writing that to a Python
+Here is an example of taking a Python bytees object, extracting the ``char *`` C buffer and writing that to a Python
 file.
 The Python function signature is::
 
@@ -243,8 +243,9 @@ Here is the C code:
                                          &c_buffer, &py_file_object)) {
             return NULL;
         }
-        /* NOTE: PyFile_WriteString() creates a unicode string and then calls PyFile_WriteObject()
-         * so the py_file_object must be capable of writing strings. */
+        /* NOTE: PyFile_WriteString() creates a unicode string and then
+         * calls PyFile_WriteObject() so the py_file_object must be
+         * capable of writing strings. */
         int result = PyFile_WriteString((char *)c_buffer.buf, py_file_object);
         if (result != 0) {
             goto except;
