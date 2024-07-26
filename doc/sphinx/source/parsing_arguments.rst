@@ -29,6 +29,21 @@ C Function Declaration
 The C function signature must be declared correctly depending on the arguments it is expected to work with.
 Here is a small summary of the required declaration.
 
+In all cases the function has a *context* which is the first argument.
+
+- For free functions the first argument is the module within which the function is declared.
+  This allows you to access other attributes or functions in the module.
+- For member functions (methods) the first argument is the object within which the function is declared ( ``self`` ).
+  This allows you to access other properties or functions in the object.
+
+If the argument is unused then the `Py_UNUSED <https://docs.python.org/3/c-api/intro.html#c.Py_UNUSED>`_ can be used to
+supress a compiler warning or error thus:
+
+.. code-block:: c
+
+    static PyObject *
+    parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs);
+
 No Arguments
 ^^^^^^^^^^^^^^^^^^
 
@@ -113,21 +128,36 @@ The reference documentation is excellent: `argument parsing and building values 
 .. warning::
 
     Error messages can be slightly misleading as the argument index is the *C* index
-    not the *Python* index. For example a C function using ``METH_VARARGS`` declared as
-    ``static PyObject *parse_args(PyObject *module, PyObject *args);``
-    which expects the Python argument[0] to be a bytes object and the Python argument[1]
-    to be an integer by using ``PyArg_ParseTuple(args, "Si", &arg0, &arg1)``.
+    not the *Python* index.
 
-    Calling this from Python with ``parse_args(21, 22)`` will give
+    For example a C function using ``METH_VARARGS`` declared as:
+
+    ``static PyObject *parse_args(PyObject *module, PyObject *args);``
+
+    Which expects the Python argument[0] to be a bytes object and the Python argument[1]
+    to be an integer by using:
+
+    ``PyArg_ParseTuple(args, "Si", &arg0, &arg1)``
+
+    Calling this from Python with ``parse_args(21, 22)`` will give:
+
     ``TypeError: argument 1 must be bytes, not int``.
 
     The "1" here refers to the C index not the Python index.
-    The correct call would be to change the 0th Python argument to
+    The correct call would be to change the 0th Python argument to:
+
     ``cParseArgs.parse_args(b'21', 22)``
 
-    Also consider the signature ``def parse_args(a: bytes, b: int, c: str = '') -> int:``
-    Called with ``parse_args(b'bytes', '456')`` gives the error "'str' object cannot be interpreted as an integer"
+    Also consider the signature:
+
+    ``def parse_args(a: bytes, b: int, c: str = '') -> int:``
+
+    Called with ``parse_args(b'bytes', '456')`` gives the error:
+
+    ``"'str' object cannot be interpreted as an integer"``
+
     without specifying which argument it is referring to.
+
 
 Examples
 ====================================
@@ -149,7 +179,7 @@ The simplest form is a global function in a module that takes no arguments at al
     }
 
 This function is added to the module methods with the ``METH_NOARGS`` value.
-The Python interpreter will raise a ``TypeError`` in any arguments are offered.
+The Python interpreter will raise a ``TypeError`` on any arguments are offered to the function.
 
 .. code-block:: c
 
@@ -207,7 +237,7 @@ This function can be added to the module with the ``METH_O`` flag:
 
 
 Arguments as Borrowed References
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There is some subtlety here as indicated by the comments. ``*arg`` is not our reference, it is a borrowed reference
 so why don't we increment it at the beginning of this function and decrement it at the end?
@@ -259,7 +289,7 @@ You can either parse this list yourself or use a helper method to parse it into 
 In the following code we are expecting a bytes object, an integer and an optional string whose default value is
 'default_string'.
 For demonstration purposes, this returns the same three arguments.
-In Python the equivalent function declaration would be::
+In Python the equivalent function signature would be::
 
     def parse_args(a: bytes, b: int, c: str = 'default_string') -> typing.Tuple[bytes, int, str]:
 
@@ -308,17 +338,18 @@ Variable Number of Arguments and Keyword Arguments
 
 The function will be called with three arguments, the module, a ``PyTupleObject`` that contains a tuple of arguments
 and a ``PyDictObject`` that contains a dictionary of keyword arguments.
+The keyword arguments can be NULL if there are no keyword arguments.
 You can either parse these yourself or use a helper method to parse it into Python and C types.
 
-In the following code we are expecting a sequence and an optional integer defaulting to 1.
+In the following code we are expecting a sequence and an optional integer count defaulting to 1.
 It returns the `sequence` repeated `count` times.
 In Python the equivalent function declaration would be::
 
     def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: = 1) -> typing.Sequence[typing.Any]:
         return sequence * count
 
-Here is the C code, note the string that describes the argument types passed to ``PyArg_ParseTupleAndKeywords``,
-if these types are not present a ``ValueError`` will be set.
+Here is the C code, note the string ``"O|i"`` that describes the argument types passed to
+``PyArg_ParseTupleAndKeywords``, if these types are not present a ``TypeError`` will be set.
 
 .. code-block:: c
 
@@ -420,7 +451,7 @@ Typically this would be done with C code such as this:
     /* arg.buf has the byte data of length arg.len */
 
 However this will likely segfault if it is used as a default argument using ``"|y*"`` formatting string as the
-Py_Buffer is uninitialized.
+``Py_Buffer`` is uninitialized.
 Here is the fix for using a default value of ``b''``:
 
 .. code-block:: c
@@ -441,14 +472,14 @@ The Python signature is:
 .. code-block:: python
 
     def parse_default_bytes_object(b: bytes = b"default") -> bytes:
-        pass
 
 The complete C code is:
 
 .. code-block:: c
 
     static PyObject *
-    parse_default_bytes_object(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs) {
+    parse_default_bytes_object(PyObject *Py_UNUSED(module), PyObject *args,
+                               PyObject *kwargs) {
         static const char *arg_default = "default";
         Py_buffer arg;
         arg.buf = (void *)arg_default;
@@ -477,10 +508,10 @@ Here is a function that has a tuple and a dict as default arguments, in other wo
 
     def function(arg_0=(42, "this"), arg_1={}):
 
-The first argument is immutable, the second is mutable and so we need to mimic the well known behaviour of Python
-with mutable arguments.
-Mutable default arguments are evaluated once only at function definition time and then becomes a (mutable) property of
-the function.
+The first argument is immutable, the second is mutable.
+We need to mimic the well known behaviour of Python with mutable arguments where default arguments are evaluated once
+only at function definition time and then becomes a (mutable) property of the function.
+
 For example:
 
 .. code-block:: python
@@ -507,7 +538,7 @@ So first we declare a ``static PyObject*`` for each default argument:
 
 .. code-block:: c
 
-    static PyObject *_parse_args_with_python_defaults(PyObject *module, PyObject *args) {
+    static PyObject *parse_args_with_python_defaults(PyObject *module, PyObject *args) {
         PyObject *ret = NULL;
         
         /* This first pointer need not be static as the argument is immutable
@@ -528,33 +559,31 @@ Then we declare a ``PyObject*`` for each argument that will either reference the
         PyObject *pyObjArg_0 = NULL;
         PyObject *pyObjArg_1 = NULL;
  
-Then, if the default values have not been initialised, initialise them. In this case it is a bit tedious merely because of the nature of the arguments. So in practice this might be clearer if this was in separate function:
+Then, if the default values have not been initialised, initialise them.
+In this case it is a bit tedious merely because of the nature of the arguments.
+So in practice this might be clearer if this was in separate function:
 
 .. code-block:: c
 
         /* Initialise first argument to its default Python value. */
+        pyObjDefaultArg_0 = Py_BuildValue("OO", PyLong_FromLong(42),
+                                          PyUnicode_FromString("This"));
         if (! pyObjDefaultArg_0) {
-            pyObjDefaultArg_0 = PyTuple_New(2);
-            if (! pyObjDefaultArg_0) {
-                PyErr_SetString(PyExc_RuntimeError, "Can not create tuple!");
-                goto except;
-            }
-            if(PyTuple_SetItem(pyObjDefaultArg_0, 0, PyLong_FromLong(42))) {
-                PyErr_SetString(PyExc_RuntimeError, "Can not set tuple[0]!");
-                goto except;
-            }
-            if(PyTuple_SetItem(pyObjDefaultArg_0, 1, PyUnicode_FromString("This"))) {
-                PyErr_SetString(PyExc_RuntimeError, "Can not set tuple[1]!");
-                goto except;
-            }
+            PyErr_SetString(PyExc_RuntimeError, "Can not create tuple!");
+            goto except;
         }
         /* Now the second argument. */
         if (! pyObjDefaultArg_1) {
             pyObjDefaultArg_1 = PyDict_New();
         }
-        
+        if (! pyObjDefaultArg_1) {
+            PyErr_SetString(PyExc_RuntimeError, "Can not create dict!");
+            goto except;
+        }
 
-Now parse the given arguments to see what, if anything, is there. ``PyArg_ParseTuple`` will set each working pointer non-``NULL`` if the argument is present. As we set the working pointers ``NULL`` prior to this call we can now tell if any argument is present.
+Now parse the given arguments to see what, if anything, is there.
+``PyArg_ParseTuple`` will set each working pointer non-``NULL`` if the argument is present.
+As we set the working pointers ``NULL`` prior to this call we can now tell if any argument is present.
     
 .. code-block:: c
 
@@ -599,13 +628,16 @@ Now the two blocks ``except`` and ``finally``.
         Py_XDECREF(ret);
         ret = NULL;
     finally:
-        /* Decrement refcount to match the increment above. */
+        /* Decrement refcount to match the borrowed reference
+         * increment above. */
         Py_XDECREF(pyObjArg_0);
         Py_XDECREF(pyObjArg_1);
         return ret;
     }
 
-An important point here is the use of ``Py_XDECREF`` in the ``finally:`` block, we can get here through a number of paths, including through the ``except:`` block and in some cases the ``pyObjArg_...`` will be ``NULL`` (for example if ``PyArg_ParseTuple`` fails). So  ``Py_XDECREF`` it must be.
+An important point here is the use of ``Py_XDECREF`` in the ``finally:`` block, we can get here through a number of
+paths, including through the ``except:`` block and in some cases the ``pyObjArg_...`` will be ``NULL``
+(for example if ``PyArg_ParseTuple`` fails). So  ``Py_XDECREF`` it must be.
 
 Here is the complete C code:
 
@@ -619,23 +651,19 @@ Here is the complete C code:
         PyObject *pyObjArg_0 = NULL;
         PyObject *pyObjArg_1 = NULL;
     
+        pyObjDefaultArg_0 = Py_BuildValue("OO", PyLong_FromLong(42),
+                                          PyUnicode_FromString("This"));
         if (! pyObjDefaultArg_0) {
-            pyObjDefaultArg_0 = PyTuple_New(2);
-            if (! pyObjDefaultArg_0) {
-                PyErr_SetString(PyExc_RuntimeError, "Can not create tuple!");
-                goto except;
-            }
-            if(PyTuple_SetItem(pyObjDefaultArg_0, 0, PyLong_FromLong(42))) {
-                PyErr_SetString(PyExc_RuntimeError, "Can not set tuple[0]!");
-                goto except;
-            }
-            if(PyTuple_SetItem(pyObjDefaultArg_0, 1, PyUnicode_FromString("This"))) {
-                PyErr_SetString(PyExc_RuntimeError, "Can not set tuple[1]!");
-                goto except;
-            }
+            PyErr_SetString(PyExc_RuntimeError, "Can not create tuple!");
+            goto except;
         }
+        /* Now the second argument. */
         if (! pyObjDefaultArg_1) {
             pyObjDefaultArg_1 = PyDict_New();
+        }
+        if (! pyObjDefaultArg_1) {
+            PyErr_SetString(PyExc_RuntimeError, "Can not create dict!");
+            goto except;
         }
     
         if (! PyArg_ParseTuple(args, "|OO", &pyObjArg_0, &pyObjArg_1)) {
@@ -676,12 +704,15 @@ and `keyword only <https://docs.python.org/3/glossary.html#keyword-only-paramete
 These are described in the Python documentation for
 `Special parameters <https://docs.python.org/3/tutorial/controlflow.html#special-parameters>`_
 Specifically `positional only parameters <https://docs.python.org/3/tutorial/controlflow.html#positional-only-parameters>`_
-and `keyword only arguments <https://docs.python.org/3/tutorial/controlflow.html#keyword-only-arguments>`_
+and `keyword only arguments <https://docs.python.org/3/tutorial/controlflow.html#keyword-only-arguments>`_.
 
 Suppose we want the functional equivalent of the Python function signature
-(reproducing https://docs.python.org/3/tutorial/controlflow.html#special-parameters )::
+(reproducing https://docs.python.org/3/tutorial/controlflow.html#special-parameters ):
 
-    def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float, kwd2: int):
+.. code-block:: python
+
+    def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float,
+                                kwd2: int):
         return None
 
 This is achieved by combining two techniques:
@@ -690,7 +721,7 @@ This is achieved by combining two techniques:
 - Keyword only: The formatting string passed to ``PyArg_ParseTupleAndKeywords`` uses the ``'$'`` character.
 
 A function using either positional only or keyword only arguments must use the flags ``METH_VARARGS | METH_KEYWORDS``
-and uses``PyArg_ParseTupleAndKeywords``. Currently, all keyword-only arguments must also be optional arguments, so ``'|'`` must always be
+and uses ``PyArg_ParseTupleAndKeywords``. Currently, all keyword-only arguments must also be optional arguments, so ``'|'`` must always be
 specified before ``'$'`` in the format string.
 
 Here is the C code:
@@ -710,17 +741,21 @@ Here is the C code:
                 "",                 /* pos1 is positional only. */
                 "",                 /* pos2 is positional only. */
                 "pos_or_kwd",       /* pos_or_kwd can be positional or keyword argument. */
-                "kwd1",             /* kwd1 is keyword only argument by use of '$' in format string. */
-                "kwd2",             /* kwd2 is keyword only argument by use of '$' in format string. */
+                        /* NOTE: As '$' is in format string the next to are keyword only. */
+                "kwd1",             /* kwd1 is keyword only argument. */
+                "kwd2",             /* kwd2 is keyword only argument. */
                 NULL,
         };
 
-        if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s*iy*|$di", kwlist, &pos1, &pos2, &pos_or_kwd, &kwd1, &kwd2)) {
+        if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s*iy*|$di", kwlist, &pos1, &pos2,
+                                         &pos_or_kwd, &kwd1, &kwd2)) {
             assert(PyErr_Occurred());
             return NULL;
         }
-        /* Return the parsed arguments. */
-        return Py_BuildValue("s#iy#di", pos1.buf, pos1.len, pos2, pos_or_kwd.buf, pos_or_kwd.len, kwd1, kwd2);
+        /* Return the parsed arguments.
+         * NOTE the asymmetry between "s*iy*|$di" above and "s#iy#di" here. */
+        return Py_BuildValue("s#iy#di", pos1.buf, pos1.len, pos2, pos_or_kwd.buf,
+                             pos_or_kwd.len, kwd1, kwd2);
     }
 
 
@@ -742,15 +777,20 @@ On success the result will be written into the opaque pointer, here called ``add
     int sum_list_of_longs(PyObject *list_longs, void *address) {
         PyObject *item = NULL;
 
-        if (!list_longs || !PyList_Check(list_longs)) { /* Note: PyList_Check allows sub-types. */
-            PyErr_Format(PyExc_TypeError, "check_list_of_longs(): First argument is not a list");
+        /* Note: PyList_Check allows sub-types. */
+        if (! list_longs || ! PyList_Check(list_longs)) {
+            PyErr_Format(PyExc_TypeError,
+                         "check_list_of_longs(): First argument is not a list"
+            );
             return 0;
         }
         long result = 0L;
         for (Py_ssize_t i = 0; i < PyList_GET_SIZE(list_longs); ++i) {
             item = PyList_GetItem(list_longs, i);
             if (!PyLong_CheckExact(item)) {
-                PyErr_Format(PyExc_TypeError, "check_list_of_longs(): Item %d is not a Python integer.", i);
+                PyErr_Format(PyExc_TypeError,
+                             "check_list_of_longs(): Item %d is not a Python integer.", i
+                );
                 return 0;
             }
             /* PyLong_AsLong() must always succeed because of check above. */
@@ -795,4 +835,3 @@ Here is the C code.
     finally:
         return ret;
     }
-
