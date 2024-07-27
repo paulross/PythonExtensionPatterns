@@ -69,7 +69,7 @@ For example, this small program segfaults:
         return 0;
     }
 
-The reason is that ``PyErr_Format`` calls ``PyThreadState *thread_state = PyThreadState_Get();`` theen ``thread_state``
+The reason is that ``PyErr_Format`` calls ``PyThreadState *thread_state = PyThreadState_Get();`` then ``thread_state``
 will be NULL unless the Python interpreter is initialised.
 
 So you need to call ``Py_Initialize()`` to set up statically allocated interpreter data.
