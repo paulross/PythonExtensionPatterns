@@ -37,16 +37,18 @@ for the `bz module <https://docs.python.org/3/library/bz2.html#module-bz2>`_ tha
 low level way of doing this, largely undocumented.
 
 Here is a version that concentrates on those essentials.
-As an example here is a subclass of a list that has a ``max()`` method that returns the maximum value in the list.
+As an example, here is a subclass of a list that has a ``max()`` method that returns the maximum value in the list.
 To do the comparison it must call
 `PyObject_RichCompareBool <https://docs.python.org/3/c-api/object.html#c.PyObject_RichCompareBool>`_
 to decide which of two objects is the maximum.
-This class deliberately has ``sleep()`` calls to allow a thread switch to take place.
 
 So during that call to ``max()`` the Python interpreter is free too switch to another thread that might alter the
 list we are inspecting.
 What we need to do is to block that thread with a lock so that can't happen.
-Then once the result of ``max()`` is known we can relases that lock.
+Then once the result of ``max()`` is known we can relase that lock.
+This class deliberately has ``sleep()`` calls to allow a thread switch to take place.
+
+The code (C and C++) is in ``src/cpy/Threads`` and the tests are in ``tests/unit/test_c_threads.py``.
 
 Lets walk through it.
 
@@ -79,9 +81,7 @@ Adding a ``PyThread_type_lock`` to our object
 --------------------------------------------------
 
 Then we add a ``PyThread_type_lock`` (an opaque pointer) to the Python structure we are intending to protect.
-I'll use the example of the
-`SkipList source code <https://github.com/paulross/skiplist/blob/master/src/cpy/cSkipList.cpp>`_.
-Here is a fragment with the important lines highlighted:
+Here is the object declaration:
 
 .. code-block:: c
 
@@ -97,9 +97,8 @@ Initialising and Deallocating the Lock
 --------------------------------------------------
 
 If you have a ``__new__`` method then set the lock pointer to ``NULL``.
-The lock needs to be initialised in the ``__init__`` method.
-
-In the ``__init__`` method we allocate the lock by calling ``PyThread_allocate_lock()`` [#f2]_.
+The lock needs to be initialised only in the ``__init__`` method.
+In the ``__init__`` method we allocate the lock by calling ``PyThread_allocate_lock()`` [#f2]_:
 
 .. code-block:: c
 
@@ -146,7 +145,7 @@ From C Code
 -------------------------------------
 
 It is useful to declare a couple of macros.
-These are from the `bz module <https://docs.python.org/3/library/bz2.html#module-bz2>`_
+These are from the `bz module <https://docs.python.org/3/library/bz2.html#module-bz2>`_:
 
 .. code-block:: c
 
@@ -177,7 +176,7 @@ macros are fully expanded:
 
 Before any critical section we need to use ``ACQUIRE_LOCK(self);`` (which blocks) then ``RELEASE_LOCK(self);``
 when done.
-Failure to call ``RELEASE_LOCK(self);`` in any code path can lead to deadlocking.
+Failure to call ``RELEASE_LOCK(self);`` in any code path *will* lead to deadlocking.
 
 Example
 -------------------------------------
@@ -185,7 +184,7 @@ Example
 Here is an example of out sublist ``append()``.
 
 In the body of the function it makes a ``super()`` call and then introduces a ``sleep()`` which allows the
-Python interpreter to switch threads (it should not).
+Python interpreter to switch threads (it should not because of the lock).
 
 .. code-block:: c
 
@@ -280,10 +279,52 @@ The lock is automatically freed when we exit the code block:
         return result;
     }
 
+====================================
+Example Code and Tests
+====================================
+
+The code (C and C++) is in ``src/cpy/Threads`` and the tests are in ``tests/unit/test_c_threads.py``.
+
+----------------------------------------------------
+Example Code
+----------------------------------------------------
+
 The example code is here:
 
 - ``C``: ``src/cpy/Threads/csublist.c``
 - ``C++``: ``src/cpy/Threads/cThreadLock.h`` and ``src/cpy/Threads/cppsublist.cpp``.
+
+``setup.py`` creates two extensions; ``cPyExtPatt.Threads.csublist`` (in C) and ``cPyExtPatt.Threads.cppsublist``
+(in C++):
+
+.. code-block:: python
+
+        Extension(name=f"{PACKAGE_NAME}.Threads.csublist",
+                  include_dirs=[
+                      '/usr/local/include',
+                      'src/cpy/Util',
+                      "src/cpy/Threads",
+                  ],
+                  sources=[
+                      "src/cpy/Threads/csublist.c",
+                      'src/cpy/Util/py_call_super.c',
+                  ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
+        Extension(name=f"{PACKAGE_NAME}.Threads.cppsublist",
+                  include_dirs=[
+                      '/usr/local/include',
+                      'src/cpy/Util',
+                      "src/cpy/Threads",
+                  ],
+                  sources=[
+                      "src/cpy/Threads/cppsublist.cpp",
+                      'src/cpy/Util/py_call_super.c',
+                  ],
+                  language='c++11',
+                  ),
+
 
 The individual C and C++ modules can be accessed with:
 
@@ -292,7 +333,136 @@ The individual C and C++ modules can be accessed with:
     from cPyExtPatt.Threads import cppsublist
     from cPyExtPatt.Threads import csublist
 
+
+----------------------------------------------------
+Example Tests
+----------------------------------------------------
+
 The tests are in ``tests/unit/test_c_threads.py``.
+Here are some examples:
+
+Tests in C
+----------------------------------------------------
+
+First create two function to call ``max()`` and ``append()``.
+These functions print out their progress and which thread they are running in:
+
+.. code-block:: python
+
+    def csublist_max(obj, count):
+        print(
+            f'sublist_max(): Thread name {threading.current_thread().name}',
+            flush=True
+        )
+        for _i in range(count):
+            print(
+                f'sublist_max(): Thread name {threading.current_thread().name}'
+                f' Result: {obj.max()}',
+                flush=True
+            )
+            time.sleep(0.25)
+        print(
+            f'sublist_max(): Thread name {threading.current_thread().name} DONE',
+            flush=True
+        )
+
+
+    def csublist_append(obj, count):
+        print(
+            f'sublist_append(): Thread name {threading.current_thread().name}',
+            flush=True
+        )
+        for _i in range(count):
+            print(
+                f'sublist_append(): Thread name {threading.current_thread().name}',
+                flush=True
+            )
+            obj.append(len(obj))
+            time.sleep(0.25)
+        print(
+            f'sublist_append(): Thread name {threading.current_thread().name} DONE',
+            flush=True
+        )
+
+
+Now a test that creates a single shared sub-list and four threads for each of the ``max()`` and ``append()``
+functions:
+
+.. code-block:: python
+
+    def test_threaded_c():
+        print()
+        print('test_threaded_c() START', flush=True)
+        obj = csublist.cSubList(range(128))
+        threads = []
+        for i in range(4):
+            threads.append(
+                threading.Thread(
+                    name=f'sublist_max[{i:2d}]',
+                    target=csublist_max,
+                    args=(obj, 2),
+                )
+            )
+            threads.append(
+                threading.Thread(
+                    name=f'sublist_append[{i:2d}]',
+                    target=csublist_append,
+                    args=(obj, 2),
+                )
+            )
+        for thread in threads:
+            thread.start()
+        print('Waiting for worker threads', flush=True)
+        main_thread = threading.current_thread()
+        for t in threading.enumerate():
+            if t is not main_thread:
+                t.join()
+        print('Worker threads DONE', flush=True)
+
+Running this test gives this output, typically:
+
+.. code-block:: text
+
+    test_threaded_c() START
+    sublist_max(): Thread name sublist_max[ 0]
+    sublist_append(): Thread name sublist_append[ 0]
+    sublist_append(): Thread name sublist_append[ 0]
+    sublist_max(): Thread name sublist_max[ 1]
+    sublist_append(): Thread name sublist_append[ 1]
+    sublist_max(): Thread name sublist_max[ 2]
+    sublist_max(): Thread name sublist_max[ 1] Result: 127
+    sublist_append(): Thread name sublist_append[ 2]
+    sublist_max(): Thread name sublist_max[ 3]
+    sublist_append(): Thread name sublist_append[ 3]
+    Waiting for worker threads
+    sublist_append(): Thread name sublist_append[ 1]
+    sublist_max(): Thread name sublist_max[ 0] Result: 128
+    sublist_max(): Thread name sublist_max[ 3] Result: 128
+    sublist_append(): Thread name sublist_append[ 2]
+    sublist_append(): Thread name sublist_append[ 3]
+    sublist_append(): Thread name sublist_append[ 0]
+    sublist_max(): Thread name sublist_max[ 2] Result: 128
+    sublist_append(): Thread name sublist_append[ 2]
+    sublist_append(): Thread name sublist_append[ 1]
+    sublist_max(): Thread name sublist_max[ 1] Result: 131
+    sublist_max(): Thread name sublist_max[ 0] Result: 132
+    sublist_append(): Thread name sublist_append[ 0] DONE
+    sublist_max(): Thread name sublist_max[ 1] DONE
+    sublist_max(): Thread name sublist_max[ 3] Result: 134
+    sublist_append(): Thread name sublist_append[ 3]
+    sublist_append(): Thread name sublist_append[ 1] DONE
+    sublist_max(): Thread name sublist_max[ 2] Result: 134
+    sublist_max(): Thread name sublist_max[ 0] DONE
+    sublist_append(): Thread name sublist_append[ 2] DONE
+    sublist_max(): Thread name sublist_max[ 3] DONE
+    sublist_append(): Thread name sublist_append[ 3] DONE
+    sublist_max(): Thread name sublist_max[ 2] DONE
+    Worker threads DONE
+
+Tests in C++
+----------------------------------------------------
+
+A very similar example in C++ is in ``tests/unit/test_c_threads.py``.
 
 .. rubric:: Footnotes
 
@@ -303,7 +473,8 @@ The tests are in ``tests/unit/test_c_threads.py``.
    than the current interpreter.
 
 .. [#f2] The order has to be: set the lock pointer NULL in ``_new``, allocate it in ``_init``, free it in ``_dealloc``.
-   If you don't do this then the lock does not get initialised and segfaults typically in ``_pthread_mutex_check_init``.
+   If you don't do this then the lock does not get initialised and segfaults, typically in
+   ``_pthread_mutex_check_init``.
 
 .. [#f3] A potential weakness of this code is that we might be deallocating the lock *whilst the lock is acquired*
    which could lead to deadlock.

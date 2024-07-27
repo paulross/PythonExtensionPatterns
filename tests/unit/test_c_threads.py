@@ -343,20 +343,39 @@ def test_csublist_csublist_max(values, expected):
 
 
 def csublist_max(obj, count):
-    print(f'sublist_max(): Thread name {threading.current_thread().name}', flush=True)
+    print(
+        f'sublist_max(): Thread name {threading.current_thread().name}',
+        flush=True
+    )
     for _i in range(count):
-        print(f'sublist_max(): Thread name {threading.current_thread().name} Result: {obj.max()}', flush=True)
+        print(
+            f'sublist_max(): Thread name {threading.current_thread().name}'
+            f' Result: {obj.max()}',
+            flush=True
+        )
         time.sleep(0.25)
-    print(f'sublist_max(): Thread name {threading.current_thread().name} DONE', flush=True)
+    print(
+        f'sublist_max(): Thread name {threading.current_thread().name} DONE',
+        flush=True
+    )
 
 
 def csublist_append(obj, count):
-    print(f'sublist_append(): Thread name {threading.current_thread().name}', flush=True)
+    print(
+        f'sublist_append(): Thread name {threading.current_thread().name}',
+        flush=True
+    )
     for _i in range(count):
-        print(f'sublist_append(): Thread name {threading.current_thread().name}', flush=True)
+        print(
+            f'sublist_append(): Thread name {threading.current_thread().name}',
+            flush=True
+        )
         obj.append(len(obj))
         time.sleep(0.25)
-    print(f'sublist_append(): Thread name {threading.current_thread().name} DONE', flush=True)
+    print(
+        f'sublist_append(): Thread name {threading.current_thread().name} DONE',
+        flush=True
+    )
 
 
 def test_threaded_c():
@@ -366,10 +385,18 @@ def test_threaded_c():
     threads = []
     for i in range(4):
         threads.append(
-            threading.Thread(name=f'sublist_max[{i:2d}]', target=csublist_max, args=(obj, 2))
+            threading.Thread(
+                name=f'sublist_max[{i:2d}]',
+                target=csublist_max,
+                args=(obj, 2),
+            )
         )
         threads.append(
-            threading.Thread(name=f'sublist_append[{i:2d}]', target=csublist_append, args=(obj, 2))
+            threading.Thread(
+                name=f'sublist_append[{i:2d}]',
+                target=csublist_append,
+                args=(obj, 2),
+            )
         )
     for thread in threads:
         thread.start()
