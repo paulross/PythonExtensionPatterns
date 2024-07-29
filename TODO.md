@@ -39,7 +39,7 @@ There is lots of good stuff here:
 - ~~Iterators and Generators.~~
 - C++ snippets as testable code: ~~Unicode~~, .
 - ~~Mark Buffer protocol (from RaPiVot) as TODO~~.
-- ~~Index, with entries such as :index:`Unicode`:~~ Abandoned because Sphinx does not support this in a sane way.
+- ~~Index, with entries such as :index:`Unicode`:~~ Abandoned because Sphinx does not support this in a useful way.
 
 ## Other Projects to Merge Here
 

@@ -70,7 +70,7 @@ In Python first we check what the size of a long is then we call the leaky funct
     >>> import sys
     >>> sys.getsizeof(1000)
     44
-    >>> import cPyRefs
+    >>> from cPyExtPatt import cPyRefs
     >>> cPyRefs.leakNewRefs(1000, 1000000)
     loose_new_reference: value=1000 count=1000000
     loose_new_reference: DONE
@@ -114,7 +114,7 @@ In a second shell fire up pidmon.py with this PID:
 
 Go back to the first shell and import ``cPyRefs``::
 
-    >>> import cPyRefs
+    >>> from cPyExtPatt import cPyRefs
     >>> cPyRefs.leakNewRefs(1000, 1000000)
     loose_new_reference: value=1000 count=1000000
     loose_new_reference: DONE
@@ -151,7 +151,7 @@ For example:
 .. code-block:: python
 
     >>> import sys
-    >>> import cPyRefs
+    >>> from cPyExtPatt import cPyRefs
     >>> dir()
     ['__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'cPyRefs', 'sys']
     >>> sys.gettotalrefcount()
@@ -194,7 +194,7 @@ Lets run our debug version of Python with Valgrind and see if we can spot the le
 
 Then run this code::
 
-    >>> import cPyRefs
+    >>> from cPyExtPatt import cPyRefs
     >>> cPyRefs.leakNewRefs(1000, 1000000)
     loose_new_reference: value=1000 count=1000000
     loose_new_reference: DONE

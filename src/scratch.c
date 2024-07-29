@@ -5,6 +5,8 @@
 //  Created by Paul Ross on 04/04/2015.
 //  Copyright (c) 2015 Paul Ross. All rights reserved.
 //
+// Just a scratch area for formatting code that goes into the documentation.
+// This is not code that is built.
 
 #include "Python.h"
 

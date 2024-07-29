@@ -133,7 +133,7 @@ then that memory is lost. Here is some C code that demonstrates this:
 And here is what happens to the memory if we use this function from Python (``cPyRefs.incref(...)`` in Python calls
 ``bad_incref()`` in C)::
 
-    >>> import cPyRefs          # Process uses about 1Mb
+    >>> from cPyExtPatt import cPyRefs          # Process uses about 1Mb
     >>> s = ' ' * 100 * 1024**2 # Process uses about 101Mb
     >>> del s                   # Process uses about 1Mb
     >>> s = ' ' * 100 * 1024**2 # Process uses about 101Mb
@@ -427,7 +427,7 @@ At least this will get your attention!
 
         import faulthandler
         faulthandler.enable()
-        import cPyRefs
+        from cPyExtPatt import cPyRefs
         l = ['abc' * 200]
         cPyRefs.pop_and_print_BAD(l)
 

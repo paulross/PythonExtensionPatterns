@@ -5,6 +5,8 @@
 //  Created by Paul Ross on 09/05/2014.
 //  Copyright (c) 2014 Paul Ross. All rights reserved.
 //
+// This is the Canonical CPython Function.
+// This is example code for documentation and is not built.
 
 #include "Python.h"
 

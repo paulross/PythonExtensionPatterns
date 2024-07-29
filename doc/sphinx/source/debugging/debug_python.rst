@@ -162,7 +162,7 @@ And we call this from the interpreter we get a diagnostic:
     Python 3.4.3 (default, Sep 16 2015, 16:56:10) 
     [GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.51)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
-    >>> import cPyRefs
+    >>> from cPyExtPatt import cPyRefs
     >>> cPyRefs.afterFree()
     <refcnt -2604246222170760229 at 0x10a474130>
     >>> 

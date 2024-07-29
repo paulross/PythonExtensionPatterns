@@ -1,7 +1,7 @@
 import faulthandler
 faulthandler.enable()
 
-import cPyRefs
+from cPyExtPatt import cPyRefs
 
-l = ['abc' * 200]
-cPyRefs.popBAD(l)
+a_list = ['abc' * 200]
+cPyRefs.pop_and_print_BAD(a_list)
