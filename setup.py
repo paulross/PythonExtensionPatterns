@@ -97,7 +97,9 @@ setup(
         'Programming Language :: C',
         'Programming Language :: C++',
         'Programming Language :: Python',
-        'Topic :: Programming',
+        'Topic :: Software Development',
+        'Topic :: Software Development :: Documentation',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     licence=licence,
     # See: https://setuptools.pypa.io/en/latest/userguide/ext_modules.html
