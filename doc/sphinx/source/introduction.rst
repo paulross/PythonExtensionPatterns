@@ -135,4 +135,4 @@ Next up: a simple example showing the effect on code performance.
 .. rubric:: Footnotes
 
 .. [#] Huge, but pretty consistent once mastered.
-.. [#] Version 0.2.0 of this project supports Python versions: 3.9, 3.10, 3.11, 3.12, 3.13.
+.. [#] Version 0.2 of this project supports Python versions: 3.9, 3.10, 3.11, 3.12, 3.13.

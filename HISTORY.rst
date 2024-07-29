@@ -2,7 +2,7 @@
 History
 =====================
 
-0.2.0 (2024-07-29)
+0.2.1 (2024-07-29)
 =====================
 
 - Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13 (possibly backwards compatible with Python 3.6, 3.7, 3.8)

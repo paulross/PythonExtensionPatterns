@@ -87,7 +87,7 @@ add_executable(PythonExtensionPatterns
 #        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.h
         src/cCanonical.c
         src/scratch.c
-        # Legacy code. Removed in the documentation for version 0.2.0.
+        # Legacy code. Removed in the documentation for version 0.2.
         src/cpy/cParseArgsHelper.cpp
         src/cpy/Pickle/cCustomPickle.c
         src/cpy/cParseArgsHelper.cpp
