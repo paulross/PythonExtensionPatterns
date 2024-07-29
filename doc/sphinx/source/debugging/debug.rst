@@ -21,3 +21,7 @@ This is very much work in progress. I will add to it/correct it as I develop new
    gcov
    debug_in_ide
    pyatexit
+
+.. todo::
+
+    Review the Debugging chapter as some of it might be obsolete.

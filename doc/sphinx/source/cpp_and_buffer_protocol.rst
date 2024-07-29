@@ -20,13 +20,16 @@ without copying.
 It is fairly straightforward to create a C++ wrapper class around the buffer protocol.
 
 
-TODO: Complete this with an example.
+.. todo::
+
+    Complete the Buffer Protocol chapter with examples from RaPiVot and the C++ wrapper code.
 
 -----------
 References:
 -----------
 
-* Python documentation on objects that support the `Buffer protocol <https://docs.python.org/3/c-api/buffer.html#bufferobjects>`_.
+* Python documentation on objects that support the
+  `Buffer protocol <https://docs.python.org/3/c-api/buffer.html#bufferobjects>`_.
 * Python standard library for the `array module <https://docs.python.org/3/library/array.html#module-array>`_.
 
 
