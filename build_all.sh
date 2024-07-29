@@ -169,6 +169,8 @@ create_documentation() {
   python -VV
   echo "---> pip list:"
   pip list
+  echo "---> Copying files from project root to doc/sphinx/source:"
+  cp "HISTORY.rst"  "doc/sphinx/source"
   echo "---> Building documentation:"
   cd doc/sphinx
   rm -rf build/

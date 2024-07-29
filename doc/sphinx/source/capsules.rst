@@ -357,7 +357,7 @@ and the tests are in ``tests/unit/test_c_capsules.py``.
 Writing the Code for the Object
 --------------------------------
 
-Firstly the declaration of the timezone aware datetime:
+Firstly the declaration of the timezone aware datetime, it just inherits from `` datetime.datetime``:
 
 .. code-block:: c
 
@@ -369,7 +369,8 @@ Firstly the declaration of the timezone aware datetime:
         PyDateTime_DateTime datetime;
     } DateTimeTZ;
 
-Then a function that sets an error if the ``DateTimeTZ`` lacks a tzinfo, this will be used in a couple of places.
+Then create a function that sets an error if the ``DateTimeTZ`` lacks a tzinfo
+This will be used in a couple of places.
 
 .. code-block:: c
 
@@ -393,7 +394,9 @@ Now the code for creating a new instance:
 
     static PyObject *
     DateTimeTZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-        DateTimeTZ *self = (DateTimeTZ *) PyDateTimeAPI->DateTimeType->tp_new(type, args, kwds);
+        DateTimeTZ *self = (DateTimeTZ *) PyDateTimeAPI->DateTimeType->tp_new(
+            type, args, kwds
+        );
         if (self) {
             self = raise_if_no_tzinfo(self);
         }
@@ -575,8 +578,6 @@ A check on construction, first with a timezone, then without:
     def test_datetimetz_datetimetz_raises(args, kwargs, expected):
         with pytest.raises(TypeError) as err:
             d = datetimetz.datetimetz(*args, **kwargs)
-            print()
-            print(f'ERROR: {repr(d)}')
         assert err.value.args[0] == expected
 
 

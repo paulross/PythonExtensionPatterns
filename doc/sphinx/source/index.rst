@@ -33,7 +33,7 @@ Coding Patterns for Python Extensions
     miscellaneous
     further_reading
     todo
-
+    HISTORY
 
 Search
 ==================
