@@ -81,7 +81,6 @@ list_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 1;
     }
     PyList_SET_ITEM(container, 0, value);
-    result |= value->ob_refcnt != 1;
     if (value->ob_refcnt != 1) {
         result |= 1 << 2;
     }
@@ -128,6 +127,39 @@ list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
     return PyLong_FromLong(result);
 }
 
+static PyObject *
+set_no_steals(PyObject *Py_UNUSED(module)) {
+    long result = 0;
+    PyObject *container = PySet_New(NULL);
+    if (container->ob_refcnt != 1) {
+        result |= 1 << 0;
+    }
+    PyObject *value = PyLong_FromLong(123456);
+    if (value->ob_refcnt != 1) {
+        result |= 1 << 1;
+    }
+    PySet_Add(container, value);
+    if (value->ob_refcnt != 2) {
+        result |= 1 << 2;
+    }
+    if (PySet_Size(container) != 1) {
+        result |= 1 << 3;
+    }
+    PyObject *pop = PySet_Pop(container);
+    if (pop->ob_refcnt != 2) {
+        result |= 1 << 4;
+    }
+    if (pop != value) {
+        result |= 1 << 5;
+    }
+    Py_DECREF(container);
+    if (value->ob_refcnt != 2) {
+        result |= 1 << 6;
+    }
+    return PyLong_FromLong(result);
+}
+
+
 
 #define MODULE_NOARGS_ENTRY(name, doc)  \
     {                                   \
@@ -138,10 +170,11 @@ list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
     }
 
 static PyMethodDef module_methods[] = {
-        MODULE_NOARGS_ENTRY(tuple_steals, "Checks that PyTuple_SET_ITEM steals a reference."),
-        MODULE_NOARGS_ENTRY(tuple_buildvalue_steals, "Checks that Py_BuildValue tuple steals a reference."),
-        MODULE_NOARGS_ENTRY(list_steals, "Checks that PyTuple_SET_ITEM list steals a reference."),
-        MODULE_NOARGS_ENTRY(list_buildvalue_steals, "Checks that Py_BuildValue list steals a reference."),
+        MODULE_NOARGS_ENTRY(tuple_steals, "Checks that PyTuple_SET_ITEM steals a reference count."),
+        MODULE_NOARGS_ENTRY(tuple_buildvalue_steals, "Checks that Py_BuildValue tuple steals a reference count."),
+        MODULE_NOARGS_ENTRY(list_steals, "Checks that PyTuple_SET_ITEM list steals a reference count."),
+        MODULE_NOARGS_ENTRY(list_buildvalue_steals, "Checks that Py_BuildValue list steals a reference count."),
+        MODULE_NOARGS_ENTRY(set_no_steals, "Checks that a set increments a reference count."),
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
