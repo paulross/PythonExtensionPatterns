@@ -3,6 +3,7 @@
 //
 // This explores reference counts with the Python C-API.
 #define PPY_SSIZE_T_CLEAN
+
 #include "Python.h"
 
 static PyObject *
@@ -44,7 +45,7 @@ tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 1;
     }
     PyObject *container = Py_BuildValue("ii", value_0, value_1);
-    if (container->ob_type != &PyTuple_Type){
+    if (container->ob_type != &PyTuple_Type) {
         result |= 1 << 2;
     }
     if (container->ob_refcnt != 1) {
@@ -103,7 +104,7 @@ list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 1;
     }
     PyObject *container = Py_BuildValue("[ii]", value_0, value_1);
-    if (container->ob_type != &PyList_Type){
+    if (container->ob_type != &PyList_Type) {
         result |= 1 << 2;
     }
     if (container->ob_refcnt != 1) {
