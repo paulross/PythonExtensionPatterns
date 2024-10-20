@@ -10,6 +10,10 @@
 
 #include "py_call_super.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+
 /* Call func_name on the super classes of self with the arguments and
  * keyword arguments.
  *
@@ -203,3 +207,5 @@ call_super_name_lookup(PyObject *self, const char *func_cname,
     Py_DECREF(func_name);
     return result;
 }
+}
+#endif /* __cplusplus */

@@ -13,11 +13,6 @@
 
 #include <Python.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 /* Call func_name on the super classes of self with the arguments and keyword arguments.
  * Equivalent to getattr(super(type(self), self), func_name)(*args, **kwargs)
  * func_name is a Python string.
@@ -49,9 +44,5 @@ call_super_pyname_lookup(PyObject *self, PyObject *func_name, PyObject *args, Py
  */
 extern PyObject *
 call_super_name_lookup(PyObject *self, const char *func_cname, PyObject *args, PyObject *kwargs);
-
-#ifdef __cplusplus
-}
-#endif /* extern "C" */
 
 #endif /* #ifndef __UTIL_PY_CALL_SUPER__ */
