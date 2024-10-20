@@ -53,7 +53,7 @@ FIND_PACKAGE (Python3 3.11 EXACT REQUIRED COMPONENTS Interpreter Development)
 #FindPythonLibs()
 IF (Python3_FOUND)
     INCLUDE_DIRECTORIES("${Python3_INCLUDE_DIRS}")
-    get_filename_component(PYTHON_LINK_DIRECTORY ${PYTHON_LIBRARY} DIRECTORY)
+#    get_filename_component(PYTHON_LINK_DIRECTORY ${PYTHON_LIBRARY} DIRECTORY)
     # See: https://cmake.org/cmake/help/latest/module/FindPython3.html#module:FindPython3
     message("Python3_VERSION:           ${Python3_VERSION}")
     message("Python3_EXECUTABLE:        ${Python3_EXECUTABLE}")
@@ -112,12 +112,23 @@ add_executable(PythonExtensionPatterns
         src/cpy/Threads/cppsublist.cpp
         src/cpy/Threads/csublist.c
         src/cpy/Logging/cLogging.c
-)
+        src/cpy/RefCount/cRefCount.c)
 
-link_directories(
-        ${PYTHON_LINK_LIBRARY}
-)
+#link_directories(${PYTHON_LINK_LIBRARY})
 
-target_link_libraries(${PROJECT_NAME} ${PYTHON_LIBRARY})
+#target_link_libraries(${PROJECT_NAME} ${PYTHON_LIBRARY})
+
+link_directories(${Python3_LIBRARIES})
+
+#target_link_libraries(${PROJECT_NAME} ${PYTHON_LIBRARY})
+target_link_libraries(${PROJECT_NAME} ${Python3_LIBRARIES})
+
+MESSAGE(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
+MESSAGE(STATUS "Library Type: " ${LIB_TYPE})
+MESSAGE(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})
+MESSAGE(STATUS "Compiler cxx debug flags:" ${CMAKE_CXX_FLAGS_DEBUG})
+MESSAGE(STATUS "Compiler cxx release flags:" ${CMAKE_CXX_FLAGS_RELEASE})
+MESSAGE(STATUS "Compiler cxx min size flags:" ${CMAKE_CXX_FLAGS_MINSIZEREL})
+MESSAGE(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})
 
 dump_cmake_variables()

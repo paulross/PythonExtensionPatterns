@@ -330,6 +330,11 @@ problems which is the subject of the next section.
     Unfortunately this was only made clear in the Python documentation for ``PyDict_SetItem`` in Python version 3.8+:
     https://docs.python.org/3.8/c-api/dict.html
 
+    TODO: Does this also happen with ``Py_BuildValue <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_ ?
+
+    This warning also applies to `PySet_Add() <https://docs.python.org/3/c-api/set.html#c.PySet_Add>`_ which also
+    increments the reference rather than stealing it.
+
 
 The contract with *stolen* references is: the thief will take care of things so you don't have to.
 If you try to the results are undefined.

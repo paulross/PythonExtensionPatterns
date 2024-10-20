@@ -290,5 +290,11 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
+        Extension(f"{PACKAGE_NAME}.cRefCount",
+                  include_dirs=['/usr/local/include', ],
+                  sources=['src/cpy/RefCount/cRefCount.c', ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
     ]
 )
