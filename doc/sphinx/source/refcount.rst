@@ -317,10 +317,10 @@ problems which is the subject of the next section.
 .. warning::
 
     The above example describes tuples that *do* "steal" references.
-    Other containers, such as a ``dict`` does *not*.
+    Other containers, such as a ``dict`` and ``set`` do *not*.
 
-    A consequence is that ``PyTuple_SetItem(pTuple, 0, PyLong_FromLong(1L))`` does *not* leak
-    with *new* references but ``PyDict_SetItem(pDict, PyLong_FromLong(1L), PyLong_FromLong(2L))``
+    A consequence is that ``PyTuple_SetItem(pTuple, 0, PyLong_FromLong(12345L))`` does *not* leak
+    with *new* references but ``PyDict_SetItem(pDict, PyLong_FromLong(12345L), PyLong_FromLong(123456L))``
     *does* leak with *new* references.
     To avoid that particular leak then create temporaries, then call ``PyDict_SetItem`` with them and then decref
     your temporaries.
@@ -330,10 +330,14 @@ problems which is the subject of the next section.
     Unfortunately this was only made clear in the Python documentation for ``PyDict_SetItem`` in Python version 3.8+:
     https://docs.python.org/3.8/c-api/dict.html
 
-    TODO: Does this also happen with ``Py_BuildValue <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_ ?
+    This also happens with ``Py_BuildValue <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_ when building
+    with already created Python objects (using ``Py_BuildValue("{OO}", ...``).
 
     This warning also applies to `PySet_Add() <https://docs.python.org/3/c-api/set.html#c.PySet_Add>`_ which also
     increments the reference rather than stealing it.
+    The documentation does not mention this at all (as of Python 3.13).
+
+    See ``src/cpy/RefCount/cRefCount.c`` and ``tests/unit/test_c_ref_count.py`` for verification of this.
 
 
 The contract with *stolen* references is: the thief will take care of things so you don't have to.
