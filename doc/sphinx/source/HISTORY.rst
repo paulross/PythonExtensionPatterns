@@ -2,6 +2,11 @@
 History
 =====================
 
+0.2.2 (2024-10-21)
+=====================
+
+- Expand note on PyDict_SetItem(), PySet_Add() with code in src/cpy/RefCount/cRefCount.c and tests.
+
 0.2.1 (2024-07-29)
 =====================
 
