@@ -279,10 +279,10 @@ setup(
                   ],
                   sources=[
                       "src/cpy/Threads/cppsublist.cpp",
-                      'src/cpy/Util/py_call_super.c',
+                      'src/cpy/Util/py_call_super.cpp',
                   ],
                   # TODO: Why does removing this work?
-                  # extra_compile_args=extra_compile_args_cpp,
+                  extra_compile_args=extra_compile_args_cpp,
                   language='c++11',
                   ),
         Extension(name=f"{PACKAGE_NAME}.Logging.cLogging",

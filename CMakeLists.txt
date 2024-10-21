@@ -103,7 +103,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/cpp/cUnicode.cpp
         src/cpy/SimpleExample/cFibA.h
         src/cpy/SimpleExample/cFibA.c
-        src/cpy/SimpleExample/cFibB.c
+#        src/cpy/SimpleExample/cFibB.c
         src/cpy/Util/py_call_super.h
         src/cpy/Util/py_call_super.c
         src/cpy/Iterators/cIterator.c
@@ -112,7 +112,8 @@ add_executable(PythonExtensionPatterns
         src/cpy/Threads/cppsublist.cpp
         src/cpy/Threads/csublist.c
         src/cpy/Logging/cLogging.c
-        src/cpy/RefCount/cRefCount.c)
+        src/cpy/RefCount/cRefCount.c
+        src/cpy/Util/py_call_super.cpp)
 
 #link_directories(${PYTHON_LINK_LIBRARY})
 

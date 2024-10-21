@@ -18,7 +18,7 @@
  * func_name is a Python string.
  * The implementation creates a new super object on each call.
  */
-extern PyObject *
+PyObject *
 call_super_pyname(PyObject *self, PyObject *func_name, PyObject *args, PyObject *kwargs);
 
 /* Call func_name on the super classes of self with the arguments and keyword arguments.
@@ -26,7 +26,7 @@ call_super_pyname(PyObject *self, PyObject *func_name, PyObject *args, PyObject 
  * func_name is a C string.
  * The implementation creates a new super object on each call.
  */
-extern PyObject *
+PyObject *
 call_super_name(PyObject *self, const char *func_cname, PyObject *args, PyObject *kwargs);
 
 /* Call func_name on the super classes of self with the arguments and keyword arguments.
@@ -34,7 +34,7 @@ call_super_name(PyObject *self, const char *func_cname, PyObject *args, PyObject
  * func_name is a Python string.
  * The implementation uses the builtin super().
  */
-extern PyObject *
+PyObject *
 call_super_pyname_lookup(PyObject *self, PyObject *func_name, PyObject *args, PyObject *kwargs);
 
 /* Call func_name on the super classes of self with the arguments and keyword arguments.
@@ -42,7 +42,7 @@ call_super_pyname_lookup(PyObject *self, PyObject *func_name, PyObject *args, Py
  * func_name is a C string.
  * The implementation uses the builtin super().
  */
-extern PyObject *
+PyObject *
 call_super_name_lookup(PyObject *self, const char *func_cname, PyObject *args, PyObject *kwargs);
 
 #endif /* #ifndef __UTIL_PY_CALL_SUPER__ */
