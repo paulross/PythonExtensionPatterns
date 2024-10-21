@@ -68,6 +68,7 @@ for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'SubClass'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Threads'),
                  os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'Logging'),
+                 os.path.join(os.path.dirname(__file__), 'cPyExtPatt', 'RefCount'),
                  ):
     if not os.path.exists(dir_path):
         print(f'Making directory {dir_path}')
