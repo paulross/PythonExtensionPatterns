@@ -219,9 +219,6 @@ wrap_python_file(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
 
     /* Exercise ths wrapper by writing, reading etc. */
     py_file_wrapper.write("Test write to python file", 25);
-
-//    std::string str_pointers = py_file_wrapper.str_pointers();
-//    return PyBytes_FromStringAndSize(str_pointers.c_str(), str_pointers.size());
     return py_file_wrapper.py_str_pointers();
 }
 

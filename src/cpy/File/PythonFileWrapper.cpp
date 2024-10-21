@@ -251,7 +251,7 @@ long PythonFileObjectWrapper::tell() {
     return PyLong_AsLong(result);
 }
 
-std::string PythonFileObjectWrapper::str_pointers() {
+std::string PythonFileObjectWrapper::str_pointers() const {
     std::ostrstream oss;
     oss << "PythonFileObjectWrapper:" << std::endl;
     oss << "m_python_file_object  " << std::hex << m_python_file_object << " type: "
@@ -269,29 +269,12 @@ std::string PythonFileObjectWrapper::str_pointers() {
     oss << "m_python_tell_method  " << std::hex << m_python_tell_method << " type: "
         << Py_TYPE(m_python_tell_method)->tp_name << " ref count=" << std::dec << m_python_tell_method->ob_refcnt
         << std::endl;
-    return oss.str();
+    return {oss.str()};
 }
 
-PyObject *PythonFileObjectWrapper::py_str_pointers() {
-    std::ostrstream oss;
-    oss << "PythonFileObjectWrapper:" << std::endl;
-    oss << "m_python_file_object  " << std::hex << m_python_file_object << " type: "
-        << Py_TYPE(m_python_file_object)->tp_name << " ref count=" << std::dec << m_python_file_object->ob_refcnt
-        << std::endl;
-    oss << "m_python_read_method  " << std::hex << m_python_read_method << " type: "
-        << Py_TYPE(m_python_read_method)->tp_name << " ref count=" << std::dec << m_python_read_method->ob_refcnt
-        << std::endl;
-    oss << "m_python_write_method " << std::hex << m_python_write_method << " type: "
-        << Py_TYPE(m_python_write_method)->tp_name << " ref count=" << std::dec << m_python_write_method->ob_refcnt
-        << std::endl;
-    oss << "m_python_seek_method  " << std::hex << m_python_seek_method << " type: "
-        << Py_TYPE(m_python_seek_method)->tp_name << " ref count=" << std::dec << m_python_seek_method->ob_refcnt
-        << std::endl;
-    oss << "m_python_tell_method  " << std::hex << m_python_tell_method << " type: "
-        << Py_TYPE(m_python_tell_method)->tp_name << " ref count=" << std::dec << m_python_tell_method->ob_refcnt
-        << std::endl;
-    std::string str_result = oss.str();
-    return PyBytes_FromStringAndSize(str_result.c_str(), str_result.size());
+PyObject *PythonFileObjectWrapper::py_str_pointers() const {
+    std::string str_result = str_pointers();
+    return PyBytes_FromStringAndSize(str_result.c_str(), (Py_ssize_t) str_result.size());
 }
 
 PythonFileObjectWrapper::~PythonFileObjectWrapper() {

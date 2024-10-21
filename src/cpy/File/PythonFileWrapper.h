@@ -63,9 +63,9 @@ public:
     /// Returns the current absolute position.
     long tell();
     /// Returns a multi-line string that describes the class state.
-    std::string str_pointers();
+    std::string str_pointers() const;
     /// Returns a Python multi-line bytes object that describes the class state.
-    PyObject *py_str_pointers();
+    PyObject *py_str_pointers() const;
     /// Destructor, this decrements the held references.
     virtual ~PythonFileObjectWrapper();
 

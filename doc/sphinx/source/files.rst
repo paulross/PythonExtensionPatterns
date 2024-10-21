@@ -221,7 +221,7 @@ This will write a C ``char *`` to a Python file.
     ``PyFile_WriteString()`` creates a unicode string and then calls ``PyFile_WriteObject()``
     so the Python file object must be capable of writing strings.
 
-Here is an example of taking a Python bytees object, extracting the ``char *`` C buffer and writing that to a Python
+Here is an example of taking a Python bytes object, extracting the ``char *`` C buffer and writing that to a Python
 file.
 The Python function signature is::
 
