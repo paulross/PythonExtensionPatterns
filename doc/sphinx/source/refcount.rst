@@ -330,8 +330,8 @@ problems which is the subject of the next section.
     Unfortunately this was only made clear in the Python documentation for ``PyDict_SetItem`` in Python version 3.8+:
     https://docs.python.org/3.8/c-api/dict.html
 
-    This also happens with ``Py_BuildValue <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_ when building
-    with already created Python objects (using ``Py_BuildValue("{OO}", ...``).
+    This also happens with `Py_BuildValue <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_ when building
+    with newly created Python objects (using ``Py_BuildValue("{OO}", ...``).
 
     This warning also applies to `PySet_Add() <https://docs.python.org/3/c-api/set.html#c.PySet_Add>`_ which also
     increments the reference rather than stealing it.
