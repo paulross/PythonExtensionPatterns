@@ -14,6 +14,7 @@
  */
 static PyObject *
 tuple_steals(PyObject *Py_UNUSED(module)) {
+    assert(! PyErr_Occurred());
     long result = 0;
     PyObject *container = PyTuple_New(1);
     if (container->ob_refcnt != 1) {
@@ -36,6 +37,7 @@ tuple_steals(PyObject *Py_UNUSED(module)) {
     }
 //    fprintf(stdout, "TRACE: value->ob_refcnt = %ld result %ld\n", PyTuple_GET_ITEM(tuple, 0)->ob_refcnt, result);
     Py_DECREF(container);
+    assert(! PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -47,6 +49,7 @@ tuple_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
+    assert(! PyErr_Occurred());
     int result = 0;
     PyObject *value_0 = PyLong_FromLong(123456);
     if (value_0->ob_refcnt != 1) {
@@ -78,6 +81,7 @@ tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 7;
     }
     Py_DECREF(container);
+    assert(! PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -89,6 +93,7 @@ tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 list_steals(PyObject *Py_UNUSED(module)) {
+    assert(! PyErr_Occurred());
     long result = 0;
     PyObject *container = PyList_New(1);
     if (container->ob_refcnt != 1) {
@@ -106,6 +111,7 @@ list_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 3;
     }
     Py_DECREF(container);
+    assert(! PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -117,6 +123,7 @@ list_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
+    assert(! PyErr_Occurred());
     int result = 0;
     PyObject *value_0 = PyLong_FromLong(123456);
     if (value_0->ob_refcnt != 1) {
@@ -148,6 +155,7 @@ list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 7;
     }
     Py_DECREF(container);
+    assert(! PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -160,6 +168,7 @@ list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 set_no_steals(PyObject *Py_UNUSED(module)) {
+    assert(! PyErr_Occurred());
     long result = 0;
     PyObject *container = PySet_New(NULL);
     if (container->ob_refcnt != 1) {
@@ -187,6 +196,7 @@ set_no_steals(PyObject *Py_UNUSED(module)) {
     if (value->ob_refcnt != 2) {
         result |= 1 << 6;
     }
+    assert(! PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -199,6 +209,7 @@ set_no_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 dict_no_steals(PyObject *Py_UNUSED(module)) {
+    assert(! PyErr_Occurred());
     long result = 0;
     int result_shift = 0;
     // Create the container
@@ -252,6 +263,7 @@ dict_no_steals(PyObject *Py_UNUSED(module)) {
     Py_DECREF(key);
     Py_DECREF(value);
     Py_DECREF(container);
+    assert(! PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -264,6 +276,7 @@ dict_no_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 dict_buildvalue_no_steals(PyObject *Py_UNUSED(module)) {
+    assert(! PyErr_Occurred());
     int result = 0;
     int result_shift = 0;
     PyObject *key = PyLong_FromLong(123456);
@@ -373,6 +386,7 @@ dict_buildvalue_no_steals(PyObject *Py_UNUSED(module)) {
     Py_DECREF(key);
     Py_DECREF(value);
     Py_DECREF(container);
+    assert(! PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
