@@ -8,23 +8,40 @@
 Pickling C Extension Types
 ====================================
 
-If you need to provide support for pickling your specialised types from your C extension then you need to implement some special functions.
+If you need to provide support for pickling your specialised types from your C extension then you need to implement
+some special functions.
 
-This example shows you how to provided pickle support for for the ``custom2.Custom`` type described in the C extension tutorial in the
+This example shows you how to provided pickle support for for the ``custom2.Custom`` type described in the C extension
+tutorial in the
 `Python documentation <https://docs.python.org/3/extending/newtypes_tutorial.html#adding-data-and-methods-to-the-basic-example>`_.
+This defines an ``CustomObject`` object that haas three fields; a first name, a last name  and a number.
+The ``CustomObject`` definition that needs to be pickled and un-pickled looks like this in C.
+
+.. code-block:: c
+
+    typedef struct {
+        PyObject_HEAD
+        PyObject *first; /* first name */
+        PyObject *last;  /* last name */
+        int number;
+    } CustomObject;
 
 Pickle Version Control
 -------------------------------
 
-Since the whole point of ``pickle`` is persistence then pickled objects can hang around in databases, file systems, data from the `shelve <https://docs.python.org/3/library/shelve.html#module-shelve>`_ module and whatnot for a long time.
-It is entirely possible that when un-pickled, sometime in the future, that your C extension has moved on and then things become awkward.
+Since the whole point of ``pickle`` is persistence then pickled objects can hang around in databases, file systems,
+data from the `shelve <https://docs.python.org/3/library/shelve.html#module-shelve>`_ module and whatnot for a long
+time.
+It is entirely possible that when un-pickled, sometime in the future, that your C extension has moved on and then
+things become awkward.
 
 It is *strongly* recommended that you add some form of version control to your pickled objects.
 In this example I just have a single integer version number which I write to the pickled object.
 If the number does not match on unpickling then I raise an exception.
 When I change the type API I would, judiciously, change this version number.
 
-Clearly more sophisticated strategies are possible by supporting older versions of the pickled object in some way but this will do for now.
+Clearly more sophisticated strategies are possible by supporting older versions of the pickled object in some way but
+this will do for now.
 
 We add some simple pickle version information to the C extension:
 
@@ -34,14 +51,17 @@ We add some simple pickle version information to the C extension:
     static const char* PICKLE_VERSION_KEY = "_pickle_version";
     static int PICKLE_VERSION = 1;
 
-Now we can implement ``__getstate__`` and ``__setstate__``, think of these as symmetric operations. First ``__getstate__``.
+Now we can implement ``__getstate__`` and ``__setstate__``, think of these as symmetric operations.
+
+First ``__getstate__``.
 
 Implementing ``__getstate__``
 ---------------------------------
 
 ``__getstate__`` pickles the object.
 ``__getstate__`` is expected to return a dictionary of the internal state of the ``Custom`` object.
-Note that a ``Custom`` object has two Python objects (``first`` and ``last``) and a C integer (``number``) that need to be converted to a Python object.
+Note that a ``Custom`` object has two Python objects (``first`` and ``last``) and a C integer (``number``) that need to
+be converted to a Python object.
 We also need to add the version information.
 
 Here is the C implementation:
@@ -58,6 +78,14 @@ Here is the C implementation:
                                       PICKLE_VERSION_KEY, PICKLE_VERSION);
         return ret;
     }
+
+.. note::
+
+    Note the careful use of ``Py_BuildValue()``.
+    ``"s"`` and ``"i"`` causes a new PyObject to be created in the dict.
+    ``"O"`` increments the reference count of an existing PyObject which is inserted into the dict.
+
+    See :ref:`chapter_refcount.stolen.warning_pydict_setitem`
 
 Implementing ``__setstate__``
 ---------------------------------
@@ -232,9 +260,7 @@ Now we need to add these two special methods to the methods table which now look
 .. code-block:: c
 
     static PyMethodDef Custom_methods[] = {
-        {"name", (PyCFunction) Custom_name, METH_NOARGS,
-                "Return the name, combining the first and last name"
-        },
+        /* Existing methods here... */
         {"__getstate__", (PyCFunction) Custom___getstate__, METH_NOARGS,
                 "Pickle the Custom object"
         },
@@ -247,56 +273,86 @@ Now we need to add these two special methods to the methods table which now look
 Pickling a ``custom2.Custom`` Object
 -------------------------------------
 
-We can test this with code like this that pickles one ``custom2.Custom`` object then creates another ``custom2.Custom`` object from that pickle.
-Here is some Python code that exercises our module:
+We can test this with code like this that pickles one ``custom2.Custom`` object then creates another ``custom2.Custom``
+object from that pickle.
+Here is some Python code that exercises our module (tests are in ``tests/unit/test_c_custom_pickle.py``):
 
 .. code-block:: python
 
+    import io
     import pickle
+    import pickletools
+    import sys
 
-    import custom2
+    import pytest
 
-    original = custom2.Custom('FIRST', 'LAST', 11)
-    print(f'original is {original} @ 0x{id(original):x}')
-    print(f'original first: {original.first} last: {original.last} number: {original.number} name: {original.name()}')
-    pickled_value = pickle.dumps(original)
-    print(f'Pickled original is {pickled_value}')
-    result = pickle.loads(pickled_value)
-    print(f'result is {result} @ 0x{id(result):x}')
-    print(f'result first: {result.first} last: {result.last} number: {result.number} name: {result.name()}')
+    from cPyExtPatt import cPickle
 
-.. code-block:: sh
 
-    $ python main.py
-    original is <custom2.Custom object at 0x1049e6810> @ 0x1049e6810
-    original first: FIRST last: LAST number: 11 name: FIRST LAST
-    Pickled original is b'\x80\x04\x95[\x00\x00\x00\x00\x00\x00\x00\x8c\x07custom2\x94\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_version\x94K\x01ub.'
-    result is <custom2.Custom object at 0x1049252d0> @ 0x1049252d0
-    result first: FIRST last: LAST number: 11 name: FIRST LAST
+    def test_module_dir():
+        assert dir(cPickle) == [
+            'Custom', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__'
+        ]
 
-So we have pickled one object and recreated a different, but equivalent, instance from the pickle of the original object which is what we set out to do.
+
+    ARGS_FOR_CUSTOM_CLASS = ('FIRST', 'LAST', 11)
+    PICKLE_BYTES_FOR_CUSTOM_CLASS = (b'\x80\x04\x95f\x00\x00\x00\x00\x00\x00\x00\x8c\x12cPyExtPatt.cPickle\x94'
+                                     b'\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST'
+                                     b'\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_'
+                                     b'version\x94K\x01ub.')
+
+
+    def test_pickle_getstate():
+        custom = cPickle.Custom(*ARGS_FOR_CUSTOM_CLASS)
+        pickled_value = pickle.dumps(custom)
+        print()
+        print(f'Pickled original is {pickled_value}')
+        assert pickled_value == PICKLE_BYTES_FOR_CUSTOM_CLASS
+        # result = pickle.loads(pickled_value)
+
+
+    def test_pickle_setstate():
+        custom = pickle.loads(PICKLE_BYTES_FOR_CUSTOM_CLASS)
+        assert custom.first == 'FIRST'
+        assert custom.last == 'LAST'
+        assert custom.number == 11
+
+    def test_pickle_round_trip():
+        custom = cPickle.Custom(*ARGS_FOR_CUSTOM_CLASS)
+        pickled_value = pickle.dumps(custom)
+        result = pickle.loads(pickled_value)
+        assert id(result) != id(custom)
+
+So we have pickled one object and recreated a different, but equivalent, instance from the pickle of the original
+object which is what we set out to do.
 
 The Pickled Object in Detail
 -------------------------------------
 
-If you are curious about the contents of the pickled object the the Python standard library provides the `pickletools <https://docs.python.org/3/library/pickletools.html#module-pickletools>`_ module.
+If you are curious about the contents of the pickled object the the Python standard library provides the
+`pickletools <https://docs.python.org/3/library/pickletools.html#module-pickletools>`_ module.
 This allows you to inspect the pickled object.
-So if we run this code:
+Here is a test for that:
 
 .. code-block:: python
 
+    import io
     import pickle
     import pickletools
+    import sys
 
-    import custom2
+    import pytest
 
-    original = custom2.Custom('FIRST', 'LAST', 11)
-    pickled_value = pickle.dumps(original)
-    print(f'Pickled original is {pickled_value}')
-    # NOTE: Here we are adding annotations.
-    pickletools.dis(pickled_value, annotate=1)
+    from cPyExtPatt import cPickle
 
-The output will be something like this:
+    def test_pickletools():
+        outfile = io.StringIO()
+        pickletools.dis(PICKLE_BYTES_FOR_CUSTOM_CLASS, out=outfile, annotate=1)
+        result = outfile.getvalue()
+        expected = '<See below>'
+        assert result == expected
+
+The expected output will be something like this:
 
 .. code-block:: text
 
@@ -338,15 +394,16 @@ The output will be something like this:
 Pickling Objects with External State
 -----------------------------------------
 
-This is just a simple example, if your object relies on external state such as open files, databases and the like you need to be careful, and knowledgeable about your state management.
-There is some useful information here: `Handling Stateful Objects <https://docs.python.org/3/library/pickle.html#pickle-state>`_
+This is just a simple example, if your object relies on external state such as open files, databases and the like you
+need to be careful, and knowledgeable about your state management.
+There is some useful information in
+`Handling Stateful Objects <https://docs.python.org/3/library/pickle.html#pickle-state>`_
 
 
 .. note::
 
     Marshalling support for use with the `marshall <https://docs.python.org/3/library/marshal.html#module-marshal>`_
     module is given by the `C Marshall API <https://docs.python.org/3/c-api/marshal.html>`_
-
 
 References
 -----------------------
@@ -356,4 +413,3 @@ References
 * Useful documentation for `Handling Stateful Objects <https://docs.python.org/3/library/pickle.html#pickle-state>`_
 * Python `pickle module <https://docs.python.org/3/library/pickle.html>`_
 * Python `shelve module <https://docs.python.org/3/library/shelve.html>`_
-

@@ -4,6 +4,8 @@
 .. toctree::
     :maxdepth: 3
 
+.. _chapter_refcount:
+
 =================================
 PyObjects and Reference Counting 
 =================================
@@ -326,9 +328,18 @@ What would be bad is this:
 Once ``v`` has been passed to ``PyTuple_SetItem`` then your  ``v`` becomes a *borrowed* reference with all of their
 problems which is the subject of the next section.
 
+The contract with *stolen* references is: the thief will take care of things so you don't have to.
+If you try to the results are undefined.
+
+.. _chapter_refcount.stolen.warning_pydict_setitem:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Warning on "Stolen" References With Containers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. warning::
 
-    The above example describes tuples that *do* "steal" references.
+    The example above describes tuples that *do* "steal" references.
     Other containers, such as a ``dict`` and ``set`` do *not*.
 
     A consequence is that ``PyTuple_SetItem(pTuple, 0, PyLong_FromLong(12345L))`` does *not* leak
@@ -351,9 +362,6 @@ problems which is the subject of the next section.
 
     See ``src/cpy/RefCount/cRefCount.c`` and ``tests/unit/test_c_ref_count.py`` for verification of this.
 
-
-The contract with *stolen* references is: the thief will take care of things so you don't have to.
-If you try to the results are undefined.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 "Borrowed" References

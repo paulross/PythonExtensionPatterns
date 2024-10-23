@@ -357,7 +357,7 @@ and the tests are in ``tests/unit/test_c_capsules.py``.
 Writing the Code for the Object
 --------------------------------
 
-Firstly the declaration of the timezone aware datetime, it just inherits from `` datetime.datetime``:
+Firstly the declaration of the timezone aware datetime, it just inherits from ``datetime.datetime``:
 
 .. code-block:: c
 
