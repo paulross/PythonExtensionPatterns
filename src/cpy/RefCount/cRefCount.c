@@ -42,90 +42,6 @@ decref_set_values(PyObject *op) {
 }
 
 /**
- * Decrement the reference counts or keys or values by one.
- *
- * @param op The dict.
- * @param decref_key
- * @param decref_value
- * @return 0.
- */
-static int
-decref_dict_keys_or_values(PyObject *op, int decref_key, int decref_value) {
-    fprintf(stdout, "TRACE: %s\n", __FUNCTION__ );
-    assert(!PyErr_Occurred());
-    assert(PyDict_Check(op));
-    /* https://docs.python.org/3/c-api/dict.html#c.PyDict_Next */
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
-    while (PyDict_Next(op, &pos, &key, &value)) {
-        fprintf(
-            stdout,
-            "TRACE: pos=%ld key=%p rc=%ld val=%p rc=%ld\n",
-            pos, (void *)key, key->ob_refcnt, (void *)value, value->ob_refcnt
-        );
-#if 0
-        if (decref_key)  {
-            Py_DECREF(key);
-        }
-        if (decref_value) {
-            Py_DECREF(value);
-        }
-#endif
-    }
-    assert(!PyErr_Occurred());
-    fprintf(stdout, "TRACE: %s DONE\n", __FUNCTION__ );
-    return 0;
-}
-
-/**
- * Decrement the reference counts of keys of a dictionary by one.
- *
- * @param op The dict.
- * @return 0 on success, non-zero on failure in which case a Python Exception will have been set.
- */
-static int
-decref_dict_keys(PyObject *op) {
-    assert(!PyErr_Occurred());
-    if (!PyDict_Check(op)) {
-        PyErr_Format(PyExc_ValueError, "Argument must be type dict not type %s", Py_TYPE(op)->tp_name);
-        return 1;
-    }
-    return decref_dict_keys_or_values(op, 1, 0);
-}
-
-/**
- * Decrement the reference counts of values of a dictionary by one.
- *
- * @param op The dict.
- * @return 0 on success, non-zero on failure in which case a Python Exception will have been set.
- */
-static int
-decref_dict_values(PyObject *op) {
-    assert(!PyErr_Occurred());
-    if (!PyDict_Check(op)) {
-        PyErr_Format(PyExc_ValueError, "Argument must be type dict not type %s", Py_TYPE(op)->tp_name);
-        return 1;
-    }
-    return decref_dict_keys_or_values(op, 0, 1);
-}
-
-/**
- * Decrement the reference counts of keys and values of a dictionary by one.
- *
- * @param op The dict.
- * @return 0 on success, non-zero on failure in which case a Python Exception will have been set.
- */
-static int
-decref_dict_key_values(PyObject *op) {
-    assert(!PyErr_Occurred());
-    if (!PyDict_Check(op)) {
-        PyErr_Format(PyExc_ValueError, "Argument must be type dict not type %s", Py_TYPE(op)->tp_name);
-        return 1;
-    }
-    return decref_dict_keys_or_values(op, 1, 1);
-}
-
-/**
  * Checks the reference counts when creating and adding to a \c tuple.
  *
  * @param _unused_module
@@ -438,13 +354,13 @@ dict_no_steals(PyObject *Py_UNUSED(module)) {
 /**
  * Checks the reference counts when creating and adding to a \c dict.
  * The \c dict object *does* increment the reference count for the key and the value.
- * This uses \c decref_dict_key_values().
+ * This demonstrates the canonical way of decrementing new objects immediately after calling PyDict_Set().
  *
  * @param _unused_module
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-dict_no_steals_decref(PyObject *Py_UNUSED(module)) {
+dict_no_steals_decref_after_set(PyObject *Py_UNUSED(module)) {
     assert(!PyErr_Occurred());
     long result = 0;
     int result_shift = 0;
@@ -472,7 +388,6 @@ dict_no_steals_decref(PyObject *Py_UNUSED(module)) {
         result |= 1 << result_shift;
     }
     ++result_shift;
-    // Check the key and value have incremented reference counts.
     if (key->ob_refcnt != 2) {
         result |= 1 << result_shift;
     }
@@ -481,22 +396,28 @@ dict_no_steals_decref(PyObject *Py_UNUSED(module)) {
         result |= 1 << result_shift;
     }
     ++result_shift;
-    if (decref_dict_key_values(container)) {
-        result |= 1 << result_shift;
-    }
-    ++result_shift;
-    // Check the key and value have decremented reference counts.
+    // Now decrement the newly created objects
+    Py_DECREF(key);
+    // Check the key and value have single reference counts.
     if (key->ob_refcnt != 1) {
         result |= 1 << result_shift;
     }
     ++result_shift;
+    Py_DECREF(value);
     if (value->ob_refcnt != 1) {
         result |= 1 << result_shift;
     }
     ++result_shift;
+    // Delete the key/value.
+    if (PyDict_DelItem(container, key)) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    if (PyDict_Size(container) != 0) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
     // Clean up.
-    Py_DECREF(key);
-    Py_DECREF(value);
     Py_DECREF(container);
     assert(!PyErr_Occurred());
     return PyLong_FromLong(result);
@@ -642,9 +563,9 @@ static PyMethodDef module_methods[] = {
         MODULE_NOARGS_ENTRY(set_no_steals_decref,
                             "Checks that a set increments a reference count and uses decref_set_values."),
         MODULE_NOARGS_ENTRY(dict_no_steals, "Checks that a dict increments a reference counts for key and value."),
-        MODULE_NOARGS_ENTRY(dict_no_steals_decref,
+        MODULE_NOARGS_ENTRY(dict_no_steals_decref_after_set,
                             "Checks that a dict increments a reference counts for key and value."
-                            " This uses decref_dict_key_values()."
+                            " They are decremented after PyDict_Set()"
                             ),
         MODULE_NOARGS_ENTRY(dict_buildvalue_no_steals,
                             "Checks that a Py_BuildValue dict increments a reference counts for key and value ."),
