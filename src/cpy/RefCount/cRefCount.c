@@ -7,6 +7,125 @@
 #include "Python.h"
 
 /**
+ * Decrement the reference counts of each set value by one.
+ *
+ * @param op The set.
+ * @return 0 on success, non-zero on failure in which case a Python Exception will have been set.
+ */
+static int
+decref_set_values(PyObject *op) {
+    assert(!PyErr_Occurred());
+
+    if (!PySet_Check(op)) {
+        PyErr_Format(PyExc_ValueError, "Argument must be type set not type %s", Py_TYPE(op)->tp_name);
+        return 1;
+    }
+    /* https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
+     * This returns a new reference. */
+    PyObject *iterator = PyObject_GetIter(op);
+    if (iterator == NULL) {
+        PyErr_Format(PyExc_ValueError, "Can not obtain iterator for type %s", Py_TYPE(op)->tp_name);
+        return 2;
+    }
+    PyObject *item;
+    /* https://docs.python.org/3/c-api/iter.html#c.PyIter_Next
+     * This returns a new reference. */
+    while ((item = PyIter_Next(iterator))) {
+        Py_DECREF(item); /* This is the point of this function. */
+        Py_DECREF(item); /* As this is a new reference. */
+    }
+    Py_DECREF(iterator);
+    if (PyErr_Occurred()) {
+        return 3;
+    }
+    return 0;
+}
+
+/**
+ * Decrement the reference counts or keys or values by one.
+ *
+ * @param op The dict.
+ * @param decref_key
+ * @param decref_value
+ * @return 0.
+ */
+static int
+decref_dict_keys_or_values(PyObject *op, int decref_key, int decref_value) {
+    fprintf(stdout, "TRACE: %s\n", __FUNCTION__ );
+    assert(!PyErr_Occurred());
+    assert(PyDict_Check(op));
+    /* https://docs.python.org/3/c-api/dict.html#c.PyDict_Next */
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(op, &pos, &key, &value)) {
+        fprintf(
+            stdout,
+            "TRACE: pos=%ld key=%p rc=%ld val=%p rc=%ld\n",
+            pos, (void *)key, key->ob_refcnt, (void *)value, value->ob_refcnt
+        );
+#if 0
+        if (decref_key)  {
+            Py_DECREF(key);
+        }
+        if (decref_value) {
+            Py_DECREF(value);
+        }
+#endif
+    }
+    assert(!PyErr_Occurred());
+    fprintf(stdout, "TRACE: %s DONE\n", __FUNCTION__ );
+    return 0;
+}
+
+/**
+ * Decrement the reference counts of keys of a dictionary by one.
+ *
+ * @param op The dict.
+ * @return 0 on success, non-zero on failure in which case a Python Exception will have been set.
+ */
+static int
+decref_dict_keys(PyObject *op) {
+    assert(!PyErr_Occurred());
+    if (!PyDict_Check(op)) {
+        PyErr_Format(PyExc_ValueError, "Argument must be type dict not type %s", Py_TYPE(op)->tp_name);
+        return 1;
+    }
+    return decref_dict_keys_or_values(op, 1, 0);
+}
+
+/**
+ * Decrement the reference counts of values of a dictionary by one.
+ *
+ * @param op The dict.
+ * @return 0 on success, non-zero on failure in which case a Python Exception will have been set.
+ */
+static int
+decref_dict_values(PyObject *op) {
+    assert(!PyErr_Occurred());
+    if (!PyDict_Check(op)) {
+        PyErr_Format(PyExc_ValueError, "Argument must be type dict not type %s", Py_TYPE(op)->tp_name);
+        return 1;
+    }
+    return decref_dict_keys_or_values(op, 0, 1);
+}
+
+/**
+ * Decrement the reference counts of keys and values of a dictionary by one.
+ *
+ * @param op The dict.
+ * @return 0 on success, non-zero on failure in which case a Python Exception will have been set.
+ */
+static int
+decref_dict_key_values(PyObject *op) {
+    assert(!PyErr_Occurred());
+    if (!PyDict_Check(op)) {
+        PyErr_Format(PyExc_ValueError, "Argument must be type dict not type %s", Py_TYPE(op)->tp_name);
+        return 1;
+    }
+    return decref_dict_keys_or_values(op, 1, 1);
+}
+
+/**
  * Checks the reference counts when creating and adding to a \c tuple.
  *
  * @param _unused_module
@@ -14,7 +133,7 @@
  */
 static PyObject *
 tuple_steals(PyObject *Py_UNUSED(module)) {
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     long result = 0;
     PyObject *container = PyTuple_New(1);
     if (container->ob_refcnt != 1) {
@@ -37,7 +156,7 @@ tuple_steals(PyObject *Py_UNUSED(module)) {
     }
 //    fprintf(stdout, "TRACE: value->ob_refcnt = %ld result %ld\n", PyTuple_GET_ITEM(tuple, 0)->ob_refcnt, result);
     Py_DECREF(container);
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -49,7 +168,7 @@ tuple_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     int result = 0;
     PyObject *value_0 = PyLong_FromLong(123456);
     if (value_0->ob_refcnt != 1) {
@@ -81,7 +200,7 @@ tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 7;
     }
     Py_DECREF(container);
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -93,7 +212,7 @@ tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 list_steals(PyObject *Py_UNUSED(module)) {
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     long result = 0;
     PyObject *container = PyList_New(1);
     if (container->ob_refcnt != 1) {
@@ -111,7 +230,7 @@ list_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 3;
     }
     Py_DECREF(container);
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -123,7 +242,7 @@ list_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     int result = 0;
     PyObject *value_0 = PyLong_FromLong(123456);
     if (value_0->ob_refcnt != 1) {
@@ -155,7 +274,7 @@ list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
         result |= 1 << 7;
     }
     Py_DECREF(container);
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -168,7 +287,7 @@ list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 set_no_steals(PyObject *Py_UNUSED(module)) {
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     long result = 0;
     PyObject *container = PySet_New(NULL);
     if (container->ob_refcnt != 1) {
@@ -196,7 +315,56 @@ set_no_steals(PyObject *Py_UNUSED(module)) {
     if (value->ob_refcnt != 2) {
         result |= 1 << 6;
     }
-    assert(! PyErr_Occurred());
+    Py_DECREF(value);
+    Py_DECREF(value);
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(result);
+}
+
+/**
+ * Checks the reference counts when creating and adding to a \c set.
+ * This uses \c decref_set_values().
+ *
+ * The \c set object *does* increment the reference count.
+ * @param _unused_module
+ * @return Zero on success, non-zero on error.
+ */
+static PyObject *
+set_no_steals_decref(PyObject *Py_UNUSED(module)) {
+    assert(!PyErr_Occurred());
+    long result = 0;
+    PyObject *container = PySet_New(NULL);
+    if (container->ob_refcnt != 1) {
+        result |= 1 << 0;
+    }
+    PyObject *value = PyLong_FromLong(123456);
+    if (value->ob_refcnt != 1) {
+        result |= 1 << 1;
+    }
+    PySet_Add(container, value);
+    if (value->ob_refcnt != 2) {
+        result |= 1 << 2;
+    }
+    if (PySet_Size(container) != 1) {
+        result |= 1 << 3;
+    }
+    // Use decref_set_values()
+    if (decref_set_values(container)) {
+        result |= 1 << 4;
+    }
+    if (value->ob_refcnt != 1) {
+        result |= 1 << 5;
+    }
+    PyObject *pop = PySet_Pop(container);
+    if (pop->ob_refcnt != 1) {
+        result |= 1 << 6;
+    }
+    if (PySet_Size(container) != 0) {
+        result |= 1 << 6;
+    }
+    Py_DECREF(container);
+    Py_DECREF(value);
+    assert(!PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -209,7 +377,7 @@ set_no_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 dict_no_steals(PyObject *Py_UNUSED(module)) {
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     long result = 0;
     int result_shift = 0;
     // Create the container
@@ -263,7 +431,74 @@ dict_no_steals(PyObject *Py_UNUSED(module)) {
     Py_DECREF(key);
     Py_DECREF(value);
     Py_DECREF(container);
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(result);
+}
+
+/**
+ * Checks the reference counts when creating and adding to a \c dict.
+ * The \c dict object *does* increment the reference count for the key and the value.
+ * This uses \c decref_dict_key_values().
+ *
+ * @param _unused_module
+ * @return Zero on success, non-zero on error.
+ */
+static PyObject *
+dict_no_steals_decref(PyObject *Py_UNUSED(module)) {
+    assert(!PyErr_Occurred());
+    long result = 0;
+    int result_shift = 0;
+    // Create the container
+    PyObject *container = PyDict_New();
+    if (container->ob_refcnt != 1) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    // Create the key and value.
+    PyObject *key = PyLong_FromLong(123456);
+    if (key->ob_refcnt != 1) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    PyObject *value = PyLong_FromLong(1234567);
+    if (value->ob_refcnt != 1) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    // Set the key and value.
+    PyDict_SetItem(container, key, value);
+    // Check the container size.
+    if (PyDict_Size(container) != 1) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    // Check the key and value have incremented reference counts.
+    if (key->ob_refcnt != 2) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    if (value->ob_refcnt != 2) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    if (decref_dict_key_values(container)) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    // Check the key and value have decremented reference counts.
+    if (key->ob_refcnt != 1) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    if (value->ob_refcnt != 1) {
+        result |= 1 << result_shift;
+    }
+    ++result_shift;
+    // Clean up.
+    Py_DECREF(key);
+    Py_DECREF(value);
+    Py_DECREF(container);
+    assert(!PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -276,7 +511,7 @@ dict_no_steals(PyObject *Py_UNUSED(module)) {
  */
 static PyObject *
 dict_buildvalue_no_steals(PyObject *Py_UNUSED(module)) {
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     int result = 0;
     int result_shift = 0;
     PyObject *key = PyLong_FromLong(123456);
@@ -386,7 +621,7 @@ dict_buildvalue_no_steals(PyObject *Py_UNUSED(module)) {
     Py_DECREF(key);
     Py_DECREF(value);
     Py_DECREF(container);
-    assert(! PyErr_Occurred());
+    assert(!PyErr_Occurred());
     return PyLong_FromLong(result);
 }
 
@@ -404,8 +639,15 @@ static PyMethodDef module_methods[] = {
         MODULE_NOARGS_ENTRY(list_steals, "Checks that PyTuple_SET_ITEM list steals a reference count."),
         MODULE_NOARGS_ENTRY(list_buildvalue_steals, "Checks that Py_BuildValue list steals a reference count."),
         MODULE_NOARGS_ENTRY(set_no_steals, "Checks that a set increments a reference count."),
-        MODULE_NOARGS_ENTRY(dict_no_steals, "Checks that a dict increments a reference counts for key and value ."),
-        MODULE_NOARGS_ENTRY(dict_buildvalue_no_steals, "Checks that a Py_BuildValue dict increments a reference counts for key and value ."),
+        MODULE_NOARGS_ENTRY(set_no_steals_decref,
+                            "Checks that a set increments a reference count and uses decref_set_values."),
+        MODULE_NOARGS_ENTRY(dict_no_steals, "Checks that a dict increments a reference counts for key and value."),
+        MODULE_NOARGS_ENTRY(dict_no_steals_decref,
+                            "Checks that a dict increments a reference counts for key and value."
+                            " This uses decref_dict_key_values()."
+                            ),
+        MODULE_NOARGS_ENTRY(dict_buildvalue_no_steals,
+                            "Checks that a Py_BuildValue dict increments a reference counts for key and value ."),
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

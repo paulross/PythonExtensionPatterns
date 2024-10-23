@@ -13,9 +13,11 @@ def test_module_dir():
         '__spec__',
         'dict_buildvalue_no_steals',
         'dict_no_steals',
+        'dict_no_steals_decref',
         'list_buildvalue_steals',
         'list_steals',
         'set_no_steals',
+        'set_no_steals_decref',
         'tuple_buildvalue_steals',
         'tuple_steals',
     ]
@@ -41,8 +43,16 @@ def test_c_ref_count_set_no_steals():
     assert cRefCount.set_no_steals() == 0
 
 
+def test_c_ref_count_set_no_steals_decref():
+    assert cRefCount.set_no_steals_decref() == 0
+
+
 def test_c_ref_count_dict_no_steals():
     assert cRefCount.dict_no_steals() == 0
+
+
+def test_c_ref_count_dict_no_steals_decref():
+    assert cRefCount.dict_no_steals_decref() == 0
 
 
 def test_c_ref_count_dict_buildvalue_no_steals():

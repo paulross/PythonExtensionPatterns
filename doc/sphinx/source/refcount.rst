@@ -151,6 +151,18 @@ And here is what happens to the memory if we use this function from Python (``cP
     The reason is that if ``Py_DECREF`` sees a refcount of one it can free and then reuse the address of the refcount
     field for a completely different object which makes it highly unlikely that that field will have a zero in it.
     There are some examples of this later on.
+
+    For example this code is asking for trouble:
+
+    .. code-block:: c
+
+        PyObject *op;
+        /* Do something ... */
+        while (op->ob_refcnt) {
+            Py_DECREF(op);
+        }
+
+    This will either loop forever or segfault.
     
 -----------------------
 Python Terminology 
