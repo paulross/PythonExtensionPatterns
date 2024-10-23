@@ -96,11 +96,16 @@ This new reference wrapper can be used as follows:
     } // Decrement the new reference here.
 
 
+.. _cpp_and_cpython.handling_default_arguments:
+
 ============================================
 Handling Default Arguments
 ============================================
 
-Handling default, possibly mutable, arguments in a pythonic way is described here: :ref:`cpython_default_mutable_arguments`. It is quite complicated to get it right but C++ can ease the pain with a generic class to simplify handling default arguments in CPython functions:
+Handling default, possibly mutable, arguments in a pythonic way is described here:
+:ref:`cpython_default_mutable_arguments`.
+It is quite complicated to get it right but C++ can ease the pain with a generic class to simplify handling default
+arguments in CPython functions:
 
 .. code-block:: cpp
 
@@ -140,6 +145,8 @@ Suppose we have the Python function signature of ``def function(encoding='utf8',
          
         /* ... */
     }
+
+The full code is in ``src/cpy/cParseArgsHelper.cpp`` and the tests in ``tests/unit/test_c_parse_args_helper.py``.
 
 ============================================
 Homogeneous Python Containers and C++

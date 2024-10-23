@@ -69,7 +69,7 @@ parse_defaults_with_helper_macro(PyObject *Py_UNUSED(module), PyObject *args, Py
     PY_DEFAULT_ARGUMENT_SET(must_log);
 
     /*
-     * Use encoding: Python str, the_id: C long, must_log from here on...
+     * Use 'encoding': Python str, 'the_id': C long, 'must_log': C long from here on...
      */
 
     Py_INCREF(encoding);
