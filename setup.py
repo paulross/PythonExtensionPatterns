@@ -78,7 +78,7 @@ for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
 # For keywords see: https://setuptools.pypa.io/en/latest/references/keywords.html
 setup(
     name=PACKAGE_NAME,
-    version='0.2.2',
+    version='0.3.0rc0',
     author='Paul Ross',
     author_email='apaulross@gmail.com',
     maintainer='Paul Ross',
