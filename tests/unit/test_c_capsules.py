@@ -239,8 +239,9 @@ def test_datetimetz_datetimetz_replace_raises_tzinfo():
     )
     with pytest.raises(TypeError) as err:
         d.replace(tzinfo=None)
-        # print()
-        # print(f'ERROR: {repr(d)}')
+        print()
+        print(f'ERROR: {repr(d)}')
+        print(f'ERROR: {repr(d.tzinfo)}')
     assert err.value.args[0] == 'No time zone provided.'
 
 

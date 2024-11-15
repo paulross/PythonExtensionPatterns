@@ -34,33 +34,33 @@ ContextManager_new(PyObject *Py_UNUSED(arg)) {
         self->buffer_lifetime[i] = ' ';
     }
     self->buffer_context = NULL;
-    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+//    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
     return self;
 }
 
 /* ContextManager methods */
 static void
 ContextManager_dealloc(ContextManager *self) {
-    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+//    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
     free(self->buffer_lifetime);
     self->buffer_lifetime = NULL;
     assert(self->buffer_context == NULL);
     PyObject_Del(self);
-    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+//    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
 }
 
 static PyObject *
 ContextManager_enter(ContextManager *self, PyObject *Py_UNUSED(args)) {
     assert(self->buffer_lifetime != NULL);
     assert(self->buffer_context == NULL);
-    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+//    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
     self->buffer_context = malloc(BUFFER_LENGTH);
     // Force an initialisation.
     for (ssize_t i = 0; i < BUFFER_LENGTH; ++i) {
         self->buffer_context[i] = ' ';
     }
     Py_INCREF(self);
-    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+//    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
     return (PyObject *)self;
 }
 
@@ -68,10 +68,10 @@ static PyObject *
 ContextManager_exit(ContextManager *self, PyObject *Py_UNUSED(args)) {
     assert(self->buffer_lifetime != NULL);
     assert(self->buffer_context != NULL);
-    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+//    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
     free(self->buffer_context);
     self->buffer_context = NULL;
-    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+//    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
     Py_RETURN_FALSE;
 }
 
