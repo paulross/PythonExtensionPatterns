@@ -297,5 +297,11 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
+        Extension(f"{PACKAGE_NAME}.cCtxMgr", sources=['src/cpy/CtxMgr/cCtxMgr.c', ],
+                  include_dirs=['/usr/local/include', ],
+                  library_dirs=[os.getcwd(), ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
     ]
 )

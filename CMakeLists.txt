@@ -113,7 +113,9 @@ add_executable(PythonExtensionPatterns
         src/cpy/Threads/csublist.c
         src/cpy/Logging/cLogging.c
         src/cpy/RefCount/cRefCount.c
-        src/cpy/Util/py_call_super.cpp)
+        src/cpy/Util/py_call_super.cpp
+        src/cpy/CtxMgr/cCtxMgr.c
+)
 
 #link_directories(${PYTHON_LINK_LIBRARY})
 

@@ -23,6 +23,7 @@ Coding Patterns for Python Extensions
     subclassing_and_super_call
     capsules
     iterators_generators
+    context_manager
     pickle
     compiler_flags
     debugging/debug
