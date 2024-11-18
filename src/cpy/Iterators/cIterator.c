@@ -45,7 +45,7 @@ SequenceOfLongIterator_init(SequenceOfLongIterator *self, PyObject *args, PyObje
                 PyExc_ValueError,
                 "Argument must be a SequenceOfLongType, not type %s",
                 Py_TYPE(sequence)->tp_name
-                );
+        );
         return -2;
     }
     // Borrowed reference
@@ -132,7 +132,7 @@ SequenceOfLong_init(SequenceOfLong *self, PyObject *args, PyObject *kwds) {
     }
     self->size = PySequence_Length(sequence);
     self->array_long = malloc(self->size * sizeof(long));
-    if (! self->array_long) {
+    if (!self->array_long) {
         return -3;
     }
     for (Py_ssize_t i = 0; i < PySequence_Length(sequence); ++i) {
@@ -185,10 +185,10 @@ SequenceOfLong_iter(SequenceOfLong *self) {
 
 static PyMethodDef SequenceOfLong_methods[] = {
         {
-            "size",
+                "size",
                 (PyCFunction) SequenceOfLong_size,
-            METH_NOARGS,
-            "Return the size of the sequence."
+                METH_NOARGS,
+                "Return the size of the sequence."
         },
         {NULL, NULL, 0, NULL}  /* Sentinel */
 };
@@ -199,7 +199,7 @@ SequenceOfLong___str__(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
     return PyUnicode_FromFormat("<SequenceOfLong sequence size: %ld>", self->size);
 }
 
-static PyTypeObject SequenceOfLongType= {
+static PyTypeObject SequenceOfLongType = {
         PyVarObject_HEAD_INIT(NULL, 0)
         .tp_name = "SequenceOfLong",
         .tp_basicsize = sizeof(SequenceOfLong),
@@ -220,14 +220,73 @@ is_sequence_of_long_type(PyObject *op) {
     return Py_TYPE(op) == &SequenceOfLongType;
 }
 
+static PyObject *
+iterate_and_print(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+    assert(!PyErr_Occurred());
+    static char *kwlist[] = {"sequence", NULL};
+    PyObject *sequence = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &sequence)) {
+        return NULL;
+    }
+//    if (!PyIter_Check(sequence)) {
+//        PyErr_Format(PyExc_TypeError, "Object of type %s does support the iterator protocol",
+//                     Py_TYPE(sequence)->tp_name);
+//        return NULL;
+//    }
+    PyObject *iterator = PyObject_GetIter(sequence);
+    if (iterator == NULL) {
+        /* propagate error */
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    PyObject *item = NULL;
+    long index = 0;
+    fprintf(stdout, "%s:\n", __FUNCTION__ );
+    while ((item = PyIter_Next(iterator))) {
+        /* do something with item */
+        fprintf(stdout, "[%ld]: ", index);
+        if (PyObject_Print(item, stdout, Py_PRINT_RAW) == -1) {
+            /* Handle error. */
+            Py_DECREF(item);
+            Py_DECREF(iterator);
+            if (!PyErr_Occurred()) {
+                PyErr_Format(PyExc_RuntimeError,
+                             "Can not print an item of type %s",
+                             Py_TYPE(sequence)->tp_name);
+            }
+            return NULL;
+        }
+        fprintf(stdout, "\n");
+        ++index;
+        /* release reference when done */
+        Py_DECREF(item);
+    }
+    Py_DECREF(iterator);
+    if (PyErr_Occurred()) {
+        /* propagate error */
+        return NULL;
+    }
+    fprintf(stdout, "%s: DONE\n", __FUNCTION__ );
+    assert(!PyErr_Occurred());
+    Py_RETURN_NONE;
+}
+
+static PyMethodDef cIterator_methods[] = {
+        {"iterate_and_print", (PyCFunction) iterate_and_print, METH_VARARGS,
+         "Iteratee through the argument printing the values."},
+        {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
 static PyModuleDef iterator_cmodule = {
         PyModuleDef_HEAD_INIT,
         .m_name = "cIterator",
         .m_doc = (
-            "Example module that creates an extension type"
-            "that has forward and reverse iterators."
+                "Example module that creates an extension type"
+                "that has forward and reverse iterators."
         ),
         .m_size = -1,
+        .m_methods = cIterator_methods,
 };
 
 PyMODINIT_FUNC

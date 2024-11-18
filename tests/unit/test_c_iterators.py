@@ -14,7 +14,8 @@ def test_c_iterator_dir():
                       '__loader__',
                       '__name__',
                       '__package__',
-                      '__spec__']
+                      '__spec__',
+                      'iterate_and_print']
 
 
 @pytest.mark.skipif(not (sys.version_info.minor < 11), reason='Python < 3.11')
@@ -248,3 +249,35 @@ def test_modify_list_during_iteration_c():
         if i and i % 2 == 0:
             lst.append(8 * i)
     assert result == [0, 1, 2, 3, 4, 5, 6, 7, 16, 32, 48, 64, 80, 96]
+
+
+@pytest.mark.parametrize(
+    'arg, expected',
+    (
+            (
+                    'abc',
+                    """iterate_and_print:
+[0]: a
+[1]: b
+[2]: c
+iterate_and_print: DONE
+"""
+            ),
+    )
+)
+def test_iterate_and_print(arg, expected, capfd):
+    cIterator.iterate_and_print(arg)
+    captured = capfd.readouterr()
+    assert captured.out == expected
+
+
+@pytest.mark.parametrize(
+    'arg, error',
+    (
+            (1, "'int' object is not iterable"),
+    )
+)
+def test_iterate_and_print_raises(arg, error):
+    with pytest.raises(TypeError) as err:
+        cIterator.iterate_and_print(arg)
+    assert err.value.args[0] == error
