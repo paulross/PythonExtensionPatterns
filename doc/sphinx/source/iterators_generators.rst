@@ -434,6 +434,99 @@ However the following is optional, as the comment suggests:
 If you omit that the code will work just fine, the iterator is instantiated dynamically, it is just that the type is
 not exposed in the module.
 
+------------------------------
+Iterating a Python Object in C
+------------------------------
+
+In ``src/cpy/Iterators/cIterator.c`` there is an example of iterating a
+Python object using the
+`Iterator Protocol <https://docs.python.org/3/c-api/iter.html>`_.
+There is a function ``iterate_and_print`` that takes an object supporting
+the Iterator Protocol and iterates across it printing out each item.
+
+The equivalent Python code is:
+
+.. code-block:: python
+
+    def iterate_and_print(sequence: typing.Iterable) -> None:
+        print('iterate_and_print:')
+        for i, item in enumerate(sequence):
+            print(f'[{i}]: {item}')
+        print('iterate_and_print: DONE')
+
+The C code looks like this:
+
+.. code-block:: c
+
+    static PyObject *
+    iterate_and_print(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+        assert(!PyErr_Occurred());
+        static char *kwlist[] = {"sequence", NULL};
+        PyObject *sequence = NULL;
+
+        if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &sequence)) {
+            return NULL;
+        }
+        PyObject *iterator = PyObject_GetIter(sequence);
+        if (iterator == NULL) {
+            /* propagate error */
+            assert(PyErr_Occurred());
+            return NULL;
+        }
+        PyObject *item = NULL;
+        long index = 0;
+        fprintf(stdout, "%s:\n", __FUNCTION__ );
+        while ((item = PyIter_Next(iterator))) {
+            /* do something with item */
+            fprintf(stdout, "[%ld]: ", index);
+            if (PyObject_Print(item, stdout, Py_PRINT_RAW) == -1) {
+                /* Handle error. */
+                Py_DECREF(item);
+                Py_DECREF(iterator);
+                if (!PyErr_Occurred()) {
+                    PyErr_Format(PyExc_RuntimeError,
+                                 "Can not print an item of type %s",
+                                 Py_TYPE(sequence)->tp_name);
+                }
+                return NULL;
+            }
+            fprintf(stdout, "\n");
+            ++index;
+            /* release reference when done */
+            Py_DECREF(item);
+        }
+        Py_DECREF(iterator);
+        if (PyErr_Occurred()) {
+            /* propagate error */
+            return NULL;
+        }
+        fprintf(stdout, "%s: DONE\n", __FUNCTION__ );
+        assert(!PyErr_Occurred());
+        Py_RETURN_NONE;
+    }
+
+This function is added to the cIterator module thus:
+
+.. code-block:: c
+
+    static PyMethodDef cIterator_methods[] = {
+            {"iterate_and_print", (PyCFunction) iterate_and_print, METH_VARARGS,
+             "Iteratee through the argument printing the values."},
+            {NULL, NULL, 0, NULL} /* Sentinel */
+    };
+
+    static PyModuleDef iterator_cmodule = {
+            PyModuleDef_HEAD_INIT,
+            .m_name = "cIterator",
+            .m_doc = (
+                    "Example module that creates an extension type"
+                    "that has forward and reverse iterators."
+            ),
+            .m_size = -1,
+            .m_methods = cIterator_methods,
+    };
+
+An example of using this is shown below.
 
 ------------------------------
 Examples
@@ -481,7 +574,21 @@ Using the builtin ``sorted()``:
     result = sorted(sequence)
     assert result == [1, 4, 7, ]
 
+And to iterate across a Python object:
 
+.. code-block:: python
+
+    cIterator.iterate_and_print('abc')
+
+Result in the stdout:
+
+.. code-block:: text
+
+    iterate_and_print:
+    [0]: a
+    [1]: b
+    [2]: c
+    iterate_and_print: DONE
 
 ===========================
 Generators
