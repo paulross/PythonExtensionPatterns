@@ -20,14 +20,16 @@ C Functions
 
 This is a summary of what is required for the C functions implementing a context
 manager.
+The is no specific ``tp_...`` slot for context manager functions ``__enter__`` and ``__exit__``, instead they are added
+to the object as a normally looked up Python methods.
 
 --------------------------------------
 ``__enter__``
 --------------------------------------
 
-The is no specific ``tp_...`` slot for context managers, instead they are added
-to the object as a normal Python method.
-Note that ``__enter__`` is declared with ``METH_NOARGS``:
+Note that ``__enter__`` is declared with ``METH_NOARGS``.
+Link to the Python documentation for
+`__enter__ <https://docs.python.org/3/library/stdtypes.html#contextmanager.__enter__>`_.
 
 .. code-block:: c
 
@@ -56,6 +58,8 @@ return ``self``:
 
 The ``__exit__`` function is declared thus.
 It takes three arguments thus ``METH_VARARGS`` is used.
+Link to the Python documentation for
+`__exit__ <https://docs.python.org/3/library/stdtypes.html#contextmanager.__exit__>`_.
 
 .. code-block:: c
 
