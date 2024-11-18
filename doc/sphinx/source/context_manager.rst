@@ -20,8 +20,8 @@ C Functions
 
 This is a summary of what is required for the C functions implementing a context
 manager.
-The is no specific ``tp_...`` slot for context manager functions ``__enter__`` and ``__exit__``, instead they are added
-to the object as a normally looked up Python methods.
+The is no specific ``tp_...`` slot for the context manager functions ``__enter__`` and ``__exit__``, instead they are added
+to the object as named, looked up, Python methods.
 
 --------------------------------------
 ``__enter__``
@@ -57,7 +57,7 @@ return ``self``:
 --------------------------------------
 
 The ``__exit__`` function is declared thus.
-It takes three arguments thus ``METH_VARARGS`` is used.
+It takes three arguments so ``METH_VARARGS`` is used.
 Link to the Python documentation for
 `__exit__ <https://docs.python.org/3/library/stdtypes.html#contextmanager.__exit__>`_.
 
@@ -70,7 +70,7 @@ Link to the Python documentation for
         {NULL, NULL, 0, NULL} /* sentinel */
     };
 
-The three arguments are ``None`` if no exception has been raised within
+The three arguments are each ``None`` if no exception has been raised within
 the ``with`` block.
 If an exception *has* been raised within the ``with`` block then the
 three arguments are the exception type, value and the traceback object.
@@ -79,7 +79,7 @@ The return value of the ``__exit__`` method tells the interpreter whether
 any exception should be suppressed.
 If the function returns ``False`` then the exception should be
 propagated.
-This is usually the common case.
+This is the common case.
 If the function returns ``True`` then the exception should be
 suppressed and execution continues with the statement immediately
 after the ``with`` statement.
@@ -132,27 +132,25 @@ Take this simple code:
 
 The sequence of reference count changes are as follows:
 
-1. Creating the ``cCtxMgr.ContextManager()`` calls ``ContextManager_new`` which makes the
+#. Creating the ``cCtxMgr.ContextManager()`` calls ``ContextManager_new`` which makes the
    reference count 1.
-2. The ``with`` statement causes the CPython interpreter to increment the reference count
+#. The ``with`` statement causes the CPython interpreter to increment the reference count
    (to 2) and then call ``__enter__`` that is implemented in our C function
    ``ContextManager_enter``.
-3. Our ``ContextManager_enter`` function increments the reference count, so it is now 3.
-4. As the context manager exists the scope of the ``with`` statement the CPython interpreter
+#. Our ``ContextManager_enter`` function increments the reference count, so it is now 3.
+#. As the context manager exists the scope of the ``with`` statement the CPython interpreter
    decrements the reference count *twice* to the value 1.
-   See below for a discussion of this.
-5. The CPython interpreter then calls ``__exit__`` which is implemented in our function
+   The logic is:
+
+    #. Decrement the reference count once as we are exiting the ``with`` statement. The reference count is now 2.
+    #. Did the ``with`` statement have a target? If not, as in this case, then decrement the reference count once more. The reference count is now 1.
+
+#. The CPython interpreter then calls ``__exit__`` which is implemented in our function
    ``ContextManager_exit``.
    This does not change the reference count which remains at 1.
-6. As the context manager goes out of scope the CPython interpreter decrements the reference
+#. As the context manager goes out of scope the CPython interpreter decrements the reference
    count to 0 and then calls our C function ``ContextManager_dealloc`` with a reference count
    of 0 and that frees the object.
-
-The CPython interpreter behaviour at step 4 is interesting, essentially it is this:
-
-- Decrement the reference count once as we are exiting the ``with`` statement.
-- Did the ``with`` statement have a target?
-  If not, as in this case, then decrement the reference count once more.
 
 ----------------------------------
 A Context Manager With a Target
@@ -191,18 +189,18 @@ example on a function return.
 
 The sequence of reference count changes are now as follows:
 
-1. As above, the reference count becomes 1.
-2. As above, the reference count becomes 2.
-3. As above, the reference count becomes 3.
-4. As the context manager exists the scope of the ``with`` statement the CPython interpreter
-   decrements the reference count *once* to the value 2.
-5. The CPython interpreter then calls ``__exit__`` which is implemented in our function
+#. As above, the reference count becomes 1.
+#. As above, the reference count becomes 2.
+#. As above, the reference count becomes 3.
+#. As the context manager exists the scope of the ``with`` statement the CPython interpreter
+   decrements the reference count just *once* to the value 2 as there *is* a target.
+#. The CPython interpreter then calls ``__exit__`` which is implemented in our function
    ``ContextManager_exit``.
    This does not change the reference count which remains at 2.
-6. As the context manager goes out of scope the CPython interpreter decrements the reference
+#. As the context manager goes out of scope the CPython interpreter decrements the reference
    count to 1.
    This ensures the survival of ``context`` after the ``with`` block.
-7. When ``context`` goes out of scope, say on a function return or a ``del`` statement the
+#. When ``context`` goes out of scope, say on a function return or a ``del`` statement the
    CPython interpreter decrements the reference count to 0 and then calls our C function
    ``ContextManager_dealloc`` which frees the object.
 
