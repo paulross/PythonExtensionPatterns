@@ -590,6 +590,35 @@ Result in the stdout:
     [2]: c
     iterate_and_print: DONE
 
+.. note::
+
+    If you are running under pytest you can capture the output to
+    stdout from C using the ``capfd`` fixture:
+
+
+    .. code-block:: python
+
+        import pytest
+
+        @pytest.mark.parametrize(
+            'arg, expected',
+            (
+                    (
+                            'abc',
+                            """iterate_and_print:
+        [0]: a
+        [1]: b
+        [2]: c
+        iterate_and_print: DONE
+        """
+                    ),
+            )
+        )
+        def test_iterate_and_print(arg, expected, capfd):
+            cIterator.iterate_and_print(arg)
+            captured = capfd.readouterr()
+            assert captured.out == expected
+
 ===========================
 Generators
 ===========================
