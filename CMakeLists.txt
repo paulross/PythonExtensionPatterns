@@ -70,8 +70,9 @@ ENDIF ()
 include_directories(src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList)
 
 add_executable(PythonExtensionPatterns
-        PythonExtensionPatterns/PythonExtensionPatterns/main.c
-        PythonExtensionPatterns/PythonExtensionPatterns/PythonExtensionPatterns.c
+        src/main.c
+#        PythonExtensionPatterns/PythonExtensionPatterns/main.c
+#        PythonExtensionPatterns/PythonExtensionPatterns/PythonExtensionPatterns.c
         src/cpy/cExceptions.c
         src/cpy/cModuleGlobals.c
         src/cpy/cObject.c
