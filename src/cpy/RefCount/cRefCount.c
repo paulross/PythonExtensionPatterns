@@ -546,6 +546,180 @@ dict_buildvalue_no_steals(PyObject *Py_UNUSED(module)) {
     return PyLong_FromLong(result);
 }
 
+/* This is used to guarantee that Python is not caching a string value when we want to check the
+ * reference counts after each string creation.
+ * */
+static int debug_test_count = 0;
+
+#if 0
+#define NEW_UNIQUE_STRING                                                                   \
+    do {                                                                                    \
+        PyObject *value = PyUnicode_FromFormat("%s-%d", __FUNCTION__, debug_test_count);    \
+        ++debug_test_count;                                                                 \
+    } while (0)
+#endif
+
+static PyObject *
+new_unique_string(const char *function_name) {
+    PyObject *value = PyUnicode_FromFormat("%s-%d", function_name, debug_test_count);
+    /* To view in the debugger. */
+    Py_UCS1 *buffer = PyUnicode_1BYTE_DATA(value);
+    assert(buffer);
+    ++debug_test_count;
+    return value;
+}
+
+/**
+ * A function that checks whether a tuple steals a reference when using PyTuple_SET_ITEM.
+ * This can be stepped through in the debugger.
+ * asserts are use for the test so this is expected to be run in DEBUG mode.
+ *
+ * @param _unused_module
+ * @return None
+ */
+static PyObject *
+dbg_PyTuple_SET_ITEM_steals(PyObject *Py_UNUSED(module)) {
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+    PyObject *value = new_unique_string(__FUNCTION__);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    PyTuple_SET_ITEM(container, 0, value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    PyObject *get_item = PyTuple_GET_ITEM(container, 0);
+    ref_count = Py_REFCNT(get_item);
+    Py_DECREF(container);
+    /* NO as container deals with this. */
+    /* Py_DECREF(value); */
+    assert(!PyErr_Occurred());
+    Py_RETURN_NONE;
+}
+
+/**
+ * TODO:
+ * Check int PyTuple_SetItem with new tuple.
+ * Check int PyTuple_SetItem with existing item in tuple.
+ * Check PyTuple_SET_ITEM with new tuple.
+ * Check PyTuple_SET_ITEM with existing item in tuple.
+ * Tuple Py_BuildValue.
+ *
+ * Lists:
+ * As above plus append.
+ *
+ * We should cover named tuples/dataclasses etc.:
+ * file:///Users/engun/dev/Python/python-3.12.1-docs-html/c-api/tuple.html#struct-sequence-objects
+ *
+ */
+
+/**
+ * A function that checks whether a tuple steals a reference when using PyTuple_SetItem on an existing item.
+ * This can be stepped through in the debugger.
+ * asserts are use for the test so this is expected to be run in DEBUG mode.
+ *
+ * This DOES leak an existing value contrary to the Python documentation.
+ *
+ * @param _unused_module
+ * @return None
+ */
+static PyObject *
+dbg_PyTuple_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value_0 = new_unique_string(__FUNCTION__);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+    PyTuple_SetItem(container, 0, value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+
+    PyObject *value_1 = new_unique_string(__FUNCTION__);
+    ref_count = Py_REFCNT(value_1);
+    assert(ref_count == 1);
+
+    /* This will overwrite value_0 leaving it with a reference count of 1.*/
+    PyTuple_SetItem(container, 0, value_1);
+    ref_count = Py_REFCNT(value_1);
+    assert(ref_count == 1);
+    PyObject *get_item = PyTuple_GET_ITEM(container, 0);
+    assert(get_item == value_1);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+
+    /* This is now leaked. */
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    Py_RETURN_NONE;
+}
+
+/**
+ * A function that checks whether a tuple steals a reference when using PyTuple_SET_ITEM on an existing item.
+ * This can be stepped through in the debugger.
+ * asserts are use for the test so this is expected to be run in DEBUG mode.
+ *
+ * @param _unused_module
+ * @return None
+ */
+static PyObject *
+dbg_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value_0 = new_unique_string(__FUNCTION__);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+    PyTuple_SET_ITEM(container, 0, value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+
+    PyObject *value_1 = new_unique_string(__FUNCTION__);
+    ref_count = Py_REFCNT(value_1);
+    assert(ref_count == 1);
+
+    /* This will overwrite value_0 leaving it with a reference count of 1.*/
+    PyTuple_SET_ITEM(container, 0, value_1);
+    ref_count = Py_REFCNT(value_1);
+    assert(ref_count == 1);
+    PyObject *get_item = PyTuple_GET_ITEM(container, 0);
+    assert(get_item == value_1);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+
+    /* This is now leaked. */
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    Py_RETURN_NONE;
+}
+
 #define MODULE_NOARGS_ENTRY(name, doc)  \
     {                                   \
         #name,                          \
@@ -566,9 +740,14 @@ static PyMethodDef module_methods[] = {
         MODULE_NOARGS_ENTRY(dict_no_steals_decref_after_set,
                             "Checks that a dict increments a reference counts for key and value."
                             " They are decremented after PyDict_Set()"
-                            ),
+        ),
         MODULE_NOARGS_ENTRY(dict_buildvalue_no_steals,
-                            "Checks that a Py_BuildValue dict increments a reference counts for key and value ."),
+                            "Checks that a Py_BuildValue dict increments a reference counts for key and value."),
+        MODULE_NOARGS_ENTRY(dbg_PyTuple_SET_ITEM_steals, "Debug check that PyTuple_SET_ITEM steals a reference."),
+        MODULE_NOARGS_ENTRY(dbg_PyTuple_SetItem_steals_replace,
+                            "Debug check that PyTuple_SetItem steals a reference on replacement."),
+        MODULE_NOARGS_ENTRY(dbg_PyTuple_SET_ITEM_steals_replace,
+                            "Debug check that PyTuple_SET_ITEM steals a reference on replacement."),
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

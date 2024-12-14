@@ -11,6 +11,26 @@
 
 #include <stdio.h>
 
+/**
+ * Get the current working directory using \c getcwd().
+ *
+ * @return The current working directory or NULL on failure.
+ */
+const char *current_working_directory(const char *extend) {
+    static char cwd[4096];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        fprintf(stderr, "%s(): Can not get current working directory.\n", __FUNCTION__);
+        return NULL;
+    }
+    if (extend) {
+        if (snprintf(cwd + strlen(cwd), strlen(extend) + 2, "/%s", extend) == 0) {
+            fprintf(stderr, "%s(): Can not compose buffer.\n", __FUNCTION__);
+            return NULL;
+        }
+    }
+    return cwd;
+}
+
 /** Takes a path and adds it to sys.paths by calling PyRun_SimpleString.
  * This does rather laborious C string concatenation so that it will work in
  * a primitive C environment.
@@ -42,31 +62,20 @@ int add_path_to_sys_module(const char *path) {
     return ret;
 }
 
-int import_call_execute(const char *module_name, const char *function_name) {
+int import_call_execute_no_args(const char *module_name, const char *function_name) {
     int return_value = 0;
     PyObject *pModule   = NULL;
     PyObject *pFunc     = NULL;
     PyObject *pResult   = NULL;
 
-//    if (argc != 4) {
-//        fprintf(stderr,
-//                "Wrong arguments!"
-//                " Usage: %s package_path module function\n", argv[0]);
-//        return_value = -1;
-//        goto except;
-//    }
-//    Py_SetProgramName((wchar_t*)argv[0]);
-//    Py_Initialize();
-//    if (add_path_to_sys_module(argv[1])) {
-//        return_value = -2;
-//        goto except;
-//    }
+    assert(! PyErr_Occurred());
     pModule = PyImport_ImportModule(module_name);
     if (! pModule) {
         fprintf(stderr, "%s: Failed to load module \"%s\"\n", __FUNCTION__ , module_name);
         return_value = -3;
         goto except;
     }
+    assert(! PyErr_Occurred());
     pFunc = PyObject_GetAttrString(pModule, function_name);
     if (! pFunc) {
         fprintf(stderr,
@@ -74,12 +83,14 @@ int import_call_execute(const char *module_name, const char *function_name) {
         return_value = -4;
         goto except;
     }
+    assert(! PyErr_Occurred());
     if (! PyCallable_Check(pFunc)) {
         fprintf(stderr,
                 "%s: Function \"%s\" is not callable\n", __FUNCTION__, function_name);
         return_value = -5;
         goto except;
     }
+    assert(! PyErr_Occurred());
     pResult = PyObject_CallObject(pFunc, NULL);
     if (! pResult) {
         fprintf(stderr, "%s: Function call %s failed\n", __FUNCTION__, function_name);
@@ -91,7 +102,7 @@ goto finally;
     except:
     assert(PyErr_Occurred());
     PyErr_Print();
-    finally:
+finally:
     Py_XDECREF(pFunc);
     Py_XDECREF(pModule);
     Py_XDECREF(pResult);
@@ -99,21 +110,56 @@ goto finally;
     return return_value;
 }
 
-int foo(void) {
-    int success = add_path_to_sys_module("/Users/engun/GitHub/paulross/PythonExtensionPatterns");
-    printf("Success: %d", success);
-    success = PyRun_SimpleString("from cPyExtPatt import cPyRefs");
-    printf("Success: %d", success);
-    return import_call_execute("cPyExtPatt.cPyRefs", "subtract_two_longs");
+int dbg_cPyRefs(void) {
+    int failure = PyRun_SimpleString("from cPyExtPatt import cPyRefs");
+    if (failure) {
+        printf("%s(): Failed with error code %d\n", __FUNCTION__, failure);
+        return failure;
+    }
+    return import_call_execute_no_args("cPyExtPatt.cPyRefs", "subtract_two_longs");
+}
+
+int test_dbg_cRefCount(void) {
+    int failure = PyRun_SimpleString("from cPyExtPatt import cRefCount");
+    if (failure) {
+        printf("%s(): Failed with error code %d\n", __FUNCTION__, failure);
+        return failure;
+    }
+//    if(import_call_execute_no_args("cPyExtPatt.cRefCount", "dbg_PyTuple_SET_ITEM_steals")) {
+//        return -1;
+//    }
+    if (import_call_execute_no_args("cPyExtPatt.cRefCount", "dbg_PyTuple_SetItem_steals_replace")) {
+        return -2;
+    }
+    if (import_call_execute_no_args("cPyExtPatt.cRefCount", "dbg_PyTuple_SET_ITEM_steals_replace")) {
+        return -3;
+    }
+    return 0;
 }
 
 int main(int argc, const char * argv[]) {
     // insert code here...
     printf("Hello, World!\n");
     Py_Initialize();
+    const char *cwd = current_working_directory("..");
+    int failure = add_path_to_sys_module(cwd);
+    if (failure) {
+        printf("add_path_to_sys_module(): Failed with error code %d\n", failure);
+        return  -1;
+    }
 
-    foo();
+//    failure = dbg_cPyRefs();
+//    if (failure) {
+//        printf("dbg_cPyRefs(): Failed with error code %d\n", failure);
+//        return  -1;
+//    }
 
+    /* cPyExtPatt.cRefCount tests*/
+    failure = test_dbg_cRefCount();
+    if (failure) {
+        printf("test_dbg_cRefCount(): Failed with error code %d\n", failure);
+        return failure;
+    }
 
     return 0;
 }
