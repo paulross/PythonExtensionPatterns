@@ -210,7 +210,9 @@ void dbg_PyTuple_SET_ITEM_steals_replace(void) {
     PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
     ref_count = Py_REFCNT(value_0);
     assert(ref_count == 1);
+
     PyTuple_SET_ITEM(container, 0, value_0);
+
     ref_count = Py_REFCNT(value_0);
     assert(ref_count == 1);
 
@@ -229,10 +231,9 @@ void dbg_PyTuple_SET_ITEM_steals_replace(void) {
 
     Py_DECREF(container);
 
-    /* This is now leaked. */
+    /* This is demonstrated as leaked. */
     ref_count = Py_REFCNT(value_0);
     assert(ref_count == 1);
-
     Py_DECREF(value_0);
 
     assert(!PyErr_Occurred());
@@ -369,3 +370,35 @@ void dbg_PyTuple_SET_ITEM_NULL_SET_ITEM(void) {
 
     assert(!PyErr_Occurred());
 }
+
+/**
+ * Function that explores Py_BuildValue("(O)", ...).
+ */
+void dbg_PyTuple_Py_BuildValue(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+
+    PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+
+    PyObject *container = Py_BuildValue("(O)", value_0);
+
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+    Py_DECREF(value_0);
+
+    assert(!PyErr_Occurred());
+}
+

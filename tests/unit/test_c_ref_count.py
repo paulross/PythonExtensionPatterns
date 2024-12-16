@@ -18,13 +18,17 @@ def test_module_dir():
         'list_steals',
         'set_no_steals',
         'set_no_steals_decref',
+        'test_PyTuple_Py_BuildValue',
+        'test_PyTuple_SET_ITEM_NULL',
+        'test_PyTuple_SET_ITEM_NULL_SET_ITEM',
         'test_PyTuple_SET_ITEM_steals',
         'test_PyTuple_SET_ITEM_steals_replace',
+        'test_PyTuple_SetIem_NULL_SetItem',
         'test_PyTuple_SetItem_NULL',
         'test_PyTuple_SetItem_steals',
         'test_PyTuple_SetItem_steals_replace',
         'tuple_buildvalue_steals',
-        'tuple_steals',
+        'tuple_steals'
     ]
 
 
@@ -71,13 +75,31 @@ def test_test_PyTuple_SetItem_steals():
 def test_test_PyTuple_SET_ITEM_steals():
     assert cRefCount.test_PyTuple_SET_ITEM_steals() == 0
 
+
 def test_test_PyTuple_SetItem_steals_replace():
     assert cRefCount.test_PyTuple_SetItem_steals_replace() == 0
 
 
 def test_test_PyTuple_SET_ITEM_steals_replace():
+    print()
     assert cRefCount.test_PyTuple_SET_ITEM_steals_replace() == 0
 
 
 def test_test_PyTuple_SetItem_NULL():
     assert cRefCount.test_PyTuple_SetItem_NULL() == 0
+
+
+def test_test_PyTuple_SET_ITEM_NULL():
+    assert cRefCount.test_PyTuple_SET_ITEM_NULL() == 0
+
+
+def test_test_PyTuple_SetIem_NULL_SetItem():
+    assert cRefCount.test_PyTuple_SetIem_NULL_SetItem() == 0
+
+
+def test_test_PyTuple_SET_ITEM_NULL_SET_ITEM():
+    assert cRefCount.test_PyTuple_SET_ITEM_NULL_SET_ITEM() == 0
+
+
+def test_test_PyTuple_Py_BuildValue():
+    assert cRefCount.test_PyTuple_Py_BuildValue() == 0
