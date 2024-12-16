@@ -146,7 +146,8 @@ void dbg_PyTuple_SetItem_steals_replace(void) {
     PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
     ref_count = Py_REFCNT(value_0);
     assert(ref_count == 1);
-    PyTuple_SetItem(container, 0, value_0);
+    int result = PyTuple_SetItem(container, 0, value_0);
+    assert(result == 0);
     ref_count = Py_REFCNT(value_0);
     assert(ref_count == 1);
 

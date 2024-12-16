@@ -740,6 +740,10 @@ test_PyTuple_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
     error_flag_position++;
 
     get_item = PyTuple_GET_ITEM(container, 0);
+    if (get_item != value_0) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
     ref_count = Py_REFCNT(get_item);
     if (ref_count != 1) {
         return_value |= 1 << error_flag_position;
@@ -754,11 +758,53 @@ test_PyTuple_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
     }
     error_flag_position++;
 
+    /* Preserve the value_0 as this reference count is about to be decremented. */
+    Py_INCREF(value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 2);
+
+    /* Preserve the value_1 so that we can see Py_DECREF(container) decrements it. */
+    Py_INCREF(value_1);
+    ref_count = Py_REFCNT(value_1);
+    assert(ref_count == 2);
+
     /* This will overwrite value_0 leaving it with a reference count of 1.*/
     if (PyTuple_SetItem(container, 0, value_1)) {
+        fprintf(stdout, "PyTuple_SetItem(container, 0, value_1)\n");
         return_value |= 1 << error_flag_position;
     }
     error_flag_position++;
+
+    /* Previous value is decremented. */
+    ref_count = Py_REFCNT(value_0);
+    if (ref_count != 1) {
+        fprintf(stdout, "Py_REFCNT(value_0) != 1 but %ld\n", Py_REFCNT(value_0));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(value_1);
+    if (ref_count != 2) {
+        fprintf(stdout, "Py_REFCNT(value_1) != 2 but %ld\n", Py_REFCNT(value_1));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyTuple_GET_ITEM(container, 0);
+    if (get_item != value_1) {
+        fprintf(stdout, "get_item != value_1\n");
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(get_item);
+    if (ref_count != 2) {
+        fprintf(stdout, "Py_REFCNT(get_item) != 1 but %ld\n", Py_REFCNT(get_item));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
 
     ref_count = Py_REFCNT(value_1);
     if (ref_count != 1) {
@@ -766,21 +812,8 @@ test_PyTuple_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
     }
     error_flag_position++;
 
-    get_item = PyTuple_GET_ITEM(container, 0);
-    if (get_item != value_1) {
-        return_value |= 1 << error_flag_position;
-    }
-    error_flag_position++;
+    Py_DECREF(value_1);
 
-    ref_count = Py_REFCNT(get_item);
-    if (ref_count != 1) {
-        return_value |= 1 << error_flag_position;
-    }
-    error_flag_position++;
-
-    Py_DECREF(container);
-
-    /* This is now leaked. */
     ref_count = Py_REFCNT(value_0);
     if (ref_count != 1) {
         return_value |= 1 << error_flag_position;
@@ -835,7 +868,10 @@ test_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
     }
     error_flag_position++;
 
-    PyTuple_SET_ITEM(container, 0, value_0);
+    if (PyTuple_SET_ITEM(container, 0, value_0)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
 
     ref_count = Py_REFCNT(value_0);
     if (ref_count != 1) {
@@ -844,6 +880,10 @@ test_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
     error_flag_position++;
 
     get_item = PyTuple_GET_ITEM(container, 0);
+    if (get_item != value_0) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
     ref_count = Py_REFCNT(get_item);
     if (ref_count != 1) {
         return_value |= 1 << error_flag_position;
@@ -858,8 +898,53 @@ test_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
     }
     error_flag_position++;
 
+    /* Preserve the value_0 as this reference count is about to be decremented. */
+    Py_INCREF(value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 2);
+
+    /* Preserve the value_1 so that we can see Py_DECREF(container) decrements it. */
+    Py_INCREF(value_1);
+    ref_count = Py_REFCNT(value_1);
+    assert(ref_count == 2);
+
     /* This will overwrite value_0 leaving it with a reference count of 1.*/
-    PyTuple_SET_ITEM(container, 0, value_1);
+    if (PyTuple_SET_ITEM(container, 0, value_1)) {
+        fprintf(stdout, "PyTuple_SET_ITEM(container, 0, value_1)\n");
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Previous value is decremented. */
+    ref_count = Py_REFCNT(value_0);
+    if (ref_count != 1) {
+        fprintf(stdout, "Py_REFCNT(value_0) != 1 but %ld\n", Py_REFCNT(value_0));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(value_1);
+    if (ref_count != 2) {
+        fprintf(stdout, "Py_REFCNT(value_1) != 2 but %ld\n", Py_REFCNT(value_1));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyTuple_GET_ITEM(container, 0);
+    if (get_item != value_1) {
+        fprintf(stdout, "get_item != value_1\n");
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(get_item);
+    if (ref_count != 2) {
+        fprintf(stdout, "Py_REFCNT(get_item) != 1 but %ld\n", Py_REFCNT(get_item));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
 
     ref_count = Py_REFCNT(value_1);
     if (ref_count != 1) {
@@ -867,21 +952,8 @@ test_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
     }
     error_flag_position++;
 
-    get_item = PyTuple_GET_ITEM(container, 0);
-    if (get_item != value_1) {
-        return_value |= 1 << error_flag_position;
-    }
-    error_flag_position++;
+    Py_DECREF(value_1);
 
-    ref_count = Py_REFCNT(get_item);
-    if (ref_count != 1) {
-        return_value |= 1 << error_flag_position;
-    }
-    error_flag_position++;
-
-    Py_DECREF(container);
-
-    /* This is now leaked. */
     ref_count = Py_REFCNT(value_0);
     if (ref_count != 1) {
         return_value |= 1 << error_flag_position;

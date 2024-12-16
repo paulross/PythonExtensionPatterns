@@ -71,7 +71,6 @@ def test_test_PyTuple_SetItem_steals():
 def test_test_PyTuple_SET_ITEM_steals():
     assert cRefCount.test_PyTuple_SET_ITEM_steals() == 0
 
-
 def test_test_PyTuple_SetItem_steals_replace():
     assert cRefCount.test_PyTuple_SetItem_steals_replace() == 0
 
