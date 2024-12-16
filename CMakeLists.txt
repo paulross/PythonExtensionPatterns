@@ -67,7 +67,10 @@ ELSE ()
     MESSAGE(FATAL_ERROR "Unable to find Python libraries.")
 ENDIF ()
 
-include_directories(src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList)
+include_directories(
+    src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList
+    src/cpy/Containers
+)
 
 add_executable(PythonExtensionPatterns
         src/main.c
@@ -116,7 +119,9 @@ add_executable(PythonExtensionPatterns
         src/cpy/RefCount/cRefCount.c
         src/cpy/Util/py_call_super.cpp
         src/cpy/CtxMgr/cCtxMgr.c
-)
+        src/cpy/Containers/DebugContainers.c
+        src/cpy/Containers/DebugContainers.h
+        )
 
 #link_directories(${PYTHON_LINK_LIBRARY})
 

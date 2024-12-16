@@ -18,6 +18,10 @@ def test_module_dir():
         'list_steals',
         'set_no_steals',
         'set_no_steals_decref',
+        'test_PyTuple_SET_ITEM_steals',
+        'test_PyTuple_SET_ITEM_steals_replace',
+        'test_PyTuple_SetItem_steals',
+        'test_PyTuple_SetItem_steals_replace',
         'tuple_buildvalue_steals',
         'tuple_steals',
     ]
@@ -57,3 +61,19 @@ def test_c_ref_count_dict_no_steals_decref_after_set():
 
 def test_c_ref_count_dict_buildvalue_no_steals():
     assert cRefCount.dict_buildvalue_no_steals() == 0
+
+
+def test_test_PyTuple_SetItem_steals():
+    assert cRefCount.test_PyTuple_SetItem_steals() == 0
+
+
+def test_test_PyTuple_SET_ITEM_steals():
+    assert cRefCount.test_PyTuple_SET_ITEM_steals() == 0
+
+
+def test_test_PyTuple_SetItem_steals_replace():
+    assert cRefCount.test_PyTuple_SetItem_steals_replace() == 0
+
+
+def test_test_PyTuple_SET_ITEM_steals_replace():
+    assert cRefCount.test_PyTuple_SET_ITEM_steals_replace() == 0

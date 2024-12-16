@@ -11,6 +11,8 @@
 
 #include <stdio.h>
 
+#include "DebugContainers.h"
+
 /**
  * Get the current working directory using \c getcwd().
  *
@@ -31,6 +33,7 @@ const char *current_working_directory(const char *extend) {
     return cwd;
 }
 
+#if 0
 /** Takes a path and adds it to sys.paths by calling PyRun_SimpleString.
  * This does rather laborious C string concatenation so that it will work in
  * a primitive C environment.
@@ -110,43 +113,19 @@ finally:
     return return_value;
 }
 
-int dbg_cPyRefs(void) {
-    int failure = PyRun_SimpleString("from cPyExtPatt import cPyRefs");
-    if (failure) {
-        printf("%s(): Failed with error code %d\n", __FUNCTION__, failure);
-        return failure;
-    }
-    return import_call_execute_no_args("cPyExtPatt.cPyRefs", "subtract_two_longs");
-}
-
-int test_dbg_cRefCount(void) {
-    int failure = PyRun_SimpleString("from cPyExtPatt import cRefCount");
-    if (failure) {
-        printf("%s(): Failed with error code %d\n", __FUNCTION__, failure);
-        return failure;
-    }
-//    if(import_call_execute_no_args("cPyExtPatt.cRefCount", "dbg_PyTuple_SET_ITEM_steals")) {
-//        return -1;
-//    }
-    if (import_call_execute_no_args("cPyExtPatt.cRefCount", "dbg_PyTuple_SetItem_steals_replace")) {
-        return -2;
-    }
-    if (import_call_execute_no_args("cPyExtPatt.cRefCount", "dbg_PyTuple_SET_ITEM_steals_replace")) {
-        return -3;
-    }
-    return 0;
-}
+#endif
 
 int main(int argc, const char * argv[]) {
     // insert code here...
     printf("Hello, World!\n");
     Py_Initialize();
     const char *cwd = current_working_directory("..");
-    int failure = add_path_to_sys_module(cwd);
-    if (failure) {
-        printf("add_path_to_sys_module(): Failed with error code %d\n", failure);
-        return  -1;
-    }
+    int failure = 0;
+//    failure = add_path_to_sys_module(cwd);
+//    if (failure) {
+//        printf("add_path_to_sys_module(): Failed with error code %d\n", failure);
+//        goto finally;
+//    }
 
 //    failure = dbg_cPyRefs();
 //    if (failure) {
@@ -154,13 +133,19 @@ int main(int argc, const char * argv[]) {
 //        return  -1;
 //    }
 
-    /* cPyExtPatt.cRefCount tests*/
-    failure = test_dbg_cRefCount();
-    if (failure) {
-        printf("test_dbg_cRefCount(): Failed with error code %d\n", failure);
-        return failure;
-    }
+//    /* cPyExtPatt.cRefCount tests*/
+//    failure = test_dbg_cRefCount();
+//    if (failure) {
+//        printf("test_dbg_cRefCount(): Failed with error code %d\n", failure);
+//        goto finally;
+//    }
 
-    return 0;
+    dbg_PyTuple_SetItem_steals();
+    dbg_PyTuple_SET_ITEM_steals();
+    dbg_PyTuple_SetItem_steals_replace();
+    dbg_PyTuple_SET_ITEM_steals_replace();
+
+
+    return failure;
 }
 
