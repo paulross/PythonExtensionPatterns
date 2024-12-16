@@ -49,6 +49,7 @@ new_unique_string(const char *function_name, const char *suffix) {
  * asserts are use for the test so this is expected to be run in DEBUG mode.
  */
 void dbg_PyTuple_SetItem_steals(void) {
+    printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
         PyErr_Print();
         return;
@@ -89,6 +90,7 @@ void dbg_PyTuple_SetItem_steals(void) {
  * asserts are use for the test so this is expected to be run in DEBUG mode.
  */
 void dbg_PyTuple_SET_ITEM_steals(void) {
+    printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
         PyErr_Print();
         return;
@@ -129,6 +131,7 @@ void dbg_PyTuple_SET_ITEM_steals(void) {
  * This DOES leak an existing value contrary to the Python documentation.
  */
 void dbg_PyTuple_SetItem_steals_replace(void) {
+    printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
         PyErr_Print();
         return;
@@ -191,6 +194,7 @@ void dbg_PyTuple_SetItem_steals_replace(void) {
  * asserts are use for the test so this is expected to be run in DEBUG mode.
  */
 void dbg_PyTuple_SET_ITEM_steals_replace(void) {
+    printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
         PyErr_Print();
         return;
@@ -228,6 +232,138 @@ void dbg_PyTuple_SET_ITEM_steals_replace(void) {
     ref_count = Py_REFCNT(value_0);
     assert(ref_count == 1);
 
+    Py_DECREF(value_0);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
+ * Function that explores setting an item in a tuple to NULL with PyTuple_SetItem().
+ */
+void dbg_PyTuple_SetIem_NULL(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    PyTuple_SetItem(container, 0, NULL);
+    assert(!PyErr_Occurred());
+
+    Py_DECREF(container);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
+ * Function that explores setting an item in a tuple to NULL with PyTuple_SET_ITEM().
+ */
+void dbg_PyTuple_SET_ITEM_NULL(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    PyTuple_SET_ITEM(container, 0, NULL);
+    assert(!PyErr_Occurred());
+
+    Py_DECREF(container);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
+ * Function that explores setting an item in a tuple to NULL with PyTuple_SetItem() then setting it to a value.
+ */
+void dbg_PyTuple_SetIem_NULL_SetItem(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    PyTuple_SetItem(container, 0, NULL);
+    assert(!PyErr_Occurred());
+
+    PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+
+    /* Preserve the value_0 as this reference count is about to be decremented. */
+    Py_INCREF(value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 2);
+
+    PyTuple_SetItem(container, 0, value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 2);
+
+    Py_DECREF(container);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+    Py_DECREF(value_0);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
+ * Function that explores setting an item in a tuple to NULL with PyTuple_SET_ITEM() then setting it to a value.
+ */
+void dbg_PyTuple_SET_ITEM_NULL_SET_ITEM(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    PyTuple_SetItem(container, 0, NULL);
+    assert(!PyErr_Occurred());
+
+    PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
+
+    /* Preserve the value_0 as this reference count is about to be decremented. */
+    Py_INCREF(value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 2);
+
+    PyTuple_SET_ITEM(container, 0, value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 2);
+
+    Py_DECREF(container);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 1);
     Py_DECREF(value_0);
 
     assert(!PyErr_Occurred());

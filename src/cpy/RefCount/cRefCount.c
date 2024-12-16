@@ -896,6 +896,57 @@ test_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
     return PyLong_FromLong(return_value);
 }
 
+static PyObject *
+test_PyTuple_SetItem_NULL(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    Py_ssize_t ref_count;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyTuple_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(container);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    PyTuple_SET_ITEM(container, 0, NULL);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyTuple_GET_ITEM(container, 0);
+    if (get_item != NULL) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    assert(!PyErr_Occurred());
+finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
 #define MODULE_NOARGS_ENTRY(name, doc)  \
     {                                   \
         #name,                          \
@@ -925,6 +976,7 @@ static PyMethodDef module_methods[] = {
                             "Check that PyTuple_SetItem() steals a reference on replacement."),
         MODULE_NOARGS_ENTRY(test_PyTuple_SET_ITEM_steals_replace,
                             "Check that PyTuple_SET_ITEM() steals a reference on replacement."),
+        MODULE_NOARGS_ENTRY(test_PyTuple_SetItem_NULL, "Check that PyTuple_SetItem() with NULL does not error."),
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
