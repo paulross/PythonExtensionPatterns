@@ -10,12 +10,11 @@
 Reference Counts and Python Containers
 ======================================
 
-Given the descriptions of *New*, *Stolen* and *Borrowed*
-references described in the preceeding chapter, this chapter looks
-in more detail of how the Python C API works with different containers.
+The descriptions of *New*, *Stolen* and *Borrowed* references were described in the preceding chapter.
+This chapter looks in more detail of how the Python C API works with different containers, tuple, list, set and dict.
 
-Of particular interest is *Setters*, *Getters* and the behaviour of
-``Py_BuildValue``.
+Of particular interest is *Setters*, *Getters* and the behaviour of ``Py_BuildValue`` for each of those containers.
+This chapter also clarifies the Python documentation where it is inaccurate or misleading.
 
 Buckle up.
 
@@ -23,19 +22,15 @@ Buckle up.
 Methodology
 --------------------------
 
-Firstly a utility function for creating new, uncached, Python objects:
+This chapter explores the CPython C API in several ways:
 
-.. code-block:: c
-
-    /* This is used to guarantee that Python is not caching a string value when we want to check the
-     * reference counts after each string creation.
-     * */
-    static int debug_test_count = 0;
-
-    static PyObject *
-    new_unique_string(const char *function_name) {
-        return PyUnicode_FromFormat("%s-%d", function_name, debug_test_count++);
-    }
+* Tests of the CPython C API that can be stepped through in the debugger.
+  This code is in ``src/cpy/Containers/DebugContainers.h`` and ``src/cpy/Containers/DebugContainers.c``
+  and ``asserts`` are used to check the results, particularly reference counts.
+  It is exercised by ``src/main.c``.
+* Similar test code is in ``src/cpy/RefCount/cRefCount.c`` which is built into the Python module ``cRefCount``.
+  This can be run under ``pytest``.
+* A review of the Python C API documentation.
 
 Here is an example of exploring reference counts and tuples.
 
@@ -91,7 +86,7 @@ Here is an example of exploring reference counts and tuples.
         Py_RETURN_NONE;
     }
 
-
+Firstly Tuples:
 
 -----------------------
 Tuple
@@ -115,6 +110,34 @@ The Python documentation for the `Tuple API <https://docs.python.org/3/c-api/tup
    * - ``Py_BuildValue("(s)", val)``
      - Steals, leaks original.
      - More stuff.
+
+
+``PyTuple_SetItem()``
+---------------------
+
+`PyTuple_SetItem() <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem>`_
+
+
+``PyTuple_SET_ITEM()``
+---------------------
+
+`PyTuple_SetItem() <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SET_ITEM>`_
+
+
+``Py_BuildValue()``
+-------------------
+
+`Py_BuildValue() <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_
+
+
+``PyTuple_Pack()``
+------------------
+
+`PyTuple_Pack() <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack>`_
+is a wrapper around
+`Py_BuildValue() <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_
+so is not explored any further.
+
 
 -----------------------
 List
