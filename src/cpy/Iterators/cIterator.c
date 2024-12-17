@@ -268,6 +268,7 @@ iterate_and_print(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
         return NULL;
     }
     fprintf(stdout, "%s: DONE\n", __FUNCTION__ );
+    fflush(stdout);
     assert(!PyErr_Occurred());
     Py_RETURN_NONE;
 }
