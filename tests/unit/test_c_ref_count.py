@@ -25,6 +25,8 @@ def test_module_dir():
         'test_PyTuple_SET_ITEM_steals_replace',
         'test_PyTuple_SetIem_NULL_SetItem',
         'test_PyTuple_SetItem_NULL',
+        'test_PyTuple_SetItem_fails_not_a_tuple',
+        'test_PyTuple_SetItem_fails_out_of_range',
         'test_PyTuple_SetItem_steals',
         'test_PyTuple_SetItem_steals_replace',
         'tuple_buildvalue_steals',
@@ -99,6 +101,18 @@ def test_test_PyTuple_SetIem_NULL_SetItem():
 
 def test_test_PyTuple_SET_ITEM_NULL_SET_ITEM():
     assert cRefCount.test_PyTuple_SET_ITEM_NULL_SET_ITEM() == 0
+
+
+def test_test_PyTuple_SetItem_fails_not_a_tuple():
+    with pytest.raises(SystemError) as err:
+        cRefCount.test_PyTuple_SetItem_fails_not_a_tuple()
+    assert err.value.args[0].endswith('bad argument to internal function')
+
+
+def test_test_PyTuple_SetItem_fails_out_of_range():
+    with pytest.raises(IndexError) as err:
+        cRefCount.test_PyTuple_SetItem_fails_out_of_range()
+    assert err.value.args[0] == 'tuple assignment index out of range'
 
 
 def test_test_PyTuple_Py_BuildValue():

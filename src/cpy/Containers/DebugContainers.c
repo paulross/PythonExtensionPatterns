@@ -372,6 +372,94 @@ void dbg_PyTuple_SET_ITEM_NULL_SET_ITEM(void) {
 }
 
 /**
+ * A function that checks PyTuple_SetItem when the container is not a tuple.
+ * This decrements the value reference count.
+ */
+void dbg_PyTuple_SetItem_fails_not_a_tuple(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(1);
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    /* We want to to hold onto this as PyTuple_SetItem() will decref it. */
+    Py_INCREF(value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    int result = PyTuple_SetItem(container, 0, value);
+    assert(result == -1);
+    assert(PyErr_Occurred());
+    PyErr_PrintEx(0);
+    PyErr_Clear();
+
+    /* Yes, has been decremented on failure. */
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
+ * A function that checks PyTuple_SetItem when the container is not a tuple.
+ * This decrements the value reference count.
+ */
+void dbg_PyTuple_SetItem_fails_out_of_range(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    /* We want to to hold onto this as PyTuple_SetItem() will decref it. */
+    Py_INCREF(value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    int result = PyTuple_SetItem(container, 1, value);
+    assert(result == -1);
+    assert(PyErr_Occurred());
+    PyErr_PrintEx(0);
+    PyErr_Clear();
+
+    /* Yes, has been decremented on failure. */
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
  * Function that explores Py_BuildValue("(O)", ...).
  */
 void dbg_PyTuple_Py_BuildValue(void) {

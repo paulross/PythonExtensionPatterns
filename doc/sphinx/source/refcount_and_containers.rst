@@ -124,6 +124,15 @@ The Python documentation for the `Tuple API <https://docs.python.org/3/c-api/tup
 ``PyTuple_SetItem()``
 ---------------------
 
+`PyTuple_SetItem()`_ inserts an object into a tuple with error checking.
+It checks for these errors returning non-zero in that case:
+
+* The container is a tuple.
+* The index is in range. Negative indexes are not allowed.
+
+As seen below, the failure of `PyTuple_SetItem()`_ has serious consequences for the value that is intended to be
+inserted.
+
 Basic Usage
 ^^^^^^^^^^^
 
@@ -159,21 +168,192 @@ What happens when you use `PyTuple_SetItem()`_ to replace an existing element in
     PyTuple_SetItem(container, 0, value_a); /* Ref count of value_a will be 1. */
     PyObject *value_b = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
     PyTuple_SetItem(container, 0, value_b);
-    /* Ref count of value_b will be 1, value_a ref count will be decremented. */
+    /* Ref count of value_b will be 1, value_a ref count will be decremented (possibly free'd). */
 
 For code tests see:
 
 * ``dbg_PyTuple_SetItem_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
 * ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals_replece``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals_replace``.
 
+``PyTuple_SetItem()`` Failures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`PyTuple_SetItem()`_ can fail for these reasons:
+
+* The given container is not a tuple.
+* The index is out of range; index < 0 or index >= tuple length. So negative indexes are not allowed.
+
+A consequence of failure is that the value being inserted will be decref'd.
+For example this code will segfault:
+
+.. code-block:: c
+
+    PyObject *container = PyTuple_New(1); /* Reference count will be 1. */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+    assert(Py_REFCNT(value) == 1);
+    /* Lets increment the reference count so it can be examined after
+     * PyTuple_SetItem() failure. */
+    Py_INCREF(value);
+    assert(Py_REFCNT(value) == 2);
+    assert(!PyErr_Occurred());
+    int result = PyTuple_SetItem(container, 1, value); /* Index out of range. */
+    /* Failure... */
+    assert(result == -1);
+    assert(PyErr_Occurred());
+    /* Yes, has been decremented on failure.
+     * If we hadn't done Py_INCREF(value); above then value would have gone
+     * out of scope and lost to us. */
+    assert(Py_REFCNT(value) == 1);
+    Py_DECREF(container); /* OK. */
+    /* This would segfault if we hadn't done Py_INCREF(value); above. */
+    Py_DECREF(value);
+
+Or to be clear:
+
+.. code-block:: c
+
+    PyObject *container = PyTuple_New(1); /* Reference count will be 1. */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+    PyTuple_SetItem(container, 1, value); /* Index out of range. */
+    Py_DECREF(value); /* SIGSEGV */
+
+For code tests see (not a tuple):
+
+* ``dbg_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_fails_not_a_tuple``.
+
+And (index out of range):
+
+* ``dbg_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_fails_out_of_range``.
 
 
 ``PyTuple_SET_ITEM()``
 ----------------------
 
-`PyTuple_SET_ITEM()`_
+`PyTuple_SET_ITEM()`_ inserts an object into a tuple without any error checking.
+Because of that is slightly faster than `PyTuple_SetItem()`_.
+If invoked with these errors the results are likely to be tragic, mostly undefined behaviour and/or memory corruption:
 
+* The container is a not a tuple.
+* The index is out of range.
+
+Importantly `PyTuple_SET_ITEM()`_ behaves **differently** to `PyTuple_SetItem()`_ when replacing another object.
+
+Basic Usage
+^^^^^^^^^^^
+
+`PyTuple_SET_ITEM()`_ *steals* a reference.
+
+.. code-block:: c
+
+    PyObject *container = PyTuple_New(1); /* Reference count will be 1. */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+    PyTuple_SET_ITEM(container, 0, value); /* Ref count of value will be 1. */
+    /* get_item == value and Ref count will be 1. */
+    PyObject *get_item = PyTuple_GET_ITEM(container, 0);
+    Py_DECREF(container); /* The contents of the container, value, will be decref'd */
+    /* Do not do this as the container deals with this. */
+    /* Py_DECREF(value); */
+
+For code tests see:
+
+* ``dbg_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_PyTuple_SET_ITEM_steals``.
+
+Replacement
+^^^^^^^^^^^
+
+`PyTuple_SET_ITEM()`_ differs from `PyTuple_SetItem()`_ when replacing an existing element in a tuple.
+The original reference will be leaked:
+
+.. code-block:: c
+
+    PyObject *container = PyTuple_New(1); /* Reference count will be 1. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+    PyTuple_SET_ITEM(container, 0, value_a); /* Ref count of value_a will be 1. */
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+    PyTuple_SET_ITEM(container, 0, value_b);
+    assert(Py_REFCNT(value_a) == 1);
+    /* Ref count of value_b will be 1, value_a ref count will still be at 1. value_a will be leaked. */
+
+For code tests see:
+
+* ``dbg_PyTuple_SET_ITEM_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals_replace``.
+
+
+``PyTuple_SetItem()`` Failures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`PyTuple_SetItem()`_ can fail for these reasons:
+
+
+Setting and Replacing ``NULL``
+------------------------------
+
+Both `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave the same way.
+
+Setting a ``NULL`` will not cause an error:
+
+.. code-block:: c
+
+    assert(!PyErr_Occurred());
+    PyTuple_SetItem(container, 0, NULL);
+    assert(!PyErr_Occurred());
+
+For code tests see:
+
+* ``dbg_PyTuple_SetIem_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SetItem_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_NULL``.
+
+And:
+
+.. code-block:: c
+
+    assert(!PyErr_Occurred());
+    PyTuple_SET_ITEM(container, 0, NULL);
+    assert(!PyErr_Occurred());
+
+For code tests see:
+
+* ``dbg_PyTuple_SET_ITEM_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SET_ITEM_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SET_ITEM_NULL``.
+
+Replacing a ``NULL`` will not cause an error, the replaced value reference is *stolen*:
+
+.. code-block:: c
+
+    PyTuple_SetItem(container, 0, NULL);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref Count of value is 1. */
+    PyTuple_SetItem(container, 0, value); /* Ref Count of value is still 1. */
+
+For code tests see:
+
+* ``dbg_PyTuple_SetIem_NULL_SetIem`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SetItem_NULL_SetIem`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_NULL_SetIem``.
+
+And:
+
+.. code-block:: c
+
+    PyTuple_SET_ITEM(container, 0, NULL);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref Count of value is 1. */
+    PyTuple_SET_ITEM(container, 0, value); /* Ref Count of value is still 1. */
+
+For code tests see:
+
+* ``dbg_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SET_ITEM_NULL_SET_ITEM``.
 
 ``Py_BuildValue()``
 -------------------

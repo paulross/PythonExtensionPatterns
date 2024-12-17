@@ -148,6 +148,8 @@ int main(int argc, const char * argv[]) {
     dbg_PyTuple_SET_ITEM_NULL();
     dbg_PyTuple_SetIem_NULL_SetItem();
     dbg_PyTuple_SET_ITEM_NULL_SET_ITEM();
+    dbg_PyTuple_SetItem_fails_not_a_tuple();
+    dbg_PyTuple_SetItem_fails_out_of_range();
     dbg_PyTuple_Py_BuildValue();
 
     printf("Bye, bye!\n");

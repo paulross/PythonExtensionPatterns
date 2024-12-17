@@ -1171,6 +1171,50 @@ finally:
 }
 
 static PyObject *
+test_PyTuple_SetItem_fails_not_a_tuple(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return NULL;
+    }
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* This should fail. */
+    if (PyTuple_SetItem(container, 0, value)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    PyErr_Format(PyExc_RuntimeError, "Should have raised an error.");
+    return NULL;
+}
+
+static PyObject *
+test_PyTuple_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+
+    PyObject *container = PyTuple_New(1);
+    if (!container) {
+        return NULL;
+    }
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* This should fail. */
+    if (PyTuple_SetItem(container, 1, value)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    PyErr_Format(PyExc_RuntimeError, "Should have raised an error.");
+    return NULL;
+}
+
+static PyObject *
 test_PyTuple_Py_BuildValue(PyObject *Py_UNUSED(module)) {
     if (PyErr_Occurred()) {
         PyErr_Print();
@@ -1235,6 +1279,10 @@ static PyMethodDef module_methods[] = {
                             "Check that PyTuple_SetItem() with NULL then with an object does not error."),
         MODULE_NOARGS_ENTRY(test_PyTuple_SET_ITEM_NULL_SET_ITEM,
                             "Check that PyTuple_SET_ITEM() with NULL then with an object does not error."),
+        MODULE_NOARGS_ENTRY(test_PyTuple_SetItem_fails_not_a_tuple,
+                            "Check that PyTuple_SET_ITEM() fails when not a tuple."),
+        MODULE_NOARGS_ENTRY(test_PyTuple_SetItem_fails_out_of_range,
+                            "Check that PyTuple_SET_ITEM() fails when index out of range."),
         MODULE_NOARGS_ENTRY(test_PyTuple_Py_BuildValue,
                             "Check that Py_BuildValue() with an existing object."),
         {NULL, NULL, 0, NULL} /* Sentinel */
