@@ -471,21 +471,25 @@ void dbg_PyTuple_Py_BuildValue(void) {
     assert(!PyErr_Occurred());
     int ref_count;
 
-    PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
-    ref_count = Py_REFCNT(value_0);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
     assert(ref_count == 1);
 
-    PyObject *container = Py_BuildValue("(O)", value_0);
+    PyObject *container = Py_BuildValue("(O)", value);
 
     assert(container);
     ref_count = Py_REFCNT(container);
     assert(ref_count == 1);
 
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
     Py_DECREF(container);
 
-    ref_count = Py_REFCNT(value_0);
+    ref_count = Py_REFCNT(value);
     assert(ref_count == 1);
-    Py_DECREF(value_0);
+
+    Py_DECREF(value);
 
     assert(!PyErr_Occurred());
 }
