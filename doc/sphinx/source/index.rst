@@ -35,9 +35,12 @@ Coding Patterns for Python Extensions
     miscellaneous
     further_reading
     todo
+    _index_styles
     HISTORY
 
 Search
 ==================
 
+* :ref:`genindex`
+* :ref:`modindex`
 * :ref:`search`

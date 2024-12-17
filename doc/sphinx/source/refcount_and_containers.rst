@@ -4,6 +4,15 @@
 .. toctree::
     :maxdepth: 3
 
+
+..
+    Links, mostly to the Python documentation:
+
+.. _PyTuple_SetItem(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
+.. _PyTuple_SET_ITEM(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SET_ITEM
+.. _Py_BuildValue(): https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue
+.. _PyTuple_Pack(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack
+
 .. _chapter_refcount_and_containers:
 
 ======================================
@@ -56,7 +65,7 @@ Here is an example of exploring reference counts and tuples.
         assert(Py_REFCNT(container) == 1);
 
         /* Create a new string. */
-        PyObject *value_0 = new_unique_string(__FUNCTION__);
+        PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
         assert(Py_REFCNT(value_0) == 1);
 
         /* Set it as tuple[0].
@@ -101,10 +110,10 @@ The Python documentation for the `Tuple API <https://docs.python.org/3/c-api/tup
    * - Python C API
      - Behaviour
      - Notes
-   * - `PyTuple_SetItem() <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem>`_
+   * - `PyTuple_SetItem()`_
      - Steals, decrements the reference count of the original.
      - More stuff.
-   * - `PyTuple_SET_ITEM() <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SET_ITEM>`_
+   * - `PyTuple_SET_ITEM()`_
      - Steals, leaks original.
      - **Contrary** to the documentation this leaks.
    * - ``Py_BuildValue("(s)", val)``
@@ -115,29 +124,67 @@ The Python documentation for the `Tuple API <https://docs.python.org/3/c-api/tup
 ``PyTuple_SetItem()``
 ---------------------
 
-`PyTuple_SetItem() <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem>`_
+Basic Usage
+^^^^^^^^^^^
+
+`PyTuple_SetItem()`_ *steals* a reference.
+
+.. code-block:: c
+
+    PyObject *container = PyTuple_New(1); /* Reference count will be 1. */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+    PyTuple_SetItem(container, 0, value); /* Ref count of value will be 1. */
+    /* get_item == value and Ref count will be 1. */
+    PyObject *get_item = PyTuple_GET_ITEM(container, 0);
+    Py_DECREF(container); /* The contents of the container, value, will be decref'd */
+    /* Do not do this as the container deals with this. */
+    /* Py_DECREF(value); */
+
+For code tests see:
+
+* ``dbg_PyTuple_SetItem_steals`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SetItem_steals`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals``.
+
+Replacement
+^^^^^^^^^^^
+
+What happens when you use `PyTuple_SetItem()`_ to replace an existing element in a tuple.
+`PyTuple_SetItem()`_ still *steals* a reference, but what happens to the original reference?
+
+.. code-block:: c
+
+    PyObject *container = PyTuple_New(1); /* Reference count will be 1. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+    PyTuple_SetItem(container, 0, value_a); /* Ref count of value_a will be 1. */
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+    PyTuple_SetItem(container, 0, value_b);
+    /* Ref count of value_b will be 1, value_a ref count will be decremented. */
+
+For code tests see:
+
+* ``dbg_PyTuple_SetItem_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
+* ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
+* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals_replece``.
+
 
 
 ``PyTuple_SET_ITEM()``
----------------------
+----------------------
 
-`PyTuple_SetItem() <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SET_ITEM>`_
+`PyTuple_SET_ITEM()`_
 
 
 ``Py_BuildValue()``
 -------------------
 
-`Py_BuildValue() <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_
+`Py_BuildValue()`_
 
 
 ``PyTuple_Pack()``
 ------------------
 
-`PyTuple_Pack() <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack>`_
-is a wrapper around
-`Py_BuildValue() <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_
-so is not explored any further.
-
+`PyTuple_Pack()`_ is a wrapper around `Py_BuildValue()`_ so is not explored any further.
 
 -----------------------
 List
