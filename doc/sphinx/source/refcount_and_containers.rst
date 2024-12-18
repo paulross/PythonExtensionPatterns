@@ -23,32 +23,35 @@ Reference Counts and Python Containers
 ======================================
 
 The descriptions of *New*, *Stolen* and *Borrowed* references were described in the preceding chapter.
-This chapter looks in more detail of how the Python C API works with different containers, tuple, list, set and dict.
+This chapter looks in more detail of how the Python C API works with different containers,
+such as ``tuple``, ``list``, ``set`` and ``dict``.
+
+This chapter includes examples and tests that you can step through to better understand the interplay
+between the container and the object in that container.
 
 Of particular interest is *Setters*, *Getters* and the behaviour of ``Py_BuildValue`` for each of those containers.
-This chapter also clarifies the Python documentation where it is inaccurate or misleading.
-
-Buckle up.
+This chapter also clarifies the Python documentation where that is inaccurate, incomplete or misleading.
 
 ---------------------------
 Exploring the CPython C API
 ---------------------------
 
-This chapter explores the CPython C API in several ways:
+The code in this chapter explores the CPython C API in several ways:
 
 * C code that can be stepped through in the debugger.
-  This code is in ``src/cpy/Containers/DebugContainers.h`` and ``src/cpy/Containers/DebugContainers.c``.
+  This code is in ``src/cpy/Containers/DebugContainers.c``.
   ``asserts`` are used to check the results, particularly reference counts.
   It is exercised by ``src/main.c``.
-* Test code is in ``src/cpy/RefCount/cRefCount.c`` which is built into the Python module ``cRefCount``.
-  This can be run under ``pytest``.
+* Test code is in ``src/cpy/RefCount/cRefCount.c`` which is built into the Python module
+  ``cPyExtPatt.cRefCount``.
+  This can be run under ``pytest`` for multipel Python versions by ``build_all.sh``.
 * A review of the Python C API documentation.
 
 .. note::
 
     The examples below use code that calls a function ``new_unique_string()``.
     This function is designed to create a new, unique,  ``PyObject`` (a string)
-    that is never cached.
+    that is never cached so always has a reference count of unity.
 
     The implementation is in ``src/cpy/Containers/DebugContainers.c`` and looks something like this:
 
@@ -58,22 +61,17 @@ This chapter explores the CPython C API in several ways:
 
         PyObject *
         new_unique_string(const char *function_name, const char *suffix) {
-            PyObject *value =  NULL;
             if (suffix){
-                value = PyUnicode_FromFormat(
-                    "%s-%^s-%ld", function_name, suffix, debug_test_count
-                );
-            } else {
-                value = PyUnicode_FromFormat(
-                    "%s-%ld", function_name, debug_test_count
+                return PyUnicode_FromFormat(
+                    "%s-%^s-%ld", function_name, suffix, debug_test_count++
                 );
             }
-            ++debug_test_count;
-            return value;
+            return PyUnicode_FromFormat(
+                "%s-%ld", function_name, debug_test_count++
+            );
         }
 
-Firstly Tuples, I'll go into quite a lot of detail here because it covers lists as well.
-The section on lists just describes the differences from tuples.
+Firstly Tuples, I'll go into quite a lot of detail here because it covers the other containers as well.
 
 .. _chapter_refcount_and_containers.tuples:
 
@@ -88,10 +86,13 @@ Firstly setters, there are two APIs for setting an item in a tuple; `PyTuple_Set
 
 .. _chapter_refcount_and_containers.tuples.PyTuple_SetItem:
 
+.. index::
+    single: PyTuple_SetItem()
+
 ``PyTuple_SetItem()``
 ---------------------
 
-`PyTuple_SetItem()`_ inserts an object into a tuple with error checking.
+`PyTuple_SetItem()`_ (a C function) inserts an object into a tuple with error checking.
 This function returns non-zero on error, these are described below in
 :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.failures`.
 The failure of `PyTuple_SetItem()`_ has serious consequences for the value
@@ -119,9 +120,9 @@ For example:
 
 For code and tests see:
 
-* ``dbg_PyTuple_SetItem_steals`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SetItem_steals`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals``.
+* C: ``dbg_PyTuple_SetItem_steals`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_steals`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals``.
 
 Replacement
 ^^^^^^^^^^^
@@ -133,18 +134,20 @@ Lets see:
 .. code-block:: c
 
     PyObject *container = PyTuple_New(1); /* container ref count will be 1. */
-    PyObject *value_a = new_unique_string(__FUNCTION__, NULL); /* value_a ref count will be 1. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    /* value_a ref count will be 1. */
     PyTuple_SetItem(container, 0, value_a); /* value_a ref count will remain 1. */
-    PyObject *value_b = new_unique_string(__FUNCTION__, NULL); /* value_b ref count will be 1. */
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    /* value_b ref count will be 1. */
     PyTuple_SetItem(container, 0, value_b);
     /* Now value_b ref count will remain 1 and value_a ref count will have been decremented
      * In this case value_a will have been free'd. */
 
 For code and tests see:
 
-* ``dbg_PyTuple_SetItem_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals_replace``.
+* C: ``dbg_PyTuple_SetItem_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals_replace``.
 
 .. _chapter_refcount_and_containers.tuples.PyTuple_SetItem.failures:
 
@@ -168,35 +171,28 @@ For example this code will segfault:
 
 For code tests see, when the container is not a tuple:
 
-* ``dbg_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_fails_not_a_tuple``.
+* C: ``dbg_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_fails_not_a_tuple``.
 
 And, when the index out of range:
 
-* ``dbg_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_fails_out_of_range``.
+* C: ``dbg_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_fails_out_of_range``.
 
 .. note::
 
     I'm not really sure why the `PyTuple_SetItem()`_ API exists.
-    Tuples are meant to be immutable but this API treats them as mutable.
+    Tuples are meant to be immutable but this API treats existing tuples as mutable.
     It would seem like the `PyTuple_SET_ITEM()`_ would be enough.
 
 ``PyTuple_SET_ITEM()``
 ----------------------
 
-`PyTuple_SET_ITEM()`_ inserts an object into a tuple without any error checking.
+`PyTuple_SET_ITEM()`_ is a function like macro that inserts an object into a tuple without any error
+checking, because of that is slightly faster than `PyTuple_SetItem()`_ (see failures below).
 This is usually used on newly created tuples.
-Because of that is slightly faster than `PyTuple_SetItem()`_.
-If invoked with these errors:
-
-* The container is a not a tuple.
-* The index is out of range.
-
-`PyTuple_SET_ITEM()`_  is capable of writing to arbitrary locations.
-The result is likely to be tragic, mostly undefined behaviour and/or memory corruption:
 
 Importantly `PyTuple_SET_ITEM()`_ behaves **differently** to `PyTuple_SetItem()`_
 when replacing another object.
@@ -204,7 +200,7 @@ when replacing another object.
 Basic Usage
 ^^^^^^^^^^^
 
-`PyTuple_SET_ITEM()`_ *steals* a reference.
+`PyTuple_SET_ITEM()`_ *steals* a reference just like `PyTuple_SetItem()`_.
 
 .. code-block:: c
 
@@ -220,14 +216,14 @@ Basic Usage
 
 For code and tests see:
 
-* ``dbg_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_PyTuple_SET_ITEM_steals``.
+* C: ``dbg_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_PyTuple_SET_ITEM_steals``.
 
 Replacement
 ^^^^^^^^^^^
 
-`PyTuple_SET_ITEM()`_ differs from `PyTuple_SetItem()`_ when replacing an existing
+`PyTuple_SET_ITEM()`_ **differs** from `PyTuple_SetItem()`_ when replacing an existing
 element in a tuple as the original reference will be leaked:
 
 .. code-block:: c
@@ -243,20 +239,21 @@ element in a tuple as the original reference will be leaked:
 
 For code and tests see:
 
-* ``dbg_PyTuple_SET_ITEM_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals_replace``.
+* C: ``dbg_PyTuple_SET_ITEM_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_steals_replace``.
 
 ``PyTuple_SET_ITEM()`` Failures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`PyTuple_SET_ITEM()`_ minimises the error checking that `PyTuple_SetItem()`_ does:
+`PyTuple_SET_ITEM()`_ minimises the error checking that `PyTuple_SetItem()`_ does, so:
 
 * It does not check if the given container is a Tuple.
 * It does not check if the index in range.
 
-If either of those is wrong then `PyTuple_SET_ITEM()`_ will merrily write to arbitrary
-memory which you might find *very* painful.
+If either of those is wrong then `PyTuple_SET_ITEM()`_ is capable of writing to arbitrary
+memory locations, and the result is likely to be tragic, mostly undefined behaviour
+and/or memory corruption:
 
 Setting and Replacing ``NULL``
 ------------------------------
@@ -267,57 +264,61 @@ Setting a ``NULL`` will not cause an error:
 
 .. code-block:: c
 
+    PyObject *container = PyTuple_New(1);
     assert(!PyErr_Occurred());
     PyTuple_SetItem(container, 0, NULL);
     assert(!PyErr_Occurred());
 
 For code and tests see:
 
-* ``dbg_PyTuple_SetIem_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SetItem_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_NULL``.
+* C: ``dbg_PyTuple_SetIem_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_NULL``.
 
 And:
 
 .. code-block:: c
 
+    PyObject *container = PyTuple_New(1);
     assert(!PyErr_Occurred());
     PyTuple_SET_ITEM(container, 0, NULL);
     assert(!PyErr_Occurred());
 
 For code and tests see:
 
-* ``dbg_PyTuple_SET_ITEM_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SET_ITEM_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SET_ITEM_NULL``.
+* C: ``dbg_PyTuple_SET_ITEM_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SET_ITEM_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SET_ITEM_NULL``.
 
 Replacing a ``NULL`` will not cause an error, the replaced value reference is *stolen*:
 
 .. code-block:: c
 
+    PyObject *container = PyTuple_New(1);
     PyTuple_SetItem(container, 0, NULL);
     PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref Count of value is 1. */
     PyTuple_SetItem(container, 0, value); /* Ref Count of value is still 1. */
 
 For code and tests see:
 
-* ``dbg_PyTuple_SetIem_NULL_SetIem`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SetItem_NULL_SetIem`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_NULL_SetIem``.
+* C: ``dbg_PyTuple_SetIem_NULL_SetIem`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_NULL_SetIem`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SetItem_NULL_SetIem``.
 
 And:
 
 .. code-block:: c
 
+    PyObject *container = PyTuple_New(1);
     PyTuple_SET_ITEM(container, 0, NULL);
     PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref Count of value is 1. */
     PyTuple_SET_ITEM(container, 0, value); /* Ref Count of value is still 1. */
 
 For code and tests see:
 
-* ``dbg_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_SET_ITEM_NULL_SET_ITEM``.
+* C: ``dbg_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_SET_ITEM_NULL_SET_ITEM``.
 
 ``PyTuple_Pack()``
 ------------------
@@ -346,9 +347,9 @@ In that sense it behaves as `Py_BuildValue()`_. For example:
 
 For code and tests see:
 
-* ``dbg_PyTuple_PyTuple_Pack`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_Py_PyTuple_Pack`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_Py_PyTuple_Pack``.
+* C: ``dbg_PyTuple_PyTuple_Pack`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_Py_PyTuple_Pack`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_Py_PyTuple_Pack``.
 
 ``Py_BuildValue()``
 -------------------
@@ -362,30 +363,52 @@ potentially, leak:
     PyObject *value = new_unique_string(__FUNCTION__, NULL); /* value reference count is 1. */
     PyObject *container = Py_BuildValue("(O)", value); /* value reference count is incremented to 2. */
     assert(Py_REFCNT(value) == 2);
+
+    Py_DECREF(container);
+
     /* value is leaked if Py_DECREF(value) is not called. */
+    assert(Py_REFCNT(value_a) == 1);
 
 For code and tests see:
 
-* ``dbg_PyTuple_Py_BuildValue`` in ``src/cpy/Containers/DebugContainers.c``.
-* ``test_PyTuple_Py_BuildValue`` in ``src/cpy/RefCount/cRefCount.c``.
-* ``tests.unit.test_c_ref_count.test_test_PyTuple_Py_BuildValue``.
+* C: ``dbg_PyTuple_Py_BuildValue`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_Py_BuildValue`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_test_PyTuple_Py_BuildValue``.
 
 Summary
 ----------------------
 
 TODO: WIP here.
 
+TODO: PyTuple_SetItem on failure.
+
+TODO: PyTuple_SetItem vs PyTuple_SET_ITEM leaks.
+
+TODO: Compare with Python official documentation. What does 'discard' mean.
+
 -----------------------
 List
 -----------------------
+
+TODO:
 
 -----------------------
 Dictionary
 -----------------------
 
+TODO:
+
 -----------------------
 Set
 -----------------------
+
+TODO:
+
+-----------------------
+Summary
+-----------------------
+
+TODO:
 
 Example footnote [#]_.
 
