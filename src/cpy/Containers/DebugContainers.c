@@ -16,7 +16,7 @@ PyObject *
 new_unique_string(const char *function_name, const char *suffix) {
     PyObject *value =  NULL;
     if (suffix){
-        value = PyUnicode_FromFormat("%s-%^s-%ld", function_name, suffix, debug_test_count);
+        value = PyUnicode_FromFormat("%s-%s-%ld", function_name, suffix, debug_test_count);
     } else {
         value = PyUnicode_FromFormat("%s-%ld", function_name, debug_test_count);
     }

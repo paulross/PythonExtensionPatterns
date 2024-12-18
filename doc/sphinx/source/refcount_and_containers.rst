@@ -44,7 +44,7 @@ The code in this chapter explores the CPython C API in several ways:
   It is exercised by ``src/main.c``.
 * Test code is in ``src/cpy/RefCount/cRefCount.c`` which is built into the Python module
   ``cPyExtPatt.cRefCount``.
-  This can be run under ``pytest`` for multipel Python versions by ``build_all.sh``.
+  This can be run under ``pytest`` for multiple Python versions by ``build_all.sh``.
 * A review of the Python C API documentation.
 
 .. note::
@@ -63,7 +63,7 @@ The code in this chapter explores the CPython C API in several ways:
         new_unique_string(const char *function_name, const char *suffix) {
             if (suffix){
                 return PyUnicode_FromFormat(
-                    "%s-%^s-%ld", function_name, suffix, debug_test_count++
+                    "%s-%s-%ld", function_name, suffix, debug_test_count++
                 );
             }
             return PyUnicode_FromFormat(
@@ -190,8 +190,8 @@ And, when the index out of range:
 ``PyTuple_SET_ITEM()``
 ----------------------
 
-`PyTuple_SET_ITEM()`_ is a function like macro that inserts an object into a tuple without any error
-checking, because of that is slightly faster than `PyTuple_SetItem()`_ (see failures below).
+`PyTuple_SET_ITEM()`_ is a function like macro that inserts an object into a tuple without any error checking.
+Because of that is slightly faster than `PyTuple_SetItem()`_ (see failures below).
 This is usually used on newly created tuples.
 
 Importantly `PyTuple_SET_ITEM()`_ behaves **differently** to `PyTuple_SetItem()`_
@@ -360,14 +360,19 @@ potentially, leak:
 
 .. code-block:: c
 
-    PyObject *value = new_unique_string(__FUNCTION__, NULL); /* value reference count is 1. */
-    PyObject *container = Py_BuildValue("(O)", value); /* value reference count is incremented to 2. */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* value reference count is 1. */
+    PyObject *container = Py_BuildValue("(O)", value);
+    /* value reference count is incremented to 2. */
     assert(Py_REFCNT(value) == 2);
 
     Py_DECREF(container);
+    /* value reference count is decremented to 1. */
+    assert(Py_REFCNT(value_a) == 1);
 
     /* value is leaked if Py_DECREF(value) is not called. */
-    assert(Py_REFCNT(value_a) == 1);
+    /* Fix leak. */
+    Py_DECREF(value);
 
 For code and tests see:
 
@@ -378,13 +383,11 @@ For code and tests see:
 Summary
 ----------------------
 
-TODO: WIP here.
-
-TODO: PyTuple_SetItem on failure.
-
-TODO: PyTuple_SetItem vs PyTuple_SET_ITEM leaks.
-
-TODO: Compare with Python official documentation. What does 'discard' mean.
+* `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ *steal* references.
+* `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave differently when replacing an existing value.
+* If `PyTuple_SetItem()`_ errors it will decrement the reference count of the given value.
+  Possibly with surprising results.
+* `PyTuple_Pack()`_ and `Py_BuildValue()`_ increment reference counts and thus may leak.
 
 -----------------------
 List
