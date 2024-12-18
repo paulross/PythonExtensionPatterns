@@ -17,6 +17,7 @@ void dbg_PyTuple_SetIem_NULL_SetItem(void);
 void dbg_PyTuple_SET_ITEM_NULL_SET_ITEM(void);
 void dbg_PyTuple_SetItem_fails_not_a_tuple(void);
 void dbg_PyTuple_SetItem_fails_out_of_range(void);
+void dbg_PyTuple_PyTuple_Pack(void);
 void dbg_PyTuple_Py_BuildValue(void);
 
 #endif //PYTHONEXTENSIONPATTERNS_DEBUGCONTAINERS_H

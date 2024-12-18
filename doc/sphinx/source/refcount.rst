@@ -6,6 +6,11 @@
 
 .. _chapter_refcount:
 
+.. index:: single: Reference Counts
+           single: Reference Counts; New
+           single: Reference Counts; Stolen
+           single: Reference Counts; Borrowed
+
 =================================
 PyObjects and Reference Counting 
 =================================

@@ -10,7 +10,7 @@
 /* This is used to guarantee that Python is not caching a string value when we want to check the
  * reference counts after each string creation.
  * */
-static long debug_test_count = 0;
+static long debug_test_count = 0L;
 
 PyObject *
 new_unique_string(const char *function_name, const char *suffix) {
@@ -455,6 +455,37 @@ void dbg_PyTuple_SetItem_fails_out_of_range(void) {
 
     Py_DECREF(container);
     Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
+ * Function that explores PyTuple_Pack(n, ...).
+ */
+void dbg_PyTuple_PyTuple_Pack(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+
+    PyObject *container = PyTuple_Pack(2, value_a, value_b);
+
+    assert(Py_REFCNT(value_a) == 2);
+    assert(Py_REFCNT(value_b) == 2);
+
+    Py_DECREF(container);
+
+    /* Leaks: */
+    assert(Py_REFCNT(value_a) == 1);
+    assert(Py_REFCNT(value_b) == 1);
+
+    Py_DECREF(value_a);
+    Py_DECREF(value_b);
 
     assert(!PyErr_Occurred());
 }

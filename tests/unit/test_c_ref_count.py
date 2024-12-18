@@ -19,6 +19,7 @@ def test_module_dir():
         'set_no_steals',
         'set_no_steals_decref',
         'test_PyTuple_Py_BuildValue',
+        'test_PyTuple_Py_PyTuple_Pack',
         'test_PyTuple_SET_ITEM_NULL',
         'test_PyTuple_SET_ITEM_NULL_SET_ITEM',
         'test_PyTuple_SET_ITEM_steals',
@@ -113,6 +114,10 @@ def test_test_PyTuple_SetItem_fails_out_of_range():
     with pytest.raises(IndexError) as err:
         cRefCount.test_PyTuple_SetItem_fails_out_of_range()
     assert err.value.args[0] == 'tuple assignment index out of range'
+
+
+def test_test_PyTuple_Py_PyTuple_Pack():
+    assert cRefCount.test_PyTuple_Py_PyTuple_Pack() == 0
 
 
 def test_test_PyTuple_Py_BuildValue():

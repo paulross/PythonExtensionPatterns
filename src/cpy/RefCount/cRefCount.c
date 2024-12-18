@@ -1215,6 +1215,43 @@ test_PyTuple_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
+test_PyTuple_Py_PyTuple_Pack(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "After PyObject *value_a = new_unique_string(__FUNCTION__, NULL);");
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "After PyObject *value_b = new_unique_string(__FUNCTION__, NULL);");
+
+    PyObject *container = PyTuple_Pack(2, value_a, value_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "After PyObject *container = PyTuple_Pack(2, value_a, value_b);");
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyObject *container = PyTuple_Pack(2, value_a, value_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after PyObject *container = PyTuple_Pack(2, value_a, value_b);");
+
+    Py_DECREF(container);
+
+    /* Leaks: */
+    assert(Py_REFCNT(value_a) == 1);
+    assert(Py_REFCNT(value_b) == 1);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "value_b after Py_DECREF(container);");
+    /* Fix leaks: */
+    Py_DECREF(value_a);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
 test_PyTuple_Py_BuildValue(PyObject *Py_UNUSED(module)) {
     if (PyErr_Occurred()) {
         PyErr_Print();
@@ -1283,8 +1320,10 @@ static PyMethodDef module_methods[] = {
                             "Check that PyTuple_SET_ITEM() fails when not a tuple."),
         MODULE_NOARGS_ENTRY(test_PyTuple_SetItem_fails_out_of_range,
                             "Check that PyTuple_SET_ITEM() fails when index out of range."),
+        MODULE_NOARGS_ENTRY(test_PyTuple_Py_PyTuple_Pack,
+                            "Check that Py_PyTuple_Pack() increments reference counts."),
         MODULE_NOARGS_ENTRY(test_PyTuple_Py_BuildValue,
-                            "Check that Py_BuildValue() with an existing object."),
+                            "Check that Py_BuildValue() increments reference counts."),
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
