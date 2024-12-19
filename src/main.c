@@ -140,6 +140,7 @@ int main(int argc, const char * argv[]) {
 //        goto finally;
 //    }
 
+#pragma mark - Tuples
     dbg_PyTuple_SetItem_steals();
     dbg_PyTuple_SET_ITEM_steals();
     dbg_PyTuple_SetItem_steals_replace();
@@ -152,6 +153,20 @@ int main(int argc, const char * argv[]) {
     dbg_PyTuple_SetItem_fails_out_of_range();
     dbg_PyTuple_PyTuple_Pack();
     dbg_PyTuple_Py_BuildValue();
+
+#pragma mark - Lists
+    dbg_PyList_SetItem_steals();
+    dbg_PyList_SET_ITEM_steals();
+    dbg_PyList_SetItem_steals_replace();
+    dbg_PyList_SET_ITEM_steals_replace();
+    dbg_PyList_SetIem_NULL();
+    dbg_PyList_SET_ITEM_NULL();
+    dbg_PyList_SetIem_NULL_SetItem();
+    dbg_PyList_SET_ITEM_NULL_SET_ITEM();
+    dbg_PyList_SetItem_fails_not_a_tuple();
+    dbg_PyList_SetItem_fails_out_of_range();
+    dbg_PyList_Append();
+    dbg_PyList_Py_BuildValue();
 
     printf("Bye, bye!\n");
     return failure;

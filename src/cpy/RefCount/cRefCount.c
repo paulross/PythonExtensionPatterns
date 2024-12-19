@@ -564,6 +564,7 @@ dict_buildvalue_no_steals(PyObject *Py_UNUSED(module)) {
     } while (0)
 
 
+#pragma mark - Teting Tuples
 /**
  * A function that checks whether a tuple steals a reference when using PyTuple_SetItem.
  * This can be stepped through in the debugger.
@@ -591,19 +592,9 @@ test_PyTuple_SetItem_steals(PyObject *Py_UNUSED(module)) {
     }
     error_flag_position++;
 
-//    ref_count = Py_REFCNT(container);
-//    if (ref_count != 1) {
-//        return_value |= 1 << error_flag_position;
-//    }
-//    error_flag_position++;
     TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "PyTuple_New()");
 
     PyObject *value = new_unique_string(__FUNCTION__, NULL);
-//    ref_count = Py_REFCNT(value);
-//    if (ref_count != 1) {
-//        return_value |= 1 << error_flag_position;
-//    }
-//    error_flag_position++;
     TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value = new_unique_string(__FUNCTION__, NULL)");
 
     if (PyTuple_SetItem(container, 0, value)) {
@@ -611,11 +602,6 @@ test_PyTuple_SetItem_steals(PyObject *Py_UNUSED(module)) {
     }
     error_flag_position++;
 
-//    ref_count = Py_REFCNT(value);
-//    if (ref_count != 1) {
-//        return_value |= 1 << error_flag_position;
-//    }
-//    error_flag_position++;
     TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value after PyTuple_SetItem()");
 
     get_item = PyTuple_GET_ITEM(container, 0);
@@ -625,7 +611,6 @@ test_PyTuple_SetItem_steals(PyObject *Py_UNUSED(module)) {
     }
     error_flag_position++;
 
-    // TODO: Propogate this below.
     get_item = PyTuple_GetItem(container, 0);
     ref_count = Py_REFCNT(get_item);
     if (ref_count != 1) {
@@ -1280,6 +1265,670 @@ test_PyTuple_Py_BuildValue(PyObject *Py_UNUSED(module)) {
     return PyLong_FromLong(return_value);
 }
 
+#pragma mark - Teting Lists
+/**
+ * A function that checks whether a tuple steals a reference when using PyList_SetItem.
+ * This can be stepped through in the debugger.
+ * asserts are use for the test so this is expected to be run in DEBUG mode.
+ *
+ * @param _unused_module
+ * @return 0 on success.
+ */
+static PyObject *
+test_PyList_SetItem_steals(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    Py_ssize_t ref_count;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "PyList_New()");
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value = new_unique_string(__FUNCTION__, NULL)");
+
+    if (PyList_SetItem(container, 0, value)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value after PyList_SetItem()");
+
+    get_item = PyList_GET_ITEM(container, 0);
+    ref_count = Py_REFCNT(get_item);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyList_GetItem(container, 0);
+    ref_count = Py_REFCNT(get_item);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+    /* NO as container deals with this. */
+    /* Py_DECREF(value); */
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+/**
+ * A function that checks whether a tuple steals a reference when using PyList_SET_ITEM.
+ * This can be stepped through in the debugger.
+ * asserts are use for the test so this is expected to be run in DEBUG mode.
+ *
+ * @param _unused_module
+ * @return 0 on success.
+ */
+static PyObject *
+test_PyList_SET_ITEM_steals(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(container);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    PyList_SET_ITEM(container, 0, value);
+
+    ref_count = Py_REFCNT(value);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    PyObject *get_item = PyList_GET_ITEM(container, 0);
+    ref_count = Py_REFCNT(get_item);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+    /* NO as container deals with this. */
+    /* Py_DECREF(value); */
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+/**
+ * A function that checks whether a tuple steals a reference when using PyList_SetItem on an existing item.
+ * This can be stepped through in the debugger.
+ * asserts are use for the test so this is expected to be run in DEBUG mode.
+ *
+ * This DOES leak an existing value contrary to the Python documentation.
+ *
+ * @param _unused_module
+ * @return None
+ */
+static PyObject *
+test_PyList_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    Py_ssize_t ref_count;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(container);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_0);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    if (PyList_SetItem(container, 0, value_0)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(value_0);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item != value_0) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+    ref_count = Py_REFCNT(get_item);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Now create a new value that will overwrite the old one. */
+    PyObject *value_1 = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_1);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Preserve the value_0 as this reference count is about to be decremented. */
+    Py_INCREF(value_0);
+    ref_count = Py_REFCNT(value_0);
+    assert(ref_count == 2);
+
+    /* Preserve the value_1 so that we can see Py_DECREF(container) decrements it. */
+    Py_INCREF(value_1);
+    ref_count = Py_REFCNT(value_1);
+    assert(ref_count == 2);
+
+    /* This will overwrite value_0 leaving it with a reference count of 1.*/
+    if (PyList_SetItem(container, 0, value_1)) {
+        fprintf(stdout, "PyList_SetItem(container, 0, value_1)\n");
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Previous value is decremented. */
+    ref_count = Py_REFCNT(value_0);
+    if (ref_count != 1) {
+        fprintf(stdout, "Py_REFCNT(value_0) != 1 but %ld\n", Py_REFCNT(value_0));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(value_1);
+    if (ref_count != 2) {
+        fprintf(stdout, "Py_REFCNT(value_1) != 2 but %ld\n", Py_REFCNT(value_1));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item != value_1) {
+        fprintf(stdout, "get_item != value_1\n");
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(get_item);
+    if (ref_count != 2) {
+        fprintf(stdout, "Py_REFCNT(get_item) != 1 but %ld\n", Py_REFCNT(get_item));
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+
+    ref_count = Py_REFCNT(value_1);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(value_1);
+
+    ref_count = Py_REFCNT(value_0);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(value_0);
+
+    assert(!PyErr_Occurred());
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+/**
+ * A function that checks whether a tuple steals a reference when using PyList_SET_ITEM on an existing item.
+ * This can be stepped through in the debugger.
+ * asserts are use for the test so this is expected to be run in DEBUG mode.
+ *
+ * @param _unused_module
+ * @return None
+ */
+static PyObject *
+test_PyList_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "Create container.");
+
+    PyObject *value_0 = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_0, 1L, "Create value_0.");
+
+    PyList_SET_ITEM(container, 0, value_0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_0, 1L, "PyList_SET_ITEM(container, 0, value_0);");
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item != value_0) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 1L, "PyList_GET_ITEM(container, 0);");
+
+    /* Now create a new value that will overwrite the old one. */
+    PyObject *value_1 = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_1, 1L, "Create value_1");
+
+    /* Preserve the value_0 as this reference count is about to be decremented. */
+    Py_INCREF(value_0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_0, 2L, "Py_INCREF(value_0);");
+
+    /* Preserve the value_1 so that we can see Py_DECREF(container) decrements it. */
+    Py_INCREF(value_1);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_1, 2L, "Py_INCREF(value_1);");
+
+    /* This will overwrite value_0 but not dec ref value_0 leaving
+     * value_0 still with a reference count of 2.
+     * This is a leak. */
+    PyList_SET_ITEM(container, 0, value_1);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_0, 2L,
+                                        "Py_REFCNT(value_0) after PyList_SET_ITEM(container, 0, value_1);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_1, 2L,
+                                        "Py_REFCNT(value_1) after PyList_SET_ITEM(container, 0, value_1);");
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item != value_1) {
+        fprintf(stdout, "get_item != value_1\n");
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "PyList_GET_ITEM(container, 0);");
+
+    Py_DECREF(container);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_1, 1L, "value_1 after Py_DECREF(container);");
+
+    Py_DECREF(value_1);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_0, 2L, "value_0 after Py_DECREF(container);");
+    Py_DECREF(value_0);
+    Py_DECREF(value_0);
+
+    assert(!PyErr_Occurred());
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PyList_SetItem_NULL(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "Create container.");
+
+    PyList_SetItem(container, 0, NULL);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item != NULL) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    assert(!PyErr_Occurred());
+finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PyList_SET_ITEM_NULL(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    Py_ssize_t ref_count;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    ref_count = Py_REFCNT(container);
+    if (ref_count != 1) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    PyList_SET_ITEM(container, 0, NULL);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item != NULL) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    assert(!PyErr_Occurred());
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PyList_SetIem_NULL_SetItem(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "Create container.");
+
+    if (PyList_SetItem(container, 0, NULL)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item != NULL) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Now set a non-null value. */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "Create value.");
+
+    /* Increment so we can  check after deleting the container. */
+    Py_INCREF(value);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "Py_INCREF(value);");
+
+    /* Set, replacing NULL. */
+    if (PyList_SetItem(container, 0, value)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item == NULL) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "Py_INCREF(value);");
+
+    Py_DECREF(value);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    assert(!PyErr_Occurred());
+finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PyList_SET_ITEM_NULL_SET_ITEM(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "Create container.");
+
+    PyList_SET_ITEM(container, 0, NULL);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item != NULL) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Now set a non-null value. */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "PyObject *value = new_unique_string(__FUNCTION__, NULL);.");
+
+    /* Increment so we can  check after deleting the container. */
+    Py_INCREF(value);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "PyObject *value after Py_INCREF.");
+
+    /* Set, replacing NULL. */
+    PyList_SET_ITEM(container, 0, value);
+
+    get_item = PyList_GET_ITEM(container, 0);
+    if (get_item == NULL) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "PyObject *value after Py_DECREF(container);.");
+
+    Py_DECREF(value);
+
+    if (PyErr_Occurred()) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    assert(!PyErr_Occurred());
+finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PyList_SetItem_fails_not_a_list(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+
+    PyObject *container = PyTuple_New(1);
+    if (!container) {
+        return NULL;
+    }
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* This should fail. */
+    if (PyList_SetItem(container, 0, value)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    PyErr_Format(PyExc_RuntimeError, "Should have raised an error.");
+    return NULL;
+}
+
+static PyObject *
+test_PyList_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return NULL;
+    }
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* This should fail. */
+    if (PyList_SetItem(container, 1, value)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    PyErr_Format(PyExc_RuntimeError, "Should have raised an error.");
+    return NULL;
+}
+
+static PyObject *
+test_PyList_Py_BuildValue(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+//    PyObject *get_item = NULL;
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After PyObject *value = new_unique_string(__FUNCTION__, NULL);");
+
+    PyObject *container = Py_BuildValue("[O]", value);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "After PyObject *container = Py_BuildValue(\"(O)\", value);");
+
+    assert(container);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "Container");
+
+    Py_DECREF(container);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After PyObject *container = Py_BuildValue(\"(O)\", value);");
+
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
 #define MODULE_NOARGS_ENTRY(name, doc)  \
     {                                   \
         #name,                          \
@@ -1303,6 +1952,7 @@ static PyMethodDef module_methods[] = {
         ),
         MODULE_NOARGS_ENTRY(dict_buildvalue_no_steals,
                             "Checks that a Py_BuildValue dict increments a reference counts for key and value."),
+#pragma mark - Testing Tuples
         /* Test ref counts with container APIs. */
         MODULE_NOARGS_ENTRY(test_PyTuple_SetItem_steals, "Check that PyTuple_SetItem() steals a reference."),
         MODULE_NOARGS_ENTRY(test_PyTuple_SET_ITEM_steals, "Check that PyTuple_SET_ITEM() steals a reference."),
@@ -1323,6 +1973,26 @@ static PyMethodDef module_methods[] = {
         MODULE_NOARGS_ENTRY(test_PyTuple_Py_PyTuple_Pack,
                             "Check that Py_PyTuple_Pack() increments reference counts."),
         MODULE_NOARGS_ENTRY(test_PyTuple_Py_BuildValue,
+                            "Check that Py_BuildValue() increments reference counts."),
+#pragma mark - Testing Lists
+        /* Test ref counts with container APIs. */
+        MODULE_NOARGS_ENTRY(test_PyList_SetItem_steals, "Check that PyList_SetItem() steals a reference."),
+        MODULE_NOARGS_ENTRY(test_PyList_SET_ITEM_steals, "Check that PyList_SET_ITEM() steals a reference."),
+        MODULE_NOARGS_ENTRY(test_PyList_SetItem_steals_replace,
+                            "Check that PyList_SetItem() steals a reference on replacement."),
+        MODULE_NOARGS_ENTRY(test_PyList_SET_ITEM_steals_replace,
+                            "Check that PyList_SET_ITEM() steals a reference on replacement."),
+        MODULE_NOARGS_ENTRY(test_PyList_SetItem_NULL, "Check that PyList_SetItem() with NULL does not error."),
+        MODULE_NOARGS_ENTRY(test_PyList_SET_ITEM_NULL, "Check that PyList_SET_ITEM() with NULL does not error."),
+        MODULE_NOARGS_ENTRY(test_PyList_SetIem_NULL_SetItem,
+                            "Check that PyList_SetItem() with NULL then with an object does not error."),
+        MODULE_NOARGS_ENTRY(test_PyList_SET_ITEM_NULL_SET_ITEM,
+                            "Check that PyList_SET_ITEM() with NULL then with an object does not error."),
+        MODULE_NOARGS_ENTRY(test_PyList_SetItem_fails_not_a_list,
+                            "Check that PyList_SET_ITEM() fails when not a tuple."),
+        MODULE_NOARGS_ENTRY(test_PyList_SetItem_fails_out_of_range,
+                            "Check that PyList_SET_ITEM() fails when index out of range."),
+        MODULE_NOARGS_ENTRY(test_PyList_Py_BuildValue,
                             "Check that Py_BuildValue() increments reference counts."),
         {NULL, NULL, 0, NULL} /* Sentinel */
 };

@@ -197,7 +197,10 @@ And, when the index out of range:
 ----------------------
 
 `PyTuple_SET_ITEM()`_ is a function like macro that inserts an object into a tuple without any error checking
-(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.failures` below).
+(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.failures` below) although the types checking
+checking is performed as an assertion if Python is built in
+`debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
+`with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
 Because of that, it is slightly faster than `PyTuple_SetItem()`_ .
 This is usually used on newly created tuples.
 
@@ -422,23 +425,31 @@ Summary
   Possibly with surprising results.
 * `PyTuple_Pack()`_ and `Py_BuildValue()`_ increment reference counts and thus may leak.
 
+.. _chapter_refcount_and_containers.lists:
+
 -----------------------
-List
+Lists
 -----------------------
 
 TODO:
 
+.. _chapter_refcount_and_containers.dictionaries:
+
 -----------------------
-Dictionary
+Dictionaries
 -----------------------
 
 TODO:
 
+.. _chapter_refcount_and_containers.sets:
+
 -----------------------
-Set
+Sets
 -----------------------
 
 TODO:
+
+.. _chapter_refcount_and_containers.summary:
 
 -----------------------
 Summary
