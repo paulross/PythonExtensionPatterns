@@ -185,6 +185,9 @@ This is about programming by contract and the following sections describe the co
 
 First up **New** references.
 
+.. index::
+    single: Reference Counts; New
+
 ^^^^^^^^^^^^^^^^^^
 "New" References 
 ^^^^^^^^^^^^^^^^^^
@@ -281,6 +284,9 @@ The fix is to create a temporary item and then decref *that* once appended (erro
         Py_RETURN_NONE;
     }
 
+.. index::
+    single: Reference Counts; Stolen
+
 ^^^^^^^^^^^^^^^^^^^^^^^
 "Stolen" References 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -367,6 +373,8 @@ Warning on "Stolen" References With Containers
 
     See ``src/cpy/RefCount/cRefCount.c`` and ``tests/unit/test_c_ref_count.py`` for verification of this.
 
+.. index::
+    single: Reference Counts; Borrowed
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 "Borrowed" References
@@ -576,6 +584,9 @@ The contracts you enter into with these three reference types are:
      - The lender can invalidate the reference at any time without telling you.
        Bad news.
        So increment a borrowed reference whilst you need it and decrement it when you are finished.
+
+In the next chapter I look in more detail about the interplay of reference counts with Python objects and
+Python containers such as  ``tuple``, ``list``, ``set`` and ``dict``.
 
 .. rubric:: Footnotes
 
