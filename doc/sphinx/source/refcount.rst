@@ -152,12 +152,29 @@ And here is what happens to the memory if we use this function from Python (``cP
     NameError: name 's' is not defined
     >>>                         # But process still uses about 101Mb - 's' is leaked
 
+
+
+.. _chapter_refcount.warning_ref_count_unity:
+
+-------------------------------------------------------
+Warning on Relying on Reference Counts of Unity or Less
+-------------------------------------------------------
+
 .. warning::
 
     Do not be tempted to read the reference count itself to determine if the object is alive.
     The reason is that if ``Py_DECREF`` sees a refcount of one it can free and then reuse the address of the refcount
     field for a completely different object which makes it highly unlikely that that field will have a zero in it.
     There are some examples of this later on.
+
+    Here is a simple example:
+
+    .. code-block:: c
+
+        PyObject *op = PyUnicode_FromString("My test string.");
+        assert(Py_REFCNT(op) == 1);
+        Py_DECREF(op);
+        /* Py_REFCNT(op) can be anything here. */
 
     For example this code is asking for trouble:
 
@@ -174,6 +191,7 @@ And here is what happens to the memory if we use this function from Python (``cP
 -----------------------
 Python Terminology 
 -----------------------
+
 The Python documentation uses the terminology "New", "Stolen" and "Borrowed" references throughout.
 These terms identify who is the *real owner* of the reference and whose job it is to clean it up when it is no longer needed:
 
@@ -563,6 +581,119 @@ A precautionary approach in your code might be to *always* increment borrowed re
 and then *always* decrement them before they go out of scope.
 That way you incur two cheap operations but eliminate a vastly more expensive one.
 
+--------------------------
+Strong and Weak References
+--------------------------
+
+Another mental model to look at this is the concept of *strong* and *weak* references to an object.
+This model is commonly used in other software domains.
+If this model suites you then use it!
+
+Here are the essential details between this model and the Python one.
+The mapping between the Python new/stolen/borrowed terminology and strong/weak terminology is:
+
+* A "new" reference is a single *strong* reference.
+* A "stolen" reference is handing over responsibility for a *strong* reference, any previous reference becomes a *weak*
+  reference.
+* A "borrowed" reference is a new *weak* reference.
+
+And the Python implementation gives:
+
+* ``Py_REFCNT()`` returns the number of *strong* references.
+* ``Py_INCREF()`` creates a new *strong* reference.
+* ``Py_DECREF()`` releases a *strong* reference.
+
+The two types of errors are:
+
+* Any unreachable *strong* reference is a memory leak (an unreachable object with a reference count > 0).
+* Accessing an object through a *weak* reference where no *strong* references exist leads to undefined behaviour.
+  Note the warning above: :ref:`chapter_refcount.warning_ref_count_unity`.
+
+^^^^^^^^^^^^^^^^^^
+Examples
+^^^^^^^^^^^^^^^^^^
+
+Unreachable Strong Reference
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here we create a new object with a *strong* reference count of unity and then abandon it:
+
+.. code-block:: c
+
+    void unreachable(void) {
+        /* Create a new object, a strong reference (a "new" reference). */
+        PyObject *value = PyUnicode_FromString("My test string.");
+        /* Check the strong reference count. */
+        assert(Py_REFCNT(value) == 1);
+        /* The object is now unreachable as 'value' goes out of scope.
+         * The strong reference count is still unity so the object is leaked. */
+        return;
+    }
+
+"New" References
+^^^^^^^^^^^^^^^^^^
+
+Here is a walked through example of the lifetime of creating a tuple containing a single string.
+First create the string:
+
+.. code-block:: c
+
+    Py_ssize_t strong_ref_count;
+
+    PyObject *value = PyUnicode_FromString("My test string.");
+    strong_ref_count = Py_REFCNT(value);
+    assert(strong_ref_count == 1);
+
+There is one strong reference to the string and it is 'owned' by ``value``.
+Now create a tuple:
+
+.. code-block:: c
+
+    PyObject *container = PyTuple_New(1);
+    strong_ref_count = Py_REFCNT(container);
+    assert(strong_ref_count == 1);
+
+There is one strong reference to the container and it is 'owned' by ``container``.
+Now insert the value into the tuple (error checking omitted):
+
+.. code-block:: c
+
+    PyTuple_SetItem(container, 0, value);
+    strong_ref_count = Py_REFCNT(value);
+    assert(strong_ref_count == 1);
+
+At this point, in the strong/weak model, we have two references to the original string.
+One is *strong* (since ``Py_REFCNT(value)`` is 1), the other must then be a *weak* reference.
+But which is which?
+In other words is ``value`` or ``container[0]`` *strong* or *weak*?
+
+This model determines that ``container`` holds the *strong* reference since on destruction of that container
+``Py_DECREF()`` will be called on that reference reducing the strong reference count to zero.
+Therefor ``value``, once a *strong* reference is now a *weak* reference.
+This expresses the concept of *stealing* a reference.
+So we end up with:
+
+* A *strong* reference which is held by ``container``, specifically ``container[0]``.
+* A *weak* reference which is held by ``value``.
+
+Now lets destroy the container.
+
+.. code-block:: c
+
+    Py_DECREF(container);
+
+This will destroy the contents, by remove one *strong* reference for each value
+of the container then removing the *strong* reference to the container.
+This now makes ``container`` a weak reference to an object that has no *strong* references:
+
+So we are left with no strong references but still have two weak references, held by ``value`` and ``container``.
+Now accessing an object that has no strong references through a weak reference is undefined behaviour such
+as this:
+
+.. code-block:: c
+
+    PyObject_Print(container, stdout, 0);
+    PyObject_Print(value, stdout, 0);
 
 -----------------------
 Summary
@@ -584,6 +715,8 @@ The contracts you enter into with these three reference types are:
      - The lender can invalidate the reference at any time without telling you.
        Bad news.
        So increment a borrowed reference whilst you need it and decrement it when you are finished.
+
+The strong reference/weak reference mode maps well to the Python model.
 
 In the next chapter I look in more detail about the interplay of reference counts with Python objects and
 Python containers such as  ``tuple``, ``list``, ``set`` and ``dict``.
