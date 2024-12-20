@@ -4,7 +4,6 @@
 .. toctree::
     :maxdepth: 3
 
-
 ..
     Links, mostly to the Python documentation:
 
@@ -23,12 +22,13 @@ Reference Counts and Python Containers
 
 The descriptions of *New*, *Stolen* and *Borrowed* references were described in the preceding chapter.
 This chapter looks in more detail of how the Python C API works with different containers,
-such as ``tuple``, ``list``, ``set`` and ``dict``.
+such as ``tuple``, ``list``, ``set`` and ``dict`` [#]_.
 
 This chapter includes examples and tests that you can step through to better understand the interplay
 between the container and the object in that container.
 
-Of particular interest is *Setters*, *Getters* and the behaviour of ``Py_BuildValue`` for each of those containers.
+Of particular interest is *Setters*, *Getters* and the behaviour of ``Py_BuildValue`` for each of those
+containers [#]_.
 This chapter also clarifies the Python documentation where that is inaccurate, incomplete or misleading.
 
 ---------------------------
@@ -51,7 +51,6 @@ The code in this chapter explores the CPython C API in several ways:
     The examples below use code that calls a function ``new_unique_string()``.
     This function is designed to create a new, unique,  ``PyObject`` (a string)
     that is never cached so always has a reference count of unity.
-
     The implementation is in ``src/cpy/Containers/DebugContainers.c`` and looks something like this:
 
     .. code-block:: c
@@ -59,15 +58,13 @@ The code in this chapter explores the CPython C API in several ways:
         static long debug_test_count = 0L;
 
         PyObject *
-        new_unique_string(const char *function_name, const char *suffix) {
+        new_unique_string(const char *function, const char *suffix) {
             if (suffix){
                 return PyUnicode_FromFormat(
-                    "%s-%s-%ld", function_name, suffix, debug_test_count++
+                    "%s-%s-%ld", function, suffix, debug_test_count++
                 );
             }
-            return PyUnicode_FromFormat(
-                "%s-%ld", function_name, debug_test_count++
-            );
+            return PyUnicode_FromFormat("%s-%ld", function, debug_test_count++);
         }
 
 Firstly Tuples, I'll go into quite a lot of detail here because it covers much of the other containers as well.
@@ -433,6 +430,11 @@ Lists
 
 TODO:
 
+https://docs.python.org/3/c-api/list.html#c.PyList_Append
+
+https://docs.python.org/3/c-api/list.html#c.PyList_Insert
+
+
 .. _chapter_refcount_and_containers.dictionaries:
 
 -----------------------
@@ -457,8 +459,14 @@ Summary
 
 TODO:
 
-Example footnote [#]_.
+.. Example footnote [#]_.
 
 .. rubric:: Footnotes
 
-.. [#] A footnote.
+.. [#] The official `Python documentation <https://docs.python.org/3/c-api/concrete.html>`_ categorises tuples and lists
+    as *sequence objects* because they support the `Sequence Protocol <https://docs.python.org/3/c-api/sequence.html>`_
+    and dictionaries and sets as *container objects* because they support the
+    `Mapping Protocol <https://docs.python.org/3/c-api/mapping.html>`_.
+    In this chapter I use looser language by describing all four as *containers*.
+
+.. [#] ``Py_BuildValue`` can not create a set, only a tuple, list or dictionary.
