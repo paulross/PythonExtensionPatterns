@@ -4,6 +4,9 @@
 .. toctree::
     :maxdepth: 3
 
+.. index::
+    single: Exceptions; General
+
 =================================
 Exception Raising 
 =================================
@@ -101,6 +104,9 @@ The other thing to note is that if there are multiple calls to ``PyErr_SetString
         return NULL;
     }
 
+.. index::
+    single: Exceptions; Common Exception Patterns
+
 ---------------------------------
 Common Exception Patterns
 ---------------------------------
@@ -144,6 +150,9 @@ Incidentally ``PyObject_TypeCheck`` is defined as:
 
     #define PyObject_TypeCheck(ob, tp) \
         (Py_TYPE(ob) == (tp) || PyType_IsSubtype(Py_TYPE(ob), (tp)))
+
+.. index::
+    single: Exceptions; Creating Specialised Exceptions
 
 ---------------------------------
 Creating Specialised Exceptions

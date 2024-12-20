@@ -6,10 +6,11 @@
 
 .. _chapter_refcount:
 
-.. index:: single: Reference Counts
-           single: Reference Counts; New
-           single: Reference Counts; Stolen
-           single: Reference Counts; Borrowed
+.. index::
+    single: Reference Counts
+    single: Reference Counts; New
+    single: Reference Counts; Stolen
+    single: Reference Counts; Borrowed
 
 =================================
 PyObjects and Reference Counting 
@@ -62,6 +63,9 @@ The twin challenges in Python extensions are:
 
 Here are some examples of where things can go wrong:
 
+.. index::
+    single: Access After Free
+
 -----------------------
 Access After Free
 -----------------------
@@ -102,6 +106,9 @@ might find *their* reference invalid:
 
 After the function returns the caller *might* find the object they naively trusted you with but probably not.
 A classic access-after-free error.
+
+.. index::
+    single: Memory Leaks
 
 -----------------------
 Memory Leaks
@@ -581,6 +588,11 @@ A precautionary approach in your code might be to *always* increment borrowed re
 and then *always* decrement them before they go out of scope.
 That way you incur two cheap operations but eliminate a vastly more expensive one.
 
+
+.. index::
+    single: Strong References
+    single: Weak References
+
 --------------------------
 Strong and Weak References
 --------------------------
@@ -716,7 +728,7 @@ The contracts you enter into with these three reference types are:
        Bad news.
        So increment a borrowed reference whilst you need it and decrement it when you are finished.
 
-The strong reference/weak reference mode maps well to the Python model.
+The strong reference/weak reference model maps well to the Python model.
 
 In the next chapter I look in more detail about the interplay of reference counts with Python objects and
 Python containers such as  ``tuple``, ``list``, ``set`` and ``dict``.

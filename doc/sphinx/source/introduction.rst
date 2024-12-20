@@ -34,11 +34,17 @@ Performance
 
 This is the most compelling reason, a 50x or 100x improvement over pure Python is not unusual.
 
+.. index::
+    single: C/C++; Libraries
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Interface with C/C++ libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have a library in C or C++ you will have to write a C extension to give a Python interface to that library.
+
+.. index::
+    single: Memory Usage
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Less memory
@@ -46,6 +52,9 @@ Less memory
 
 Python is pretty memory hungry, for example a float in Python is 24 bytes, the corresponding double in C is 8 bytes.
 C and C++ have more specific deallocation policies than with a garbage collected language.
+
+.. index::
+    single: GIL
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The GIL
@@ -74,6 +83,9 @@ Alternatives to C Extensions
 
 There are several alternatives to writing an extension directly in C, here are some:
 
+.. index::
+    single: ctypes
+
 ^^^^^^^^^^^^^^^^^^^
 ``ctypes``
 ^^^^^^^^^^^^^^^^^^^
@@ -83,6 +95,9 @@ for Python and is part of Python's standard library.
 The module allows direct access to C/C++ libraries (such as ``libc``).
 If you need this functionality, for example you need to access a binary library where you do not have the original
 source code so you can not build the library into your own code.
+
+.. index::
+    single: Code Generators
 
 ^^^^^^^^^^^^^^^^^^^
 Code Generators

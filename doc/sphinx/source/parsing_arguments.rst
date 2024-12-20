@@ -4,6 +4,9 @@
 .. toctree::
     :maxdepth: 3
 
+.. index::
+    single: Parsing Arguments
+
 ***************************
 Parsing Python Arguments
 ***************************
@@ -44,12 +47,18 @@ supress a compiler warning or error thus:
     static PyObject *
     parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs);
 
+.. index::
+    single: Parsing Arguments; No Arguments
+
 No Arguments
 ^^^^^^^^^^^^^^^^^^
 
 - The flags will be `METH_NOARGS <https://docs.python.org/3/c-api/structures.html#c.METH_NOARGS>`_
 - The C Function Signature will be ``PyObject *PyCFunction(PyObject *self, PyObject *args);``
 - The second argument will be ``NULL``.
+
+.. index::
+    single: Parsing Arguments; One Argument
 
 One Argument
 ^^^^^^^^^^^^^^^^^^
@@ -58,12 +67,18 @@ One Argument
 - The C Function Signature will be ``PyObject *PyCFunction(PyObject *self, PyObject *args);``
 - The second argument will be the single argument.
 
+.. index::
+    single: Parsing Arguments; Multiple Positional Arguments
+
 Multiple Positional Arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - The flags will be `METH_VARARGS <https://docs.python.org/3/c-api/structures.html#c.METH_VARARGS>`_
 - The C Function Signature will be ``PyObject *PyCFunction(PyObject *self, PyObject *args);``
 - Second value will be a sequence of arguments.
+
+.. index::
+    single: Parsing Arguments; Multiple Positional and Keyword Arguments
 
 Multiple Positional and Keyword Arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -164,6 +179,9 @@ Examples
 
 These examples are in ``src/cpy/cParseArgs.c`` and their tests are in ``tests/unit/test_c_parse_args.py``.
 
+.. index::
+    single: Parsing Arguments Example; No Arguments
+
 No Arguments
 ------------------------------------
 
@@ -195,6 +213,8 @@ The Python interpreter will raise a ``TypeError`` on any arguments are offered t
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
 
+.. index::
+    single: Parsing Arguments Example; One Argument
 
 One Argument
 ------------------------------------
@@ -280,6 +300,9 @@ So it is best to fail fast, an near the error site, that dastardly
 
 Side note: Of course this does not protect you from malicious/badly written code that decrements by more than one :-)
 
+.. index::
+    single: Parsing Arguments Example; Variable Number of Arguments
+
 Variable Number of Arguments
 ----------------------------------------------------
 
@@ -332,6 +355,9 @@ This code can be seen in ``src/cpy/cParseArgs.c``.
 It is tested in ``tests.unit.test_c_parse_args.test_parse_args``.
 Failure modes, when the wrong arguments are passed are tested in ``tests.unit.test_c_parse_args.test_parse_args_raises``.
 Note the wide variety of error messages that are obtained.
+
+.. index::
+    single: Parsing Arguments Example; Variable Number of Arguments and Keyword Arguments
 
 Variable Number of Arguments and Keyword Arguments
 --------------------------------------------------------------------------
@@ -414,10 +440,16 @@ All arguments are keyword arguments so this function can be called in a number o
     cParseArgs.parse_args_kwargs([1, 2, 3], count=2)
     cParseArgs.parse_args_kwargs(sequence=[1, 2, 3], count=2)
 
+.. index::
+    single: Parsing Arguments Example; Keyword Arguments and C++11
+
 Keyword Arguments and C++11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-C++11 compilers warn when creating non-const ``char*`` from string literals as we have done with the keyword array above. The solution is to declare these ``const char*`` however ``PyArg_ParseTupleAndKeywords`` expects a ``char **``. The solution is to cast away const in the call:
+C++11 compilers warn when creating non-const ``char*`` from string literals as we have done with the keyword array
+above.
+The solution is to declare these ``const char*`` however ``PyArg_ParseTupleAndKeywords`` expects a ``char **``.
+The solution is to cast away const in the call:
 
 .. code-block:: c
 
@@ -430,6 +462,9 @@ C++11 compilers warn when creating non-const ``char*`` from string literals as w
     }
     /* ... */
 
+
+.. index::
+    single: Parsing Arguments Example; Default String and Bytes Arguments
 
 Default String and Bytes Arguments
 ------------------------------------------
@@ -495,6 +530,9 @@ The complete C code is:
         return Py_BuildValue("y#", arg.buf, arg.len);
     }
 
+.. index::
+    single: Parsing Arguments Example; Positional Only and Keyword Only Arguments
+
 Positional Only and Keyword Only Arguments
 -----------------------------------------------
 
@@ -559,8 +597,10 @@ Here is the C code:
     }
 
 
+.. index::
+    single: Parsing Arguments Example; Parsing Arguments With Functional Conversion to C
 
-Parsing Arguments With a Functional Conversion to C
+Parsing Arguments With Functional Conversion to C
 ---------------------------------------------------------
 
 Often you want to convert a Python argument to a C value(s) in a way that is not covered by the format strings
@@ -637,6 +677,9 @@ Here is the C code.
     }
 
 .. _cpython_default_mutable_arguments:
+
+.. index::
+    single: Parsing Arguments Example; Being Pythonic with Default Mutable Arguments
 
 Being Pythonic with Default Mutable Arguments
 =============================================
@@ -835,6 +878,9 @@ Here is the complete C code:
         Py_XDECREF(pyObjArg_1);
         return ret;
     }
+
+.. index::
+    single: Parsing Arguments Example; Helper Macros
 
 Helper Macros
 -------------

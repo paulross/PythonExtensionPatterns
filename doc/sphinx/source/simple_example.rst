@@ -121,6 +121,9 @@ Lastly a function to to initialise the module:
         return m;
     }
 
+.. index::
+    single: setup.py
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The ``setup.py`` File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
