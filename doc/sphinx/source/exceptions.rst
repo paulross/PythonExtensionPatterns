@@ -152,7 +152,7 @@ Incidentally ``PyObject_TypeCheck`` is defined as:
         (Py_TYPE(ob) == (tp) || PyType_IsSubtype(Py_TYPE(ob), (tp)))
 
 .. index::
-    single: Exceptions; Creating Specialised Exceptions
+    single: Exceptions; Specialised Exceptions
 
 ---------------------------------
 Creating Specialised Exceptions

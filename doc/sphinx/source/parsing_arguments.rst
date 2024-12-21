@@ -68,7 +68,7 @@ One Argument
 - The second argument will be the single argument.
 
 .. index::
-    single: Parsing Arguments; Multiple Positional Arguments
+    single: Parsing Arguments; Multiple Arguments
 
 Multiple Positional Arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,9 +78,9 @@ Multiple Positional Arguments
 - Second value will be a sequence of arguments.
 
 .. index::
-    single: Parsing Arguments; Multiple Positional and Keyword Arguments
+    single: Parsing Arguments; Positional and Keyword Arguments
 
-Multiple Positional and Keyword Arguments
+Positional and Keyword Arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - The flags will be `METH_NOARGS | METH_KEYWORDS <https://docs.python.org/3/c-api/structures.html#c.METH_KEYWORDS>`_
@@ -357,7 +357,8 @@ Failure modes, when the wrong arguments are passed are tested in ``tests.unit.te
 Note the wide variety of error messages that are obtained.
 
 .. index::
-    single: Parsing Arguments Example; Variable Number of Arguments and Keyword Arguments
+    single: Parsing Arguments Example; Variable Number of Arguments
+    single: Parsing Arguments Example; Keyword Arguments
 
 Variable Number of Arguments and Keyword Arguments
 --------------------------------------------------------------------------
@@ -464,7 +465,8 @@ The solution is to cast away const in the call:
 
 
 .. index::
-    single: Parsing Arguments Example; Default String and Bytes Arguments
+    single: Parsing Arguments Example; Default String Arguments
+    single: Parsing Arguments Example; Default Bytes Arguments
 
 Default String and Bytes Arguments
 ------------------------------------------
@@ -531,7 +533,8 @@ The complete C code is:
     }
 
 .. index::
-    single: Parsing Arguments Example; Positional Only and Keyword Only Arguments
+    single: Parsing Arguments Example; Positional Only Arguments
+    single: Parsing Arguments Example; Keyword Only Arguments
 
 Positional Only and Keyword Only Arguments
 -----------------------------------------------
@@ -598,7 +601,7 @@ Here is the C code:
 
 
 .. index::
-    single: Parsing Arguments Example; Parsing Arguments With Functional Conversion to C
+    single: Parsing Arguments Example; Functional Conversion to C
 
 Parsing Arguments With Functional Conversion to C
 ---------------------------------------------------------
@@ -679,7 +682,7 @@ Here is the C code.
 .. _cpython_default_mutable_arguments:
 
 .. index::
-    single: Parsing Arguments Example; Being Pythonic with Default Mutable Arguments
+    single: Parsing Arguments Example; Default Mutable Arguments
 
 Being Pythonic with Default Mutable Arguments
 =============================================
