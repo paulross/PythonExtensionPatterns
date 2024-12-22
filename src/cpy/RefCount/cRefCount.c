@@ -1901,6 +1901,80 @@ test_PyList_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
+test_PyList_Append(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    PyObject *container = PyList_New(0);
+    if (!container) {
+        return NULL;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "After PyObject *container = PyList_New(0);");
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After PyObject *value = new_unique_string(__FUNCTION__, NULL);");
+
+    if (PyList_Append(container, value)) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "After PyList_Append(container, value);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "After PyList_Append(container, value);");
+
+    Py_DECREF(value);
+    Py_DECREF(container);
+
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PyList_Append_fails_not_a_list(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+
+    PyObject *container = PyTuple_New(1);
+    if (!container) {
+        return NULL;
+    }
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+
+    int result = PyList_Append(container, value);
+    assert(result);
+    Py_DECREF(value);
+    Py_DECREF(container);
+    assert(PyErr_Occurred());
+    return NULL;
+}
+
+static PyObject *
+test_PyList_Append_fails_NULL(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+
+    PyObject *container = PyList_New(0);
+    if (!container) {
+        return NULL;
+    }
+
+    int result = PyList_Append(container, NULL);
+    assert(result);
+    Py_DECREF(container);
+    assert(PyErr_Occurred());
+    return NULL;
+}
+
+static PyObject *
 test_PyList_Py_BuildValue(PyObject *Py_UNUSED(module)) {
     if (PyErr_Occurred()) {
         PyErr_Print();
@@ -1992,6 +2066,12 @@ static PyMethodDef module_methods[] = {
                             "Check that PyList_SET_ITEM() fails when not a tuple."),
         MODULE_NOARGS_ENTRY(test_PyList_SetItem_fails_out_of_range,
                             "Check that PyList_SET_ITEM() fails when index out of range."),
+        MODULE_NOARGS_ENTRY(test_PyList_Append,
+                            "Check that PyList_Append() increments reference counts."),
+        MODULE_NOARGS_ENTRY(test_PyList_Append_fails_not_a_list,
+                            "Check that PyList_Append() raises when not a list."),
+        MODULE_NOARGS_ENTRY(test_PyList_Append_fails_NULL,
+                            "Check that PyList_Append() raises on NULL."),
         MODULE_NOARGS_ENTRY(test_PyList_Py_BuildValue,
                             "Check that Py_BuildValue() increments reference counts."),
         {NULL, NULL, 0, NULL} /* Sentinel */

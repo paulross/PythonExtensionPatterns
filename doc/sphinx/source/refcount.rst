@@ -707,6 +707,9 @@ as this:
     PyObject_Print(container, stdout, 0);
     PyObject_Print(value, stdout, 0);
 
+Python's documentation on `strong references <https://docs.python.org/3/glossary.html#term-strong-reference>`_
+and `borrowed (weak) references <https://docs.python.org/3/glossary.html#term-borrowed-reference>`_.
+
 -----------------------
 Summary
 -----------------------

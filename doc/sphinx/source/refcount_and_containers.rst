@@ -9,8 +9,17 @@
 
 .. _PyTuple_SetItem(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
 .. _PyTuple_SET_ITEM(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SET_ITEM
-.. _Py_BuildValue(): https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue
 .. _PyTuple_Pack(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack
+
+.. _PyList_SetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
+.. _PyList_SET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_SET_ITEM
+.. _PyList_Get_Item(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
+.. _PyList_GET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_GET_ITEM
+.. _PyList_GetItemRef(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItemRef
+.. _PyList_Insert(): https://docs.python.org/3/c-api/list.html#c.PyList_Insert
+.. _PyList_Append(): https://docs.python.org/3/c-api/list.html#c.PyList_Append
+
+.. _Py_BuildValue(): https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue
 
 .. _chapter_refcount_and_containers:
 
@@ -428,11 +437,36 @@ Summary
 Lists
 -----------------------
 
+`PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave identically to their equivalents `PyTuple_SetItem()`_ and
+`PyTuple_SET_ITEM()`_.
+
 TODO:
 
 https://docs.python.org/3/c-api/list.html#c.PyList_Append
+PyErr_BadInternalCall on not-a-list or NULL value.
+On success does incref value.
+On failure does not decref value.
+Uses PyList_SET_ITEM
 
 https://docs.python.org/3/c-api/list.html#c.PyList_Insert
+PyList_Insert raises bad internal call on insert NULL.
+
+https://docs.python.org/3/c-api/list.html#c.PyList_GetItemRef
+
+https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
+
+https://docs.python.org/3/c-api/list.html#c.PyList_GET_ITEM
+
+Summary
+----------------------
+
+* `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ *steal* references.
+* `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently when replacing an existing value.
+* If `PyList_SetItem()`_ errors it will decrement the reference count of the given value.
+  Possibly with surprising results.
+* `Py_BuildValue()`_ increment reference counts and thus may leak.
+
+
 
 
 .. _chapter_refcount_and_containers.dictionaries:

@@ -166,6 +166,8 @@ int main(int argc, const char * argv[]) {
     dbg_PyList_SetItem_fails_not_a_tuple();
     dbg_PyList_SetItem_fails_out_of_range();
     dbg_PyList_Append();
+    dbg_PyList_Append_fails_not_a_list();
+    dbg_PyList_Append_fails_NULL();
     dbg_PyList_Py_BuildValue();
 
     printf("Bye, bye!\n");

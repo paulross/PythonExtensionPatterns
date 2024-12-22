@@ -34,7 +34,7 @@ new_unique_string(const char *function_name, const char *suffix) {
  * As above plus append.
  *
  * We should cover named tuples/dataclasses etc.:
- * file:///Users/engun/dev/Python/python-3.12.1-docs-html/c-api/tuple.html#struct-sequence-objects
+ * python-3.12.1-docs-html/c-api/tuple.html#struct-sequence-objects
  *
  */
 
@@ -48,6 +48,7 @@ new_unique_string(const char *function_name, const char *suffix) {
 void dbg_PyTuple_SetItem_steals(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -89,6 +90,7 @@ void dbg_PyTuple_SetItem_steals(void) {
 void dbg_PyTuple_SET_ITEM_steals(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -130,6 +132,7 @@ void dbg_PyTuple_SET_ITEM_steals(void) {
 void dbg_PyTuple_SetItem_steals_replace(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -194,6 +197,7 @@ void dbg_PyTuple_SetItem_steals_replace(void) {
 void dbg_PyTuple_SET_ITEM_steals_replace(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -242,6 +246,7 @@ void dbg_PyTuple_SET_ITEM_steals_replace(void) {
 void dbg_PyTuple_SetIem_NULL(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -267,6 +272,7 @@ void dbg_PyTuple_SetIem_NULL(void) {
 void dbg_PyTuple_SET_ITEM_NULL(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -292,6 +298,7 @@ void dbg_PyTuple_SET_ITEM_NULL(void) {
 void dbg_PyTuple_SetIem_NULL_SetItem(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -333,6 +340,7 @@ void dbg_PyTuple_SetIem_NULL_SetItem(void) {
 void dbg_PyTuple_SET_ITEM_NULL_SET_ITEM(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -375,6 +383,7 @@ void dbg_PyTuple_SET_ITEM_NULL_SET_ITEM(void) {
 void dbg_PyTuple_SetItem_fails_not_a_tuple(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -399,8 +408,8 @@ void dbg_PyTuple_SetItem_fails_not_a_tuple(void) {
     int result = PyTuple_SetItem(container, 0, value);
     assert(result == -1);
     assert(PyErr_Occurred());
-    PyErr_PrintEx(0);
-    PyErr_Clear();
+    fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    PyErr_Print();
 
     /* Yes, has been decremented on failure. */
     ref_count = Py_REFCNT(value);
@@ -419,6 +428,7 @@ void dbg_PyTuple_SetItem_fails_not_a_tuple(void) {
 void dbg_PyTuple_SetItem_fails_out_of_range(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -443,8 +453,8 @@ void dbg_PyTuple_SetItem_fails_out_of_range(void) {
     int result = PyTuple_SetItem(container, 1, value);
     assert(result == -1);
     assert(PyErr_Occurred());
-    PyErr_PrintEx(0);
-    PyErr_Clear();
+    fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    PyErr_Print();
 
     /* Yes, has been decremented on failure. */
     ref_count = Py_REFCNT(value);
@@ -462,6 +472,7 @@ void dbg_PyTuple_SetItem_fails_out_of_range(void) {
 void dbg_PyTuple_PyTuple_Pack(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -493,6 +504,7 @@ void dbg_PyTuple_PyTuple_Pack(void) {
 void dbg_PyTuple_Py_BuildValue(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -532,6 +544,7 @@ void dbg_PyTuple_Py_BuildValue(void) {
 void dbg_PyList_SetItem_steals(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -573,6 +586,7 @@ void dbg_PyList_SetItem_steals(void) {
 void dbg_PyList_SET_ITEM_steals(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -614,6 +628,7 @@ void dbg_PyList_SET_ITEM_steals(void) {
 void dbg_PyList_SetItem_steals_replace(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -678,6 +693,7 @@ void dbg_PyList_SetItem_steals_replace(void) {
 void dbg_PyList_SET_ITEM_steals_replace(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -726,6 +742,7 @@ void dbg_PyList_SET_ITEM_steals_replace(void) {
 void dbg_PyList_SetIem_NULL(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -751,6 +768,7 @@ void dbg_PyList_SetIem_NULL(void) {
 void dbg_PyList_SET_ITEM_NULL(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -776,6 +794,7 @@ void dbg_PyList_SET_ITEM_NULL(void) {
 void dbg_PyList_SetIem_NULL_SetItem(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -817,6 +836,7 @@ void dbg_PyList_SetIem_NULL_SetItem(void) {
 void dbg_PyList_SET_ITEM_NULL_SET_ITEM(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -859,6 +879,7 @@ void dbg_PyList_SET_ITEM_NULL_SET_ITEM(void) {
 void dbg_PyList_SetItem_fails_not_a_tuple(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -883,8 +904,8 @@ void dbg_PyList_SetItem_fails_not_a_tuple(void) {
     int result = PyList_SetItem(container, 0, value);
     assert(result == -1);
     assert(PyErr_Occurred());
-    PyErr_PrintEx(0);
-    PyErr_Clear();
+    fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    PyErr_Print();
 
     /* Yes, has been decremented on failure. */
     ref_count = Py_REFCNT(value);
@@ -903,6 +924,7 @@ void dbg_PyList_SetItem_fails_not_a_tuple(void) {
 void dbg_PyList_SetItem_fails_out_of_range(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -927,8 +949,8 @@ void dbg_PyList_SetItem_fails_out_of_range(void) {
     int result = PyList_SetItem(container, 1, value);
     assert(result == -1);
     assert(PyErr_Occurred());
-    PyErr_PrintEx(0);
-    PyErr_Clear();
+    fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    PyErr_Print();
 
     /* Yes, has been decremented on failure. */
     ref_count = Py_REFCNT(value);
@@ -941,13 +963,14 @@ void dbg_PyList_SetItem_fails_out_of_range(void) {
 }
 
 /**
- * A function that checks whether a tuple steals a reference when using PyList_SetItem.
+ * A function that checks whether a list increments a reference when using PyList_Append.
  * This can be stepped through in the debugger.
  * asserts are use for the test so this is expected to be run in DEBUG mode.
  */
 void dbg_PyList_Append(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }
@@ -985,12 +1008,80 @@ void dbg_PyList_Append(void) {
     assert(!PyErr_Occurred());
 }
 
+void dbg_PyList_Append_fails_not_a_list(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    assert(!PyErr_Occurred());
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    int result = PyList_Append(container, value);
+    assert(result);
+
+    assert(PyErr_Occurred());
+    fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    PyErr_Print();
+    assert(!PyErr_Occurred());
+
+    Py_DECREF(container);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyList_Append_fails_NULL(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(0);
+    assert(container);
+    assert(!PyErr_Occurred());
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    int result = PyList_Append(container, NULL);
+    assert(result);
+
+    assert(PyErr_Occurred());
+    fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    PyErr_Print();
+    assert(!PyErr_Occurred());
+
+    Py_DECREF(container);
+
+    assert(!PyErr_Occurred());
+}
+
 /**
  * Function that explores Py_BuildValue("(O)", ...).
  */
 void dbg_PyList_Py_BuildValue(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
         PyErr_Print();
         return;
     }

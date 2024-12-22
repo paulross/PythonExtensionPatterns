@@ -18,6 +18,9 @@ def test_module_dir():
         'list_steals',
         'set_no_steals',
         'set_no_steals_decref',
+        'test_PyList_Append',
+        'test_PyList_Append_fails_NULL',
+        'test_PyList_Append_fails_not_a_list',
         'test_PyList_Py_BuildValue',
         'test_PyList_SET_ITEM_NULL',
         'test_PyList_SET_ITEM_NULL_SET_ITEM',
@@ -178,6 +181,22 @@ def test_PyList_SetItem_fails_out_of_range():
     with pytest.raises(IndexError) as err:
         cRefCount.test_PyList_SetItem_fails_out_of_range()
     assert err.value.args[0] == 'list assignment index out of range'
+
+
+def test_PyList_Append():
+    assert cRefCount.test_PyList_Append() == 0
+
+
+def test_PyList_Append_fails_not_a_list():
+    with pytest.raises(SystemError) as err:
+        cRefCount.test_PyList_Append_fails_not_a_list()
+    assert err.value.args[0].endswith(' bad argument to internal function')
+
+
+def test_PyList_Append_fails_NULL():
+    with pytest.raises(SystemError) as err:
+        cRefCount.test_PyList_Append_fails_NULL()
+    assert err.value.args[0].endswith(' bad argument to internal function')
 
 
 def test_PyList_Py_BuildValue():
