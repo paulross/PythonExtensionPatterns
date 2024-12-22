@@ -13,7 +13,7 @@
 
 .. _PyList_SetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
 .. _PyList_SET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_SET_ITEM
-.. _PyList_Get_Item(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
+.. _PyList_GetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
 .. _PyList_GET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_GET_ITEM
 .. _PyList_GetItemRef(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItemRef
 .. _PyList_Insert(): https://docs.python.org/3/c-api/list.html#c.PyList_Insert
@@ -236,6 +236,8 @@ For code and tests see:
 * CPython: ``test_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_PyTuple_SET_ITEM_steals``.
 
+.. _chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement:
+
 Replacement
 ^^^^^^^^^^^
 
@@ -437,16 +439,50 @@ Summary
 Lists
 -----------------------
 
-`PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave identically to their equivalents `PyTuple_SetItem()`_ and
-`PyTuple_SET_ITEM()`_.
+`PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave identically to their equivalents `PyTuple_SetItem()`_
+(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem`)
+and `PyTuple_SET_ITEM()`_ (see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM`).
+
+Note that, as with tuples, `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently on replacement of values
+(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement`).
+
+`Py_BuildValue()`_ also behaves identically, as far as reference counts are concerned, with Lists as it does with
+Tuples (see :ref:`chapter_refcount_and_containers.tuples.Py_BuildValue`).
+
+``PyList_Append()``
+---------------------
+
+`PyList_Append()`_ (a C function) adds an object onto the end of a list with error checking.
+This increments the reference count of the given value which will be decremented on container destruction.
+For example:
+
+.. code-block:: c
+
+    PyObject *container = PyList_New(0);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    PyList_Append(container, value);
+    assert(Py_REFCNT(value) == 2);
+    Py_DECREF(container);
+    /* Possible leak. */
+    assert(Py_REFCNT(value) == 1);
+
+`PyList_Append()`_ uses `PyList_SET_ITEM()`_ in its implementation.
+`PyList_Append()`_ can fail for two reasons:
+
+* The given container is not a list.
+* The given value is NULL.
+
+On failure the reference count of value is unchanged and a ``SystemError`` is raised with the text
+"bad argument to internal function".
+
+For code and tests, including failure modes, see:
+
+* C: ``dbg_PyList_Append...`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyList_Append...`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_PyList_Append`` etc.
+
 
 TODO:
-
-https://docs.python.org/3/c-api/list.html#c.PyList_Append
-PyErr_BadInternalCall on not-a-list or NULL value.
-On success does incref value.
-On failure does not decref value.
-Uses PyList_SET_ITEM
 
 https://docs.python.org/3/c-api/list.html#c.PyList_Insert
 PyList_Insert raises bad internal call on insert NULL.
