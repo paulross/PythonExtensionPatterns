@@ -169,7 +169,7 @@ def test_PyList_SET_ITEM_NULL_SET_ITEM():
     assert cRefCount.test_PyList_SET_ITEM_NULL_SET_ITEM() == 0
 
 
-def test_PyList_SetItem_fails_not_a_tuple():
+def test_PyList_SetItem_fails_not_a_list():
     with pytest.raises(SystemError) as err:
         cRefCount.test_PyList_SetItem_fails_not_a_list()
     assert err.value.args[0].endswith('bad argument to internal function')
