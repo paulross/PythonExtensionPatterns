@@ -18,3 +18,5 @@ cPyExtPatt.egg-info/
 dist/
 
 cPyExtPatt/
+
+tmp/
