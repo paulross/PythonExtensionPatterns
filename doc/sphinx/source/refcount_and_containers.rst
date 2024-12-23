@@ -75,6 +75,8 @@ Firstly Tuples, I'll go into quite a lot of detail here because it covers much o
 .. _PyTuple_SetItem(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
 .. _PyTuple_SET_ITEM(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SET_ITEM
 .. _PyTuple_Pack(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack
+.. _PyTuple_GetItem(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_GetItem
+.. _PyTuple_GET_ITEM(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_GET_ITEM
 
 
 -----------------------
@@ -200,7 +202,7 @@ And, when the index out of range:
 ----------------------
 
 `PyTuple_SET_ITEM()`_ is a function like macro that inserts an object into a tuple without any error checking
-(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.failures` below) although the types checking
+(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.failures` below) although the type
 checking is performed as an assertion if Python is built in
 `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
 `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
@@ -530,6 +532,15 @@ For code and tests, including failure modes, see:
 * CPython: ``test_PyList_Insert...`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyList_Insert`` etc.
 
+[Continued on the next page]
+
+..
+    This note and code blocks are quite big in latex so page break here.
+
+.. raw:: latex
+
+    \pagebreak
+
 .. note::
 
     Although the Python documentation for `PyList_Insert()`_ does not make this clear the index can be negative in
@@ -579,18 +590,22 @@ For code and tests, including failure modes, see:
     single: PyList_GetItemRef()
     pair: PyList_GetItemREf(); List
 
-TODO:
 
 List Getters
 ---------------------
 
 There are three APIS for getting an item from a list:
 
-* `PyList_GetItem()`_
-* `PyList_GET_ITEM()`_
-* `PyList_GetItemRef()`_ [From Python 3.13 onwards]
-
-
+* `PyList_GetItem()`_ This is very similar to `PyTuple_GetItem()`_. It returns a borrowed reference and will error
+  if the supplied container is not list or the index is negative or out of range.
+* `PyList_GET_ITEM()`_ This is very similar to `PyTuple_GET_ITEM()`_. It returns a borrowed reference and there is
+  no error checking for the index being in range.
+  The type checking is performed as an assertion if Python is built in
+  `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
+  `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
+  If not the results aer undefined.
+* `PyList_GetItemRef()`_ [From Python 3.13 onwards].
+  Like `PyList_GetItem()`_ but his returns a new *strong* reference to the existing object.
 
 Summary
 ----------------------
@@ -599,12 +614,14 @@ Summary
 * `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently when replacing an existing value.
 * If `PyList_SetItem()`_ errors it will decrement the reference count of the given value.
   Possibly with surprising results.
-* `Py_BuildValue()`_ increment reference counts and thus may leak.
-
-
+* `PyList_Append()`_ Increments the reference count of the given object and thus may leak.
+* `PyList_Insert()`_ Increments the reference count of the given object and thus may leak.
+* `Py_BuildValue()`_ Increments the reference count of the given object and thus may leak.
 
 
 .. _chapter_refcount_and_containers.dictionaries:
+
+TODO:
 
 -----------------------
 Dictionaries
