@@ -532,12 +532,12 @@ For code and tests, including failure modes, see:
 * CPython: ``test_PyList_Insert...`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyList_Insert`` etc.
 
-[Continued on the next page]
-
 ..
     This note and code blocks are quite big in latex so page break here.
 
 .. raw:: latex
+
+    [Continued on the next page]
 
     \pagebreak
 
@@ -621,11 +621,39 @@ Summary
 
 .. _chapter_refcount_and_containers.dictionaries:
 
+..
+    Links, mostly to the Python documentation:
+    TODO: Investigate/create tests for all of these.
+
+.. _PyDict_SetItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetItem
+.. _PyDict_DelItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_DelItem
+.. _PyDict_GetItemRef(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemRef
+.. _PyDict_GetItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItem
+.. _PyDict_GetItemWithError(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemWithError
+.. _PyDict_SetDefault(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefault
+.. _PyDict_SetDefaultRef(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefaultRef
+.. _PyDict_Pop(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Pop
+.. _PyDict_Items(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Items
+.. _PyDict_Keys(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Keys
+.. _PyDict_Values(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Values
+
 TODO:
+
 
 -----------------------
 Dictionaries
 -----------------------
+
+``PyDict_SetItem()``
+--------------------
+
+.. note::
+
+    The Python documentation for `PyDict_SetItem()`_ states that i does *not* steal a reference to the value (in fact it
+    increments the *value* reference count). However the documentation does not make clear that this function also
+    increments the *key* reference count as well.
+
+
 
 TODO:
 
@@ -646,6 +674,12 @@ Summary
 TODO:
 
 .. Example footnote [#]_.
+
+.. todo::
+
+    Chapter on watchers, e.g. dict watchers [since Python 3.12]: https://docs.python.org/3/c-api/dict.html#c.PyDict_AddWatcher
+    Also type watchers etc. There does not seem to be a PEP for this.
+    This change has example tests: https://github.com/python/cpython/pull/31787/files
 
 .. rubric:: Footnotes
 
