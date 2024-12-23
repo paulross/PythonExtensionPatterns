@@ -1075,6 +1075,205 @@ void dbg_PyList_Append_fails_NULL(void) {
     assert(!PyErr_Occurred());
 }
 
+void dbg_PyList_Insert(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(1);
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyList_Insert(container, 0L, value)) {
+        assert(0);
+    }
+    // PyList_Append increments.
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    PyObject *get_item = PyList_GET_ITEM(container, 0);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    Py_DECREF(container);
+
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    /* Need this. */
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyList_Insert_Is_Truncated(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(0);
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyList_Insert(container, 4L, value)) {
+        assert(0);
+    }
+    // PyList_Insert increments.
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    PyObject *get_item;
+    // PyList_Insert at 4 actually inserts at 0.
+    assert(PyList_GET_SIZE(container) == 1L);
+    get_item = PyList_GET_ITEM(container, 0L);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    Py_DECREF(container);
+
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    /* Need this. */
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyList_Insert_Negative_Index(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(0);
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyList_Insert(container, -1L, value)) {
+        assert(0);
+    }
+    // PyList_Insert increments.
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    PyObject *get_item;
+    // PyList_Insert at -1 actually inserts at 0.
+    assert(PyList_GET_SIZE(container) == 1L);
+    get_item = PyList_GET_ITEM(container, 0L);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    Py_DECREF(container);
+
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    /* Need this. */
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyList_Insert_fails_not_a_list(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    assert(!PyErr_Occurred());
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    int result = PyList_Insert(container, 1L, value);
+    assert(result);
+
+    assert(PyErr_Occurred());
+    fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    PyErr_Print();
+    assert(!PyErr_Occurred());
+
+    Py_DECREF(container);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyList_Insert_fails_NULL(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(1);
+    assert(container);
+    assert(!PyErr_Occurred());
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    int result = PyList_Insert(container, 1L, NULL);
+    assert(result);
+
+    assert(PyErr_Occurred());
+    fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    PyErr_Print();
+    assert(!PyErr_Occurred());
+
+    Py_DECREF(container);
+
+    assert(!PyErr_Occurred());
+}
+
 /**
  * Function that explores Py_BuildValue("(O)", ...).
  */

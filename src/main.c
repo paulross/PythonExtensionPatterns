@@ -168,6 +168,11 @@ int main(int argc, const char * argv[]) {
     dbg_PyList_Append();
     dbg_PyList_Append_fails_not_a_list();
     dbg_PyList_Append_fails_NULL();
+    dbg_PyList_Insert();
+    dbg_PyList_Insert_Is_Truncated();
+    dbg_PyList_Insert_Negative_Index();
+    dbg_PyList_Insert_fails_not_a_list();
+    dbg_PyList_Insert_fails_NULL();
     dbg_PyList_Py_BuildValue();
 
     printf("Bye, bye!\n");

@@ -33,6 +33,11 @@ void dbg_PyList_SetItem_fails_out_of_range(void);
 void dbg_PyList_Append(void);
 void dbg_PyList_Append_fails_not_a_list(void);
 void dbg_PyList_Append_fails_NULL(void);
+void dbg_PyList_Insert(void);
+void dbg_PyList_Insert_Is_Truncated(void);
+void dbg_PyList_Insert_Negative_Index(void);
+void dbg_PyList_Insert_fails_not_a_list(void);
+void dbg_PyList_Insert_fails_NULL(void);
 void dbg_PyList_Py_BuildValue(void);
 
 #endif //PYTHONEXTENSIONPATTERNS_DEBUGCONTAINERS_H

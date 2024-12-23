@@ -13,11 +13,11 @@
 
 .. _PyList_SetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
 .. _PyList_SET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_SET_ITEM
+.. _PyList_Append(): https://docs.python.org/3/c-api/list.html#c.PyList_Append
+.. _PyList_Insert(): https://docs.python.org/3/c-api/list.html#c.PyList_Insert
 .. _PyList_GetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
 .. _PyList_GET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_GET_ITEM
 .. _PyList_GetItemRef(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItemRef
-.. _PyList_Insert(): https://docs.python.org/3/c-api/list.html#c.PyList_Insert
-.. _PyList_Append(): https://docs.python.org/3/c-api/list.html#c.PyList_Append
 
 .. _Py_BuildValue(): https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue
 
@@ -439,12 +439,17 @@ Summary
 Lists
 -----------------------
 
+``PyList_SetItem()`` and ``PyList_SET_ITEM()``
+----------------------------------------------
+
 `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave identically to their equivalents `PyTuple_SetItem()`_
 (see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem`)
 and `PyTuple_SET_ITEM()`_ (see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM`).
 
 Note that, as with tuples, `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently on replacement of values
 (see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement`).
+The Python documentation on `PyList_SET_ITEM()`_ correctly identifies when a leak can occur
+(unlike `PyTuple_SetItem()`_).
 
 `Py_BuildValue()`_ also behaves identically, as far as reference counts are concerned, with Lists as it does with
 Tuples (see :ref:`chapter_refcount_and_containers.tuples.Py_BuildValue`).
@@ -463,7 +468,7 @@ For example:
     PyList_Append(container, value);
     assert(Py_REFCNT(value) == 2);
     Py_DECREF(container);
-    /* Possible leak. */
+    /* A leak unless decref'd. */
     assert(Py_REFCNT(value) == 1);
 
 `PyList_Append()`_ uses `PyList_SET_ITEM()`_ in its implementation.
@@ -481,6 +486,54 @@ For code and tests, including failure modes, see:
 * CPython: ``test_PyList_Append...`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyList_Append`` etc.
 
+
+``PyList_Insert()``
+---------------------
+
+`PyList_Insert()`_ (a C function) inserts an object onto a specific index in a list with error checking.
+This increments the reference count of the given value which will be decremented on container destruction.
+For example:
+
+
+.. note::
+
+    Although the Python documentation for `PyList_Insert()`_ does not make this clear the index can be negative in
+    which case the index is calculated from the end.
+
+    For example (``dbg_PyList_Insert_Negative_Index()`` in ``src/cpy/Containers/DebugContainers.c``):
+
+    .. code-block:: c
+
+        PyObject *container = PyList_New(0);
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        // Insert at end
+        if (PyList_Insert(container, -1L, value)) {
+            assert(0);
+        }
+        PyObject *get_item;
+        // PyList_Insert at -1 actually inserts at 0.
+        assert(PyList_GET_SIZE(container) == 1L);
+        get_item = PyList_GET_ITEM(container, 0L);
+        assert(get_item == value);
+
+    Also, not mentioned (but implied) in the documentation is that if the index is greater than the list length then the
+    value is appended to the list.
+
+    For example (``dbg_PyList_Insert_Is_Truncated()`` in ``src/cpy/Containers/DebugContainers.c``):
+
+    .. code-block:: c
+
+        PyObject *container = PyList_New(0);
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        // Insert before index 4
+        if (PyList_Insert(container, 4L, value)) {
+            assert(0);
+        }
+        PyObject *get_item;
+        // PyList_Insert at 4 actually inserts at 0.
+        assert(PyList_GET_SIZE(container) == 1L);
+        get_item = PyList_GET_ITEM(container, 0L);
+        assert(get_item == value);
 
 TODO:
 
