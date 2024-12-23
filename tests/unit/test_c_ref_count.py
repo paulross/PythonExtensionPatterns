@@ -21,6 +21,11 @@ def test_module_dir():
         'test_PyList_Append',
         'test_PyList_Append_fails_NULL',
         'test_PyList_Append_fails_not_a_list',
+        'test_PyList_Insert',
+        'test_PyList_Insert_Is_Truncated',
+        'test_PyList_Insert_Negative_Index',
+        'test_PyList_Insert_fails_NULL',
+        'test_PyList_Insert_fails_not_a_list',
         'test_PyList_Py_BuildValue',
         'test_PyList_SET_ITEM_NULL',
         'test_PyList_SET_ITEM_NULL_SET_ITEM',
@@ -194,6 +199,30 @@ def test_PyList_Append_fails_not_a_list():
 def test_PyList_Append_fails_NULL():
     with pytest.raises(SystemError) as err:
         cRefCount.test_PyList_Append_fails_NULL()
+    assert err.value.args[0].endswith(' bad argument to internal function')
+
+
+def test_PyList_Insert():
+    assert cRefCount.test_PyList_Insert() == 0
+
+
+def test_PyList_Insert_Is_Truncated():
+    assert cRefCount.test_PyList_Insert_Is_Truncated() == 0
+
+
+def test_PyList_Insert_Negative_Index():
+    assert cRefCount.test_PyList_Insert_Negative_Index() == 0
+
+
+def test_PyList_Insert_fails_not_a_list():
+    with pytest.raises(SystemError) as err:
+        cRefCount.test_PyList_Insert_fails_not_a_list()
+    assert err.value.args[0].endswith(' bad argument to internal function')
+
+
+def test_PyList_Insert_fails_NULL():
+    with pytest.raises(SystemError) as err:
+        cRefCount.test_PyList_Insert_fails_NULL()
     assert err.value.args[0].endswith(' bad argument to internal function')
 
 

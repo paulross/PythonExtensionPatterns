@@ -1085,7 +1085,7 @@ void dbg_PyList_Insert(void) {
     assert(!PyErr_Occurred());
     Py_ssize_t ref_count;
 
-    PyObject *container = PyList_New(1);
+    PyObject *container = PyList_New(0);
     assert(container);
 
     ref_count = Py_REFCNT(container);
@@ -1095,9 +1095,11 @@ void dbg_PyList_Insert(void) {
     ref_count = Py_REFCNT(value);
     assert(ref_count == 1);
 
+    assert(PyList_GET_SIZE(container) == 0);
     if (PyList_Insert(container, 0L, value)) {
         assert(0);
     }
+    assert(PyList_GET_SIZE(container) == 1);
     // PyList_Append increments.
     ref_count = Py_REFCNT(value);
     assert(ref_count == 2);

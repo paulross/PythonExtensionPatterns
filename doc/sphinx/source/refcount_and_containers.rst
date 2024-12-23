@@ -5,19 +5,8 @@
     :maxdepth: 3
 
 ..
-    Links, mostly to the Python documentation:
-
-.. _PyTuple_SetItem(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
-.. _PyTuple_SET_ITEM(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SET_ITEM
-.. _PyTuple_Pack(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack
-
-.. _PyList_SetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
-.. _PyList_SET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_SET_ITEM
-.. _PyList_Append(): https://docs.python.org/3/c-api/list.html#c.PyList_Append
-.. _PyList_Insert(): https://docs.python.org/3/c-api/list.html#c.PyList_Insert
-.. _PyList_GetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
-.. _PyList_GET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_GET_ITEM
-.. _PyList_GetItemRef(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItemRef
+    Links, mostly to the Python documentation.
+    Specific container links are just before the appropriate section.
 
 .. _Py_BuildValue(): https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue
 
@@ -79,6 +68,14 @@ The code in this chapter explores the CPython C API in several ways:
 Firstly Tuples, I'll go into quite a lot of detail here because it covers much of the other containers as well.
 
 .. _chapter_refcount_and_containers.tuples:
+
+..
+    Links, mostly to the Python documentation:
+
+.. _PyTuple_SetItem(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
+.. _PyTuple_SET_ITEM(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SET_ITEM
+.. _PyTuple_Pack(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack
+
 
 -----------------------
 Tuples
@@ -433,11 +430,29 @@ Summary
   Possibly with surprising results.
 * `PyTuple_Pack()`_ and `Py_BuildValue()`_ increment reference counts and thus may leak.
 
+
 .. _chapter_refcount_and_containers.lists:
+
+..
+    Links, mostly to the Python documentation:
+
+.. _PyList_SetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
+.. _PyList_SET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_SET_ITEM
+.. _PyList_Append(): https://docs.python.org/3/c-api/list.html#c.PyList_Append
+.. _PyList_Insert(): https://docs.python.org/3/c-api/list.html#c.PyList_Insert
+.. _PyList_GetItem(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
+.. _PyList_GET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_GET_ITEM
+.. _PyList_GetItemRef(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItemRef
 
 -----------------------
 Lists
 -----------------------
+
+.. index::
+    single: PyList_SetItem()
+    pair: PyList_SetItem(); List
+    single: PyList_SET_ITEM()
+    pair: PyList_SET_ITEM(); List
 
 ``PyList_SetItem()`` and ``PyList_SET_ITEM()``
 ----------------------------------------------
@@ -453,6 +468,10 @@ The Python documentation on `PyList_SET_ITEM()`_ correctly identifies when a lea
 
 `Py_BuildValue()`_ also behaves identically, as far as reference counts are concerned, with Lists as it does with
 Tuples (see :ref:`chapter_refcount_and_containers.tuples.Py_BuildValue`).
+
+.. index::
+    single: PyList_Append()
+    pair: PyList_Append(); List
 
 ``PyList_Append()``
 ---------------------
@@ -487,13 +506,29 @@ For code and tests, including failure modes, see:
 * Python: ``tests.unit.test_c_ref_count.test_PyList_Append`` etc.
 
 
+.. index::
+    single: PyList_Insert()
+    pair: PyList_Insert(); List
+
 ``PyList_Insert()``
 ---------------------
 
-`PyList_Insert()`_ (a C function) inserts an object onto a specific index in a list with error checking.
+`PyList_Insert()`_ (a C function) inserts an object before a specific index in a list with error checking.
 This increments the reference count of the given value which will be decremented on container destruction.
-For example:
 
+`PyList_Insert()`_ can fail for two reasons:
+
+* The given container is not a list.
+* The given value is NULL.
+
+On failure the reference count of value is unchanged and a ``SystemError`` is raised with the text
+"bad argument to internal function".
+
+For code and tests, including failure modes, see:
+
+* C: ``dbg_PyList_Insert...`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyList_Insert...`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_PyList_Insert`` etc.
 
 .. note::
 
@@ -535,16 +570,27 @@ For example:
         get_item = PyList_GET_ITEM(container, 0L);
         assert(get_item == value);
 
+
+.. index::
+    single: PyList_GetItem()
+    pair: PyList_GetItem(); List
+    single: PyList_GET_ITEM()
+    pair: PyList_GET_ITEM(); List
+    single: PyList_GetItemRef()
+    pair: PyList_GetItemREf(); List
+
 TODO:
 
-https://docs.python.org/3/c-api/list.html#c.PyList_Insert
-PyList_Insert raises bad internal call on insert NULL.
+List Getters
+---------------------
 
-https://docs.python.org/3/c-api/list.html#c.PyList_GetItemRef
+There are three APIS for getting an item from a list:
 
-https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
+* `PyList_GetItem()`_
+* `PyList_GET_ITEM()`_
+* `PyList_GetItemRef()`_ [From Python 3.13 onwards]
 
-https://docs.python.org/3/c-api/list.html#c.PyList_GET_ITEM
+
 
 Summary
 ----------------------
