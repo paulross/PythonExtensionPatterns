@@ -18,6 +18,7 @@ def test_module_dir():
         'list_steals',
         'set_no_steals',
         'set_no_steals_decref',
+        'test_PyDict_SetItem_increments',
         'test_PyList_Append',
         'test_PyList_Append_fails_NULL',
         'test_PyList_Append_fails_not_a_list',
@@ -228,3 +229,7 @@ def test_PyList_Insert_fails_NULL():
 
 def test_PyList_Py_BuildValue():
     assert cRefCount.test_PyList_Py_BuildValue() == 0
+
+
+def test_PyDict_SetItem_increments():
+    assert cRefCount.test_PyDict_SetItem_increments() == 0

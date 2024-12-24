@@ -1271,7 +1271,7 @@ test_PyTuple_Py_BuildValue(PyObject *Py_UNUSED(module)) {
     return PyLong_FromLong(return_value);
 }
 
-#pragma mark - Teting Lists
+#pragma mark - Testing Lists
 
 /**
  * A function that checks whether a tuple steals a reference when using PyList_SetItem.
@@ -2166,6 +2166,85 @@ test_PyList_Py_BuildValue(PyObject *Py_UNUSED(module)) {
     return PyLong_FromLong(return_value);
 }
 
+#pragma mark - Testing Dictionaries
+
+static PyObject *
+test_PyDict_SetItem_increments(PyObject *Py_UNUSED(module)) {
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+        return NULL;
+    }
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+//    Py_ssize_t ref_count;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyDict_New();
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "PyDict_New()");
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key = new_unique_string(__FUNCTION__, NULL)");
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value = new_unique_string(__FUNCTION__, NULL)");
+
+    if (PyDict_SetItem(container, key, value_a)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetItem()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_SetItem()");
+
+    get_item = PyDict_GetItem(container, key);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "get_item = PyDict_GetItem(container, key);");
+    if (get_item != value_a) {
+        fprintf(stderr, "get_item = PyDict_GetItem(container, key); is not value_a\n");
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    /* Now replace value_a with a new value, value_b. */
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "value_a = new_unique_string(__FUNCTION__, NULL)");
+
+    if (PyDict_SetItem(container, key, value_b)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetItem()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after PyList_SetItem()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after PyList_SetItem()");
+
+    get_item = PyDict_GetItem(container, key);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "get_item = PyDict_GetItem(container, key);");
+    if (get_item != value_b) {
+        fprintf(stderr, "get_item = PyDict_GetItem(container, key); is not value_b\n");
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "value_b after Py_DECREF(container);");
+    Py_DECREF(key);
+    Py_DECREF(value_a);
+    Py_DECREF(value_b);
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+
 #define MODULE_NOARGS_ENTRY(name, doc)  \
     {                                   \
         #name,                          \
@@ -2247,6 +2326,8 @@ static PyMethodDef module_methods[] = {
                             "Check that PyList_Insert() raises on NULL."),
         MODULE_NOARGS_ENTRY(test_PyList_Py_BuildValue,
                             "Check that Py_BuildValue() increments reference counts."),
+#pragma mark - Testing Dictionaries
+        MODULE_NOARGS_ENTRY(test_PyDict_SetItem_increments, "Check that PyDict_SetItem() works as expected."),
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

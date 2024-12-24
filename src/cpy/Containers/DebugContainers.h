@@ -39,5 +39,7 @@ void dbg_PyList_Insert_Negative_Index(void);
 void dbg_PyList_Insert_fails_not_a_list(void);
 void dbg_PyList_Insert_fails_NULL(void);
 void dbg_PyList_Py_BuildValue(void);
+#pragma mark - Dictionaries
+void dbg_PyDict_SetItem_increments(void);
 
 #endif //PYTHONEXTENSIONPATTERNS_DEBUGCONTAINERS_H

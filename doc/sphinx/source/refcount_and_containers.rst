@@ -42,6 +42,7 @@ The code in this chapter explores the CPython C API in several ways:
 * Test code is in ``src/cpy/RefCount/cRefCount.c`` which is built into the Python module
   ``cPyExtPatt.cRefCount``.
   This can be run under ``pytest`` for multiple Python versions by ``build_all.sh``.
+* A study of the Python source code.
 * A review of the Python C API documentation.
 
 .. note::
@@ -78,6 +79,9 @@ Firstly Tuples, I'll go into quite a lot of detail here because it covers much o
 .. _PyTuple_GetItem(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_GetItem
 .. _PyTuple_GET_ITEM(): https://docs.python.org/3/c-api/tuple.html#c.PyTuple_GET_ITEM
 
+
+.. index::
+    single: Tuple
 
 -----------------------
 Tuples
@@ -446,6 +450,9 @@ Summary
 .. _PyList_GET_ITEM(): https://docs.python.org/3/c-api/list.html#c.PyList_GET_ITEM
 .. _PyList_GetItemRef(): https://docs.python.org/3/c-api/list.html#c.PyList_GetItemRef
 
+.. index::
+    single: List
+
 -----------------------
 Lists
 -----------------------
@@ -625,6 +632,7 @@ Summary
     Links, mostly to the Python documentation:
     TODO: Investigate/create tests for all of these.
 
+.. _PyDict_Check(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Check
 .. _PyDict_SetItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetItem
 .. _PyDict_DelItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_DelItem
 .. _PyDict_GetItemRef(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemRef
@@ -637,27 +645,48 @@ Summary
 .. _PyDict_Keys(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Keys
 .. _PyDict_Values(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Values
 
-TODO:
+.. _PyObject_Hash(): https://docs.python.org/3/c-api/object.html#c.PyObject_Hash
 
+..
+    TODO: Py_BuildValue with a dict.
+
+.. index::
+    single: Dictionary
 
 -----------------------
 Dictionaries
 -----------------------
 
+.. index::
+    single: PyDict_SetItem()
+    pair: PyDict_SetItem(); Dictionary
+
 ``PyDict_SetItem()``
 --------------------
 
-.. note::
+TODO:
 
-    The Python documentation for `PyDict_SetItem()`_ states that i does *not* steal a reference to the value (in fact it
-    increments the *value* reference count). However the documentation does not make clear that this function also
-    increments the *key* reference count as well.
 
+The Python documentation for `PyDict_SetItem()`_ states that it does *not* steal a reference to the value (i.e. it
+increments the *value* reference count). The documentation does not make clear that this function also
+increments the *key* reference count as well.
+
+`PyDict_SetItem()`_ can fail for the following reasons:
+
+* The container is not a dictionary (or a sub-class of a dictionary, see `PyDict_Check()`_).
+* The key is not hashable (`PyObject_Hash()`_ returns -1).
+* If either the key or the values is NULL then the result is likely to be undefined.
+  These are checked with asserts if Python is built in
+  `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
+  `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
 
 
 TODO:
 
 .. _chapter_refcount_and_containers.sets:
+
+.. index::
+    single: Set
 
 -----------------------
 Sets
@@ -677,7 +706,12 @@ TODO:
 
 .. todo::
 
-    Chapter on watchers, e.g. dict watchers [since Python 3.12]: https://docs.python.org/3/c-api/dict.html#c.PyDict_AddWatcher
+    Chapter `Struct Sequence Objects <https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects>`_
+
+.. todo::
+
+    Chapter on watchers, e.g. dict watchers [since Python 3.12]:
+    https://docs.python.org/3/c-api/dict.html#c.PyDict_AddWatcher
     Also type watchers etc. There does not seem to be a PEP for this.
     This change has example tests: https://github.com/python/cpython/pull/31787/files
 

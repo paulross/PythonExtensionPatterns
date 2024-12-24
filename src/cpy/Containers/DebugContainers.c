@@ -27,17 +27,6 @@ new_unique_string(const char *function_name, const char *suffix) {
     return value;
 }
 
-/**
- * TODO:
- *
- * Lists:
- * As above plus append.
- *
- * We should cover named tuples/dataclasses etc.:
- * python-3.12.1-docs-html/c-api/tuple.html#struct-sequence-objects
- *
- */
-
 #pragma mark - Tuples
 
 /**
@@ -1311,3 +1300,85 @@ void dbg_PyList_Py_BuildValue(void) {
 
     assert(!PyErr_Occurred());
 }
+
+#pragma mark - Dictionaries
+
+void dbg_PyDict_SetItem_increments(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+    PyObject *get_item;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+
+    if (PyDict_SetItem(container, key, value_a)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    get_item = PyDict_GetItem(container, key);
+    assert(get_item == value_a);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    /* Now replace the value using the same key. */
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+
+    if (PyDict_SetItem(container, key, value_b)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    get_item = PyDict_GetItem(container, key);
+    assert(get_item == value_b);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+
+    Py_DECREF(container);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+
+    Py_DECREF(key);
+    Py_DECREF(value_a);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
+ * TODO:
+ *
+ * We should cover named tuples/dataclasses etc.:
+ * https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
+ *
+ */
+

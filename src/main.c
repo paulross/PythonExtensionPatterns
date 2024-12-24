@@ -175,6 +175,9 @@ int main(int argc, const char * argv[]) {
     dbg_PyList_Insert_fails_NULL();
     dbg_PyList_Py_BuildValue();
 
+#pragma mark - Dictionaries
+    dbg_PyDict_SetItem_increments();
+
     printf("Bye, bye!\n");
     return failure;
 }
