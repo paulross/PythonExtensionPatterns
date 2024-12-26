@@ -5,6 +5,8 @@
 #ifndef PYTHONEXTENSIONPATTERNS_DEBUGCONTAINERS_H
 #define PYTHONEXTENSIONPATTERNS_DEBUGCONTAINERS_H
 
+#define ACCEPT_SIGSEGV 0
+
 PyObject *new_unique_string(const char *function_name, const char *suffix);
 #pragma mark - Tuples
 void dbg_PyTuple_SetItem_steals(void);
@@ -41,5 +43,11 @@ void dbg_PyList_Insert_fails_NULL(void);
 void dbg_PyList_Py_BuildValue(void);
 #pragma mark - Dictionaries
 void dbg_PyDict_SetItem_increments(void);
+void dbg_PyDict_SetItem_fails_not_a_dict(void);
+void dbg_PyDict_SetItem_fails_not_hashable(void);
+#if ACCEPT_SIGSEGV
+void dbg_PyDict_SetItem_SIGSEGV_on_key_NULL(void);
+void dbg_PyDict_SetItem_SIGSEGV_on_value_NULL(void);
+#endif
 
 #endif //PYTHONEXTENSIONPATTERNS_DEBUGCONTAINERS_H

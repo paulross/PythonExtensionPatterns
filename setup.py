@@ -30,7 +30,7 @@ DEBUG = True
 # If DEBUG > 0 then extra code paths are introduced such as checking the integrity of
 # internal data structures. In this case the performance is by no means comparable
 # with release builds.
-DEBUG_LEVEL = 0
+DEBUG_LEVEL = 1
 
 # Python stlib requirement:
 LANGUAGE_STANDARD_C = "c99"

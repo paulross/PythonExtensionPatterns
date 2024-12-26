@@ -177,6 +177,12 @@ int main(int argc, const char * argv[]) {
 
 #pragma mark - Dictionaries
     dbg_PyDict_SetItem_increments();
+    dbg_PyDict_SetItem_fails_not_a_dict();
+    dbg_PyDict_SetItem_fails_not_hashable();
+#if ACCEPT_SIGSEGV
+    dbg_PyDict_SetItem_SIGSEGV_on_key_NULL();
+    dbg_PyDict_SetItem_SIGSEGV_on_value_NULL();
+#endif
 
     printf("Bye, bye!\n");
     return failure;

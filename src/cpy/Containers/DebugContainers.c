@@ -1360,6 +1360,18 @@ void dbg_PyDict_SetItem_increments(void) {
     ref_count = Py_REFCNT(get_item);
     assert(ref_count == 2);
 
+    // Replace with existing key/value_b. Reference counts should remain the same.
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+    if (PyDict_SetItem(container, key, value_b)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
 
     Py_DECREF(container);
     ref_count = Py_REFCNT(key);
@@ -1373,6 +1385,176 @@ void dbg_PyDict_SetItem_increments(void) {
 
     assert(!PyErr_Occurred());
 }
+
+void dbg_PyDict_SetItem_fails_not_a_dict(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(0);
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    int result = PyDict_SetItem(container, key, value);
+    if (result) {
+        assert(PyErr_Occurred());
+        fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print(); /* Clears the error. */
+    } else {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+    Py_DECREF(key);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyDict_SetItem_fails_not_hashable(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = PyList_New(0);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    int result = PyDict_SetItem(container, key, value);
+    if (result) {
+        assert(PyErr_Occurred());
+        fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print(); /* Clears the error. */
+    } else {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+    Py_DECREF(key);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+#if ACCEPT_SIGSEGV
+
+void dbg_PyDict_SetItem_SIGSEGV_on_key_NULL(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = NULL;
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    int result = PyDict_SetItem(container, key, value);
+    if (result) {
+        assert(PyErr_Occurred());
+        fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print(); /* Clears the error. */
+    } else {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyDict_SetItem_SIGSEGV_on_value_NULL(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value = NULL;
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    int result = PyDict_SetItem(container, key, value);
+    if (result) {
+        assert(PyErr_Occurred());
+        fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print(); /* Clears the error. */
+    } else {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+    Py_DECREF(key);
+
+    assert(!PyErr_Occurred());
+}
+
+#endif
 
 /**
  * TODO:

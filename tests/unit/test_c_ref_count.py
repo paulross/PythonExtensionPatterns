@@ -18,6 +18,7 @@ def test_module_dir():
         'list_steals',
         'set_no_steals',
         'set_no_steals_decref',
+        'test_PyDict_SetItem_fails_not_a_dict',
         'test_PyDict_SetItem_increments',
         'test_PyList_Append',
         'test_PyList_Append_fails_NULL',
@@ -233,3 +234,9 @@ def test_PyList_Py_BuildValue():
 
 def test_PyDict_SetItem_increments():
     assert cRefCount.test_PyDict_SetItem_increments() == 0
+
+
+def test_PyDict_SetItem_fails_not_a_dict():
+    with pytest.raises(SystemError) as err:
+        cRefCount.test_PyDict_SetItem_fails_not_a_dict()
+    assert err.value.args[0].endswith('bad argument to internal function')

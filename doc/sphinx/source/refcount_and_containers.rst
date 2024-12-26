@@ -664,21 +664,80 @@ Dictionaries
 ``PyDict_SetItem()``
 --------------------
 
-TODO:
+The Python documentation for `PyDict_SetItem()`_ is incomplete.
+In summary `PyDict_SetItem()`_ does this with the key and value reference counts:
 
+* If the key exists in the dictionary then key's reference count remains the same.
+* If the key does *not* exist in the dictionary then its reference count will be incremented.
+* The value reference count will always be incremented.
+* If the key exists in the dictionary then the previous value reference count will be decremented before the value
+  is replaced by the new value.
+  If the key exists in the dictionary and the value is the same then this, effectively, means reference counts of
+  both key and value remain unchanged.
 
-The Python documentation for `PyDict_SetItem()`_ states that it does *not* steal a reference to the value (i.e. it
-increments the *value* reference count). The documentation does not make clear that this function also
-increments the *key* reference count as well.
+This code illustrates `PyDict_SetItem()`_ with ``assert()`` showing the reference count:
+
+.. code-block:: c
+
+    PyObject *container = PyDict_New();
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    assert(Py_REFCNT(key) == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    assert(Py_REFCNT(value_a) == 1);
+    /* Insert a new key value. */
+    if (PyDict_SetItem(container, key, value_a)) {
+        assert(0);
+    }
+    assert(Py_REFCNT(key) == 2);
+    assert(Py_REFCNT(value_a) == 2);
+
+Now replace the value with another value:
+
+.. code-block:: c
+
+    /* Replace a value for the key. */
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    if (PyDict_SetItem(container, key, value_b)) {
+        assert(0);
+    }
+    assert(Py_REFCNT(key) == 2);
+    assert(Py_REFCNT(value_a) == 1);
+    assert(Py_REFCNT(value_b) == 2);
+
+Now replace the value with the same value:
+
+.. code-block:: c
+
+    /* Replace with the same value for the key. */
+    if (PyDict_SetItem(container, key, value_b)) {
+        assert(0);
+    }
+    assert(Py_REFCNT(key) == 2);
+    assert(Py_REFCNT(value_a) == 1);
+    assert(Py_REFCNT(value_b) == 2);
+
+``PyDict_SetItem()`` Failure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `PyDict_SetItem()`_ can fail for the following reasons:
 
 * The container is not a dictionary (or a sub-class of a dictionary, see `PyDict_Check()`_).
 * The key is not hashable (`PyObject_Hash()`_ returns -1).
-* If either the key or the values is NULL then the result is likely to be undefined.
+* If either the key or the values is NULL this will cause a SIGSEGV.
   These are checked with asserts if Python is built in
   `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
   `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
+
+For code and tests see:
+
+* C: ``dbg_PyDict_SetItem_*`` in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyDict_SetItem_*`` in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_PyDict_SetItem_increments``.
+
+.. note::
+
+    In ``src/cpy/Containers/DebugContainers.c`` there are failure tests that cause a SIGSEGV if ``ACCEPT_SIGSEGV``
+    controlled in  ``src/cpy/Containers/DebugContainers.h``.
 
 
 TODO:
