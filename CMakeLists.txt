@@ -121,7 +121,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/CtxMgr/cCtxMgr.c
         src/cpy/Containers/DebugContainers.c
         src/cpy/Containers/DebugContainers.h
-        )
+        src/cpy/StructSequence/cStructSequence.c)
 
 #link_directories(${PYTHON_LINK_LIBRARY})
 

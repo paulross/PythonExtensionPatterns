@@ -303,5 +303,11 @@ setup(
                   extra_compile_args=extra_compile_args_c,
                   language='c',
                   ),
+        Extension(name=f"{PACKAGE_NAME}.cStructSequence",
+                  include_dirs=[],
+                  sources=["src/cpy/StructSequence/cStructSequence.c", ],
+                  extra_compile_args=extra_compile_args_c,
+                  language='c',
+                  ),
     ]
 )

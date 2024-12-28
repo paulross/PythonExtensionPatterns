@@ -14,6 +14,7 @@ Coding Patterns for Python Extensions
     simple_example
     refcount
     containers_and_refcounts
+    struct_sequence
     exceptions
     canonical_function
     parsing_arguments
