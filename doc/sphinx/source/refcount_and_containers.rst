@@ -628,23 +628,32 @@ Summary
 
 .. _chapter_refcount_and_containers.dictionaries:
 
-..
-    Links, mostly to the Python documentation:
-    TODO: Investigate/create tests for all of these.
+.. Links, mostly to the Python documentation:
+   TODO: Investigate/create tests for all of these.
 
-.. _PyDict_Check(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Check
+.. Setters
+
 .. _PyDict_SetItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetItem
-.. _PyDict_DelItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_DelItem
-.. _PyDict_GetItemRef(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemRef
-.. _PyDict_GetItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItem
-.. _PyDict_GetItemWithError(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemWithError
 .. _PyDict_SetDefault(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefault
 .. _PyDict_SetDefaultRef(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefaultRef
+
+.. Getters
+
+.. _PyDict_GetItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItem
+.. _PyDict_GetItemRef(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemRef
+.. _PyDict_GetItemWithError(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemWithError
 .. _PyDict_Pop(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Pop
+.. _PyDict_DelItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_DelItem
+
+.. Iterators
+
 .. _PyDict_Items(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Items
 .. _PyDict_Keys(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Keys
 .. _PyDict_Values(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Values
 
+.. Other
+
+.. _PyDict_Check(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Check
 .. _PyObject_Hash(): https://docs.python.org/3/c-api/object.html#c.PyObject_Hash
 
 ..
@@ -657,6 +666,8 @@ Summary
 Dictionaries
 -----------------------
 
+This section describes how reference counts are affected when building and accessing dictionaries.
+
 .. index::
     single: PyDict_SetItem()
     pair: PyDict_SetItem(); Dictionary
@@ -665,13 +676,13 @@ Dictionaries
 --------------------
 
 The Python documentation for `PyDict_SetItem()`_ is incomplete.
-In summary `PyDict_SetItem()`_ does this with the key and value reference counts:
+In summary `PyDict_SetItem()`_ actually does this with the key and value reference counts:
 
 * If the key exists in the dictionary then key's reference count remains the same.
 * If the key does *not* exist in the dictionary then its reference count will be incremented.
-* The value reference count will always be incremented.
+* The value's reference count will always be incremented.
 * If the key exists in the dictionary then the previous value reference count will be decremented before the value
-  is replaced by the new value.
+  is replaced by the new value (and the new value reference count is incremented).
   If the key exists in the dictionary and the value is the same then this, effectively, means reference counts of
   both key and value remain unchanged.
 
@@ -681,8 +692,8 @@ This code illustrates `PyDict_SetItem()`_ with ``assert()`` showing the referenc
 
     PyObject *container = PyDict_New();
     PyObject *key = new_unique_string(__FUNCTION__, NULL);
-    assert(Py_REFCNT(key) == 1);
     PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    assert(Py_REFCNT(key) == 1);
     assert(Py_REFCNT(value_a) == 1);
     /* Insert a new key value. */
     if (PyDict_SetItem(container, key, value_a)) {
@@ -697,6 +708,9 @@ Now replace the value with another value:
 
     /* Replace a value for the key. */
     PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    assert(Py_REFCNT(key) == 2);
+    assert(Py_REFCNT(value_a) == 2);
+    assert(Py_REFCNT(value_b) == 1);
     if (PyDict_SetItem(container, key, value_b)) {
         assert(0);
     }
@@ -704,7 +718,7 @@ Now replace the value with another value:
     assert(Py_REFCNT(value_a) == 1);
     assert(Py_REFCNT(value_b) == 2);
 
-Now replace the value with the same value:
+Now replace the value with the same value, reference counts remain the same:
 
 .. code-block:: c
 
@@ -723,7 +737,7 @@ Now replace the value with the same value:
 
 * The container is not a dictionary (or a sub-class of a dictionary, see `PyDict_Check()`_).
 * The key is not hashable (`PyObject_Hash()`_ returns -1).
-* If either the key or the values is NULL this will cause a SIGSEGV.
+* If either the key or the values is NULL this will cause a SIGSEGV (or some other disaster).
   These are checked with asserts if Python is built in
   `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
   `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
@@ -737,8 +751,14 @@ For code and tests see:
 .. note::
 
     In ``src/cpy/Containers/DebugContainers.c`` there are failure tests that cause a SIGSEGV if ``ACCEPT_SIGSEGV``
-    controlled in  ``src/cpy/Containers/DebugContainers.h``.
+    is non zero.
+    ``ACCEPT_SIGSEGV`` is defined in ``src/cpy/Containers/DebugContainers.h``.
 
+
+``PyDict_SetDefault()``
+------------------------
+
+This is equivalent to `dict.setdefault() <https://docs.python.org/3/library/stdtypes.html#dict.setdefault>`_ in Python.
 
 TODO:
 
