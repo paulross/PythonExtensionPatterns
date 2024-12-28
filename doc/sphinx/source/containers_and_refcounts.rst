@@ -15,7 +15,7 @@
 .. index:: single: Containers
 
 ======================================
-Reference Counts and Python Containers
+Containers and Reference Counts
 ======================================
 
 The descriptions of *New*, *Stolen* and *Borrowed* references were described in the preceding chapter.
