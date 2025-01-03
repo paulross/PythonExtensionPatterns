@@ -19,3 +19,8 @@ Struct Sequence Objects
 ======================================
 
 These are the C equivalent of Python's named tuple.
+
+.. todo::
+
+    Chapter `Struct Sequence Objects <https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects>`_
+

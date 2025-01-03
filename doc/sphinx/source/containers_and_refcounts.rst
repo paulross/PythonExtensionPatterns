@@ -1,5 +1,5 @@
 .. highlight:: python
-    :linenothreshold: 10
+    :linenothreshold: 20
 
 .. toctree::
     :maxdepth: 3
@@ -10,24 +10,87 @@
 
 .. _Py_BuildValue(): https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue
 
-.. _chapter_refcount_and_containers:
 
 .. index:: single: Containers
+
+.. _chapter_refcount_and_containers:
 
 ======================================
 Containers and Reference Counts
 ======================================
 
-The descriptions of *New*, *Stolen* and *Borrowed* references were described in the preceding chapter.
 This chapter looks in more detail of how the Python C API works with different containers,
 such as ``tuple``, ``list``, ``set`` and ``dict`` [#]_.
+This chapter also clarifies the Python documentation where that is inaccurate, incomplete or misleading.
 
 This chapter includes examples and tests that you can step through to better understand the interplay
-between the container and the object in that container.
+between the container and the objects in that container.
 
-Of particular interest is *Setters*, *Getters* and the behaviour of ``Py_BuildValue`` for each of those
+Of particular interest are *Setters*, *Getters* and the behaviour of ``Py_BuildValue`` for each of those
 containers [#]_.
-This chapter also clarifies the Python documentation where that is inaccurate, incomplete or misleading.
+
+---------------------------
+Some Additional Terminology
+---------------------------
+
+As well as :ref:`chapter_refcount.new`, :ref:`chapter_refcount.stolen` and :ref:`chapter_refcount.borrowed`
+described in the previous chapter some other **behaviors** of containers are worth defining when they interact
+with objects.
+
+.. index::
+    single: Reference Counts; Discarded
+
+.. _chapter_refcount_and_containers.discarded:
+
+Discarded References
+---------------------------
+
+This is usually when a container has a reference to an object but is required to replace it with another object.
+In this case the container decrements the reference count of the original object before replacing it with the other
+object.
+This is not likely to lead to a memory leak.
+
+.. note::
+
+    There is some subtlety here; suppose the replacement object is the *same* as the original object.
+    For example:
+
+    .. code-block:: c
+
+        PyObject *container = PyTuple_New(1);
+        /* container ref count will be 1. */
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        /* value ref count will be 1. */
+        PyTuple_SetItem(container, 0, value);
+        /* value_a ref count will remain 1 (PyTuple_SetItem steals the reference). */
+
+        /* Now replace with the same value.
+         * The danger is that if we decrement the reference count of the original value
+         * it might well be free'd.
+         * In that case our replacement (the same object) will be invalid.
+         * What PyTuple_SetItem() does, correctly, is to increment the reference count
+         * of the new value. Then decrement the reference count of the old value
+         * and finally decrement the reference count of the new value. */
+        PyTuple_SetItem(container, 0, value);
+        /* value ref count should be 1 and never achieved 0. */
+
+
+.. index::
+    single: Reference Counts; Abandoned
+
+.. _chapter_refcount_and_containers.abandoned:
+
+Abandoned References
+---------------------------
+
+This is usually when a container has a reference to an object but is required to replace it with another object.
+In this case the container *does not* decrement the reference count of the original object before replacing it with
+the other object.
+This is *very* likely to lead to a memory leak.
+Of course if the original reference is ``NULL`` there is no leak.
+
+An example of this is ``PyTuple_SET_ITEM()``
+:ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement`.
 
 ---------------------------
 Exploring the CPython C API
@@ -437,8 +500,6 @@ Summary
 * `PyTuple_Pack()`_ and `Py_BuildValue()`_ increment reference counts and thus may leak.
 
 
-.. _chapter_refcount_and_containers.lists:
-
 ..
     Links, mostly to the Python documentation:
 
@@ -453,6 +514,8 @@ Summary
 .. index::
     single: List
 
+.. _chapter_refcount_and_containers.lists:
+
 -----------------------
 Lists
 -----------------------
@@ -462,6 +525,10 @@ Lists
     pair: PyList_SetItem(); List
     single: PyList_SET_ITEM()
     pair: PyList_SET_ITEM(); List
+
+.. _chapter_refcount_and_containers.lists.PyList_SetItem:
+
+.. _chapter_refcount_and_containers.lists.PyList_SET_ITEM:
 
 ``PyList_SetItem()`` and ``PyList_SET_ITEM()``
 ----------------------------------------------
@@ -626,8 +693,6 @@ Summary
 * `Py_BuildValue()`_ Increments the reference count of the given object and thus may leak.
 
 
-.. _chapter_refcount_and_containers.dictionaries:
-
 .. Links, mostly to the Python documentation:
    TODO: Investigate/create tests for all of these.
 
@@ -661,6 +726,8 @@ Summary
 
 .. index::
     single: Dictionary
+
+.. _chapter_refcount_and_containers.dictionaries:
 
 -----------------------
 Dictionaries
@@ -760,7 +827,11 @@ For code and tests see:
 
 This is equivalent to `dict.setdefault() <https://docs.python.org/3/library/stdtypes.html#dict.setdefault>`_ in Python.
 
-TODO:
+.. todo::
+
+    Complete chapter :ref:`chapter_refcount_and_containers` section :ref:`chapter_refcount_and_containers.dictionaries`.
+
+
 
 .. _chapter_refcount_and_containers.sets:
 
@@ -771,7 +842,10 @@ TODO:
 Sets
 -----------------------
 
-TODO:
+.. todo::
+
+    Complete chapter :ref:`chapter_refcount_and_containers` section :ref:`chapter_refcount_and_containers.sets`.
+
 
 .. _chapter_refcount_and_containers.summary:
 
@@ -779,13 +853,12 @@ TODO:
 Summary
 -----------------------
 
-TODO:
-
-.. Example footnote [#]_.
-
 .. todo::
 
-    Chapter `Struct Sequence Objects <https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects>`_
+    Complete chapter :ref:`chapter_refcount_and_containers` section :ref:`chapter_refcount_and_containers.summary`.
+
+
+.. Example footnote [#]_.
 
 .. todo::
 

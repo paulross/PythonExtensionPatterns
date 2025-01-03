@@ -213,6 +213,8 @@ First up **New** references.
 .. index::
     single: Reference Counts; New
 
+.. _chapter_refcount.new:
+
 ^^^^^^^^^^^^^^^^^^
 "New" References 
 ^^^^^^^^^^^^^^^^^^
@@ -312,6 +314,8 @@ The fix is to create a temporary item and then decref *that* once appended (erro
 .. index::
     single: Reference Counts; Stolen
 
+.. _chapter_refcount.stolen:
+
 ^^^^^^^^^^^^^^^^^^^^^^^
 "Stolen" References 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -400,6 +404,8 @@ Warning on "Stolen" References With Containers
 
 .. index::
     single: Reference Counts; Borrowed
+
+.. _chapter_refcount.borrowed:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 "Borrowed" References
@@ -733,8 +739,8 @@ The contracts you enter into with these three reference types are:
 
 The strong reference/weak reference model maps well to the Python model.
 
-In the next chapter I look in more detail about the interplay of reference counts with Python objects and
-Python containers such as  ``tuple``, ``list``, ``set`` and ``dict``.
+In the next chapter :ref:`chapter_refcount_and_containers` we look in more detail about the interplay of reference
+counts with Python objects and Python containers such as  ``tuple``, ``list``, ``set`` and ``dict``.
 
 .. rubric:: Footnotes
 

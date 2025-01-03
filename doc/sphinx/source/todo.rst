@@ -10,3 +10,7 @@ TODO
 
 .. todolist::
 
+
+.. todo::
+
+    Add a chapter on installation and testing.
