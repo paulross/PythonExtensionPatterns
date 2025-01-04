@@ -29,10 +29,11 @@ C extensions.
 A Personal Note
 ---------------------
 
-This project has its roots when, long ago, I joined a tech company that had created a large number of production
-critical Python C Extensions.
+This project has its roots when, long ago, I joined a tech company that had created many production
+critical Python extensions in C.
 These were all written by a single engineer who left shortly after I joined.
-The CTO appointed me as their replacement on the dubious basis that I knew Python and C.
+The CTO appointed me as the replacement on the dubious basis that I knew Python and C although I had never written a
+Python extension in C.
 
 I really struggled to bring my knowledge of both languages to their very complicated, and crucial, codebase.
 To be honest I don't think I did a great job, but as I was the 'owner' I somehow got away with it.
@@ -44,7 +45,7 @@ This eventually lead me to being invited to PyConUS to give a talk about the sub
 This document is a synthesis of the latter journey which ended up giving me far more confidence about the subject than
 during my earlier difficulties.
 
-My fond hope is that you will find this document makes it much easier for you to work in this field.
+My fond hope is that you will find that this document makes it much easier to work in this field.
 Another way of saying that is that I dedicate this document to you, and your work.
 
 So why write Python C Extensions?
