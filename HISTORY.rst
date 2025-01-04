@@ -1,3 +1,8 @@
+..
+
+    The master version of this file is at <PROJECT_ROOT>/doc/sphinx/source/HISTORY.rst
+    The script build_all.sh copies this to the project root.
+
 =====================
 History
 =====================
@@ -6,6 +11,10 @@ History
 =====================
 
 - Add chapter on Context Managers.
+
+.. todo::
+
+    Update this history file.
 
 0.2.2 (2024-10-21)
 =====================

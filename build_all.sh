@@ -116,6 +116,12 @@ remove_virtual_environments() {
   done
 }
 
+copy_history() {
+  echo "---> Copying HISTORY.rst files from doc/sphinx/source to project root:"
+  cp "doc/sphinx/source/HISTORY.rst"  "."
+}
+
+
 create_and_test_bdist_wheel() {
   echo "---> Creating bdist_wheel for all versions..."
   for version in ${PYTHON_VERSIONS[*]}; do
@@ -170,7 +176,6 @@ create_documentation() {
   echo "---> pip list:"
   pip list
   echo "---> Copying files from project root to doc/sphinx/source:"
-  cp "HISTORY.rst"  "doc/sphinx/source"
   echo "---> Building documentation:"
   cd doc/sphinx
   rm -rf build/
@@ -235,6 +240,9 @@ remove_virtual_environments
 echo "===> Creating virtual environments"
 create_virtual_environments
 fi
+
+echo "===> Copying HISTORY.rst"
+copy_history
 
 echo "===> Creating binary wheels"
 create_and_test_bdist_wheel
