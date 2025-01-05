@@ -31,12 +31,14 @@ def test_module_dir():
         'test_PyList_Py_BuildValue',
         'test_PyList_SET_ITEM_NULL',
         'test_PyList_SET_ITEM_NULL_SET_ITEM',
+        'test_PyList_SET_ITEM_replace_same',
         'test_PyList_SET_ITEM_steals',
         'test_PyList_SET_ITEM_steals_replace',
         'test_PyList_SetIem_NULL_SetItem',
         'test_PyList_SetItem_NULL',
         'test_PyList_SetItem_fails_not_a_list',
         'test_PyList_SetItem_fails_out_of_range',
+        'test_PyList_SetItem_replace_same',
         'test_PyList_SetItem_steals',
         'test_PyList_SetItem_steals_replace',
         'test_PyTuple_Py_BuildValue',
@@ -236,6 +238,13 @@ def test_PyList_Insert_fails_NULL():
     with pytest.raises(SystemError) as err:
         cRefCount.test_PyList_Insert_fails_NULL()
     assert err.value.args[0].endswith(' bad argument to internal function')
+
+def test_PyList_SetItem_replace_same():
+    assert cRefCount.test_PyList_SetItem_replace_same() == 0
+
+
+def test_PyList_SET_ITEM_replace_same():
+    assert cRefCount.test_PyList_SET_ITEM_replace_same() == 0
 
 
 def test_PyList_Py_BuildValue():

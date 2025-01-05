@@ -1738,6 +1738,129 @@ test_PyList_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
+test_PyList_SetItem_replace_same(PyObject *Py_UNUSED(module)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "After PyObject *container = PyList_New(1);");
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After PyObject *value = new_unique_string(__FUNCTION__, NULL);");
+    /* Set the first time. */
+    if (PyList_SetItem(container, 0, value)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After first PyList_SetItem(container, 0, value);");
+    /*Get and test the first item. */
+    get_item = PyList_GET_ITEM(container, 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 1L, "After PyList_GET_ITEM(container, 0);");
+    if (get_item != value) {
+        fprintf(stderr, "get_item != value at File: %s Line: %d\n", __FILE__, __LINE__);
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Now incref the value so we can prevent a SIGSEGV with a double PyList_SetItem(). */
+    Py_INCREF(value);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "After Py_INCREF(value);");
+
+    /* Second PyList_SetItem(). */
+    /* This will overwrite value leaving it with a reference count of 1 if it wasn't for the Py_INCREF(value); above.*/
+    if (PyList_SetItem(container, 0, value)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+    /* This checks that PyList_SetItem() has decremented the original reference count. */
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After second PyList_SetItem(container, 0, value);");
+
+    /* Check  the value is the same. */
+    get_item = PyList_GET_ITEM(container, 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 1L, "After PyList_GET_ITEM(container, 0);");
+    if (get_item != value) {
+        fprintf(stderr, "get_item != value at File: %s Line: %d\n", __FILE__, __LINE__);
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Decref the container. value will be ree'd. Double check values reference count is 1. */
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "Before Py_DECREF(container);");
+    Py_DECREF(container);
+
+    assert(!PyErr_Occurred());
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PyList_SET_ITEM_replace_same(PyObject *Py_UNUSED(module)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyList_New(1);
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "After PyObject *container = PyList_New(1);");
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After PyObject *value = new_unique_string(__FUNCTION__, NULL);");
+    /* Set the first time. Does not alter reference count. */
+    PyList_SET_ITEM(container, 0, value);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After first PyList_SET_ITEM(container, 0, value);");
+    /* Get and test the first item. */
+    get_item = PyList_GET_ITEM(container, 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 1L, "After PyList_GET_ITEM(container, 0);");
+    if (get_item != value) {
+        fprintf(stderr, "get_item != value at File: %s Line: %d\n", __FILE__, __LINE__);
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    /* Second PyList_SET_ITEM(). Does not alter reference count. */
+    PyList_SET_ITEM(container, 0, value);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After second PyList_SET_ITEM(container, 0, value);");
+
+    /* Check  the value is the same. */
+    get_item = PyList_GET_ITEM(container, 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 1L, "After PyList_GET_ITEM(container, 0);");
+    if (get_item != value) {
+        fprintf(stderr, "get_item != value at File: %s Line: %d\n", __FILE__, __LINE__);
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_INCREF(value);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "Before Py_DECREF(container);");
+    /* Decref the container. value will be decref'd. Double check values reference count is 1. */
+    Py_DECREF(container);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "After Py_DECREF(container);");
+
+    /* Clean up. */
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
 test_PyList_SetItem_NULL(PyObject *Py_UNUSED(module)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
@@ -2412,6 +2535,10 @@ static PyMethodDef module_methods[] = {
                             "Check that PyList_SetItem() steals a reference on replacement."),
         MODULE_NOARGS_ENTRY(test_PyList_SET_ITEM_steals_replace,
                             "Check that PyList_SET_ITEM() steals a reference on replacement."),
+        MODULE_NOARGS_ENTRY(test_PyList_SetItem_replace_same,
+                            "Check how PyTuple_SetItem() behaves on replacement of the same value."),
+        MODULE_NOARGS_ENTRY(test_PyList_SET_ITEM_replace_same,
+                            "Check how PyTuple_SET_ITEM() behaves on replacement of the same value."),
         MODULE_NOARGS_ENTRY(test_PyList_SetItem_NULL, "Check that PyList_SetItem() with NULL does not error."),
         MODULE_NOARGS_ENTRY(test_PyList_SET_ITEM_NULL, "Check that PyList_SET_ITEM() with NULL does not error."),
         MODULE_NOARGS_ENTRY(test_PyList_SetIem_NULL_SetItem,

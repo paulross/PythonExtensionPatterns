@@ -161,6 +161,8 @@ int main(int argc, const char * argv[]) {
     dbg_PyList_SET_ITEM_steals();
     dbg_PyList_SetItem_steals_replace();
     dbg_PyList_SET_ITEM_steals_replace();
+    dbg_PyList_SetItem_replace_with_same();
+    dbg_PyList_SET_ITEM_replace_with_same();
     dbg_PyList_SetIem_NULL();
     dbg_PyList_SET_ITEM_NULL();
     dbg_PyList_SetIem_NULL_SetItem();

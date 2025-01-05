@@ -818,6 +818,100 @@ void dbg_PyList_SET_ITEM_steals_replace(void) {
     assert(!PyErr_Occurred());
 }
 
+void dbg_PyList_SetItem_replace_with_same(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyList_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    int result = PyList_SetItem(container, 0, value);
+    assert(result == 0);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    /* Increment the reference count to track the bad behaviour. */
+    Py_INCREF(value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    /* This will decrement the reference count of value as it is the previous value.
+     * That will free the current value and set garbage in the tuple. */
+    result = PyList_SetItem(container, 0, value);
+    assert(result == 0);
+    ref_count = Py_REFCNT(value);
+    /* This is only alive because of Py_INCREF(value); above. */
+    assert(ref_count == 1);
+
+    PyObject *get_item = PyList_GET_ITEM(container, 0);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 1);
+
+    /* Increment the reference count from 1 so we can see it go to 1. */
+    Py_INCREF(value);
+    Py_DECREF(container);
+    /* Clean up. */
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyList_SET_ITEM_replace_with_same(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyList_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    PyList_SET_ITEM(container, 0, value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    /* Second PyList_SET_ITEM(). */
+    /* This will NOT decrement the reference count of value as it is the previous value. */
+    PyList_SET_ITEM(container, 0, value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    PyObject *get_item = PyList_GET_ITEM(container, 0);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 1);
+
+    /* Increment the reference count from 1 so we can see it go to 1. */
+    Py_INCREF(value);
+    Py_DECREF(container);
+    /* Clean up. */
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
 /**
  * Function that explores setting an item in a tuple to NULL with PyList_SetItem().
  */
