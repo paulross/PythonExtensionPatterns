@@ -43,12 +43,14 @@ def test_module_dir():
         'test_PyTuple_Py_PyTuple_Pack',
         'test_PyTuple_SET_ITEM_NULL',
         'test_PyTuple_SET_ITEM_NULL_SET_ITEM',
+        'test_PyTuple_SET_ITEM_replace_same',
         'test_PyTuple_SET_ITEM_steals',
         'test_PyTuple_SET_ITEM_steals_replace',
         'test_PyTuple_SetIem_NULL_SetItem',
         'test_PyTuple_SetItem_NULL',
         'test_PyTuple_SetItem_fails_not_a_tuple',
         'test_PyTuple_SetItem_fails_out_of_range',
+        'test_PyTuple_SetItem_replace_same',
         'test_PyTuple_SetItem_steals',
         'test_PyTuple_SetItem_steals_replace',
         'tuple_buildvalue_steals',
@@ -134,6 +136,14 @@ def test_PyTuple_SetItem_fails_out_of_range():
     with pytest.raises(IndexError) as err:
         cRefCount.test_PyTuple_SetItem_fails_out_of_range()
     assert err.value.args[0] == 'tuple assignment index out of range'
+
+
+def test_PyTuple_SetItem_replace_same():
+    assert cRefCount.test_PyTuple_SetItem_replace_same() == 0
+
+
+def test_PyTuple_SET_ITEM_replace_same():
+    assert cRefCount.test_PyTuple_SET_ITEM_replace_same() == 0
 
 
 def test_PyTuple_Py_PyTuple_Pack():

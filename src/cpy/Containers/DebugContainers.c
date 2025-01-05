@@ -115,8 +115,6 @@ void dbg_PyTuple_SET_ITEM_steals(void) {
  * A function that checks whether a tuple steals a reference when using PyTuple_SetItem on an existing item.
  * This can be stepped through in the debugger.
  * asserts are use for the test so this is expected to be run in DEBUG mode.
- *
- * This DOES leak an existing value contrary to the Python documentation.
  */
 void dbg_PyTuple_SetItem_steals_replace(void) {
     printf("%s():\n", __FUNCTION__);
@@ -154,7 +152,8 @@ void dbg_PyTuple_SetItem_steals_replace(void) {
     ref_count = Py_REFCNT(value_1);
     assert(ref_count == 2);
 
-    /* This will decrement the ref count of value_0 leaving it with a reference count of 1.*/
+    /* This will decrement the ref count of value_0 leaving it with a reference count of 1.
+     * Whilst preserving the reference count of value_1 of 2. */
     PyTuple_SetItem(container, 0, value_1);
     ref_count = Py_REFCNT(value_1);
     assert(ref_count == 2);
@@ -225,6 +224,100 @@ void dbg_PyTuple_SET_ITEM_steals_replace(void) {
     ref_count = Py_REFCNT(value_0);
     assert(ref_count == 1);
     Py_DECREF(value_0);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyTuple_SetItem_replace_with_same(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    int result = PyTuple_SetItem(container, 0, value);
+    assert(result == 0);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    /* Increment the reference count to track the bad behaviour. */
+    Py_INCREF(value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    /* This will decrement the reference count of value as it is the previous value.
+     * That will free the current value and set garbage in the tuple. */
+    result = PyTuple_SetItem(container, 0, value);
+    assert(result == 0);
+    ref_count = Py_REFCNT(value);
+    /* This is only alive because of Py_INCREF(value); above. */
+    assert(ref_count == 1);
+
+    PyObject *get_item = PyTuple_GET_ITEM(container, 0);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 1);
+
+    /* Increment the reference count from 1 so we can see it go to 1. */
+    Py_INCREF(value);
+    Py_DECREF(container);
+    /* Clean up. */
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyTuple_SET_ITEM_replace_with_same(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    int ref_count;
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    PyTuple_SET_ITEM(container, 0, value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    /* Second PyTuple_SET_ITEM(). */
+    /* This will NOT decrement the reference count of value as it is the previous value. */
+    PyTuple_SET_ITEM(container, 0, value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    PyObject *get_item = PyTuple_GET_ITEM(container, 0);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 1);
+
+    /* Increment the reference count from 1 so we can see it go to 1. */
+    Py_INCREF(value);
+    Py_DECREF(container);
+    /* Clean up. */
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    Py_DECREF(value);
 
     assert(!PyErr_Occurred());
 }

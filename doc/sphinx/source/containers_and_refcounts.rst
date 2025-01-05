@@ -21,7 +21,8 @@ Containers and Reference Counts
 
 This chapter looks in more detail of how the Python C API works with different containers,
 such as ``tuple``, ``list``, ``set`` and ``dict`` [#]_.
-This chapter also clarifies the Python documentation where that is inaccurate, incomplete or misleading.
+It also clarifies the Python documentation where that is inaccurate, incomplete or misleading and shows where the
+Python C API has some undocumented failure modes, some of which can lead to undefined behaviour.
 
 This chapter includes examples and tests that you can step through to better understand the interplay
 between the container and the objects in that container.
@@ -34,7 +35,7 @@ Some Additional Terminology
 ---------------------------
 
 As well as :ref:`chapter_refcount.new`, :ref:`chapter_refcount.stolen` and :ref:`chapter_refcount.borrowed`
-described in the previous chapter some other **behaviors** of containers are worth defining when they interact
+described in the previous chapter some other *behaviors* of containers are worth defining when they interact
 with objects.
 
 .. index::
@@ -48,32 +49,11 @@ Discarded References
 This is usually when a container has a reference to an object but is required to replace it with another object.
 In this case the container decrements the reference count of the original object before replacing it with the other
 object.
-This is not likely to lead to a memory leak.
+This is to prevent a memory leak of the previous object.
+However if the the replacement object is the same as the existing object then very bad things can happen.
 
-.. note::
-
-    There is some subtlety here; suppose the replacement object is the *same* as the original object.
-    For example:
-
-    .. code-block:: c
-
-        PyObject *container = PyTuple_New(1);
-        /* container ref count will be 1. */
-        PyObject *value = new_unique_string(__FUNCTION__, NULL);
-        /* value ref count will be 1. */
-        PyTuple_SetItem(container, 0, value);
-        /* value_a ref count will remain 1 (PyTuple_SetItem steals the reference). */
-
-        /* Now replace with the same value.
-         * The danger is that if we decrement the reference count of the original value
-         * it might well be free'd.
-         * In that case our replacement (the same object) will be invalid.
-         * What PyTuple_SetItem() does, correctly, is to increment the reference count
-         * of the new value. Then decrement the reference count of the old value
-         * and finally decrement the reference count of the new value. */
-        PyTuple_SetItem(container, 0, value);
-        /* value ref count should be 1 and never achieved 0. */
-
+For example see the warning in `PyTuple_SetItem()`_
+:ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement`.
 
 .. index::
     single: Reference Counts; Abandoned
@@ -86,7 +66,7 @@ Abandoned References
 This is usually when a container has a reference to an object but is required to replace it with another object.
 In this case the container *does not* decrement the reference count of the original object before replacing it with
 the other object.
-This is *very* likely to lead to a memory leak.
+This *will* lead to a memory leak *unless* the replacement object is the same as the existing object.
 Of course if the original reference is ``NULL`` there is no leak.
 
 An example of this is ``PyTuple_SET_ITEM()``
@@ -196,6 +176,8 @@ For code and tests see:
 * CPython: ``test_PyTuple_SetItem_steals`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals``.
 
+.. _chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement:
+
 Replacement
 ^^^^^^^^^^^
 
@@ -215,18 +197,54 @@ Lets see:
     /* Now value_b ref count will remain 1 and value_a ref count will have been decremented
      * In this case value_a will have been free'd. */
 
+.. warning::
+
+    What happens if you use `PyTuple_SetItem()`_ to replace a value with the *same* value?
+    For example:
+
+    .. code-block:: c
+
+        PyObject *container = PyTuple_New(1);
+        /* container ref count will be 1. */
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        /* value ref count will be 1. */
+        PyTuple_SetItem(container, 0, value);
+        /* value ref count is still 1 as it has been *stolen*. */
+
+        /* But this ends up with adding a garbage value to the tuple.
+         * Which can only lead to trouble later on. */
+        PyTuple_SetItem(container, 0, value);
+        /* And this will segfault as, during execution, it will
+         * try to decrement a value that does not exist. */
+        Py_DECREF(container);
+        /* So what is going on? */
+
+    What is happening is that the second time `PyTuple_SetItem()`_ is called it decrements the reference count of the
+    existing member that happens to be ``value``.
+    This brings ``value``'s reference count from one down to zero
+    At that point ``value`` is free'd.
+    Then `PyTuple_SetItem()`_ blithely sets ``value`` which is now garbage.
+
+    A simple change to `PyTuple_SetItem()`_ would prevent this from producing undefined behaviour by checking if the
+    replacement is the same as the existing value.
+
+    `PyTuple_SET_ITEM()`_ does not exhibit this problem as it *abandons* values rather than *discarding* them.
+
 For code and tests see:
 
-* C: ``dbg_PyTuple_SetItem_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals_replace``.
+* C: ``dbg_PyTuple_SetItem_steals_replace`` and ``dbg_PyTuple_SetItem_replace_with_same``
+  in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_steals_replace`` and ``test_PyTuple_SetItem_replace_same``
+  in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals_replace``
+  and ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_replace_same``.
 
 .. _chapter_refcount_and_containers.tuples.PyTuple_SetItem.failures:
 
 ``PyTuple_SetItem()`` Failures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`PyTuple_SetItem()`_ can fail for these reasons:
+`PyTuple_SetItem()`_ can return a non-zero error code for these reasons:
 
 * The given container is not a tuple.
 * The index is out of range; index < 0 or index >= tuple length (negative indexes are not allowed).
@@ -298,7 +316,7 @@ Basic Usage
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/Containers/DebugContainers.c``.
+* C: ``dbg_PyTuple_PyTuple_SET_ITEM_steals``in ``src/cpy/Containers/DebugContainers.c``.
 * CPython: ``test_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_PyTuple_SET_ITEM_steals``.
 
@@ -308,7 +326,9 @@ Replacement
 ^^^^^^^^^^^
 
 `PyTuple_SET_ITEM()`_ **differs** from `PyTuple_SetItem()`_ when replacing an existing
-element in a tuple as the original reference will be leaked:
+element in a tuple as the original reference will be leaked.
+This is because `PyTuple_SET_ITEM()`_ *abandons* the previous reference
+(see :ref:`chapter_refcount_and_containers.abandoned`):
 
 .. code-block:: c
 
@@ -321,11 +341,21 @@ element in a tuple as the original reference will be leaked:
     /* Ref count of value_b will be 1,
      * value_a ref count will still be at 1 and value_a will be leaked unless decref'd. */
 
+.. note::
+
+    Because `PyTuple_SET_ITEM()`_ *abandons* the previous reference it does not have the problem with
+    undefined behaviour that `PyTuple_Set_Item()`_ has.
+    For that see the warning about undefined behaviour in `PyTuple_Set_Item()`_
+    :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement`.
+
 For code and tests see:
 
-* C: ``dbg_PyTuple_SET_ITEM_steals_replace`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SetItem_steals_replace`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals_replace``.
+* C: ``dbg_PyTuple_SET_ITEM_steals_replace`` and ``dbg_PyTuple_SET_ITEM_replace_with_same``
+  in ``src/cpy/Containers/DebugContainers.c``.
+* CPython: ``test_PyTuple_SetItem_steals_replace`` and ``test_PyTuple_SET_ITEM_replace_same``
+  in ``src/cpy/RefCount/cRefCount.c``.
+* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals_replace`` and
+  ``tests.unit.test_c_ref_count.test_PyTuple_SET_ITEM_replace_same``.
 
 .. _chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.failures:
 
@@ -427,7 +457,7 @@ Each of those PyObjects reference counts will be incremented.
 In that sense it behaves as `Py_BuildValue()`_.
 
 .. note::
-    `PyTuple_Pack()`_ is implemented as a low level routine, it does not invoke
+    `PyTuple_Pack()`_ is implemented as a separate low level routine, it does not invoke
     `PyTuple_SetItem()`_ or `PyTuple_SET_ITEM()`_ .
 
 For example:
@@ -494,7 +524,8 @@ Summary
 ----------------------
 
 * `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ *steal* references.
-* `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave differently when replacing an existing value.
+* `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave differently when replacing an existing, different, value.
+* `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave differently when replacing the *same* value.
 * If `PyTuple_SetItem()`_ errors it will decrement the reference count of the given value.
   Possibly with surprising results.
 * `PyTuple_Pack()`_ and `Py_BuildValue()`_ increment reference counts and thus may leak.
@@ -617,7 +648,7 @@ For code and tests, including failure modes, see:
 
 .. note::
 
-    Although the Python documentation for `PyList_Insert()`_ does not make this clear the index can be negative in
+    The Python documentation for `PyList_Insert()`_ does not make this clear the index can be negative in
     which case the index is calculated from the end.
 
     For example (``dbg_PyList_Insert_Negative_Index()`` in ``src/cpy/Containers/DebugContainers.c``):
@@ -636,7 +667,9 @@ For code and tests, including failure modes, see:
         get_item = PyList_GET_ITEM(container, 0L);
         assert(get_item == value);
 
-    Also, not mentioned (but implied) in the documentation is that if the index is greater than the list length then the
+.. note::
+
+    The Python documentation does not mention (but implies) that if the index is greater than the list length then the
     value is appended to the list.
 
     For example (``dbg_PyList_Insert_Is_Truncated()`` in ``src/cpy/Containers/DebugContainers.c``):

@@ -145,6 +145,8 @@ int main(int argc, const char * argv[]) {
     dbg_PyTuple_SET_ITEM_steals();
     dbg_PyTuple_SetItem_steals_replace();
     dbg_PyTuple_SET_ITEM_steals_replace();
+    dbg_PyTuple_SetItem_replace_with_same();
+    dbg_PyTuple_SET_ITEM_replace_with_same();
     dbg_PyTuple_SetIem_NULL();
     dbg_PyTuple_SET_ITEM_NULL();
     dbg_PyTuple_SetIem_NULL_SetItem();

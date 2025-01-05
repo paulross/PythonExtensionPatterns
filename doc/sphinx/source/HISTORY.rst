@@ -12,9 +12,10 @@ History
 
 - Add chapter on Context Managers.
 
-.. todo::
+..
+    .. todo::
 
-    Update this history file.
+        Update this history file.
 
 0.2.2 (2024-10-21)
 =====================

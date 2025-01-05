@@ -13,6 +13,8 @@ void dbg_PyTuple_SetItem_steals(void);
 void dbg_PyTuple_SET_ITEM_steals(void);
 void dbg_PyTuple_SetItem_steals_replace(void);
 void dbg_PyTuple_SET_ITEM_steals_replace(void);
+void dbg_PyTuple_SetItem_replace_with_same(void);
+void dbg_PyTuple_SET_ITEM_replace_with_same(void);
 void dbg_PyTuple_SetIem_NULL(void);
 void dbg_PyTuple_SET_ITEM_NULL(void);
 void dbg_PyTuple_SetIem_NULL_SetItem(void);
