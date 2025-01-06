@@ -14,9 +14,9 @@
 
 .. index:: single: Struct Sequence
 
-======================================
-Struct Sequence Objects
-======================================
+==================================================
+Struct Sequence Objects (Named Tuples in C)
+==================================================
 
 These are the C equivalent of Python's named tuple.
 
