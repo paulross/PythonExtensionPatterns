@@ -638,13 +638,13 @@ For code and tests, including failure modes, see:
 * Python: ``tests.unit.test_c_ref_count.test_PyList_Insert`` etc.
 
 ..
-    This note and code blocks are quite big in latex so page break here.
+    This note and code blocks are quite big in latex so page break here. Now commented out.
 
-.. raw:: latex
+    .. raw:: latex
 
-    [Continued on the next page]
+        [Continued on the next page]
 
-    \pagebreak
+        \pagebreak
 
 .. note::
 
