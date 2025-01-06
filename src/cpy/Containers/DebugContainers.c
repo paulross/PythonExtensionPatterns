@@ -14,8 +14,8 @@ static long debug_test_count = 0L;
 
 PyObject *
 new_unique_string(const char *function_name, const char *suffix) {
-    PyObject *value =  NULL;
-    if (suffix){
+    PyObject *value = NULL;
+    if (suffix) {
         value = PyUnicode_FromFormat("%s-%s-%ld", function_name, suffix, debug_test_count);
     } else {
         value = PyUnicode_FromFormat("%s-%ld", function_name, debug_test_count);
@@ -268,7 +268,7 @@ void dbg_PyTuple_SetItem_replace_with_same(void) {
     ref_count = Py_REFCNT(get_item);
     assert(ref_count == 1);
 
-    /* Increment the reference count from 1 so we can see it go to 1. */
+    /* Increment the reference count from 1 so we can see it go back to 1 on Py_DECREF(container);. */
     Py_INCREF(value);
     Py_DECREF(container);
     /* Clean up. */
@@ -311,7 +311,7 @@ void dbg_PyTuple_SET_ITEM_replace_with_same(void) {
     ref_count = Py_REFCNT(get_item);
     assert(ref_count == 1);
 
-    /* Increment the reference count from 1 so we can see it go to 1. */
+    /* Increment the reference count from 1 so we can see it go back to 1 on Py_DECREF(container);. */
     Py_INCREF(value);
     Py_DECREF(container);
     /* Clean up. */
@@ -858,7 +858,7 @@ void dbg_PyList_SetItem_replace_with_same(void) {
     ref_count = Py_REFCNT(get_item);
     assert(ref_count == 1);
 
-    /* Increment the reference count from 1 so we can see it go to 1. */
+    /* Increment the reference count from 1 so we can see it go back to 1 on Py_DECREF(container);. */
     Py_INCREF(value);
     Py_DECREF(container);
     /* Clean up. */
@@ -901,7 +901,7 @@ void dbg_PyList_SET_ITEM_replace_with_same(void) {
     ref_count = Py_REFCNT(get_item);
     assert(ref_count == 1);
 
-    /* Increment the reference count from 1 so we can see it go to 1. */
+    /* Increment the reference count from 1 so we can see it go back to 1 on Py_DECREF(container);. */
     Py_INCREF(value);
     Py_DECREF(container);
     /* Clean up. */
@@ -1661,6 +1661,90 @@ void dbg_PyDict_SetItem_fails_not_hashable(void) {
 
 #if ACCEPT_SIGSEGV
 
+void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyTuple_New(1);
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    int result = PyTuple_SetItem(container, 0, value);
+    assert(result == 0);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    PyObject *get_value = PyTuple_GetItem(container, 0);
+    assert(get_value == value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    /* This causes value to be free'd. */
+    result = PyTuple_SetItem(container, 0, value);
+    assert(result == 0);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count != 1);
+
+    fprintf(stderr, "%s(): Undefined behaviour, possible SIGSEGV %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    /* This may cause a SIGSEGV. */
+    Py_DECREF(container);
+    fprintf(stderr, "%s(): SIGSEGV did not happen %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+}
+
+void dbg_PyList_SetItem_SIGSEGV_on_same_value(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyList_New(1);
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    int result = PyList_SetItem(container, 0, value);
+    assert(result == 0);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    PyObject *get_value = PyList_GetItem(container, 0);
+    assert(get_value == value);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    /* This causes value to be free'd. */
+    result = PyList_SetItem(container, 0, value);
+    assert(result == 0);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count != 1);
+
+    fprintf(stderr, "%s(): Undefined behaviour, possible SIGSEGV %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+    /* This may cause a SIGSEGV. */
+    Py_DECREF(container);
+    fprintf(stderr, "%s(): SIGSEGV did not happen %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+}
+
 void dbg_PyDict_SetItem_SIGSEGV_on_key_NULL(void) {
     printf("%s():\n", __FUNCTION__);
     if (PyErr_Occurred()) {
@@ -1678,13 +1762,14 @@ void dbg_PyDict_SetItem_SIGSEGV_on_key_NULL(void) {
     assert(ref_count == 1);
 
     PyObject *key = NULL;
-    ref_count = Py_REFCNT(key);
-    assert(ref_count == 1);
     PyObject *value = new_unique_string(__FUNCTION__, NULL);
     ref_count = Py_REFCNT(value);
     assert(ref_count == 1);
 
+    fprintf(stderr, "%s(): PyDict_SetItem() with NULL key causes SIGSEGV %s#%d:\n",
+            __FUNCTION__, __FILE_NAME__, __LINE__);
     int result = PyDict_SetItem(container, key, value);
+    fprintf(stderr, "%s(): SIGSEGV did not happen %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
     if (result) {
         assert(PyErr_Occurred());
         fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
@@ -1721,10 +1806,11 @@ void dbg_PyDict_SetItem_SIGSEGV_on_value_NULL(void) {
     ref_count = Py_REFCNT(key);
     assert(ref_count == 1);
     PyObject *value = NULL;
-    ref_count = Py_REFCNT(value);
-    assert(ref_count == 1);
 
+    fprintf(stderr, "%s(): PyDict_SetItem() with NULL value causes SIGSEGV %s#%d:\n",
+            __FUNCTION__, __FILE_NAME__, __LINE__);
     int result = PyDict_SetItem(container, key, value);
+    fprintf(stderr, "%s(): SIGSEGV did not happen %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
     if (result) {
         assert(PyErr_Occurred());
         fprintf(stderr, "%s(): PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);

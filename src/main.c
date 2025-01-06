@@ -184,6 +184,9 @@ int main(int argc, const char * argv[]) {
     dbg_PyDict_SetItem_fails_not_a_dict();
     dbg_PyDict_SetItem_fails_not_hashable();
 #if ACCEPT_SIGSEGV
+    /* Comment out as desired. */
+    dbg_PyTuple_SetItem_SIGSEGV_on_same_value();
+    dbg_PyList_SetItem_SIGSEGV_on_same_value();
     dbg_PyDict_SetItem_SIGSEGV_on_key_NULL();
     dbg_PyDict_SetItem_SIGSEGV_on_value_NULL();
 #endif

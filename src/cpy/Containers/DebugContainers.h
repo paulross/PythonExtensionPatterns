@@ -50,6 +50,8 @@ void dbg_PyDict_SetItem_increments(void);
 void dbg_PyDict_SetItem_fails_not_a_dict(void);
 void dbg_PyDict_SetItem_fails_not_hashable(void);
 #if ACCEPT_SIGSEGV
+void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void);
+void dbg_PyList_SetItem_SIGSEGV_on_same_value(void);
 void dbg_PyDict_SetItem_SIGSEGV_on_key_NULL(void);
 void dbg_PyDict_SetItem_SIGSEGV_on_value_NULL(void);
 #endif
