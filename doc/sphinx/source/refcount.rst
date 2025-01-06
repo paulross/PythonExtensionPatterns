@@ -598,6 +598,8 @@ That way you incur two cheap operations but eliminate a vastly more expensive on
 .. index::
     single: Strong References
     single: Weak References
+    single: References; Strong
+    single: References; Weak
 
 --------------------------
 Strong and Weak References

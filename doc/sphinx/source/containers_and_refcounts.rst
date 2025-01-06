@@ -176,6 +176,9 @@ For code and tests see:
 * CPython: ``test_PyTuple_SetItem_steals`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals``.
 
+.. index::
+    single: PyTuple_SetItem(); Replacement
+
 .. _chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement:
 
 Replacement
@@ -239,6 +242,8 @@ For code and tests see:
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals_replace``
   and ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_replace_same``.
 
+.. index:: single: PyTuple_SetItem(); Failures
+
 .. _chapter_refcount_and_containers.tuples.PyTuple_SetItem.failures:
 
 ``PyTuple_SetItem()`` Failures
@@ -249,15 +254,17 @@ For code and tests see:
 * The given container is not a tuple.
 * The index is out of range; index < 0 or index >= tuple length (negative indexes are not allowed).
 
-A consequence of failure is that the value being inserted will be decref'd.
-For example this code will segfault:
+.. warning::
 
-.. code-block:: c
+    A consequence of failure is that the value being inserted will be decref'd.
+    For example this code will segfault:
 
-    PyObject *container = PyTuple_New(1); /* Reference count will be 1. */
-    PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
-    PyTuple_SetItem(container, 1, value); /* Index out of range. */
-    Py_DECREF(value); /* value has already been decref'd and free'd so this will SIGSEGV */
+    .. code-block:: c
+
+        PyObject *container = PyTuple_New(1); /* Reference count will be 1. */
+        PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
+        PyTuple_SetItem(container, 1, value); /* Index out of range. */
+        Py_DECREF(value); /* value has already been decref'd and free'd so this will SIGSEGV */
 
 For code tests see, when the container is not a tuple:
 
@@ -320,6 +327,9 @@ For code and tests see:
 * CPython: ``test_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_PyTuple_SET_ITEM_steals``.
 
+.. index::
+    single: PyTuple_SET_ITEM(); Replacement
+
 .. _chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement:
 
 Replacement
@@ -357,6 +367,8 @@ For code and tests see:
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals_replace`` and
   ``tests.unit.test_c_ref_count.test_PyTuple_SET_ITEM_replace_same``.
 
+.. index:: single: PyTuple_SET_ITEM(); Failures
+
 .. _chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.failures:
 
 ``PyTuple_SET_ITEM()`` Failures
@@ -376,6 +388,10 @@ Setting and Replacing ``NULL``
 
 This looks at what happens when setting or replacing a ``NULL`` pointer in a tuple.
 Both `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave the same way.
+
+.. index::
+    single: PyTuple_SetItem(); Setting NULL
+    single: PyTuple_SET_ITEM(); Setting NULL
 
 Setting ``NULL``
 ^^^^^^^^^^^^^^^^
@@ -409,6 +425,10 @@ For code and tests see:
 * C: ``dbg_PyTuple_SET_ITEM_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
 * CPython: ``test_PyTuple_SET_ITEM_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SET_ITEM_NULL``.
+
+.. index::
+    single: PyTuple_SetItem(); Replacing NULL
+    single: PyTuple_SET_ITEM(); Replacing NULL
 
 Replacing ``NULL``
 ^^^^^^^^^^^^^^^^^^
@@ -479,7 +499,6 @@ For example:
     Py_DECREF(value_a);
     Py_DECREF(value_b);
 
-
 For code and tests see:
 
 * C: ``dbg_PyTuple_PyTuple_Pack`` in ``src/cpy/Containers/DebugContainers.c``.
@@ -520,16 +539,39 @@ For code and tests see:
 * CPython: ``test_PyTuple_Py_BuildValue`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_Py_BuildValue``.
 
+.. index::
+    single: PyTuple_GetItem()
+    pair: PyTuple_GetItem(); Tuple
+    single: PyTuple_GET_ITEM()
+    pair: PyTuple_GET_ITEM(); Tuple
+    pair: Getters; Tuple
+
+Tuple Getters
+---------------------
+
+There are these APIS for getting an item from a tuple:
+
+* `PyTuple_GetItem()`_, it returns a borrowed reference and will error
+  if the supplied container is not tuple or the index is negative or out of range.
+* `PyTuple_GET_ITEM()`_, it returns a borrowed reference and there is
+  no error checking for the index being in range.
+  The type checking is performed as an assertion if Python is built in
+  `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
+  `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
+  If not the results are undefined.
+
+.. index:: single: Tuple; API Summary
+
 Summary
 ----------------------
 
 * `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ *steal* references.
 * `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave differently when replacing an existing, different, value.
 * `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave differently when replacing the *same* value.
-* If `PyTuple_SetItem()`_ errors it will decrement the reference count of the given value.
-  Possibly with surprising results.
+  In particular `PyTuple_SetItem()`_ can produce undefined behaviour.
+* If `PyTuple_SetItem()`_ errors it will decrement the reference count of the given value which can produce undefined
+  behaviour.
 * `PyTuple_Pack()`_ and `Py_BuildValue()`_ increment reference counts and thus may leak.
-
 
 ..
     Links, mostly to the Python documentation:
@@ -565,13 +607,16 @@ Lists
 ----------------------------------------------
 
 `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave identically to their equivalents `PyTuple_SetItem()`_
-(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem`)
-and `PyTuple_SET_ITEM()`_ (see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM`).
+(link :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem`)
+and `PyTuple_SET_ITEM()`_ (link :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM`).
 
 Note that, as with tuples, `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently on replacement of values
 (see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement`).
 The Python documentation on `PyList_SET_ITEM()`_ correctly identifies when a leak can occur
-(unlike `PyTuple_SetItem()`_).
+(unlike `PyTuple_SET_ITEM()`_).
+
+On replacement with `PyList_SetItem()`_ heed the warning in
+:ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement` as `PyList_SetItem()`_ holds the same danger.
 
 `Py_BuildValue()`_ also behaves identically, as far as reference counts are concerned, with Lists as it does with
 Tuples (see :ref:`chapter_refcount_and_containers.tuples.Py_BuildValue`).
@@ -611,7 +656,6 @@ For code and tests, including failure modes, see:
 * C: ``dbg_PyList_Append...`` in ``src/cpy/Containers/DebugContainers.c``.
 * CPython: ``test_PyList_Append...`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyList_Append`` etc.
-
 
 .. index::
     single: PyList_Insert()
@@ -688,7 +732,6 @@ For code and tests, including failure modes, see:
         get_item = PyList_GET_ITEM(container, 0L);
         assert(get_item == value);
 
-
 .. index::
     single: PyList_GetItem()
     pair: PyList_GetItem(); List
@@ -696,12 +739,12 @@ For code and tests, including failure modes, see:
     pair: PyList_GET_ITEM(); List
     single: PyList_GetItemRef()
     pair: PyList_GetItemREf(); List
-
+    pair: Getters; List
 
 List Getters
 ---------------------
 
-There are three APIS for getting an item from a list:
+There are these APIS for getting an item from a list:
 
 * `PyList_GetItem()`_ This is very similar to `PyTuple_GetItem()`_. It returns a borrowed reference and will error
   if the supplied container is not list or the index is negative or out of range.
@@ -710,17 +753,21 @@ There are three APIS for getting an item from a list:
   The type checking is performed as an assertion if Python is built in
   `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
   `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
-  If not the results aer undefined.
+  If not the results are undefined.
 * `PyList_GetItemRef()`_ [From Python 3.13 onwards].
   Like `PyList_GetItem()`_ but his returns a new *strong* reference to the existing object.
+
+.. index:: single: List; API Summary
 
 Summary
 ----------------------
 
 * `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ *steal* references.
-* `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently when replacing an existing value.
-* If `PyList_SetItem()`_ errors it will decrement the reference count of the given value.
-  Possibly with surprising results.
+* `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently when replacing an existing, different, value.
+* `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently when replacing the *same* value.
+  In particular `PyList_SetItem()`_ can produce undefined behaviour.
+* If `PyList_SetItem()`_ errors it will decrement the reference count of the given value which can produce undefined
+  behaviour.
 * `PyList_Append()`_ Increments the reference count of the given object and thus may leak.
 * `PyList_Insert()`_ Increments the reference count of the given object and thus may leak.
 * `Py_BuildValue()`_ Increments the reference count of the given object and thus may leak.
