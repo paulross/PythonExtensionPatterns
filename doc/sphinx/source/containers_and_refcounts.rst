@@ -30,6 +30,14 @@ between the container and the objects in that container.
 Of particular interest are *Setters*, *Getters* and the behaviour of ``Py_BuildValue`` for each of those
 containers [#]_.
 
+
+.. note::
+
+    The Python documentation for the
+    `Concrete Objects Layer <https://docs.python.org/3/c-api/concrete.html#concrete-objects-layer>`_
+    has a general warning that passing ``NULL`` values into functions gives rise to undefined behaviour.
+    This is not always the case and this chapter explores this in more detail than the official Python documentation.
+
 ---------------------------
 Some Additional Terminology
 ---------------------------
@@ -109,7 +117,8 @@ The code in this chapter explores the CPython C API in several ways:
             return PyUnicode_FromFormat("%s-%ld", function, debug_test_count++);
         }
 
-Firstly Tuples, I'll go into quite a lot of detail here because it covers much of the other containers as well.
+Firstly Tuples, I'll go into quite a lot of detail here because it is very similar to the
+C API for lists which I'll cover with more brevity in a later section.
 
 .. _chapter_refcount_and_containers.tuples:
 
@@ -175,6 +184,39 @@ For code and tests see:
 * C: ``dbg_PyTuple_SetItem_steals`` in ``src/cpy/Containers/DebugContainers.c``.
 * CPython: ``test_PyTuple_SetItem_steals`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals``.
+
+Whilst we are here this is an example of testing the behaviour by manipulating reference counts which we then check
+with ``assert()``.
+The rationale is that you can't check reference counts after an object is destroyed.
+For example:
+
+.. code-block:: c
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    assert(Py_REFCNT(value) == 1);
+    Py_DECREF(value);
+    /* This will fail, the reference count will have an arbitrary value. */
+    assert(Py_REFCNT(value) == 0);
+
+Once an object has been free'd you can not rely on the reference count field.
+Instead, deliberately increment the reference count before the critical section and check it afterwards.
+For example:
+
+.. code-block:: c
+
+    PyObject *container = PyTuple_New(1);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    assert(Py_REFCNT(value) == 1);
+    PyTuple_SetItem(container, 0, value);
+    assert(Py_REFCNT(value) == 1);
+    /* Increment the reference count so we can see destruction. */
+    Py_INCREF(value);
+    assert(Py_REFCNT(value) == 2);
+    /* Check destruction. */
+    Py_DECREF(container);
+    assert(Py_REFCNT(value) == 1);
+    /* Clean up. */
+    Py_DECREF(value);
 
 .. index::
     single: PyTuple_SetItem(); Replacement
@@ -282,7 +324,7 @@ And, when the index out of range:
 
     I'm not really sure why the `PyTuple_SetItem()`_ API exists.
     Tuples are meant to be immutable but this API treats existing tuples as mutable.
-    It would seem like the `PyTuple_SET_ITEM()`_ would be enough.
+    It would seem like `PyTuple_SET_ITEM()`_ would be enough.
 
 .. _chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM:
 
@@ -672,7 +714,7 @@ This increments the reference count of the given value which will be decremented
 * The given container is not a list.
 * The given value is NULL.
 
-On failure the reference count of value is unchanged and a ``SystemError`` is raised with the text
+On failure the reference count of value is unchanged, returns -1, and a ``SystemError`` is set with the text
 "bad argument to internal function".
 
 For code and tests, including failure modes, see:
@@ -705,6 +747,7 @@ For code and tests, including failure modes, see:
         if (PyList_Insert(container, -1L, value)) {
             assert(0);
         }
+        assert(Py_REFCNT(value) == 2);
         PyObject *get_item;
         // PyList_Insert at -1 actually inserts at 0.
         assert(PyList_GET_SIZE(container) == 1L);
@@ -726,6 +769,7 @@ For code and tests, including failure modes, see:
         if (PyList_Insert(container, 4L, value)) {
             assert(0);
         }
+        assert(Py_REFCNT(value) == 2);
         PyObject *get_item;
         // PyList_Insert at 4 actually inserts at 0.
         assert(PyList_GET_SIZE(container) == 1L);
@@ -823,14 +867,14 @@ This section describes how reference counts are affected when building and acces
 --------------------
 
 The Python documentation for `PyDict_SetItem()`_ is incomplete.
-In summary `PyDict_SetItem()`_ actually does this with the key and value reference counts:
+`PyDict_SetItem()`_ changes the key and value reference counts according to these rules:
 
 * If the key exists in the dictionary then key's reference count remains the same.
 * If the key does *not* exist in the dictionary then its reference count will be incremented.
 * The value's reference count will always be incremented.
 * If the key exists in the dictionary then the previous value reference count will be decremented before the value
   is replaced by the new value (and the new value reference count is incremented).
-  If the key exists in the dictionary and the value is the same then this, effectively, means reference counts of
+  If the key exists in the dictionary and the value is the same then this means, effectively, that reference counts of
   both key and value remain unchanged.
 
 This code illustrates `PyDict_SetItem()`_ with ``assert()`` showing the reference count:
@@ -884,7 +928,7 @@ Now replace the value with the same value, reference counts remain the same:
 
 * The container is not a dictionary (or a sub-class of a dictionary, see `PyDict_Check()`_).
 * The key is not hashable (`PyObject_Hash()`_ returns -1).
-* If either the key or the values is NULL this will cause a SIGSEGV (or some other disaster).
+* If either the key or the value is NULL this will cause a SIGSEGV (or some other disaster).
   These are checked with asserts if Python is built in
   `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
   `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
