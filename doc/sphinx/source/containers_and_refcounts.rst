@@ -148,7 +148,7 @@ Firstly setters, there are two APIs for setting an item in a tuple; `PyTuple_Set
 
 .. index::
     single: PyTuple_SetItem()
-    pair: PyTuple_SetItem(); Tuple
+    single: Tuple; PyTuple_SetItem()
 
 ``PyTuple_SetItem()``
 ---------------------
@@ -330,7 +330,7 @@ And, when the index out of range:
 
 .. index::
     single: PyTuple_SET_ITEM()
-    pair: PyTuple_SET_ITEM(); Tuple
+    single: Tuple; PyTuple_SET_ITEM();
 
 ``PyTuple_SET_ITEM()``
 ----------------------
@@ -509,7 +509,7 @@ For code and tests see:
 
 .. index::
     single: PyTuple_Pack()
-    pair: PyTuple_Pack(); Tuple
+    single: Tuple; PyTuple_Pack()
 
 ``PyTuple_Pack()``
 ------------------
@@ -550,7 +550,7 @@ For code and tests see:
 .. _chapter_refcount_and_containers.tuples.Py_BuildValue:
 
 .. index::
-    pair: Py_BuildValue(); Tuple
+    single: Tuple; Py_BuildValue()
 
 ``Py_BuildValue()``
 -------------------
@@ -583,9 +583,9 @@ For code and tests see:
 
 .. index::
     single: PyTuple_GetItem()
-    pair: PyTuple_GetItem(); Tuple
+    single: Tuple; PyTuple_GetItem()
     single: PyTuple_GET_ITEM()
-    pair: PyTuple_GET_ITEM(); Tuple
+    single: Tuple; PyTuple_GET_ITEM()
     pair: Getters; Tuple
 
 Tuple Getters
@@ -637,9 +637,9 @@ Lists
 
 .. index::
     single: PyList_SetItem()
-    pair: PyList_SetItem(); List
+    single: List; PyList_SetItem()
     single: PyList_SET_ITEM()
-    pair: PyList_SET_ITEM(); List
+    single: List; PyList_SET_ITEM()
 
 .. _chapter_refcount_and_containers.lists.PyList_SetItem:
 
@@ -665,7 +665,7 @@ Tuples (see :ref:`chapter_refcount_and_containers.tuples.Py_BuildValue`).
 
 .. index::
     single: PyList_Append()
-    pair: PyList_Append(); List
+    single: List; PyList_Append()
 
 ``PyList_Append()``
 ---------------------
@@ -701,7 +701,7 @@ For code and tests, including failure modes, see:
 
 .. index::
     single: PyList_Insert()
-    pair: PyList_Insert(); List
+    single: List;  PyList_Insert()
 
 ``PyList_Insert()``
 ---------------------
@@ -778,11 +778,11 @@ For code and tests, including failure modes, see:
 
 .. index::
     single: PyList_GetItem()
-    pair: PyList_GetItem(); List
+    single: List; PyList_GetItem()
     single: PyList_GET_ITEM()
-    pair: PyList_GET_ITEM(); List
+    single: List; PyList_GET_ITEM()
     single: PyList_GetItemRef()
-    pair: PyList_GetItemREf(); List
+    single: List; PyList_GetItemRef()
     pair: Getters; List
 
 List Getters
@@ -861,7 +861,7 @@ This section describes how reference counts are affected when building and acces
 
 .. index::
     single: PyDict_SetItem()
-    pair: PyDict_SetItem(); Dictionary
+    single: Dictionary; PyDict_SetItem()
 
 ``PyDict_SetItem()``
 --------------------
