@@ -194,7 +194,27 @@ Warning on Relying on Reference Counts of Unity or Less
         }
 
     This will either loop forever or segfault.
-    
+
+.. _chapter_refcount.pythons_garbage_collector:
+
+-------------------------------------------------------
+Python's Garbage Collector
+-------------------------------------------------------
+
+CPython is a garbage collected language however the primary means of garbage collection is by reference counting.
+The 'garbage collector' is a secondary device that attempts to resolve circular references.
+If the reference counts are wrong the 'garbage collector' can do nothing to recover memory [#]_.
+
+For example this will leak whatever efforts CPython's garbage collector makes:
+
+.. code-block:: c
+
+    void leak(void) {
+        PyObject *value = PyLong_FromLong(123456L);
+        /* value has been allocated on the heap with a reference count of 1. */
+        /* On return, value will be leaked. */
+    }
+
 -----------------------
 Python Terminology 
 -----------------------
@@ -606,8 +626,8 @@ Strong and Weak References
 --------------------------
 
 Another mental model to look at this is the concept of *strong* and *weak* references to an object.
-This model is commonly used in other software domains.
-If this model suites you then use it!
+This model is commonly used in other software domains [#]_.
+If this model suits you then use it!
 
 Here are the essential details between this model and the Python one.
 The mapping between the Python new/stolen/borrowed terminology and strong/weak terminology is:
@@ -718,6 +738,36 @@ as this:
 Python's documentation on `strong references <https://docs.python.org/3/glossary.html#term-strong-reference>`_
 and `borrowed (weak) references <https://docs.python.org/3/glossary.html#term-borrowed-reference>`_.
 
+.. _chapter_refcount.a_possible_precautionary_principle:
+
+----------------------------------
+A Possible Precautionary Principle
+----------------------------------
+
+Getting the reference counts wrong at any stage of the program risks:
+
+* If the reference count is unnecessarily high you will have a memory leak.
+* If the reference count is unnecessarily low you might have a segmentation fault or undefined behaviour.
+
+Note that memory leaks are usually harder, sometimes *much* harder, to fix than segmentation faults.
+
+To avoid both possibilities you need to get the reference counts *exactly* right and requires a great attention to
+detail which is expensive to do.
+This problem is exacerbated if the code base is large and constantly changing.
+
+So are there some other trade-offs that could be made?
+Well if your process is short running you might not care about memory leaks as the OS will reclaim all the memory at
+process end.
+In this case you could make the choice to ignore decrementing reference counts (or gratuitously increase the reference
+count) so that objects are never free'd thus a segmentation fault is unlikely.
+This is similar to the way some compilers use ``malloc()`` but never bother with ``free()``.
+The rationale is that there may be any number of reference to an internal data structure and it is dangerous to
+invalidate any of them whereas if the compiler invokes separate short running processes leaks are unimportant.
+
+If you want to create a Python Extension for a long running process (say a server) and you can't put up with memory
+leaks then you have no choice but to control the reference counts carefully.
+Budget accordingly.
+
 -----------------------
 Summary
 -----------------------
@@ -746,7 +796,18 @@ counts with Python objects and Python containers such as  ``tuple``, ``list``, `
 
 .. rubric:: Footnotes
 
+.. [#] If you are interested in some of the technical details of memory management terms and techniques in a wide
+    variety of languages then a great place to start is `<https://www.memorymanagement.org>`_.
+    For example here is their entry about
+    `reference counting <https://www.memorymanagement.org/glossary/r.html#term-reference-counting>`_.
+
 .. [#] To be picky we just need to decrement the use of *our* reference to it.
        Other code that has incremented the same reference is responsible for decrementing their use of the reference.
+
 .. [#] Of course we never *remove* items in a list we merely decrement their reference count,
        and if that hits zero then they are deleted.
+
+.. [#] Here is `<https://www.memorymanagement.org>`_'s definition of a
+       `strong reference <https://www.memorymanagement.org/glossary/s.html#term-strong-reference>`_
+       and a
+       `weak reference <https://www.memorymanagement.org/glossary/w.html#term-weak-reference-1>`_.
