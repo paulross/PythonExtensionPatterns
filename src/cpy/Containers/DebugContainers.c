@@ -1659,6 +1659,126 @@ void dbg_PyDict_SetItem_fails_not_hashable(void) {
     assert(!PyErr_Occurred());
 }
 
+void dbg_PyDict_SetDefault_default_unused(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+    PyObject *get_item;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    get_item = PyDict_GetItem(container, key);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    /* Now check PyDict_SetDefault() which does not use the default. */
+    PyObject *value_default = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 1);
+
+    get_item = PyDict_SetDefault(container, key, value_default);
+    if (! get_item) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+    assert(get_item == value);
+
+    Py_DECREF(container);
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(value);
+    Py_DECREF(value_default);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyDict_SetDefault_default_used(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+    PyObject *get_item;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+
+    /* Do not do this so the default is invoked.
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    */
+
+    /* Now check PyDict_SetDefault() which *does* use the default. */
+    PyObject *value_default = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 1);
+
+    get_item = PyDict_SetDefault(container, key, value_default);
+    if (! get_item) {
+        assert(0);
+    }
+    assert(PyDict_Size(container) == 1);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+    assert(get_item == value_default);
+
+    Py_DECREF(container);
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(value_default);
+
+    assert(!PyErr_Occurred());
+}
+
 #if ACCEPT_SIGSEGV
 
 void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void) {

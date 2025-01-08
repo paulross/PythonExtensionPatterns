@@ -18,7 +18,10 @@ def test_module_dir():
         'list_steals',
         'set_no_steals',
         'set_no_steals_decref',
+        'test_PyDict_SetDefault_default_unused',
+        'test_PyDict_SetDefault_default_used',
         'test_PyDict_SetItem_fails_not_a_dict',
+        'test_PyDict_SetItem_fails_not_hashable',
         'test_PyDict_SetItem_increments',
         'test_PyList_Append',
         'test_PyList_Append_fails_NULL',
@@ -239,6 +242,7 @@ def test_PyList_Insert_fails_NULL():
         cRefCount.test_PyList_Insert_fails_NULL()
     assert err.value.args[0].endswith(' bad argument to internal function')
 
+
 def test_PyList_SetItem_replace_same():
     assert cRefCount.test_PyList_SetItem_replace_same() == 0
 
@@ -259,3 +263,17 @@ def test_PyDict_SetItem_fails_not_a_dict():
     with pytest.raises(SystemError) as err:
         cRefCount.test_PyDict_SetItem_fails_not_a_dict()
     assert err.value.args[0].endswith('bad argument to internal function')
+
+
+def test_PyDict_SetItem_fails_not_hashable():
+    with pytest.raises(TypeError) as err:
+        cRefCount.test_PyDict_SetItem_fails_not_hashable()
+    assert err.value.args[0] == "unhashable type: 'list'"
+
+
+def test_PyDict_SetDefault_default_unused():
+    assert cRefCount.test_PyDict_SetDefault_default_unused() == 0
+
+
+def test_PyDict_SetDefault_default_used():
+    assert cRefCount.test_PyDict_SetDefault_default_used() == 0

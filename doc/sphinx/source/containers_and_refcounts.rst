@@ -949,7 +949,28 @@ For code and tests see:
 ``PyDict_SetDefault()``
 ------------------------
 
-This is equivalent to `dict.setdefault() <https://docs.python.org/3/library/stdtypes.html#dict.setdefault>`_ in Python.
+`PyDict_SetDefault()`_ is equivalent to the Python method
+`dict.setdefault() <https://docs.python.org/3/library/stdtypes.html#dict.setdefault>`_ in Python.
+The C function signature is:
+
+.. code-block:: c
+
+    PyObject *PyDict_SetDefault(PyObject *p, PyObject *key, PyObject *defaultobj);
+
+The idea is that if the key exists then the appropriate value is returned and the default value is unused.
+If the key does *not* exist then the default value is inserted into the dictionary and returned.
+
+If the Default Value is Unused
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the key already exists in the dictionary the reference counts of the key, existing value and default value are
+unchanged.
+
+If the Default Value is Used
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the key does *not* exist in the dictionary the reference counts of the key and default value are incremented.
+
 
 .. todo::
 

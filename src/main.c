@@ -183,6 +183,8 @@ int main(int argc, const char * argv[]) {
     dbg_PyDict_SetItem_increments();
     dbg_PyDict_SetItem_fails_not_a_dict();
     dbg_PyDict_SetItem_fails_not_hashable();
+    dbg_PyDict_SetDefault_default_unused();
+    dbg_PyDict_SetDefault_default_used();
 #if ACCEPT_SIGSEGV
     /* Comment out as desired. */
     dbg_PyTuple_SetItem_SIGSEGV_on_same_value();
