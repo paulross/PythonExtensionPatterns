@@ -54,14 +54,16 @@ with objects.
 Discarded References
 ---------------------------
 
-This is usually when a container has a reference to an object but is required to replace it with another object.
+This is when a container has a reference to an object but is required to replace it with another object.
 In this case the container decrements the reference count of the original object before replacing it with the other
 object.
 This is to prevent a memory leak of the previous object.
-However if the the replacement object is the same as the existing object then very bad things can happen.
 
-For example see the warning in `PyTuple_SetItem()`_
-:ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement`.
+.. warning::
+
+    If the the replacement object is the **same** as the existing object then very bad things *might* happen.
+    For example see the warning in `PyTuple_SetItem()`_
+    :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement`.
 
 .. index::
     single: Reference Counts; Abandoned
@@ -71,7 +73,7 @@ For example see the warning in `PyTuple_SetItem()`_
 Abandoned References
 ---------------------------
 
-This is usually when a container has a reference to an object but is required to replace it with another object.
+This is when a container has a reference to an object but is required to replace it with another object.
 In this case the container *does not* decrement the reference count of the original object before replacing it with
 the other object.
 This *will* lead to a memory leak *unless* the replacement object is the same as the existing object.
@@ -831,6 +833,9 @@ Summary
 .. _PyDict_GetItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItem
 .. _PyDict_GetItemRef(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemRef
 .. _PyDict_GetItemWithError(): https://docs.python.org/3/c-api/dict.html#c.PyDict_GetItemWithError
+
+.. Deleters
+
 .. _PyDict_Pop(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Pop
 .. _PyDict_DelItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_DelItem
 
