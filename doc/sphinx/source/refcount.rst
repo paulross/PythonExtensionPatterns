@@ -791,7 +791,7 @@ The contracts you enter into with these three reference types are:
 
 The strong reference/weak reference model maps well to the Python model.
 
-In the next chapter :ref:`chapter_refcount_and_containers` we look in more detail about the interplay of reference
+In the next chapter :ref:`chapter_containers_and_refcounts` we look in more detail about the interplay of reference
 counts with Python objects and Python containers such as  ``tuple``, ``list``, ``set`` and ``dict``.
 
 .. rubric:: Footnotes

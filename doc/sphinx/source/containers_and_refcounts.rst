@@ -13,7 +13,7 @@
 
 .. index:: single: Containers
 
-.. _chapter_refcount_and_containers:
+.. _chapter_containers_and_refcounts:
 
 ======================================
 Containers and Reference Counts
@@ -49,7 +49,7 @@ with objects.
 .. index::
     single: Reference Counts; Discarded
 
-.. _chapter_refcount_and_containers.discarded:
+.. _chapter_containers_and_refcounts.discarded:
 
 Discarded References
 ---------------------------
@@ -63,12 +63,12 @@ This is to prevent a memory leak of the previous object.
 
     If the the replacement object is the **same** as the existing object then very bad things *might* happen.
     For example see the warning in `PyTuple_SetItem()`_
-    :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement`.
+    :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem.replacement`.
 
 .. index::
     single: Reference Counts; Abandoned
 
-.. _chapter_refcount_and_containers.abandoned:
+.. _chapter_containers_and_refcounts.abandoned:
 
 Abandoned References
 ---------------------------
@@ -80,7 +80,7 @@ This *will* lead to a memory leak *unless* the replacement object is the same as
 Of course if the original reference is ``NULL`` there is no leak.
 
 An example of this is ``PyTuple_SET_ITEM()``
-:ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement`.
+:ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.replacement`.
 
 ---------------------------
 Exploring the CPython C API
@@ -122,7 +122,7 @@ The code in this chapter explores the CPython C API in several ways:
 Firstly Tuples, I'll go into quite a lot of detail here because it is very similar to the
 C API for lists which I'll cover with more brevity in a later section.
 
-.. _chapter_refcount_and_containers.tuples:
+.. _chapter_containers_and_refcounts.tuples:
 
 ..
     Links, mostly to the Python documentation:
@@ -146,7 +146,7 @@ is here.
 
 Firstly setters, there are two APIs for setting an item in a tuple; `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_.
 
-.. _chapter_refcount_and_containers.tuples.PyTuple_SetItem:
+.. _chapter_containers_and_refcounts.tuples.PyTuple_SetItem:
 
 .. index::
     single: PyTuple_SetItem()
@@ -157,7 +157,7 @@ Firstly setters, there are two APIs for setting an item in a tuple; `PyTuple_Set
 
 `PyTuple_SetItem()`_ (a C function) inserts an object into a tuple with error checking.
 This function returns non-zero on error, these are described below in
-:ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.failures`.
+:ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem.failures`.
 The failure of `PyTuple_SetItem()`_ has serious consequences for the value
 that is intended to be inserted.
 
@@ -223,7 +223,7 @@ For example:
 .. index::
     single: PyTuple_SetItem(); Replacement
 
-.. _chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement:
+.. _chapter_containers_and_refcounts.tuples.PyTuple_SetItem.replacement:
 
 Replacement
 ^^^^^^^^^^^
@@ -288,7 +288,7 @@ For code and tests see:
 
 .. index:: single: PyTuple_SetItem(); Failures
 
-.. _chapter_refcount_and_containers.tuples.PyTuple_SetItem.failures:
+.. _chapter_containers_and_refcounts.tuples.PyTuple_SetItem.failures:
 
 ``PyTuple_SetItem()`` Failures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -328,7 +328,7 @@ And, when the index out of range:
     Tuples are meant to be immutable but this API treats existing tuples as mutable.
     It would seem like `PyTuple_SET_ITEM()`_ would be enough.
 
-.. _chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM:
+.. _chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM:
 
 .. index::
     single: PyTuple_SET_ITEM()
@@ -338,7 +338,7 @@ And, when the index out of range:
 ----------------------
 
 `PyTuple_SET_ITEM()`_ is a function like macro that inserts an object into a tuple without any error checking
-(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.failures` below) although the type
+(see :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.failures` below) although the type
 checking is performed as an assertion if Python is built in
 `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
 `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
@@ -374,7 +374,7 @@ For code and tests see:
 .. index::
     single: PyTuple_SET_ITEM(); Replacement
 
-.. _chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement:
+.. _chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.replacement:
 
 Replacement
 ^^^^^^^^^^^
@@ -382,7 +382,7 @@ Replacement
 `PyTuple_SET_ITEM()`_ **differs** from `PyTuple_SetItem()`_ when replacing an existing
 element in a tuple as the original reference will be leaked.
 This is because `PyTuple_SET_ITEM()`_ *abandons* the previous reference
-(see :ref:`chapter_refcount_and_containers.abandoned`):
+(see :ref:`chapter_containers_and_refcounts.abandoned`):
 
 .. code-block:: c
 
@@ -400,7 +400,7 @@ This is because `PyTuple_SET_ITEM()`_ *abandons* the previous reference
     Because `PyTuple_SET_ITEM()`_ *abandons* the previous reference it does not have the problem with
     undefined behaviour that `PyTuple_Set_Item()`_ has.
     For that see the warning about undefined behaviour in `PyTuple_Set_Item()`_
-    :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement`.
+    :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem.replacement`.
 
 For code and tests see:
 
@@ -413,7 +413,7 @@ For code and tests see:
 
 .. index:: single: PyTuple_SET_ITEM(); Failures
 
-.. _chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.failures:
+.. _chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.failures:
 
 ``PyTuple_SET_ITEM()`` Failures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -507,7 +507,7 @@ For code and tests see:
 * CPython: ``test_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SET_ITEM_NULL_SET_ITEM``.
 
-.. _chapter_refcount_and_containers.tuples.PyTuple_Pack:
+.. _chapter_containers_and_refcounts.tuples.PyTuple_Pack:
 
 .. index::
     single: PyTuple_Pack()
@@ -549,7 +549,7 @@ For code and tests see:
 * CPython: ``test_PyTuple_Py_PyTuple_Pack`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_Py_PyTuple_Pack``.
 
-.. _chapter_refcount_and_containers.tuples.Py_BuildValue:
+.. _chapter_containers_and_refcounts.tuples.Py_BuildValue:
 
 .. index::
     single: Tuple; Py_BuildValue()
@@ -631,7 +631,7 @@ Summary
 .. index::
     single: List
 
-.. _chapter_refcount_and_containers.lists:
+.. _chapter_containers_and_refcounts.lists:
 
 -----------------------
 Lists
@@ -643,27 +643,27 @@ Lists
     single: PyList_SET_ITEM()
     single: List; PyList_SET_ITEM()
 
-.. _chapter_refcount_and_containers.lists.PyList_SetItem:
+.. _chapter_containers_and_refcounts.lists.PyList_SetItem:
 
-.. _chapter_refcount_and_containers.lists.PyList_SET_ITEM:
+.. _chapter_containers_and_refcounts.lists.PyList_SET_ITEM:
 
 ``PyList_SetItem()`` and ``PyList_SET_ITEM()``
 ----------------------------------------------
 
 `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave identically to their equivalents `PyTuple_SetItem()`_
-(link :ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem`)
-and `PyTuple_SET_ITEM()`_ (link :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM`).
+(link :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem`)
+and `PyTuple_SET_ITEM()`_ (link :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM`).
 
 Note that, as with tuples, `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ behave differently on replacement of values
-(see :ref:`chapter_refcount_and_containers.tuples.PyTuple_SET_ITEM.replacement`).
+(see :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.replacement`).
 The Python documentation on `PyList_SET_ITEM()`_ correctly identifies when a leak can occur
 (unlike `PyTuple_SET_ITEM()`_).
 
 On replacement with `PyList_SetItem()`_ heed the warning in
-:ref:`chapter_refcount_and_containers.tuples.PyTuple_SetItem.replacement` as `PyList_SetItem()`_ holds the same danger.
+:ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem.replacement` as `PyList_SetItem()`_ holds the same danger.
 
 `Py_BuildValue()`_ also behaves identically, as far as reference counts are concerned, with Lists as it does with
-Tuples (see :ref:`chapter_refcount_and_containers.tuples.Py_BuildValue`).
+Tuples (see :ref:`chapter_containers_and_refcounts.tuples.Py_BuildValue`).
 
 .. index::
     single: PyList_Append()
@@ -856,7 +856,7 @@ Summary
 .. index::
     single: Dictionary
 
-.. _chapter_refcount_and_containers.dictionaries:
+.. _chapter_containers_and_refcounts.dictionaries:
 
 -----------------------
 Dictionaries
@@ -979,11 +979,11 @@ If the key does *not* exist in the dictionary the reference counts of the key an
 
 .. todo::
 
-    Complete chapter :ref:`chapter_refcount_and_containers` section :ref:`chapter_refcount_and_containers.dictionaries`.
+    Complete chapter :ref:`chapter_containers_and_refcounts` section :ref:`chapter_containers_and_refcounts.dictionaries`.
 
 
 
-.. _chapter_refcount_and_containers.sets:
+.. _chapter_containers_and_refcounts.sets:
 
 .. index::
     single: Set
@@ -994,10 +994,10 @@ Sets
 
 .. todo::
 
-    Complete chapter :ref:`chapter_refcount_and_containers` section :ref:`chapter_refcount_and_containers.sets`.
+    Complete chapter :ref:`chapter_containers_and_refcounts` section :ref:`chapter_containers_and_refcounts.sets`.
 
 
-.. _chapter_refcount_and_containers.summary:
+.. _chapter_containers_and_refcounts.summary:
 
 -----------------------
 Summary
@@ -1005,7 +1005,7 @@ Summary
 
 .. todo::
 
-    Complete chapter :ref:`chapter_refcount_and_containers` section :ref:`chapter_refcount_and_containers.summary`.
+    Complete chapter :ref:`chapter_containers_and_refcounts` section :ref:`chapter_containers_and_refcounts.summary`.
 
 
 .. Example footnote [#]_.

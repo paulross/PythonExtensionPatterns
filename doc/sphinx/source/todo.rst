@@ -28,7 +28,7 @@ Work Estimate for v0.3.0 Release
 Complete "Containers and Reference Counts"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Link: :ref:`chapter_refcount_and_containers`
+Link: :ref:`chapter_containers_and_refcounts`
 
 * Finish "Dictionaries".
 * Finish "Sets".
