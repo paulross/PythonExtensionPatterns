@@ -88,6 +88,7 @@ setup(
     long_description_content_type='text/x-rst',
     platforms=['Mac OSX', 'POSIX', ],
     packages=[PACKAGE_NAME, ],
+    # https://pypi.org/classifiers/
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
@@ -98,6 +99,11 @@ setup(
         'Programming Language :: C',
         'Programming Language :: C++',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Topic :: Software Development',
         'Topic :: Software Development :: Documentation',
         'Topic :: Software Development :: Libraries :: Python Modules',
