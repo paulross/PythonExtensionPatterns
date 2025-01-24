@@ -5,7 +5,16 @@ History
 0.3 (TODO)
 =====================
 
-- Add chapter on Context Managers.
+- Add a chapter "Containers and Reference Counts" that corrects and clarifies the Python Documentation.
+- Add a chapter "Struct Sequence Objects (Named Tuples in C)".
+- Add a chapter "Dict and Type Watchers" (Python 3.12+).
+- Add a chapter on Context Managers.
+- Update "Homogeneous Python Containers and C++".
+- Add a chapter "Debugging Python with CLion".
+- Add a chapter "Source Code Layout".
+- Add a chapter "Building and Testing".
+- Add an extensive index.
+- Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13 (possibly backwards compatible with Python 3.6, 3.7, 3.8).
 
 ..
     .. todo::
