@@ -1,8 +1,3 @@
-..
-
-    The master version of this file is at <PROJECT_ROOT>/doc/sphinx/source/HISTORY.rst
-    The script build_all.sh copies this to the project root.
-
 =====================
 History
 =====================
