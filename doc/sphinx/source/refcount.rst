@@ -422,6 +422,9 @@ Warning on "Stolen" References With Containers
 
     See ``src/cpy/RefCount/cRefCount.c`` and ``tests/unit/test_c_ref_count.py`` for verification of this.
 
+    The next chapter :ref:`chapter_containers_and_refcounts` goes into more detail about this, how it can bite you
+    and how you can defend yourself from these issues.
+
 .. index::
     single: Reference Counts; Borrowed
 
@@ -507,6 +510,9 @@ If we try a different string:
     Segmentation fault: 11
 
 At least this will get your attention!
+
+.. index::
+    single: faulthandler
 
 .. note::
 
@@ -732,8 +738,8 @@ as this:
 
 .. code-block:: c
 
-    PyObject_Print(container, stdout, 0);
-    PyObject_Print(value, stdout, 0);
+    PyObject_Print(container, stdout, Py_PRINT_RAW);
+    PyObject_Print(value, stdout, Py_PRINT_RAW);
 
 Python's documentation on `strong references <https://docs.python.org/3/glossary.html#term-strong-reference>`_
 and `borrowed (weak) references <https://docs.python.org/3/glossary.html#term-borrowed-reference>`_.
@@ -746,8 +752,8 @@ A Possible Precautionary Principle
 
 Getting the reference counts wrong at any stage of the program risks:
 
-* If the reference count is unnecessarily high you will have a memory leak.
-* If the reference count is unnecessarily low you might have a segmentation fault or undefined behaviour.
+* If the reference count is unnecessarily *high* you will have a memory leak.
+* If the reference count is unnecessarily *low* you might have a segmentation fault or undefined behaviour.
 
 Note that memory leaks are usually harder, sometimes *much* harder, to fix than segmentation faults.
 
@@ -756,16 +762,17 @@ detail which is expensive to do.
 This problem is exacerbated if the code base is large and constantly changing.
 
 So are there some other trade-offs that could be made?
-Well if your process is short running you might not care about memory leaks as the OS will reclaim all the memory at
-process end.
+Well if your process is short running you might not care about memory leaks at all as the OS will reclaim all the
+memory at the process end.
 In this case you could make the choice to ignore decrementing reference counts (or gratuitously increase the reference
-count) so that objects are never free'd thus a segmentation fault is unlikely.
+count) so that objects are never free'd thus a segmentation fault is impossible.
 This is similar to the way some compilers use ``malloc()`` but never bother with ``free()``.
-The rationale is that there may be any number of reference to an internal data structure and it is dangerous to
-invalidate any of them whereas if the compiler invokes separate short running processes leaks are unimportant.
+The rationale is that there may be any number of references to an internal data structure and it is dangerous to
+invalidate any of them whereas if the compiler is a short running process then leaks are unimportant (you hope).
 
-If you want to create a Python Extension for a long running process (say a server) and you can't put up with memory
-leaks then you have no choice but to control the reference counts carefully.
+However if you want to create a Python Extension for a long running process (say a server) and you can't put up with
+memory leaks then you have no choice but to control the reference counts carefully.
+
 Budget accordingly.
 
 -----------------------

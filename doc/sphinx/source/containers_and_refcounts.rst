@@ -969,7 +969,7 @@ If the Default Value is Unused
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the key already exists in the dictionary the reference counts of the key, existing value and default value are
-unchanged.
+unchanged so the return value is a borrowed reference (see :ref:`chapter_refcount.borrowed`).
 
 If the Default Value is Used
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -977,9 +977,27 @@ If the Default Value is Used
 If the key does *not* exist in the dictionary the reference counts of the key and default value are incremented.
 
 
+For code and tests see:
+
+* C, in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_SetDefault_default_unused()``
+    * ``dbg_PyDict_SetDefault_default_used()``
+* CPython, in ``src/cpy/RefCount/cRefCount.c``.
+    ``test_PyDict_SetDefault_default_unused()``
+    ``test_PyDict_SetDefault_default_used()``
+* Python, pytest, in ``tests.unit.test_c_ref_count``:
+    * ``test_PyDict_SetDefault_default_unused()``
+    * ``test_PyDict_SetDefault_default_used()``
+
+
+
+
 .. todo::
 
     Complete chapter :ref:`chapter_containers_and_refcounts` section :ref:`chapter_containers_and_refcounts.dictionaries`.
+
+
+
 
 
 
