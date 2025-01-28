@@ -82,6 +82,8 @@ def test_module_dir_3_13():
         'list_steals',
         'set_no_steals',
         'set_no_steals_decref',
+        'test_PyDict_Pop_key_absent',
+        'test_PyDict_Pop_key_present',
         'test_PyDict_SetDefaultRef_default_unused',
         'test_PyDict_SetDefaultRef_default_used',
         'test_PyDict_SetDefault_default_unused',
@@ -353,3 +355,13 @@ def test_PyDict_SetDefaultRef_default_unused():
 @pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
 def test_PyDict_SetDefaultRef_default_used():
     assert cRefCount.test_PyDict_SetDefaultRef_default_used() == 0
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
+def test_PyDict_Pop_key_present():
+    assert cRefCount.test_PyDict_Pop_key_present() == 0
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
+def test_PyDict_Pop_key_absent():
+    assert cRefCount.test_PyDict_Pop_key_absent() == 0

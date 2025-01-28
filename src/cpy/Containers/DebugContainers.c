@@ -1779,6 +1779,8 @@ void dbg_PyDict_SetDefault_default_used(void) {
     assert(!PyErr_Occurred());
 }
 
+#pragma mark - Dictionaries [Python3.13]
+
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 // PyDict_SetDefaultRef
@@ -2033,7 +2035,147 @@ void dbg_PyDict_SetDefaultRef_default_unused_result_non_null(void) {
     assert(!PyErr_Occurred());
 }
 
-#endif
+// PyDict_Pop
+// int PyDict_Pop(PyObject *p, PyObject *key, PyObject **result)
+// https://docs.python.org/3/c-api/dict.html#c.PyDict_Pop
+void dbg_PyDict_Pop_key_present(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    PyObject *get_item = PyDict_GetItem(container, key);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    assert(PyDict_GET_SIZE(container) == 1);
+
+    PyObject *result = NULL;
+    int return_value = PyDict_Pop(container, key, &result);
+    if (return_value != 1) {
+        assert(0);
+    }
+
+    assert(PyDict_GET_SIZE(container) == 0);
+
+    assert(result == value);
+
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(result);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+    assert(get_item == value);
+
+    Py_DECREF(container);
+
+    /* Dupe of above as the container is empty. */
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(result);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+    assert(get_item == value);
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(value);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyDict_Pop_key_absent(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+
+    assert(PyDict_GET_SIZE(container) == 0);
+
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *dummy_value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(dummy_value);
+    assert(ref_count == 1);
+
+    PyObject *result = dummy_value;
+    int return_value = PyDict_Pop(container, key, &result);
+    if (return_value != 0) {
+        assert(0);
+    }
+
+    assert(PyDict_GET_SIZE(container) == 0);
+
+    assert(result == NULL);
+
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(dummy_value);
+    assert(ref_count == 1);
+
+    Py_DECREF(container);
+
+    /* Dupe of above as the container is empty. */
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(dummy_value);
+    assert(ref_count == 1);
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(dummy_value);
+
+    assert(!PyErr_Occurred());
+}
+
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 #if ACCEPT_SIGSEGV
 

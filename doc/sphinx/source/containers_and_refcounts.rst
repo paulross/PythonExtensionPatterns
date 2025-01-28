@@ -990,6 +990,11 @@ For code and tests see:
     * ``test_PyDict_SetDefault_default_used()``
 
 
+.. index::
+    single: PyDict_SetDefaultRef()
+    single: Dictionary; PyDict_SetDefaultRef()
+
+
 ``PyDict_SetDefaultRef()`` [Python 3.13+]
 -----------------------------------------
 
@@ -1017,6 +1022,9 @@ This is important as the following code snippet shows:
      * the results will be undefined.
     */
     PyDict_SetDefaultRef(container, key, default_value, &result);
+
+.. index::
+    single: Dictionary; PyDict_SetDefaultRef(); Key Exists
 
 Key Exists
 ^^^^^^^^^^
@@ -1074,6 +1082,13 @@ For code and tests see:
 
 * C, in ``src/cpy/Containers/DebugContainers.c``:
     * ``dbg_PyDict_SetDefaultRef_default_unused()``
+* CPython, in ``src/cpy/RefCount/cRefCount.c``.
+    ``test_PyDict_SetDefaultRef_default_unused()``
+* Python, pytest, in ``tests.unit.test_c_ref_count``:
+    * ``test_PyDict_SetDefaultRef_default_unused()``
+
+.. index::
+    single: Dictionary; PyDict_SetDefaultRef(); Key Does not Exist
 
 Key Does not Exist
 ^^^^^^^^^^^^^^^^^^^
@@ -1118,9 +1133,13 @@ For code and tests see:
 
 * C, in ``src/cpy/Containers/DebugContainers.c``:
     * ``dbg_PyDict_SetDefaultRef_default_used()``
+* CPython, in ``src/cpy/RefCount/cRefCount.c``.
+    ``test_PyDict_SetDefaultRef_default_used()``
+* Python, pytest, in ``tests.unit.test_c_ref_count``:
+    * ``test_PyDict_SetDefaultRef_default_used()``
 
-
-
+.. index::
+    single: Dictionary; PyDict_SetDefaultRef(); Failure
 
 Failure
 ^^^^^^^
@@ -1129,7 +1148,146 @@ Failure
 
     Explore the reference counts of key, value, default_value and result when `PyDict_SetDefaultRef()`_ fails.
     There are multiple failure modes.
-    The simplist failure mode (not a dictionary) does not change the reference counts at all.
+    The simplest failure mode (not a dictionary) does not change the reference counts at all.
+
+
+.. index::
+    single: Dictionary; PyDict_Pop()
+
+``PyDict_Pop()`` [Python 3.13+]
+-----------------------------------------
+
+`PyDict_Pop()`_ removes a specific value.
+This is new in Python 3.13+.
+The C function signature is:
+
+.. code-block:: c
+
+    int int PyDict_Pop(PyObject *p, PyObject *key, PyObject **result);
+
+``*result``
+^^^^^^^^^^^
+
+Any previous ``*result`` is always *abandoned* (:ref:`chapter_containers_and_refcounts.abandoned`).
+To emphasise, there is no decrementing the reference count of the existing value  (if any).
+This is important as the following code snippet shows:
+
+.. code-block:: c
+
+    PyObject *result; /* Refers to an arbitrary memory location. */
+    /* Now if PyDict_Pop() were to attempt to Py_DECREF(result)
+     * the results will be undefined.
+    */
+    PyDict_Pop(container, key, &result);
+
+
+.. index::
+    single: Dictionary; PyDict_Pop(); Key Exists
+
+Key Exists
+^^^^^^^^^^
+
+If the key already exists in the dictionary `PyDict_Pop()`_ returns 1.
+The reference counts are changed as follows:
+
+- key: unchanged.
+- value: incremented by one
+
+``*result`` is equal to the stored value.
+
+For example:
+
+.. code-block:: c
+
+    PyObject *container = PyDict_New();
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    PyObject *val = new_unique_string(__FUNCTION__, NULL);
+    /* At this point the reference counts are:
+     * key: 1
+     * val: 1
+     */
+    // Set the key/value
+    PyDict_SetItem(container, key, val);
+    /* At this point the reference counts are:
+     * key: 2
+     * val: 2
+     */
+    PyObject *result;
+    PyDict_Pop(container, key, &result);
+    /* Now the reference counts are:
+     * key: 1
+     * val: 2
+     * result: 2 as it equals val.
+     */
+
+For code and tests see:
+
+* C, in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_Pop_key_present()``
+* CPython, in ``src/cpy/RefCount/cRefCount.c``.
+    ``test_PyDict_Pop_key_present()``
+* Python, pytest, in ``tests.unit.test_c_ref_count``:
+    * ``test_PyDict_Pop_key_present()``
+
+TODO: HERE
+
+.. index::
+    single: Dictionary; PyDict_Pop(); Key Does not Exist
+
+Key Does not Exist
+^^^^^^^^^^^^^^^^^^^
+
+If the key does not exists in the dictionary `PyDict_Pop()`_ returns 0.
+The reference counts are changed as follows:
+
+- key: unchanged.
+
+``*result`` is set to ``NULL``, any previous value is *abandoned* (:ref:`chapter_containers_and_refcounts.abandoned`).
+
+For example:
+
+.. code-block:: c
+
+    PyObject *container = PyDict_New();
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    // Create a default value and a result.
+    PyObject *dummy_value = new_unique_string(__FUNCTION__, NULL);
+    PyObject *result = dummy_value;
+    /* At this point the reference counts are:
+     * key: 1
+     * dummy_value: 1
+     * result: 1 as it is equal to dummy_value.
+     */
+    PyDict_Pop(container, key, &result);
+    /* Now the reference counts are:
+     * key: 1
+     * dummy_value: 1
+     * result: is NULL.
+     */
+    Py_DECREF(container);
+    /* No change in the reference counts. */
+
+For code and tests see:
+
+* C, in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_Pop_key_absent()``
+* CPython, in ``src/cpy/RefCount/cRefCount.c``.
+    ``test_PyDict_Pop_key_absent()``
+* Python, pytest, in ``tests.unit.test_c_ref_count``:
+    * ``test_PyDict_Pop_key_absent()``
+
+
+.. index::
+    single: Dictionary; PyDict_Pop(); Failure
+
+Failure
+^^^^^^^
+
+.. todo::
+
+    Explore the reference counts of key, value, default_value and result when `PyDict_Pop()`_ fails.
+    There are multiple failure modes.
+    The simplest failure mode (not a dictionary) does not change the reference counts at all.
 
 
 .. todo::

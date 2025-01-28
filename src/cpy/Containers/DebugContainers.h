@@ -55,6 +55,8 @@ void dbg_PyDict_SetDefaultRef_default_unused(void);
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 void dbg_PyDict_SetDefaultRef_default_used(void);
 void dbg_PyDict_SetDefaultRef_default_unused_result_non_null(void);
+void dbg_PyDict_Pop_key_present(void);
+void dbg_PyDict_Pop_key_absent(void);
 #endif
 
 #if ACCEPT_SIGSEGV

@@ -189,6 +189,8 @@ int main(int argc, const char * argv[]) {
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
     dbg_PyDict_SetDefaultRef_default_used();
     dbg_PyDict_SetDefaultRef_default_unused_result_non_null();
+    dbg_PyDict_Pop_key_present();
+    dbg_PyDict_Pop_key_absent();
 #endif
 #if ACCEPT_SIGSEGV
     /* Comment out as desired. */
