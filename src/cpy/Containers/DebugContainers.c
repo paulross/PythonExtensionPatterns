@@ -1779,6 +1779,262 @@ void dbg_PyDict_SetDefault_default_used(void) {
     assert(!PyErr_Occurred());
 }
 
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
+// PyDict_SetDefaultRef
+// int PyDict_SetDefaultRef(PyObject *p, PyObject *key, PyObject *default_value, PyObject **result)
+// https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefaultRef
+void dbg_PyDict_SetDefaultRef_default_unused(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    PyObject *get_item = PyDict_GetItem(container, key);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    /* Now check PyDict_SetDefault() which does not use the default. */
+    PyObject *default_value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(default_value);
+    assert(ref_count == 1);
+
+    /* From https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefaultRef lightly edited.
+     *
+     * Inserts default_value into the dictionary p with a key of key if the key is not already
+     * present in the dictionary.
+     * If result is not NULL, then *result is set to a strong reference to either default_value,
+     * if the key was not present, or the existing value, if key was already present in the dictionary.
+     * Returns:
+     * 1 if the key was present and default_value was not inserted.
+     * 0 if the key was not * present and default_value was inserted.
+     * -1 on failure, sets an exception, and sets *result to NULL.
+     *
+     * For clarity: if you have a strong reference to default_value before calling this function,
+     * then after it returns, you hold a strong reference to both default_value and *result (if it’s not NULL).
+     * These may refer to the same object: in that case you hold two separate references to it.
+     */
+    PyObject *result = NULL;
+    int return_value = PyDict_SetDefaultRef(container, key, default_value, &result);
+    if (return_value != 1) {
+        assert(0);
+    }
+
+    assert(result == value);
+
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(default_value);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(result);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 3);
+    assert(get_item == value);
+
+    Py_DECREF(container);
+
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(default_value);
+    assert(ref_count == 1);
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(value);
+    Py_DECREF(value);
+    Py_DECREF(default_value);
+
+    assert(!PyErr_Occurred());
+}
+
+void dbg_PyDict_SetDefaultRef_default_used(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+
+    PyObject *value_default = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 1);
+
+    /* From https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefaultRef lightly edited.
+     *
+     * Inserts default_value into the dictionary p with a key of key if the key is not already
+     * present in the dictionary.
+     * If result is not NULL, then *result is set to a strong reference to either default_value,
+     * if the key was not present, or the existing value, if key was already present in the dictionary.
+     * Returns:
+     * 1 if the key was present and default_value was not inserted.
+     * 0 if the key was not * present and default_value was inserted.
+     * -1 on failure, sets an exception, and sets *result to NULL.
+     *
+     * For clarity: if you have a strong reference to default_value before calling this function,
+     * then after it returns, you hold a strong reference to both default_value and *result (if it’s not NULL).
+     * These may refer to the same object: in that case you hold two separate references to it.
+     */
+    PyObject *result = NULL;
+    int return_value = PyDict_SetDefaultRef(container, key, value_default, &result);
+    if (return_value != 0) {
+        assert(0);
+    }
+
+    assert(result == value_default);
+
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(result);
+    assert(ref_count == 3);
+
+    Py_DECREF(container);
+
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(result);
+    assert(ref_count == 2);
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(value_default);
+    Py_DECREF(value_default);
+
+    assert(!PyErr_Occurred());
+}
+
+/*
+ * This explores using PyDict_SetDefaultRef when result is a live Python object.
+ * The previous version of result is abandoned.
+ */
+void dbg_PyDict_SetDefaultRef_default_unused_result_non_null(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    PyObject *get_item = PyDict_GetItem(container, key);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    /* Now check PyDict_SetDefault() which does not use the default. */
+    PyObject *value_default = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 1);
+
+    PyObject *result_live = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(result_live);
+    assert(ref_count == 1);
+
+    PyObject *result = result_live;
+    int return_value = PyDict_SetDefaultRef(container, key, value_default, &result);
+    if (return_value != 1) {
+        assert(0);
+    }
+
+    assert(result != result_live);
+    assert(result == value);
+
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_default);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(result_live);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(result);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 3);
+    assert(get_item == value);
+
+    Py_DECREF(container);
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(value);
+    Py_DECREF(value);
+    Py_DECREF(value_default);
+    Py_DECREF(result_live);
+
+    assert(!PyErr_Occurred());
+}
+
+#endif
+
 #if ACCEPT_SIGSEGV
 
 void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void) {

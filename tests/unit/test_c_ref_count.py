@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from cPyExtPatt import cRefCount
@@ -18,6 +20,8 @@ def test_module_dir():
         'list_steals',
         'set_no_steals',
         'set_no_steals_decref',
+        'test_PyDict_SetDefaultRef_default_unused',
+        'test_PyDict_SetDefaultRef_default_used',
         'test_PyDict_SetDefault_default_unused',
         'test_PyDict_SetDefault_default_used',
         'test_PyDict_SetItem_fails_not_a_dict',
@@ -277,3 +281,13 @@ def test_PyDict_SetDefault_default_unused():
 
 def test_PyDict_SetDefault_default_used():
     assert cRefCount.test_PyDict_SetDefault_default_used() == 0
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
+def test_PyDict_SetDefaultRef_default_unused():
+    assert cRefCount.test_PyDict_SetDefaultRef_default_unused() == 0
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
+def test_PyDict_SetDefaultRef_default_used():
+    assert cRefCount.test_PyDict_SetDefaultRef_default_used() == 0

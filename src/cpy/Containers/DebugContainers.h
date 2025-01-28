@@ -51,6 +51,12 @@ void dbg_PyDict_SetItem_fails_not_a_dict(void);
 void dbg_PyDict_SetItem_fails_not_hashable(void);
 void dbg_PyDict_SetDefault_default_unused(void);
 void dbg_PyDict_SetDefault_default_used(void);
+void dbg_PyDict_SetDefaultRef_default_unused(void);
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+void dbg_PyDict_SetDefaultRef_default_used(void);
+void dbg_PyDict_SetDefaultRef_default_unused_result_non_null(void);
+#endif
+
 #if ACCEPT_SIGSEGV
 void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void);
 void dbg_PyList_SetItem_SIGSEGV_on_same_value(void);

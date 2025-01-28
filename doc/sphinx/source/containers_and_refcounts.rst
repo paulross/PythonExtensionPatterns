@@ -990,15 +990,151 @@ For code and tests see:
     * ``test_PyDict_SetDefault_default_used()``
 
 
+``PyDict_SetDefaultRef()`` [Python 3.13+]
+-----------------------------------------
+
+`PyDict_SetDefaultRef()`_ sets a default value and retrieves the actual value.
+This is new in Python 3.13+.
+The C function signature is:
+
+.. code-block:: c
+
+    int PyDict_SetDefaultRef(
+        PyObject *dictionary, PyObject *key, PyObject *default_value, PyObject **result
+    );
+
+``*result``
+^^^^^^^^^^^
+
+Any previous ``*result`` is always *abandoned* (:ref:`chapter_containers_and_refcounts.abandoned`).
+To emphasise, there is no decrementing the reference count of the existing value  (if any).
+This is important as the following code snippet shows:
+
+.. code-block:: c
+
+    PyObject *result; /* Refers to an arbitrary memory location. */
+    /* Now if PyDict_SetDefaultRef() were to attempt to Py_DECREF(result)
+     * the results will be undefined.
+    */
+    PyDict_SetDefaultRef(container, key, default_value, &result);
+
+Key Exists
+^^^^^^^^^^
+
+If the key already exists in the dictionary `PyDict_SetDefaultRef()`_ returns 1.
+The reference counts are changed as follows:
+
+- key: unchanged.
+- value: incremented by one
+- default_value: unchanged.
+
+``*result`` is equal to the stored value.
+
+For example:
+
+.. code-block:: c
+
+    PyObject *container = PyDict_New();
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    PyObject *val = new_unique_string(__FUNCTION__, NULL);
+    /* At this point the reference counts are:
+     * key: 1
+     * val: 1
+     */
+    // Set the key/value
+    PyDict_SetItem(container, key, val);
+    /* At this point the reference counts are:
+     * key: 2
+     * val: 2
+     */
+    // Create a default value and a result.
+    PyObject *default_value = new_unique_string(__FUNCTION__, NULL);
+    PyObject *result = NULL;
+    /* At this point the reference counts are:
+     * default_value: 1
+     * result: N/A
+     */
+    PyDict_SetDefaultRef(container, key, default_value, &result);
+    /* Now the reference counts are:
+     * key: 2
+     * val: 3
+     * default_value: 1
+     * result: 3 as it equals val.
+     */
+    Py_DECREF(container);
+    /* Now the reference counts are:
+     * key: 1
+     * val: 2
+     * default_value: 1
+     * result: 2 as it equals val.
+     */
+
+
+For code and tests see:
+
+* C, in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_SetDefaultRef_default_unused()``
+
+Key Does not Exist
+^^^^^^^^^^^^^^^^^^^
+
+If the key does not exists in the dictionary `PyDict_SetDefaultRef()`_ returns 0.
+The reference counts are changed as follows:
+
+- key: incremented by one.
+- default_value: incremented by *two*. The rationale is one increment as the default_value is inserted into
+  the dictionary then a second increment as the default_value is 'returned' as ``*result``.
+
+``*result`` is equal to the default_value.
+
+For example:
+
+.. code-block:: c
+
+    PyObject *container = PyDict_New();
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    // Create a default value and a result.
+    PyObject *default_value = new_unique_string(__FUNCTION__, NULL);
+    PyObject *result = NULL;
+    /* At this point the reference counts are:
+     * key: 1
+     * default_value: 1
+     * result: N/A
+     */
+    PyDict_SetDefaultRef(container, key, default_value, &result);
+    /* Now the reference counts are:
+     * key: 2
+     * default_value: 3
+     * result: 3 as it equals default_value.
+     */
+    Py_DECREF(container);
+    /* Now the reference counts are:
+     * key: 1
+     * default_value: 2
+     * result: 2 as it equals default_value.
+     */
+
+For code and tests see:
+
+* C, in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_SetDefaultRef_default_used()``
+
+
+
+
+Failure
+^^^^^^^
+
+.. todo::
+
+    Explore the reference counts of key, value, default_value and result when `PyDict_SetDefaultRef()`_ fails.
+    There are multiple failure modes.
+    The simplist failure mode (not a dictionary) does not change the reference counts at all.
 
 
 .. todo::
 
     Complete chapter :ref:`chapter_containers_and_refcounts` section :ref:`chapter_containers_and_refcounts.dictionaries`.
-
-
-
-
 
 
 .. _chapter_containers_and_refcounts.sets:

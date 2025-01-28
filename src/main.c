@@ -185,6 +185,11 @@ int main(int argc, const char * argv[]) {
     dbg_PyDict_SetItem_fails_not_hashable();
     dbg_PyDict_SetDefault_default_unused();
     dbg_PyDict_SetDefault_default_used();
+    dbg_PyDict_SetDefaultRef_default_unused();
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+    dbg_PyDict_SetDefaultRef_default_used();
+    dbg_PyDict_SetDefaultRef_default_unused_result_non_null();
+#endif
 #if ACCEPT_SIGSEGV
     /* Comment out as desired. */
     dbg_PyTuple_SetItem_SIGSEGV_on_same_value();

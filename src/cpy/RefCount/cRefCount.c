@@ -2531,17 +2531,17 @@ test_PyDict_SetDefault_default_unused(PyObject *Py_UNUSED(module)) {
 
     get_item = PyDict_GetItem(container, key);
     assert(get_item == value);
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "value after PyDict_SetItem()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "value after PyDict_GetItem()");
 
     /* Now check PyDict_SetDefault() which does not use the default. */
     PyObject *value_default = new_unique_string(__FUNCTION__, NULL);
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "value after PyDict_SetItem()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "New value_default");
 
     get_item = PyDict_SetDefault(container, key, value_default);
     assert(get_item == value);
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetItem()");
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after PyDict_SetItem()");
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "value after PyDict_SetItem()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetDefault()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after PyDict_SetDefault()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "value after PyDict_SetDefault()");
 
     Py_DECREF(container);
 
@@ -2585,16 +2585,16 @@ test_PyDict_SetDefault_default_used(void) {
         assert(0);
     }
     assert(PyDict_Size(container) == 1);
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "container after PyObject *container = PyDict_New();");
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 2L, "container after PyObject *container = PyDict_New();");
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "container after PyObject *container = PyDict_New();");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetDefault()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 2L, "value_default after PyDict_SetDefault()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "get_item after PyDict_SetDefault()");
     assert(get_item == value_default);
 
     Py_DECREF(container);
 
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "container after PyObject *container = PyDict_New();");
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "container after PyObject *container = PyDict_New();");
-    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 1L, "container after PyObject *container = PyDict_New();");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "value_default after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 1L, "get_item after Py_DECREF(container);");
     /* Clean up. */
     Py_DECREF(key);
     Py_DECREF(value_default);
@@ -2602,6 +2602,120 @@ test_PyDict_SetDefault_default_used(void) {
     assert(!PyErr_Occurred());
     return PyLong_FromLong(return_value);
 }
+
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
+static PyObject *
+test_PyDict_SetDefaultRef_default_unused(PyObject *Py_UNUSED(module)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    PyObject *get_item;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "container after PyObject *container = PyDict_New();");
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "New key");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "New value");
+
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetItem()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after PyDict_SetItem()");
+
+    get_item = PyDict_GetItem(container, key);
+    assert(get_item == value);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "get_item after PyDict_GetItem()");
+
+    /* Now check PyDict_SetDefault() which does not use the default. */
+    PyObject *value_default = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "New value_default");
+
+    PyObject *result = NULL;
+    int ret_val = PyDict_SetDefaultRef(container, key, value_default, &result);
+    if (ret_val != 1) {
+        return_value = -1;
+    }
+    assert(result == value);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetDefaultRef()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 3L, "value after PyDict_SetDefaultRef()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(result, 3L, "value after PyDict_SetDefaultRef()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "value_default after PyDict_SetDefaultRef()");
+
+    Py_DECREF(container);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(result, 2L, "value after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "value_default after Py_DECREF(container);");
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(value);
+    Py_DECREF(value);
+    Py_DECREF(value_default);
+
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+PyObject *
+test_PyDict_SetDefaultRef_default_used(void) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "container after PyObject *container = PyDict_New();");
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "container after PyObject *container = PyDict_New();");
+
+    /* Do not do this so the default is invoked.
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    */
+
+    /* Now check PyDict_SetDefault() which *does* use the default. */
+    PyObject *value_default = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "container after PyObject *container = PyDict_New();");
+
+    PyObject *result = NULL;
+    int ret_val = PyDict_SetDefaultRef(container, key, value_default, &result);
+    if (ret_val != 0) {
+        return_value = -1;
+    }
+    assert(result == value_default);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetDefaultRef()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 3L, "value after PyDict_SetDefaultRef()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(result, 3L, "value after PyDict_SetDefaultRef()");
+
+    Py_DECREF(container);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 2L, "value after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(result, 2L, "value after Py_DECREF(container);");
+
+    /* Clean up. */
+    Py_DECREF(key);
+    Py_DECREF(value_default);
+    Py_DECREF(value_default);
+
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 #define MODULE_NOARGS_ENTRY(name, doc)  \
     {                                   \
@@ -2702,6 +2816,12 @@ static PyMethodDef module_methods[] = {
                             "Check that PyDict_SetDefault() works when the default is not used."),
         MODULE_NOARGS_ENTRY(test_PyDict_SetDefault_default_used,
                             "Check that PyDict_SetDefault() works when the default not used."),
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+        MODULE_NOARGS_ENTRY(test_PyDict_SetDefaultRef_default_unused,
+                            "Check that PyDict_SetDefault() works when the default is not used."),
+        MODULE_NOARGS_ENTRY(test_PyDict_SetDefaultRef_default_used,
+                            "Check that PyDict_SetDefault() works when the default not used."),
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
