@@ -5,7 +5,69 @@ import pytest
 from cPyExtPatt import cRefCount
 
 
-def test_module_dir():
+@pytest.mark.skipif(not (sys.version_info.minor < 13), reason='Python pre 3.13')
+def test_module_dir_pre_3_13():
+    assert dir(cRefCount) == [
+        '__doc__',
+        '__file__',
+        '__loader__',
+        '__name__',
+        '__package__',
+        '__spec__',
+        'dict_buildvalue_no_steals',
+        'dict_no_steals',
+        'dict_no_steals_decref_after_set',
+        'list_buildvalue_steals',
+        'list_steals',
+        'set_no_steals',
+        'set_no_steals_decref',
+        'test_PyDict_SetDefault_default_unused',
+        'test_PyDict_SetDefault_default_used',
+        'test_PyDict_SetItem_fails_not_a_dict',
+        'test_PyDict_SetItem_fails_not_hashable',
+        'test_PyDict_SetItem_increments',
+        'test_PyList_Append',
+        'test_PyList_Append_fails_NULL',
+        'test_PyList_Append_fails_not_a_list',
+        'test_PyList_Insert',
+        'test_PyList_Insert_Is_Truncated',
+        'test_PyList_Insert_Negative_Index',
+        'test_PyList_Insert_fails_NULL',
+        'test_PyList_Insert_fails_not_a_list',
+        'test_PyList_Py_BuildValue',
+        'test_PyList_SET_ITEM_NULL',
+        'test_PyList_SET_ITEM_NULL_SET_ITEM',
+        'test_PyList_SET_ITEM_replace_same',
+        'test_PyList_SET_ITEM_steals',
+        'test_PyList_SET_ITEM_steals_replace',
+        'test_PyList_SetIem_NULL_SetItem',
+        'test_PyList_SetItem_NULL',
+        'test_PyList_SetItem_fails_not_a_list',
+        'test_PyList_SetItem_fails_out_of_range',
+        'test_PyList_SetItem_replace_same',
+        'test_PyList_SetItem_steals',
+        'test_PyList_SetItem_steals_replace',
+        'test_PyTuple_Py_BuildValue',
+        'test_PyTuple_Py_PyTuple_Pack',
+        'test_PyTuple_SET_ITEM_NULL',
+        'test_PyTuple_SET_ITEM_NULL_SET_ITEM',
+        'test_PyTuple_SET_ITEM_replace_same',
+        'test_PyTuple_SET_ITEM_steals',
+        'test_PyTuple_SET_ITEM_steals_replace',
+        'test_PyTuple_SetIem_NULL_SetItem',
+        'test_PyTuple_SetItem_NULL',
+        'test_PyTuple_SetItem_fails_not_a_tuple',
+        'test_PyTuple_SetItem_fails_out_of_range',
+        'test_PyTuple_SetItem_replace_same',
+        'test_PyTuple_SetItem_steals',
+        'test_PyTuple_SetItem_steals_replace',
+        'tuple_buildvalue_steals',
+        'tuple_steals'
+    ]
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
+def test_module_dir_3_13():
     assert dir(cRefCount) == [
         '__doc__',
         '__file__',
