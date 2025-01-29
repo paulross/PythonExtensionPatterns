@@ -58,6 +58,7 @@ void dbg_PyDict_SetDefaultRef_default_unused_result_non_null(void);
 void dbg_PyDict_Pop_key_present(void);
 void dbg_PyDict_Pop_key_absent(void);
 #endif
+void dbg_PyDict_GetItem(void);
 
 #if ACCEPT_SIGSEGV
 void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void);

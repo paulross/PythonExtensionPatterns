@@ -192,6 +192,7 @@ int main(int argc, const char * argv[]) {
     dbg_PyDict_Pop_key_present();
     dbg_PyDict_Pop_key_absent();
 #endif
+    dbg_PyDict_GetItem();
 #if ACCEPT_SIGSEGV
     /* Comment out as desired. */
     dbg_PyTuple_SetItem_SIGSEGV_on_same_value();

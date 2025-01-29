@@ -1152,6 +1152,38 @@ Failure
 
 
 .. index::
+    single: Dictionary; PyDict_GetItem()
+
+``PyDict_GetItem()``
+-----------------------------------------
+
+`PyDict_GetItem()`_ returns a borrowed reference (:ref:`chapter_refcount.borrowed`) to an existing value or ``NULL`` if
+the key does not exist in the dictionary.
+
+.. index::
+    single: Dictionary; PyDict_GetItemRef()
+
+``PyDict_GetItemRef()``
+-----------------------------------------
+
+`PyDict_GetItemRef()`_
+
+
+.. index::
+    single: Dictionary; PyDict_GetItemWithError()
+
+``PyDict_GetItemWithError()``
+-----------------------------------------
+
+`PyDict_GetItemWithError()`_
+
+
+
+
+
+
+
+.. index::
     single: Dictionary; PyDict_Pop()
 
 ``PyDict_Pop()`` [Python 3.13+]

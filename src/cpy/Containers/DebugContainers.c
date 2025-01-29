@@ -1488,7 +1488,7 @@ void dbg_PyList_Py_BuildValue(void) {
     assert(!PyErr_Occurred());
 }
 
-#pragma mark - Dictionaries
+#pragma mark - Dictionaries - setters
 
 void dbg_PyDict_SetItem_increments(void) {
     printf("%s():\n", __FUNCTION__);
@@ -2176,6 +2176,65 @@ void dbg_PyDict_Pop_key_absent(void) {
 }
 
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
+#pragma mark Dictionaries - getters
+
+void dbg_PyDict_GetItem(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+    PyObject *get_item;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+
+    // No Key in the dictionary.
+    get_item = PyDict_GetItem(container, key);
+    assert(get_item == NULL);
+
+    // Set a value
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    get_item = PyDict_GetItem(container, key);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    Py_DECREF(container);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    Py_DECREF(key);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+}
+
 
 #if ACCEPT_SIGSEGV
 
