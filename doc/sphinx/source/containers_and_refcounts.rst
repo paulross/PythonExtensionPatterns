@@ -882,6 +882,12 @@ The Python documentation for `PyDict_SetItem()`_ is incomplete.
   If the key exists in the dictionary and the value is the same then this means, effectively, that reference counts of
   both key and value remain unchanged.
 
+.. warning::
+
+    If either the key or the value are NULL this will segfault.
+    See ``dbg_PyDict_SetItem_NULL_key()`` and ``dbg_PyDict_SetItem_NULL_value()`` in
+    ``src/cpy/Containers/DebugContainers.c``.
+
 This code illustrates `PyDict_SetItem()`_ with ``assert()`` showing the reference count:
 
 .. code-block:: c
@@ -1160,13 +1166,56 @@ Failure
 `PyDict_GetItem()`_ returns a borrowed reference (:ref:`chapter_refcount.borrowed`) to an existing value or ``NULL`` if
 the key does not exist in the dictionary.
 
+.. warning::
+
+    If the key is ``NULL`` this will segfault.
+    See ``dbg_PyDict_GetItem_key_NULL()`` in ``src/cpy/Containers/DebugContainers.c``.
+
+
 .. index::
     single: Dictionary; PyDict_GetItemRef()
 
-``PyDict_GetItemRef()``
+``PyDict_GetItemRef()`` [Python 3.13+]
 -----------------------------------------
 
-`PyDict_GetItemRef()`_
+`PyDict_GetItemRef()`_ gets a new strong reference to a value from a dictionary.
+
+The C signature is:
+
+.. code-block:: c
+
+    int PyDict_GetItemRef(PyObject *p, PyObject *key, PyObject **result);
+
+Key is Present
+^^^^^^^^^^^^^^
+
+If the key is in the dictionary then increment the reference count of the value and set ``*result`` to the value.
+The reference count of the key is unchanged.
+The function returns 1.
+
+For code and tests see:
+
+* C, in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_GetItemRef()``
+* CPython, in ``src/cpy/RefCount/cRefCount.c``.
+    ``test_PyDict_SetDefaultRef_default_used()``
+* Python, pytest, in ``tests.unit.test_c_ref_count``:
+    * ``test_PyDict_SetDefaultRef_default_used()``
+
+.. index::
+    single: Dictionary; PyDict_SetDefaultRef(); Failure
+
+Failure
+^^^^^^^
+
+.. todo::
+
+    Explore the reference counts of key, value, default_value and result when `PyDict_GetItemRef()`_ fails.
+    There are multiple failure modes.
+    The simplest failure mode (not a dictionary) does not change the reference counts at all.
+
+
+
 
 
 .. index::

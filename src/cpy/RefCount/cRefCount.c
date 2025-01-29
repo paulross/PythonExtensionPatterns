@@ -2715,6 +2715,65 @@ test_PyDict_SetDefaultRef_default_used(void) {
     return PyLong_FromLong(return_value);
 }
 
+
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
+static PyObject *
+test_PyDict_GetItem(PyObject *Py_UNUSED(module)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+    PyObject *get_item = NULL;
+
+    PyObject *container = PyDict_New();
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "PyDict_New()");
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key = new_unique_string(__FUNCTION__, NULL)");
+    if (PyDict_GetItem(container, key) != NULL) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value = new_unique_string(__FUNCTION__, NULL)");
+
+    if (PyDict_SetItem(container, key, value)) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetItem()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value_a after PyDict_SetItem()");
+
+    get_item = PyDict_GetItem(container, key);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(get_item, 2L, "get_item = PyDict_GetItem(container, key);");
+    if (get_item != value) {
+        fprintf(stderr, "get_item = PyDict_GetItem(container, key); is not value_a\n");
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key after Py_DECREF(container);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value_b after Py_DECREF(container);");
+    Py_DECREF(key);
+    Py_DECREF(value);
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
 static PyObject *
 test_PyDict_Pop_key_present(PyObject *Py_UNUSED(module)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
@@ -2916,6 +2975,12 @@ static PyMethodDef module_methods[] = {
                             "Check that PyDict_SetDefaultRef() works when the default is not used."),
         MODULE_NOARGS_ENTRY(test_PyDict_SetDefaultRef_default_used,
                             "Check that PyDict_SetDefaultRef() works when the default not used."),
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
+        MODULE_NOARGS_ENTRY(test_PyDict_GetItem,
+                            "Checks PyDict_GetItem()."),
+
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
         MODULE_NOARGS_ENTRY(test_PyDict_Pop_key_present,
                             "Check that PyDict_Pop() works when the key is present."),
         MODULE_NOARGS_ENTRY(test_PyDict_Pop_key_absent,

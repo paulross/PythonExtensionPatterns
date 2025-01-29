@@ -181,24 +181,41 @@ int main(int argc, const char * argv[]) {
 
 #pragma mark - Dictionaries
     dbg_PyDict_SetItem_increments();
+
+#if ACCEPT_SIGSEGV
+    dbg_PyDict_SetItem_NULL_key();
+    dbg_PyDict_SetItem_NULL_value();
+#endif // ACCEPT_SIGSEGV
+
     dbg_PyDict_SetItem_fails_not_a_dict();
     dbg_PyDict_SetItem_fails_not_hashable();
     dbg_PyDict_SetDefault_default_unused();
     dbg_PyDict_SetDefault_default_used();
     dbg_PyDict_SetDefaultRef_default_unused();
+
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
     dbg_PyDict_SetDefaultRef_default_used();
     dbg_PyDict_SetDefaultRef_default_unused_result_non_null();
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
+    dbg_PyDict_GetItem();
+
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+    dbg_PyDict_GetItemRef();
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
     dbg_PyDict_Pop_key_present();
     dbg_PyDict_Pop_key_absent();
-#endif
-    dbg_PyDict_GetItem();
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
 #if ACCEPT_SIGSEGV
     /* Comment out as desired. */
     dbg_PyTuple_SetItem_SIGSEGV_on_same_value();
     dbg_PyList_SetItem_SIGSEGV_on_same_value();
     dbg_PyDict_SetItem_SIGSEGV_on_key_NULL();
     dbg_PyDict_SetItem_SIGSEGV_on_value_NULL();
+    dbg_PyDict_GetItem_key_NULL();
 #endif
 
     printf("Bye, bye!\n");
