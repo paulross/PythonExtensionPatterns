@@ -27,6 +27,7 @@ Coding Patterns for Python Extensions
     iterators_generators
     context_manager
     pickle
+    watchers
     compiler_flags
     debugging/debug
     memory_leaks

@@ -1,3 +1,6 @@
+.. moduleauthor:: Paul Ross <apaulross@gmail.com>
+.. sectionauthor:: Paul Ross <apaulross@gmail.com>
+
 .. highlight:: python
     :linenothreshold: 20
 
@@ -1502,6 +1505,7 @@ Summary
     https://docs.python.org/3/c-api/dict.html#c.PyDict_AddWatcher
     Also type watchers etc. There does not seem to be a PEP for this.
     This change has example tests: https://github.com/python/cpython/pull/31787/files
+    Issue: https://github.com/python/cpython/issues/91052
 
 .. rubric:: Footnotes
 
