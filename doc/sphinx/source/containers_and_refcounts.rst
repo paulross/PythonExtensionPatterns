@@ -844,6 +844,7 @@ Summary
 .. _PyDict_Items(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Items
 .. _PyDict_Keys(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Keys
 .. _PyDict_Values(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Values
+.. _PyDict_Next(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Next
 
 .. Other
 
@@ -1215,23 +1216,6 @@ Failure
     The simplest failure mode (not a dictionary) does not change the reference counts at all.
 
 
-
-
-
-.. index::
-    single: Dictionary; PyDict_GetItemWithError()
-
-``PyDict_GetItemWithError()``
------------------------------------------
-
-`PyDict_GetItemWithError()`_
-
-
-
-
-
-
-
 .. index::
     single: Dictionary; PyDict_Pop()
 
@@ -1310,8 +1294,6 @@ For code and tests see:
 * Python, pytest, in ``tests.unit.test_c_ref_count``:
     * ``test_PyDict_Pop_key_present()``
 
-TODO: HERE
-
 .. index::
     single: Dictionary; PyDict_Pop(); Key Does not Exist
 
@@ -1371,9 +1353,120 @@ Failure
     The simplest failure mode (not a dictionary) does not change the reference counts at all.
 
 
-.. todo::
+.. index::
+    single: Dictionary; Other APIs
 
-    Complete chapter :ref:`chapter_containers_and_refcounts` section :ref:`chapter_containers_and_refcounts.dictionaries`.
+Other APIs
+----------
+
+This section describes other dictionary APIs that are simple to describe and have no complications.
+
+.. note::
+
+    There are no tests for many of these APIs in this project.
+
+
+.. index::
+    single: Dictionary; PyDict_GetItemWithError()
+
+``PyDict_GetItemWithError()``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`PyDict_GetItemWithError()`_ gets a new *borrowed* reference to a value from a dictionary or NULL.
+Unlike `PyDict_GetItem()`_ this will set an exception if appropriate.
+
+The C signature is:
+
+.. code-block:: c
+
+    PyObject *PyDict_GetItemWithError(PyObject *p, PyObject *key);
+
+
+.. index::
+    single: Dictionary; PyDict_DelItem()
+
+``PyDict_DelItem()``
+^^^^^^^^^^^^^^^^^^^^
+
+`PyDict_DelItem()`_ removes a specific value if it exists. The reference count of the value will be decremented.
+The key must be hashable; if it isn’t a ``TypeError`` is set.
+If key is not in the dictionary a ``KeyError`` is set.
+Returns 0 on success or -1 on failure in which case an exception will have been set.
+
+The C function signature is:
+
+.. code-block:: c
+
+    int PyDict_DelItem(PyObject *p, PyObject *key);
+
+
+.. index::
+    single: Dictionary; PyDict_Items()
+
+``PyDict_Items()``
+^^^^^^^^^^^^^^^^^^^^
+
+`PyDict_Items()`_ returns a *new* Python list containing *new* tuples of (key, value).
+Each key and value will have their reference count incremented.
+That is to say calling ``Py_DECREF`` on the result will change all the reference counts within the dictionary to their
+previous values.
+
+The C function signature is:
+
+.. code-block:: c
+
+    Pyobject *PyDict_Items(PyObject *p);
+
+
+.. index::
+    single: Dictionary; PyDict_Keys()
+
+``PyDict_Keys()``
+^^^^^^^^^^^^^^^^^^^^
+
+`PyDict_Keys()`_ returns a *new* Python list containing all the keys.
+Each key will have its reference count incremented.
+That is to say calling ``Py_DECREF`` on the result will change all the reference counts within the dictionary to their
+previous values.
+
+The C function signature is:
+
+.. code-block:: c
+
+    Pyobject *PyDict_Keys(PyObject *p);
+
+
+.. index::
+    single: Dictionary; PyDict_Values()
+
+``PyDict_Values()``
+^^^^^^^^^^^^^^^^^^^^
+
+`PyDict_Values()`_ returns a *new* Python list containing all the values.
+Each value will have its reference count incremented.
+That is to say calling ``Py_DECREF`` on the result will change all the reference counts within the dictionary to their
+previous values.
+
+The C function signature is:
+
+.. code-block:: c
+
+    Pyobject *PyDict_Values(PyObject *p);
+
+
+.. index::
+    single: Dictionary; PyDict_Next()
+
+``PyDict_Next()``
+^^^^^^^^^^^^^^^^^^^^
+
+`PyDict_Next()`_ is the standard way of iterating through all the keys and values.
+Each key and value will is a *borrowed* reference.
+The C function signature is:
+
+.. code-block:: c
+
+    int PyDict_Next(PyObject *p, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue);
 
 
 .. _chapter_containers_and_refcounts.sets:
