@@ -326,12 +326,24 @@ static const char *watch_event_name(PyDict_WatchEvent event) {
 static int dict_watcher_verbose(PyDict_WatchEvent event, PyObject *dict, PyObject *key, PyObject *new_value) {
     write_frame_data_to_outfile(stdout, PyEval_GetFrame());
     fprintf(stdout, " Event: %-24s", watch_event_name(event));
-    fprintf(stdout, " Dict: ");
-    PyObject_Print(dict, stdout, Py_PRINT_RAW);
-    fprintf(stdout, " Key (%s): ", Py_TYPE(key)->tp_name);
-    PyObject_Print(key, stdout, Py_PRINT_RAW);
-    fprintf(stdout, " New value (%s): ", Py_TYPE(new_value)->tp_name);
-    PyObject_Print(new_value, stdout, Py_PRINT_RAW);
+    if (dict) {
+        fprintf(stdout, " Dict: ");
+        PyObject_Print(dict, stdout, Py_PRINT_RAW);
+    } else {
+        fprintf(stdout, " Dict: NULL");
+    }
+    if (key) {
+        fprintf(stdout, " Key (%s): ", Py_TYPE(key)->tp_name);
+        PyObject_Print(key, stdout, Py_PRINT_RAW);
+    } else {
+        fprintf(stdout, " Key : NULL");
+    }
+    if (new_value) {
+        fprintf(stdout, " New value (%s): ", Py_TYPE(new_value)->tp_name);
+        PyObject_Print(new_value, stdout, Py_PRINT_RAW);
+    } else {
+        fprintf(stdout, " New value : NULL");
+    }
     fprintf(stdout, "\n");
     return 0;
 }

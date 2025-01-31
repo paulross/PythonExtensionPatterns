@@ -23,6 +23,7 @@ def temp_2() -> None:
     watcher_id = cWatchers.py_dict_watcher_verbose_add(d)
     d['age'] = 22
     d['age'] = 23
+    del d['age']
     cWatchers.py_dict_watcher_verbose_remove(watcher_id, d)
 
 
