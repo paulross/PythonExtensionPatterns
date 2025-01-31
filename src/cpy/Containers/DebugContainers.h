@@ -5,9 +5,10 @@
 #ifndef PYTHONEXTENSIONPATTERNS_DEBUGCONTAINERS_H
 #define PYTHONEXTENSIONPATTERNS_DEBUGCONTAINERS_H
 
+#include "pyextpatt_util.h"
+
 #define ACCEPT_SIGSEGV 0
 
-PyObject *new_unique_string(const char *function_name, const char *suffix);
 #pragma mark - Tuples
 void dbg_PyTuple_SetItem_steals(void);
 void dbg_PyTuple_SET_ITEM_steals(void);

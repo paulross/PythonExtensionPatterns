@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include "DebugContainers.h"
+#include "DictWatcher.h"
 
 /**
  * Get the current working directory using \c getcwd().
@@ -217,6 +218,13 @@ int main(int argc, const char * argv[]) {
     dbg_PyDict_SetItem_SIGSEGV_on_value_NULL();
     dbg_PyDict_GetItem_key_NULL();
 #endif
+
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
+    // Watchers
+    dbg_PyDict_EVENT_ADDED();
+    dbg_PyDict_EVENT_MODIFIED();
+    dbg_PyDict_EVENT_MODIFIED_same_value_no_event();
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
 
     printf("Bye, bye!\n");
     return failure;

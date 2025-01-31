@@ -69,7 +69,9 @@ ENDIF ()
 
 include_directories(
     src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList
+    src/cpy
     src/cpy/Containers
+    src/cpy/Watchers
 )
 
 add_executable(PythonExtensionPatterns
@@ -121,7 +123,11 @@ add_executable(PythonExtensionPatterns
         src/cpy/CtxMgr/cCtxMgr.c
         src/cpy/Containers/DebugContainers.c
         src/cpy/Containers/DebugContainers.h
-        src/cpy/StructSequence/cStructSequence.c)
+        src/cpy/StructSequence/cStructSequence.c
+        src/cpy/Watchers/DictWatcher.c
+        src/cpy/Watchers/DictWatcher.h
+        src/cpy/pyextpatt_util.c
+        src/cpy/pyextpatt_util.h)
 
 #link_directories(${PYTHON_LINK_LIBRARY})
 
