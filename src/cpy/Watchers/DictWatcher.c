@@ -38,7 +38,8 @@ GET_STATIC_DICT_VALUE(static_dict_deallocated)
 
 
 // Dictionary callback function
-static int dict_watcher_inc_event_counter(PyDict_WatchEvent event, PyObject *dict, PyObject *key, PyObject *new_value) {
+static int dict_watcher_inc_event_counter(PyDict_WatchEvent event, PyObject *Py_UNUSED(dict), PyObject *Py_UNUSED(key),
+                                          PyObject *Py_UNUSED(new_value)) {
     switch (event) {
         case PyDict_EVENT_ADDED:
             static_dict_added++;
@@ -339,13 +340,14 @@ static const char *watch_event_name(PyDict_WatchEvent event) {
 // Verbose dictionary callback function prints out Python file/line, dictionary, key and new value.
 static int dict_watcher_verbose(PyDict_WatchEvent event, PyObject *dict, PyObject *key, PyObject *new_value) {
     write_frame_data_to_outfile(stdout, PyEval_GetFrame(), PyTrace_LINE, Py_None);
-    fprintf(stdout, " Event: %s", watch_event_name(event));
+    fprintf(stdout, " Event: %24s", watch_event_name(event));
     fprintf(stdout, " Dict: ");
     PyObject_Print(dict, stdout, Py_PRINT_RAW);
-    fprintf(stdout, " Key: ");
+    fprintf(stdout, " Key (%s): ", Py_TYPE(key)->tp_name);
     PyObject_Print(key, stdout, Py_PRINT_RAW);
-    fprintf(stdout, " New value: ");
+    fprintf(stdout, " New value (%s): ", Py_TYPE(new_value)->tp_name);
     PyObject_Print(new_value, stdout, Py_PRINT_RAW);
+    fprintf(stdout, "\n");
     return 0;
 }
 
