@@ -231,7 +231,7 @@ void dbg_PyDict_EVENT_MODIFIED_same_value_no_event(void) {
 
 #pragma mark Verbose watcher to report Python file/line
 
-/** NOTE: This ios based on pymemtrace code. */
+/** NOTE: This is based on pymemtrace code. */
 
 static const unsigned char MT_U_STRING[] = "";
 static const char MT_STRING[] = "";
@@ -265,11 +265,11 @@ get_python_function_name(PyFrameObject *frame) {
     return MT_STRING;
 }
 
-int py_frame_get_line_number(PyFrameObject *frame) {
+int get_python_line_number(PyFrameObject *frame) {
     if (frame) {
-        PyFrame_GetLineNumber(frame);
+        return PyFrame_GetLineNumber(frame);
     }
-    return 0;
+    return -47;
 }
 
 /**
@@ -287,8 +287,10 @@ write_frame_data_to_outfile(FILE *outfile, PyFrameObject *frame) {
     if (frame) {
         fprintf(outfile,
                 "%-80s %6d %-24s",
-                get_python_file_name(frame), py_frame_get_line_number(frame),
-                get_python_function_name(frame));
+                get_python_file_name(frame),
+                get_python_line_number(frame),
+                get_python_function_name(frame)
+                );
     } else {
         fprintf(outfile, "No Python frame available.");
     }

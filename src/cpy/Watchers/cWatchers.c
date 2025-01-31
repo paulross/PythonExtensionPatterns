@@ -65,20 +65,30 @@ PyDictWatcherContextManager_new(PyObject *Py_UNUSED(arg)) {
 }
 
 static PyObject *
-PyDictWatcherContextManager_enter(PyDictWatcherContextManager *self, PyObject *args) {
+PyDictWatcherContextManager_init(PyDictWatcherContextManager *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &self->dict)) {
         return NULL;
     }
+    Py_INCREF(self->dict);
+    return (PyObject *)self;
+}
+
+static void
+PyDictWatcherContextManager_dealloc(PyDictWatcherContextManager *self) {
+    Py_DECREF(self->dict);
+    PyObject_Del(self);
+}
+
+static PyObject *
+PyDictWatcherContextManager_enter(PyDictWatcherContextManager *self, PyObject *Py_UNUSED(args)) {
     self->watcher_id = dict_watcher_verbose_add(self->dict);
     Py_INCREF(self);
-    Py_INCREF(self->dict);
     return (PyObject *)self;
 }
 
 static PyObject *
 PyDictWatcherContextManager_exit(PyDictWatcherContextManager *self, PyObject *Py_UNUSED(args)) {
     long result = dict_watcher_verbose_remove(self->watcher_id, self->dict);
-    Py_DECREF(self->dict);
     if (result) {
         PyErr_Format(PyExc_RuntimeError, "dict_watcher_verbose_remove() returned %ld", result);
         Py_RETURN_TRUE;
@@ -98,10 +108,11 @@ static PyTypeObject PyDictWatcherContextManager_Type = {
         PyVarObject_HEAD_INIT(NULL, 0)
         .tp_name = "cObject.ContextManager",
         .tp_basicsize = sizeof(PyDictWatcherContextManager),
-//        .tp_dealloc = (destructor) PyDictWatcherContextManager_dealloc,
+        .tp_dealloc = (destructor) PyDictWatcherContextManager_dealloc,
         .tp_flags = Py_TPFLAGS_DEFAULT,
         .tp_methods = PyDictWatcherContextManager_methods,
         .tp_new = (newfunc) PyDictWatcherContextManager_new,
+        .tp_init = (initproc) PyDictWatcherContextManager_init
 };
 
 static PyMethodDef module_methods[] = {

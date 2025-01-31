@@ -30,7 +30,7 @@ def temp_2() -> None:
 def main() -> int:
     # temp()
     temp_2()
-    # dict_watcher()
+    dict_watcher()
     return 0
 
 
