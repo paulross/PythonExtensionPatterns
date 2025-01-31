@@ -251,19 +251,15 @@ get_python_file_name(PyFrameObject *frame) {
 }
 
 static const char *
-get_python_function_name(PyFrameObject *frame, int what, PyObject *arg) {
+get_python_function_name(PyFrameObject *frame) {
     const char *func_name = NULL;
     if (frame) {
-        if (what == PyTrace_C_CALL || what == PyTrace_C_EXCEPTION || what == PyTrace_C_RETURN) {
-            func_name = PyEval_GetFuncName(arg);
-        } else {
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
-            /* See https://docs.python.org/3.11/whatsnew/3.11.html#pyframeobject-3-11-hiding */
-            func_name = (const char *) PyUnicode_1BYTE_DATA(PyFrame_GetCode(frame)->co_name);
+        /* See https://docs.python.org/3.11/whatsnew/3.11.html#pyframeobject-3-11-hiding */
+        func_name = (const char *) PyUnicode_1BYTE_DATA(PyFrame_GetCode(frame)->co_name);
 #else
-            func_name = (const char *) PyUnicode_1BYTE_DATA(frame->f_code->co_name);
+        func_name = (const char *) PyUnicode_1BYTE_DATA(frame->f_code->co_name);
 #endif // PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
-        }
         return func_name;
     }
     return MT_STRING;
@@ -276,17 +272,6 @@ int py_frame_get_line_number(PyFrameObject *frame) {
     return 0;
 }
 
-static const char *WHAT_STRINGS[] = {
-        "CALL",
-        "EXCEPT",
-        "LINE",
-        "RETURN",
-        "C_CALL",
-        "C_EXCEPT",
-        "C_RETURN",
-        "OPCODE",
-};
-
 /**
  *
  * Usage:
@@ -298,12 +283,12 @@ static const char *WHAT_STRINGS[] = {
  * @param arg
  */
 static void
-write_frame_data_to_outfile(FILE *outfile, PyFrameObject *frame, int what, PyObject *arg) {
+write_frame_data_to_outfile(FILE *outfile, PyFrameObject *frame) {
     if (frame) {
         fprintf(outfile,
-                "%-8s %-80s %4d %-32s",
-                WHAT_STRINGS[what], get_python_file_name(frame), py_frame_get_line_number(frame),
-                get_python_function_name(frame, what, arg));
+                "%-80s %6d %-24s",
+                get_python_file_name(frame), py_frame_get_line_number(frame),
+                get_python_function_name(frame));
     } else {
         fprintf(outfile, "No Python frame available.");
     }
@@ -339,8 +324,8 @@ static const char *watch_event_name(PyDict_WatchEvent event) {
 
 // Verbose dictionary callback function prints out Python file/line, dictionary, key and new value.
 static int dict_watcher_verbose(PyDict_WatchEvent event, PyObject *dict, PyObject *key, PyObject *new_value) {
-    write_frame_data_to_outfile(stdout, PyEval_GetFrame(), PyTrace_LINE, Py_None);
-    fprintf(stdout, " Event: %24s", watch_event_name(event));
+    write_frame_data_to_outfile(stdout, PyEval_GetFrame());
+    fprintf(stdout, " Event: %-24s", watch_event_name(event));
     fprintf(stdout, " Dict: ");
     PyObject_Print(dict, stdout, Py_PRINT_RAW);
     fprintf(stdout, " Key (%s): ", Py_TYPE(key)->tp_name);

@@ -18,8 +18,17 @@ def temp() -> None:
     cmm.__exit__()
 
 
+def temp_2() -> None:
+    d = {}
+    watcher_id = cWatchers.py_dict_watcher_verbose_add(d)
+    d['age'] = 22
+    d['age'] = 23
+    cWatchers.py_dict_watcher_verbose_remove(watcher_id, d)
+
+
 def main() -> int:
-    temp()
+    # temp()
+    temp_2()
     # dict_watcher()
     return 0
 
