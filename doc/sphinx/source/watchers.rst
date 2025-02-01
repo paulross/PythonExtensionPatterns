@@ -492,6 +492,42 @@ And the result on ``stdout`` is something like:
     watcher_example.py 14 dict_watcher_demo PyDict_EVENT_ADDED       Dict: {} Key (str): age New value (int): 42
 
 
+.. _PyType_AddWatcher(): https://docs.python.org/3/c-api/type.html#c.PyType_AddWatcher
+.. _PyType_ClearWatcher(): https://docs.python.org/3/c-api/type.html#c.PyType_ClearWatcher
+.. _PyType_Watch(): https://docs.python.org/3/c-api/type.html#c.PyType_Watch
+.. _PyType_UnWatch(): https://docs.python.org/3/c-api/type.html#c.PyType_UnWatch
+.. _PyType_WatchEvent: https://docs.python.org/3/c-api/type.html#c.PyType_WatchEvent
+.. _PyType_WatchCallback(): https://docs.python.org/3/c-api/type.html#c.PyType_WatchCallback
+
+---------------------------
+Type Watchers
+---------------------------
+
+These allow a callback when a type is modified.
+
+This beyond the scope of this version of this document.
+
+More information can be found in https://docs.python.org/3/c-api/type.html
+
+---------------------------
+Function Watchers
+---------------------------
+
+These allow a callback when a function is created and destroyed.
+
+This beyond the scope of this version of this document.
+
+More information can be found in https://docs.python.org/3/c-api/function.html
+
+---------------------------
+Code Watchers
+---------------------------
+
+These allow a callback when code is created and destroyed.
+
+This beyond the scope of this version of this document.
+
+More information can be found in https://docs.python.org/3/c-api/code.html
 
 .. rubric:: Footnotes
 
