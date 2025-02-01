@@ -1499,14 +1499,6 @@ Summary
 
 .. Example footnote [#]_.
 
-.. todo::
-
-    Chapter on watchers, e.g. dict watchers [since Python 3.12]:
-    https://docs.python.org/3/c-api/dict.html#c.PyDict_AddWatcher
-    Also type watchers etc. There does not seem to be a PEP for this.
-    This change has example tests: https://github.com/python/cpython/pull/31787/files
-    Issue: https://github.com/python/cpython/issues/91052
-
 .. rubric:: Footnotes
 
 .. [#] The official `Python documentation <https://docs.python.org/3/c-api/concrete.html>`_ categorises tuples and lists

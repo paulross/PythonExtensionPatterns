@@ -3,10 +3,23 @@
 from cPyExtPatt import cWatchers
 
 
+def dict_watcher_demo() -> None:
+    print('dict_watcher_demo():')
+    d = {}
+    with cWatchers.PyDictWatcher(d):
+        dd = {'age': 17, }
+        d.update(dd)
+        d['age'] = 42
+        del d['age']
+        d['name'] = 'Python'
+        d.clear()
+        del d
+
+
 def dict_watcher_add() -> None:
     print('dict_watcher_add():')
     d = {}
-    with cWatchers.PyDictWatcherContextManager(d):
+    with cWatchers.PyDictWatcher(d):
         d['age'] = 42
 
 
@@ -14,7 +27,7 @@ def dict_watcher_add_and_replace() -> None:
     print('dict_watcher_add_and_replace():')
     d = {}
     d['age'] = 42
-    with cWatchers.PyDictWatcherContextManager(d):
+    with cWatchers.PyDictWatcher(d):
         d['age'] = 43
 
 
@@ -22,7 +35,7 @@ def dict_watcher_add_and_del() -> None:
     print('dict_watcher_add_and_del():')
     d = {}
     d['age'] = 42
-    with cWatchers.PyDictWatcherContextManager(d):
+    with cWatchers.PyDictWatcher(d):
         del d['age']
 
 
@@ -30,7 +43,7 @@ def dict_watcher_add_and_clear() -> None:
     print('dict_watcher_add_and_clear():')
     d = {}
     d['age'] = 42
-    with cWatchers.PyDictWatcherContextManager(d):
+    with cWatchers.PyDictWatcher(d):
         d.clear()
 
 
@@ -38,14 +51,14 @@ def dict_watcher_del() -> None:
     print('dict_watcher_del():')
     d = {}
     d['age'] = 42
-    with cWatchers.PyDictWatcherContextManager(d):
+    with cWatchers.PyDictWatcher(d):
         del d
 
 
 def dict_watcher_cloned() -> None:
     print('dict_watcher_cloned():')
     d = {}
-    with cWatchers.PyDictWatcherContextManager(d):
+    with cWatchers.PyDictWatcher(d):
         dd = {'age': 42, }
         d.update(dd)
 
@@ -54,14 +67,14 @@ def dict_watcher_deallocated() -> None:
     print('dict_watcher_deallocated():')
     d = {'age': 42, }
     dd = d
-    with cWatchers.PyDictWatcherContextManager(dd):
+    with cWatchers.PyDictWatcher(dd):
         del d
         del dd
 
 
 # def temp() -> None:
 #     d = {}
-#     cm = cWatchers.PyDictWatcherContextManager(d)
+#     cm = cWatchers.PyDictWatcher(d)
 #     cmm = cm.__enter__(d)
 #     d['age'] = 42
 #     d['age'] = 43
@@ -80,6 +93,7 @@ def dict_watcher_deallocated() -> None:
 def main() -> int:
     # temp()
     # temp_2()
+    dict_watcher_demo()
     dict_watcher_add()
     dict_watcher_add_and_replace()
     dict_watcher_add_and_del()

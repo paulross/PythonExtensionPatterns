@@ -1,9 +1,9 @@
 //
 // Created by Paul Ross on 30/01/2025.
 //
-#define PPY_SSIZE_T_CLEAN
-
-#include "Python.h"
+//#define PPY_SSIZE_T_CLEAN
+//
+//#include "Python.h"
 
 #include "DictWatcher.h"
 #include "pyextpatt_util.h"
@@ -269,7 +269,7 @@ int get_python_line_number(PyFrameObject *frame) {
     if (frame) {
         return PyFrame_GetLineNumber(frame);
     }
-    return -47;
+    return 0;
 }
 
 /**

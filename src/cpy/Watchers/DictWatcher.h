@@ -6,6 +6,10 @@
 #ifndef PYTHONEXTENSIONPATTERNS_DICTWATCHER_H
 #define PYTHONEXTENSIONPATTERNS_DICTWATCHER_H
 
+#define PPY_SSIZE_T_CLEAN
+
+#include "Python.h"
+
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
 
 long get_static_dict_added(void);

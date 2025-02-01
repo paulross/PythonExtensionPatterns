@@ -45,17 +45,17 @@ typedef struct {
     PyObject_HEAD
     int watcher_id;
     PyObject *dict;
-} PyDictWatcherContextManager;
+} PyDictWatcher;
 
 /** Forward declaration. */
-static PyTypeObject PyDictWatcherContextManager_Type;
+static PyTypeObject PyDictWatcher_Type;
 
-#define PyDictWatcherContextManager_Check(v)      (Py_TYPE(v) == &PyDictWatcherContextManager_Type)
+#define PyDictWatcher_Check(v)      (Py_TYPE(v) == &PyDictWatcher_Type)
 
-static PyDictWatcherContextManager *
-PyDictWatcherContextManager_new(PyObject *Py_UNUSED(arg)) {
-    PyDictWatcherContextManager *self;
-    self = PyObject_New(PyDictWatcherContextManager, &PyDictWatcherContextManager_Type);
+static PyDictWatcher *
+PyDictWatcher_new(PyObject *Py_UNUSED(arg)) {
+    PyDictWatcher *self;
+    self = PyObject_New(PyDictWatcher, &PyDictWatcher_Type);
     if (self == NULL) {
         return NULL;
     }
@@ -65,7 +65,7 @@ PyDictWatcherContextManager_new(PyObject *Py_UNUSED(arg)) {
 }
 
 static PyObject *
-PyDictWatcherContextManager_init(PyDictWatcherContextManager *self, PyObject *args) {
+PyDictWatcher_init(PyDictWatcher *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &self->dict)) {
         return NULL;
     }
@@ -74,20 +74,20 @@ PyDictWatcherContextManager_init(PyDictWatcherContextManager *self, PyObject *ar
 }
 
 static void
-PyDictWatcherContextManager_dealloc(PyDictWatcherContextManager *self) {
+PyDictWatcher_dealloc(PyDictWatcher *self) {
     Py_DECREF(self->dict);
     PyObject_Del(self);
 }
 
 static PyObject *
-PyDictWatcherContextManager_enter(PyDictWatcherContextManager *self, PyObject *Py_UNUSED(args)) {
+PyDictWatcher_enter(PyDictWatcher *self, PyObject *Py_UNUSED(args)) {
     self->watcher_id = dict_watcher_verbose_add(self->dict);
     Py_INCREF(self);
     return (PyObject *)self;
 }
 
 static PyObject *
-PyDictWatcherContextManager_exit(PyDictWatcherContextManager *self, PyObject *Py_UNUSED(args)) {
+PyDictWatcher_exit(PyDictWatcher *self, PyObject *Py_UNUSED(args)) {
     long result = dict_watcher_verbose_remove(self->watcher_id, self->dict);
     if (result) {
         PyErr_Format(PyExc_RuntimeError, "dict_watcher_verbose_remove() returned %ld", result);
@@ -96,23 +96,23 @@ PyDictWatcherContextManager_exit(PyDictWatcherContextManager *self, PyObject *Py
     Py_RETURN_FALSE;
 }
 
-static PyMethodDef PyDictWatcherContextManager_methods[] = {
-        {"__enter__", (PyCFunction) PyDictWatcherContextManager_enter, METH_VARARGS,
-                PyDoc_STR("__enter__() -> PyDictWatcherContextManager")},
-        {"__exit__", (PyCFunction) PyDictWatcherContextManager_exit, METH_VARARGS,
+static PyMethodDef PyDictWatcher_methods[] = {
+        {"__enter__", (PyCFunction) PyDictWatcher_enter, METH_VARARGS,
+                PyDoc_STR("__enter__() -> PyDictWatcher")},
+        {"__exit__", (PyCFunction) PyDictWatcher_exit, METH_VARARGS,
                 PyDoc_STR("__exit__(exc_type, exc_value, exc_tb) -> bool")},
         {NULL, NULL, 0, NULL} /* sentinel */
 };
 
-static PyTypeObject PyDictWatcherContextManager_Type = {
+static PyTypeObject PyDictWatcher_Type = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        .tp_name = "cObject.ContextManager",
-        .tp_basicsize = sizeof(PyDictWatcherContextManager),
-        .tp_dealloc = (destructor) PyDictWatcherContextManager_dealloc,
+        .tp_name = "cWatchers.PyDictWatcher",
+        .tp_basicsize = sizeof(PyDictWatcher),
+        .tp_dealloc = (destructor) PyDictWatcher_dealloc,
         .tp_flags = Py_TPFLAGS_DEFAULT,
-        .tp_methods = PyDictWatcherContextManager_methods,
-        .tp_new = (newfunc) PyDictWatcherContextManager_new,
-        .tp_init = (initproc) PyDictWatcherContextManager_init
+        .tp_methods = PyDictWatcher_methods,
+        .tp_new = (newfunc) PyDictWatcher_new,
+        .tp_init = (initproc) PyDictWatcher_init
 };
 
 static PyMethodDef module_methods[] = {
@@ -142,10 +142,10 @@ PyMODINIT_FUNC PyInit_cWatchers(void) {
     if (!m) {
         goto fail;
     }
-    if (PyType_Ready(&PyDictWatcherContextManager_Type) < 0) {
+    if (PyType_Ready(&PyDictWatcher_Type) < 0) {
         goto fail;
     }
-    if (PyModule_AddObject(m, "PyDictWatcherContextManager", (PyObject *) &PyDictWatcherContextManager_Type)) {
+    if (PyModule_AddObject(m, "PyDictWatcher", (PyObject *) &PyDictWatcher_Type)) {
         goto fail;
     }
     return m;
