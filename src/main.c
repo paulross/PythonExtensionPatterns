@@ -122,6 +122,13 @@ int main(int argc, const char * argv[]) {
     Py_Initialize();
     const char *cwd = current_working_directory("..");
     int failure = 0;
+
+    int32_t py_version_hex = PY_VERSION_HEX;
+    printf("Python version %d.%d.%d Release level: 0x%x Serial: %d Numeric: %12d 0x%08x",
+           PY_MAJOR_VERSION, PY_MINOR_VERSION, PY_MICRO_VERSION,
+           PY_RELEASE_LEVEL, PY_RELEASE_SERIAL,
+           py_version_hex, py_version_hex
+    );
 //    failure = add_path_to_sys_module(cwd);
 //    if (failure) {
 //        printf("add_path_to_sys_module(): Failed with error code %d\n", failure);

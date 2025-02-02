@@ -7,6 +7,15 @@
 
 #include "Python.h"
 
+/* Version as a single 4-byte hex number, e.g. 0x010502B2 == 1.5.2b2
+ * Therefore 0x030C0000 == 3.12.0
+ */
+#if PY_VERSION_HEX < 0x030C0000
+
+#error "Required version of Python is 3.12+ (PY_VERSION_HEX >= 0x030C0000)"
+
+#else
+
 #pragma mark Dictionary Watcher
 
 #include "DictWatcher.h"
@@ -153,3 +162,5 @@ fail:
     Py_XDECREF(m);
     return NULL;
 }
+
+#endif // #if PY_VERSION_HEX >= 0x030C0000

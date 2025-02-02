@@ -8,7 +8,14 @@
 #include "DictWatcher.h"
 #include "pyextpatt_util.h"
 
-#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
+/* Version as a single 4-byte hex number, e.g. 0x010502B2 == 1.5.2b2
+ * Therefore 0x030C0000 == 3.12.0
+ */
+#if PY_VERSION_HEX < 0x030C0000
+
+#error "Required version of Python is 3.12+ (PY_VERSION_HEX >= 0x030C0000)"
+
+#else
 
 // Event counters for a dictionary
 static long static_dict_added = 0L;
@@ -371,4 +378,4 @@ int dict_watcher_verbose_remove(int watcher_id, PyObject *dict) {
     return 0;
 }
 
-#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
+#endif // PY_VERSION_HEX >= 0x030C0000
