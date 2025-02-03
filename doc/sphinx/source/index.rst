@@ -12,6 +12,7 @@ Coding Patterns for Python Extensions
 
     introduction
     simple_example
+    install
     refcount
     containers_and_refcounts
     struct_sequence

@@ -27,7 +27,7 @@ This can be a powerful debugging technique.
 
 Here is an example of a dictionary watcher.
 
-    .. index::
+.. index::
     pair: Watchers; Dictionary
 
 ..

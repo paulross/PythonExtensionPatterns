@@ -6,13 +6,13 @@ History
 =====================
 
 - Add a chapter "Containers and Reference Counts" that corrects and clarifies the Python Documentation.
-- Add a chapter "Struct Sequence Objects (Named Tuples in C)".
 - Add a chapter "Watchers" with practical examples for dictionary watchers (Python 3.12+).
 - Add a chapter "Context Managers".
+- Add a chapter "Installation".
+- Add a chapter "Struct Sequence Objects (Named Tuples in C)".
 - Update "Homogeneous Python Containers and C++".
 - Add a chapter "Debugging Python with CLion".
 - Add a chapter "Source Code Layout".
-- Add a chapter "Building and Testing".
 - Add an extensive index.
 - Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13 (possibly backwards compatible with Python 3.6, 3.7, 3.8).
 

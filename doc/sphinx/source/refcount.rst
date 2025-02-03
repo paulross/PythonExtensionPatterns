@@ -17,7 +17,7 @@ PyObjects and Reference Counting
 =================================
 
 A ``PyObject`` can represent any Python object. It is a fairly minimal C struct consisting of a reference count and a
-pointer to the object type:
+pointer to the object type [#]_:
 
 .. code-block:: c
     
@@ -802,6 +802,8 @@ In the next chapter :ref:`chapter_containers_and_refcounts` we look in more deta
 counts with Python objects and Python containers such as  ``tuple``, ``list``, ``set`` and ``dict``.
 
 .. rubric:: Footnotes
+
+.. [#] This varies slightly between different Python versions.
 
 .. [#] If you are interested in some of the technical details of memory management terms and techniques in a wide
     variety of languages then a great place to start is `<https://www.memorymanagement.org>`_.
