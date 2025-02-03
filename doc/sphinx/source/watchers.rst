@@ -30,7 +30,7 @@ Watchers
 ======================================
 
 From Python 3.12 onwards *watchers* have been added [#]_.
-This allows registering a callback function on specific ``dict``, ``type``, ``code`` and ``function`` objects.
+This allows registering a callback function on specific ``dict``, ``type``, ``code`` or ``function`` object.
 The callback is called with any event that occurs on the specific object.
 
 Here is an example of a dictionary watcher.
@@ -54,9 +54,9 @@ Here is an example of a dictionary watcher.
 Dictionary Watchers
 ---------------------------
 
-We have created a context manager to wrap the low level C code with a watcher called ``cWatchers.PyDictWatcher``
+Here is a context manager ``cWatchers.PyDictWatcher`` that wraps the low level CPython code with a watcher
 that reports every dictionary operation to ``stdout``.
-The code is in ``watcher_example.py``.
+The code is in ``src/cpy/Watchers/watcher_example.py``.
 
 .. code-block:: python
     :linenos:
@@ -102,32 +102,43 @@ the arguments used to manipulate the dictionary:
 
     \end{landscape}
 
-So how does this work?
+There are some obvious variations here:
+
+- Add some prefix to each watcher output line to discriminate it from the rest of stdout.
+- The ID of the dictionary could be added so different dictionaries using the same watcher callback could be
+  discriminated.
+- Different outputs, such as JSON.
+
+But how does this watcher work?
 
 Low Level C Implementation
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
-First we need to create some low level C code that interacts with the watcher API.
+We need some low level C code that interacts with the CPython watcher API.
 First a header file that provides the interface to our dictionary watcher code.
 This declares two functions:
 
-- ``dict_watcher_verbose_add()`` this adds a watcher to a dictionary. This returns the watcher ID.
+- ``dict_watcher_verbose_add()`` this adds a watcher to a dictionary and returns the watcher ID.
 - ``dict_watcher_verbose_remove()`` this removes a watcher ID from a dictionary.
 
 The actual code is in ``src/cpy/Watchers/DictWatcher.h``.
-It looks like this:
+It looks like this, note the Python version guard to ensure this only works with Python 3.12+:
 
 .. code-block:: c
 
     #define PPY_SSIZE_T_CLEAN
     #include "Python.h"
 
-    #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
+    #if PY_VERSION_HEX < 0x030C0000
+
+    #error "Required version of Python is 3.12+ (PY_VERSION_HEX >= 0x030C0000)"
+
+    #else
 
     int dict_watcher_verbose_add(PyObject *dict);
     int dict_watcher_verbose_remove(int watcher_id, PyObject *dict);
 
-    #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
+    #endif // #if PY_VERSION_HEX >= 0x030C0000
 
 So there are several moving parts in the implementation in  ``src/cpy/Watchers/DictWatcher.c``.
 First we have some general purpose functions that extract the file name, function name and line number from a Python
@@ -244,8 +255,9 @@ Then there is a simple little helper function that returns a string based on the
     }
 
 Now we define the callback function that reports the dictionary event to ``stdout``.
-This uses the CPython API ``PyObject_Print`` to print the representation of each object to ``stdout``.
-This has to respect NULL arguments:
+This calles all the functionas above and uses the CPython API ``PyObject_Print`` to print the representation
+of each object to ``stdout``.
+This function has to respect NULL arguments:
 
 .. code-block:: c
 
@@ -276,44 +288,36 @@ This has to respect NULL arguments:
     }
 
 Finally we have the two implementations that register and unregister the callback using the low level Python C API.
-The first registers the callback, returning the watcher ID:
+The first registers the callback, returning the watcher ID (error handling code omitted):
 
 .. code-block:: c
 
     // Set watcher.
     int dict_watcher_verbose_add(PyObject *dict) {
         int watcher_id = PyDict_AddWatcher(&dict_watcher_verbose);
-        int api_ret_val = PyDict_Watch(watcher_id, dict);
+        PyDict_Watch(watcher_id, dict);
         return watcher_id;
     }
 
-The second de-registers the callback, with the watcher ID and the dictionary in question:
+The second de-registers the callback, with the watcher ID and the dictionary in question
+(error handling code omitted):
 
 .. code-block:: c
 
     // Remove watcher.
     int dict_watcher_verbose_remove(int watcher_id, PyObject *dict) {
-        int api_ret_val = PyDict_Unwatch(watcher_id, dict);
-        if (api_ret_val) {
-            return -1;
-        }
-        api_ret_val = PyDict_ClearWatcher(watcher_id);
-        if (api_ret_val) {
-            return -2;
-        }
+        PyDict_Unwatch(watcher_id, dict);
+        PyDict_ClearWatcher(watcher_id);
         return 0;
     }
 
 Exposing This to CPython
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 Now we create a Python module ``cWatchers`` that exposes this low level C code to CPython.
 This code is in ``src/cpy/Watchers/cWatchers.c``.
 
-
-To be Pythonic we create a Context Manager (see :ref:`chapter_context_manager`) in C.
-The context manager holds a reference to the dictionary and the watcher ID.
-Here is the definition which holds a watcher ID and a reference to the dictionary:
+First some module level CPython wrappers around our underlying C code:
 
 .. code-block:: c
 
@@ -322,6 +326,54 @@ Here is the definition which holds a watcher ID and a reference to the dictionar
 
     #include "DictWatcher.h"
 
+    static PyObject *
+    py_dict_watcher_verbose_add(PyObject *Py_UNUSED(module), PyObject *arg) {
+        if (!PyDict_Check(arg)) {
+            PyErr_Format(PyExc_TypeError, "Argument must be a dict not type %s", Py_TYPE(arg)->tp_name);
+            return NULL;
+        }
+        long watcher_id = dict_watcher_verbose_add(arg);
+        return Py_BuildValue("l", watcher_id);
+    }
+
+    static PyObject *
+    py_dict_watcher_verbose_remove(PyObject *Py_UNUSED(module), PyObject *args) {
+        long watcher_id;
+        PyObject *dict = NULL;
+
+        if (!PyArg_ParseTuple(args, "lO", &watcher_id, &dict)) {
+            return NULL;
+        }
+
+        if (!PyDict_Check(dict)) {
+            PyErr_Format(PyExc_TypeError, "Argument must be a dict not type %s", Py_TYPE(dict)->tp_name);
+            return NULL;
+        }
+        long result = dict_watcher_verbose_remove(watcher_id, dict);
+        return Py_BuildValue("l", result);
+    }
+
+    static PyMethodDef module_methods[] = {
+            {"py_dict_watcher_verbose_add",
+                    (PyCFunction) py_dict_watcher_verbose_add,
+                    METH_O,
+                    "Adds watcher to a dictionary. Returns the watcher ID."
+            },
+            {"py_dict_watcher_verbose_remove",
+                    (PyCFunction) py_dict_watcher_verbose_remove,
+                    METH_VARARGS,
+                    "Removes the watcher ID from the dictionary."
+            },
+            {NULL, NULL, 0, NULL} /* Sentinel */
+    };
+
+These are file but to be Pythonic it would be helpful to create a Context Manager
+(see :ref:`chapter_context_manager`) in C.
+The context manager holds a reference to the dictionary and the watcher ID.
+Here is the definition which holds a watcher ID and a reference to the dictionary:
+
+.. code-block:: c
+
     #pragma mark Dictionary Watcher Context Manager
 
     typedef struct {
@@ -329,11 +381,6 @@ Here is the definition which holds a watcher ID and a reference to the dictionar
         int watcher_id;
         PyObject *dict;
     } PyDictWatcher;
-
-    /** Forward declaration. */
-    static PyTypeObject PyDictWatcher_Type;
-
-    #define PyDictWatcher_Check(v) (Py_TYPE(v) == &PyDictWatcher_Type)
 
 Here is the creation code:
 
@@ -354,6 +401,14 @@ Here is the creation code:
     static PyObject *
     PyDictWatcher_init(PyDictWatcher *self, PyObject *args) {
         if (!PyArg_ParseTuple(args, "O", &self->dict)) {
+            return NULL;
+        }
+        if (!PyDict_Check(self->dict)) {
+            PyErr_Format(
+                PyExc_TypeError,
+                "Argument must be a dictionary not a %s",
+                Py_TYPE(self->dict)->tp_name
+            );
             return NULL;
         }
         Py_INCREF(self->dict);
@@ -390,11 +445,11 @@ watcher from the dictionary:
 
     static PyObject *
     PyDictWatcher_exit(PyDictWatcher *self, PyObject *Py_UNUSED(args)) {
-        long result = dict_watcher_verbose_remove(self->watcher_id, self->dict);
+        int result = dict_watcher_verbose_remove(self->watcher_id, self->dict);
         if (result) {
             PyErr_Format(
                 PyExc_RuntimeError,
-                "dict_watcher_verbose_remove() returned %ld",
+                "dict_watcher_verbose_remove() returned %d",
                 result
             );
             Py_RETURN_TRUE;
@@ -490,6 +545,22 @@ And the result on ``stdout`` is something like:
 .. code-block:: text
 
     watcher_example.py 14 dict_watcher_demo PyDict_EVENT_ADDED       Dict: {} Key (str): age New value (int): 42
+
+Without the Context Manager
+---------------------------
+
+If you are putting in some debugging code then a context manager might not be convenient.
+``cWatchers`` provides two functions, ``py_dict_watcher_verbose_add()`` and
+``py_dict_watcher_verbose_remove`` that achieve the same aim:
+
+.. code-block:: python
+
+    from cPyExtPatt import cWatchers
+
+    d = {}
+    watcher_id = cWatchers.py_dict_watcher_verbose_add(d)
+    d['age'] = 42
+    cWatchers.py_dict_watcher_verbose_remove(watcher_id, d)
 
 
 .. _PyType_AddWatcher(): https://docs.python.org/3/c-api/type.html#c.PyType_AddWatcher

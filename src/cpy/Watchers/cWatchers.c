@@ -78,6 +78,10 @@ PyDictWatcher_init(PyDictWatcher *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &self->dict)) {
         return NULL;
     }
+    if (!PyDict_Check(self->dict)) {
+        PyErr_Format(PyExc_TypeError, "Argument must be a dictionary not a %s", Py_TYPE(self->dict)->tp_name);
+        return NULL;
+    }
     Py_INCREF(self->dict);
     return (PyObject *)self;
 }
@@ -97,9 +101,9 @@ PyDictWatcher_enter(PyDictWatcher *self, PyObject *Py_UNUSED(args)) {
 
 static PyObject *
 PyDictWatcher_exit(PyDictWatcher *self, PyObject *Py_UNUSED(args)) {
-    long result = dict_watcher_verbose_remove(self->watcher_id, self->dict);
+    int result = dict_watcher_verbose_remove(self->watcher_id, self->dict);
     if (result) {
-        PyErr_Format(PyExc_RuntimeError, "dict_watcher_verbose_remove() returned %ld", result);
+        PyErr_Format(PyExc_RuntimeError, "dict_watcher_verbose_remove() returned %d", result);
         Py_RETURN_TRUE;
     }
     Py_RETURN_FALSE;

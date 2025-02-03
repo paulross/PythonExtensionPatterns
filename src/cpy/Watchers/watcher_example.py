@@ -72,6 +72,14 @@ def dict_watcher_deallocated() -> None:
         del dd
 
 
+def dict_watcher_add_no_context_manager() -> None:
+    print('dict_watcher_add_no_context_manager():')
+    d = {}
+    watcher_id = cWatchers.py_dict_watcher_verbose_add(d)
+    d['age'] = 42
+    cWatchers.py_dict_watcher_verbose_remove(watcher_id, d)
+
+
 # def temp() -> None:
 #     d = {}
 #     cm = cWatchers.PyDictWatcher(d)
@@ -101,6 +109,7 @@ def main() -> int:
     dict_watcher_del()
     dict_watcher_cloned()
     dict_watcher_deallocated()
+    dict_watcher_add_no_context_manager()
     return 0
 
 
