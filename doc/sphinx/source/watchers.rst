@@ -2,7 +2,7 @@
 .. sectionauthor:: Paul Ross <apaulross@gmail.com>
 
 .. highlight:: python
-    :linenothreshold: 20
+    :linenothreshold: 30
 
 .. toctree::
     :maxdepth: 3
@@ -32,10 +32,11 @@ Watchers
 From Python 3.12 onwards *watchers* have been added [#]_.
 This allows registering a callback function on specific ``dict``, ``type``, ``code`` or ``function`` object.
 The callback is called with any event that occurs on the specific object.
+This can be a powerful debugging technique.
 
 Here is an example of a dictionary watcher.
 
-.. index::
+    .. index::
     pair: Watchers; Dictionary
 
 ..
@@ -71,11 +72,11 @@ The code is in ``src/cpy/Watchers/watcher_example.py``.
         d = {}                              # The dictionary we are going to watch.
         with cWatchers.PyDictWatcher(d):
             dd = {'age': 17, }
-            d.update(dd)                    #
-            d['age'] = 42
-            del d['age']
-            d['name'] = 'Python'
-            d.clear()
+            d.update(dd)                    # Generates event: PyDict_EVENT_CLONED
+            d['age'] = 42                   # Generates event: PyDict_EVENT_MODIFIED
+            del d['age']                    # Generates event: PyDict_EVENT_DELETED
+            d['name'] = 'Python'            # Generates event: PyDict_EVENT_ADDED
+            d.clear()                       # Generates event: PyDict_EVENT_CLEARED
             del d
     
     
@@ -85,6 +86,12 @@ The code is in ``src/cpy/Watchers/watcher_example.py``.
 And the output would be something like this, it reports the Python file, line number, function, event and
 then detail about the arguments used to manipulate the dictionary:
 
+.. raw:: latex
+
+    [Continued on the next page]
+
+    \pagebreak
+
 ..
     .. raw:: latex
     
@@ -93,23 +100,23 @@ then detail about the arguments used to manipulate the dictionary:
 .. code-block:: text
 
     dict_watcher_demo():
-    watcher_example.py     11 dict_watcher_demo        Event: PyDict_EVENT_CLONED     
+    Dict @ 0x0x10fb53c00: watcher_example.py 11 dict_watcher_demo PyDict_EVENT_CLONED
         Dict: {}
         Key (dict): {'age': 17}
         New value : NULL
-    watcher_example.py     12 dict_watcher_demo        Event: PyDict_EVENT_MODIFIED   
+    Dict @ 0x0x10fb53c00: watcher_example.py 12 dict_watcher_demo PyDict_EVENT_MODIFIED
         Dict: {'age': 17}
         Key (str): age
         New value (int): 42
-    watcher_example.py     13 dict_watcher_demo        Event: PyDict_EVENT_DELETED    
+    Dict @ 0x0x10fb53c00: watcher_example.py 13 dict_watcher_demo PyDict_EVENT_DELETED
         Dict: {'age': 42}
         Key (str): age
         New value : NULL
-    watcher_example.py     14 dict_watcher_demo        Event: PyDict_EVENT_ADDED      
+    Dict @ 0x0x10fb53c00: watcher_example.py 14 dict_watcher_demo PyDict_EVENT_ADDED
         Dict: {}
         Key (str): name
         New value (str): Python
-    watcher_example.py     15 dict_watcher_demo        Event: PyDict_EVENT_CLEARED    
+    Dict @ 0x0x10fb53c00: watcher_example.py 15 dict_watcher_demo PyDict_EVENT_CLEARED
         Dict: {'name': 'Python'}
         Key : NULL
         New value : NULL
@@ -122,8 +129,6 @@ then detail about the arguments used to manipulate the dictionary:
 There are some obvious variations here:
 
 - Add some prefix to each watcher output line to discriminate it from the rest of stdout.
-- The ID of the dictionary could be added so different dictionaries using the same watcher callback could be
-  discriminated.
 - Different outputs, such as JSON.
 
 But how does this watcher work?
@@ -171,7 +176,8 @@ First up, getting the Python file name:
     static const unsigned char *
     get_python_file_name(PyFrameObject *frame) {
         if (frame) {
-    #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
+    // Python 3.11+ specific code.
+    #if PY_VERSION_HEX >= 0x030B0000
             /* See:
              * https://docs.python.org/3.11/whatsnew/3.11.html#pyframeobject-3-11-hiding
              */
@@ -182,7 +188,7 @@ First up, getting the Python file name:
             const unsigned char *file_name = PyUnicode_1BYTE_DATA(
                 frame->f_code->co_filename
             );
-    #endif // PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
+    #endif // #if PY_VERSION_HEX >= 0x030B0000
             return file_name;
         }
         return "";
@@ -196,7 +202,8 @@ Now, getting the Python function name:
     get_python_function_name(PyFrameObject *frame) {
         const char *func_name = NULL;
         if (frame) {
-    #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
+    // Python 3.11+ specific code.
+    #if PY_VERSION_HEX >= 0x030B0000
             /* See:
              * https://docs.python.org/3.11/whatsnew/3.11.html#pyframeobject-3-11-hiding
              */
@@ -205,11 +212,17 @@ Now, getting the Python function name:
             );
     #else
             func_name = (const char *) PyUnicode_1BYTE_DATA(frame->f_code->co_name);
-    #endif // PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
+    #endif // #if PY_VERSION_HEX >= 0x030B0000
             return func_name;
         }
         return "";
     }
+
+.. raw:: latex
+
+    [Continued on the next page]
+
+    \pagebreak
 
 Then, getting the Python line number:
 
@@ -280,31 +293,36 @@ This function has to respect NULL arguments:
 
     static int dict_watcher_verbose(PyDict_WatchEvent event, PyObject *dict,
                                     PyObject *key, PyObject *new_value) {
+        fprintf(stdout, "Dict @ 0x%p: ", (void *)dict);
         write_frame_data_to_outfile(stdout, PyEval_GetFrame());
         fprintf(stdout, " Event: %-24s", watch_event_name(event));
+        fprintf(stdout, "\n");
         if (dict) {
-            fprintf(stdout, " Dict: ");
+            fprintf(stdout, "    Dict: ");
             PyObject_Print(dict, stdout, Py_PRINT_RAW);
         } else {
-            fprintf(stdout, " Dict: NULL");
+            fprintf(stdout, "    Dict: NULL");
         }
+        fprintf(stdout, "\n");
         if (key) {
-            fprintf(stdout, " Key (%s): ", Py_TYPE(key)->tp_name);
+            fprintf(stdout, "    Key (%s): ", Py_TYPE(key)->tp_name);
             PyObject_Print(key, stdout, Py_PRINT_RAW);
         } else {
-            fprintf(stdout, " Key : NULL");
+            fprintf(stdout, "    Key : NULL");
         }
+        fprintf(stdout, "\n");
         if (new_value) {
-            fprintf(stdout, " New value (%s): ", Py_TYPE(new_value)->tp_name);
+            fprintf(stdout, "    New value (%s): ", Py_TYPE(new_value)->tp_name);
             PyObject_Print(new_value, stdout, Py_PRINT_RAW);
         } else {
-            fprintf(stdout, " New value : NULL");
+            fprintf(stdout, "    New value : NULL");
         }
         fprintf(stdout, "\n");
         return 0;
     }
 
 Finally we have the two implementations that register and unregister the callback using the low level Python C API.
+This uses `PyDict_AddWatcher()`_ and `PyDict_Watch()`_.
 The first registers the callback, returning the watcher ID (error handling code omitted):
 
 .. code-block:: c
@@ -317,7 +335,8 @@ The first registers the callback, returning the watcher ID (error handling code 
     }
 
 The second de-registers the callback, with the watcher ID and the dictionary in question
-(error handling code omitted):
+(error handling code omitted).
+This uses `PyDict_Unwatch()`_ and `PyDict_ClearWatcher()`_.
 
 .. code-block:: c
 
@@ -346,7 +365,11 @@ First some module level CPython wrappers around our underlying C code:
     static PyObject *
     py_dict_watcher_verbose_add(PyObject *Py_UNUSED(module), PyObject *arg) {
         if (!PyDict_Check(arg)) {
-            PyErr_Format(PyExc_TypeError, "Argument must be a dict not type %s", Py_TYPE(arg)->tp_name);
+            PyErr_Format(
+                PyExc_TypeError,
+                "Argument must be a dict not type %s",
+                Py_TYPE(arg)->tp_name
+            );
             return NULL;
         }
         long watcher_id = dict_watcher_verbose_add(arg);
@@ -363,12 +386,20 @@ First some module level CPython wrappers around our underlying C code:
         }
 
         if (!PyDict_Check(dict)) {
-            PyErr_Format(PyExc_TypeError, "Argument must be a dict not type %s", Py_TYPE(dict)->tp_name);
+            PyErr_Format(
+                PyExc_TypeError,
+                "Argument must be a dict not type %s",
+                Py_TYPE(dict)->tp_name
+            );
             return NULL;
         }
         long result = dict_watcher_verbose_remove(watcher_id, dict);
         return Py_BuildValue("l", result);
     }
+
+Now create the table of module methods:
+
+.. code-block:: c
 
     static PyMethodDef module_methods[] = {
             {"py_dict_watcher_verbose_add",
@@ -384,14 +415,12 @@ First some module level CPython wrappers around our underlying C code:
             {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
-These are file but to be Pythonic it would be helpful to create a Context Manager
+These are all fine but to be Pythonic it would be helpful to create a Context Manager
 (see :ref:`chapter_context_manager`) in C.
 The context manager holds a reference to the dictionary and the watcher ID.
 Here is the definition which holds a watcher ID and a reference to the dictionary:
 
 .. code-block:: c
-
-    #pragma mark Dictionary Watcher Context Manager
 
     typedef struct {
         PyObject_HEAD
@@ -501,10 +530,6 @@ Now we create the ``cWatchers`` module,
 
 .. code-block:: c
 
-    static PyMethodDef module_methods[] = {
-            {NULL, NULL, 0, NULL} /* Sentinel */
-    };
-
     static PyModuleDef cWatchers = {
             PyModuleDef_HEAD_INIT,
             .m_name = "cWatchers",
@@ -557,11 +582,20 @@ And it can be used like this:
     with cWatchers.PyDictWatcher(d):
         d['age'] = 42
 
+.. raw:: latex
+
+    [Continued on the next page]
+
+    \pagebreak
+
 And the result on ``stdout`` is something like:
 
 .. code-block:: text
 
-    watcher_example.py 14 dict_watcher_demo PyDict_EVENT_ADDED       Dict: {} Key (str): age New value (int): 42
+    Dict @ 0x0x10fb53c00: watcher_example.py 12 dict_watcher_demo PyDict_EVENT_ADDED
+        Dict: {}
+        Key (str): age
+        New value (int): 42
 
 Without the Context Manager
 ---------------------------

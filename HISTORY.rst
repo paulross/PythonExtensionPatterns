@@ -7,8 +7,8 @@ History
 
 - Add a chapter "Containers and Reference Counts" that corrects and clarifies the Python Documentation.
 - Add a chapter "Struct Sequence Objects (Named Tuples in C)".
-- Add a chapter "Dict and Type Watchers" (Python 3.12+).
-- Add a chapter on Context Managers.
+- Add a chapter "Watchers" with practical examples for dictionary watchers (Python 3.12+).
+- Add a chapter "Context Managers".
 - Update "Homogeneous Python Containers and C++".
 - Add a chapter "Debugging Python with CLion".
 - Add a chapter "Source Code Layout".

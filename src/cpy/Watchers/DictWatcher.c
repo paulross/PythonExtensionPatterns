@@ -333,6 +333,7 @@ static const char *watch_event_name(PyDict_WatchEvent event) {
 
 // Verbose dictionary callback function prints out Python file/line, dictionary, key and new value.
 static int dict_watcher_verbose(PyDict_WatchEvent event, PyObject *dict, PyObject *key, PyObject *new_value) {
+    fprintf(stdout, "Dict @ 0x%p: ", (void *)dict);
     write_frame_data_to_outfile(stdout, PyEval_GetFrame());
     fprintf(stdout, " Event: %-24s", watch_event_name(event));
     fprintf(stdout, "\n");
