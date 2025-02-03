@@ -1,4 +1,5 @@
 """Example of using watchers."""
+import sys
 
 from cPyExtPatt import cWatchers
 
@@ -14,6 +15,19 @@ def dict_watcher_demo() -> None:
         d['name'] = 'Python'
         d.clear()
         del d
+
+
+def dict_watcher_demo_refcount() -> None:
+    """Checks that the reference count of the dictionary is managed correctly by the context manager."""
+    print('dict_watcher_demo_refcount():')
+    d = {}
+    print(f'Ref count pre  {sys.getrefcount(d)}')
+    ref_count = sys.getrefcount(d)
+    # assert ref_count == 1
+    with cWatchers.PyDictWatcher(d):
+        d['age'] = 42
+    print(f'Ref count post  {sys.getrefcount(d)}')
+    assert sys.getrefcount(d) == ref_count
 
 
 def dict_watcher_add() -> None:
@@ -102,6 +116,7 @@ def main() -> int:
     # temp()
     # temp_2()
     dict_watcher_demo()
+    dict_watcher_demo_refcount()
     dict_watcher_add()
     dict_watcher_add_and_replace()
     dict_watcher_add_and_del()

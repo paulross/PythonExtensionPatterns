@@ -68,10 +68,10 @@ The code is in ``src/cpy/Watchers/watcher_example.py``.
     
     def dict_watcher_demo() -> None:
         print('dict_watcher_demo():')
-        d = {}
+        d = {}                              # The dictionary we are going to watch.
         with cWatchers.PyDictWatcher(d):
             dd = {'age': 17, }
-            d.update(dd)
+            d.update(dd)                    #
             d['age'] = 42
             del d['age']
             d['name'] = 'Python'
@@ -82,25 +82,42 @@ The code is in ``src/cpy/Watchers/watcher_example.py``.
     if __name__ == '__main__':
         dict_watcher_demo()
 
-And the output would be something like this, it reports the Python file, line number, function, event and detail about
-the arguments used to manipulate the dictionary:
+And the output would be something like this, it reports the Python file, line number, function, event and
+then detail about the arguments used to manipulate the dictionary:
 
-.. raw:: latex
-
-    \begin{landscape}
+..
+    .. raw:: latex
+    
+        \begin{landscape}
 
 .. code-block:: text
 
     dict_watcher_demo():
-    watcher_example.py 11 dict_watcher_demo PyDict_EVENT_CLONED      Dict: {} Key (dict): {'age': 17} New value : NULL
-    watcher_example.py 12 dict_watcher_demo PyDict_EVENT_MODIFIED    Dict: {'age': 17} Key (str): age New value (int): 42
-    watcher_example.py 13 dict_watcher_demo PyDict_EVENT_DELETED     Dict: {'age': 42} Key (str): age New value : NULL
-    watcher_example.py 14 dict_watcher_demo PyDict_EVENT_ADDED       Dict: {} Key (str): name New value (str): Python
-    watcher_example.py 15 dict_watcher_demo PyDict_EVENT_CLEARED     Dict: {'name': 'Python'} Key : NULL New value : NULL
+    watcher_example.py     11 dict_watcher_demo        Event: PyDict_EVENT_CLONED     
+        Dict: {}
+        Key (dict): {'age': 17}
+        New value : NULL
+    watcher_example.py     12 dict_watcher_demo        Event: PyDict_EVENT_MODIFIED   
+        Dict: {'age': 17}
+        Key (str): age
+        New value (int): 42
+    watcher_example.py     13 dict_watcher_demo        Event: PyDict_EVENT_DELETED    
+        Dict: {'age': 42}
+        Key (str): age
+        New value : NULL
+    watcher_example.py     14 dict_watcher_demo        Event: PyDict_EVENT_ADDED      
+        Dict: {}
+        Key (str): name
+        New value (str): Python
+    watcher_example.py     15 dict_watcher_demo        Event: PyDict_EVENT_CLEARED    
+        Dict: {'name': 'Python'}
+        Key : NULL
+        New value : NULL
 
-.. raw:: latex
-
-    \end{landscape}
+..
+    .. raw:: latex
+    
+        \end{landscape}
 
 There are some obvious variations here:
 
