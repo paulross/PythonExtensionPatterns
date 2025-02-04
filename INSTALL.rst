@@ -1,3 +1,15 @@
+.. moduleauthor:: Paul Ross <apaulross@gmail.com>
+.. sectionauthor:: Paul Ross <apaulross@gmail.com>
+
+.. highlight:: python
+    :linenothreshold: 20
+
+.. toctree::
+    :maxdepth: 3
+
+.. index::
+    single: Installation
+
 Installation
 ========================
 
@@ -44,6 +56,9 @@ Install the Dependencies
 
     pip install -r requirements.txt
 
+.. index::
+    single: Installation; Testing
+
 Running the Tests
 -----------------------
 
@@ -53,6 +68,9 @@ You now should be able to run the following commands successfully in
 .. code-block:: console
 
     pytest tests/
+
+.. index::
+    single: Installation; Documentation
 
 Building the Documentation
 ----------------------------------
