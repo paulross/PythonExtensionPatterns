@@ -280,7 +280,7 @@ It also converts many runtime errors to compile time errors.
 The types and containers this library supports are:
 
 .. list-table:: **Supported Object types.**
-   :widths: 15 10 40
+   :widths: 20 10 45
    :header-rows: 1
 
    * - **C++ Type**
@@ -511,7 +511,7 @@ The generic function signature looks like this:
     }
 
 .. list-table:: ``very_generic_cpp_std_list_like_to_py_unary()`` template parameters.
-   :widths: 20 75
+   :widths: 30 70
    :header-rows: 1
 
    * - Template Parameter
