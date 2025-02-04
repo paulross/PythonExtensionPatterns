@@ -155,7 +155,7 @@ Homogeneous Python Containers and C++
 Here are some useful generic functions that can convert homogeneous Python containers to and from their C++ STL
 equivalents in this project:
 `Python/C++ homogeneous containers on GitHub <https://github.com/paulross/PyCppContainers>`_
-The project uses a mixture of templates and code generation to provide 200+ functions to convert to and from
+The project uses a mixture of templates and code generation to provide 300+ functions to convert to and from
 C++ and Python containers.
 
 Here is the introduction to that project:
@@ -215,7 +215,7 @@ Suppose that you have a Python list of floats and need to pass it to a C++ libra
 If the result of that call modifies the C++ vector, or creates a new one, you need to return a Python list of floats
 from the result.
 
-Your C++ code might look like this:
+Your C++ code might look like this (error checking omitted):
 
 .. code-block:: cpp
 
@@ -404,13 +404,21 @@ C++ ``std::map<long, std::string>>`` then a function using the conversion code u
     #include "python_convert.h"
 
     void convert_py_data_to_cpp(PyObject *arg) {
-        std::unordered_map<long, std::string> map;
+        std::map<long, std::string> map;
         if (Python_Cpp_Containers::py_dict_to_cpp_std_map_like(arg, map)) {
             // Handle error...
         } else {
             // Use the map...
         }
     }
+
+.. note::
+
+    If you were to change the C++ container to a ``std::unordered_map<long, std::string>`` the function call
+    ``py_dict_to_cpp_std_map_like()`` would be the same.
+    Of course ``py_dict_to_cpp_std_map_like()`` would then dispatch to code handling a
+    ``std::unordered_map<long, std::string>``.
+
 
 C++ to Python
 -------------------
@@ -474,7 +482,7 @@ Another example, suppose the C++ data source is a ``std::map<long, std::string>>
 The Hand Written Functions
 =============================
 
-At the heart off this library here are only six non-trivial hand written functions along with a much larger of
+At the heart off this library here are just six non-trivial hand written functions along with a much larger of
 generated functions that successively specialise these handwritten functions.
 They are defined as templates in ``src/cpy/python_object_convert.h``.
 
@@ -482,7 +490,7 @@ They are defined as templates in ``src/cpy/python_object_convert.h``.
 * Two C++ templates for Python ``set`` / ``frozenset`` to and from ``std::unordered_set`` for all types.
 * Two C++ templates for Python ``dict`` to and from ``std::map`` or ``std::unordered_map`` for all type pairs.
 
-These six handwritten templates are short, fairly simple and comprehensible.
+These six handwritten templates are short, simple and comprehensible.
 Then, for simplicity, a Python script is used to create the final, instantiated, 352 functions.
 
 As an example, here how the function is developed that converts a Python list of ``float`` to and from a C++
@@ -517,7 +525,7 @@ The generic function signature looks like this:
    * - Template Parameter
      - Notes
    * - ``ListLike``
-     - The C++ container type, either a ``std::vector<T>`` or ``std::list<T>``.
+     - The C++ container type, either a ``std::vector`` or ``std::list``.
    * - ``T``
      - The C++ type of the objects in the target C++ container.
    * - ``ConvertCppToPy``
@@ -583,8 +591,7 @@ The implementation is fairly straightforward in ``src/cpy/python_object_convert.
                     PyErr_Format(PyExc_ValueError, "C++ value of can not be converted.");
                     goto except;
                 }
-                // PyUnaryContainer_Set usually wraps a void function, always succeeds
-                // returning non-zero.
+                // PyUnaryContainer_Set wraps a function returning non-zero on error.
                 if (PyUnaryContainer_Set(ret, i++, op)) { // Stolen reference.
                     PyErr_Format(PyExc_RuntimeError, "Can not set unary value.");
                     goto except;
@@ -632,6 +639,20 @@ As an example this is specialised for a C++ ``std::vector`` and a Python ``list`
     The use of the function pointers to ``py_list_new``, and ``py_list_set`` that are defined in this
     project namespace.
     These are thin wrappers around existing functions or macros in ``"Python.h"``.
+    There is no error checking in these functions.
+
+    For example:
+
+    .. code-block:: c
+
+            PyObject *py_list_new(size_t len) {
+                return PyList_New(len);
+            }
+            int py_list_set(PyObject *list_p, size_t pos, PyObject *op) {
+                // No error checking, always "succeeds".
+                PyList_SET_ITEM(list_p, pos, op);
+                return 0;
+            }
 
 There is a similar partial specialisation for a Python ``tuple``:
 
@@ -648,6 +669,19 @@ There is a similar partial specialisation for a Python ``tuple``:
         >(container);
     }
 
+And the tuple functions are trivial and look like the list ones in the note above.
+There is no error checking in these functions:
+
+.. code-block:: c
+
+    PyObject *py_tuple_new(size_t len) {
+        return PyTuple_New(len);
+    }
+    int py_tuple_set(PyObject *tuple_p, size_t pos, PyObject *op) {
+        // No error checking, always "succeeds".
+        PyTuple_SET_ITEM(tuple_p, pos, op);
+        return 0;
+    }
 
 Converting a Python ``tuple`` or ``list`` to a C++ ``std::vector<T>`` or ``std::list<T>``
 --------------------------------------------------------------------------------------------------
@@ -682,7 +716,7 @@ This template has these parameters:
    * - Template Parameter
      - Notes
    * - ``ListLike``
-     - The C++ container type, either a ``std::vector<T>`` or ``std::list<T>``.
+     - The C++ container type, either a ``std::vector`` or ``std::list``.
    * - ``T``
      - The C++ type of the objects in the target C++ container.
    * - ``PyObject_Check``
@@ -824,6 +858,21 @@ In the particular case of a ``std::vector`` we can use ``.reserve()`` as an opti
     The use of the function pointers to ``py_list_check``, ``py_list_len`` and ``py_list_get`` that are defined in this
     project namespace.
     These are thin wrappers around existing functions or macros in ``"Python.h"``.
+    There is no error checking in these functions.
+
+    For example:
+
+    .. code-block:: c
+
+            int py_list_check(PyObject *op) {
+                return PyList_Check(op);
+            }
+            Py_ssize_t py_list_len(PyObject *op) {
+                return PyList_Size(op);
+            }
+            PyObject *py_list_get(PyObject *list_p, size_t pos) {
+                return PyList_GET_ITEM(list_p, pos);
+            }
 
 There is a similar partial specialisation for the Python ``tuple``:
 
@@ -843,6 +892,9 @@ There is a similar partial specialisation for the Python ``tuple``:
                 &py_tuple_check, &py_tuple_len, &py_tuple_get
         >(op, container);
     }
+
+The functions ``py_tuple_len`` and ``py_tuple_get`` are thin wrappers round existing functions or macros in
+``"Python.h"`` as above.
 
 Generated Functions
 =============================
@@ -939,6 +991,13 @@ And the concrete definition is in *auto_py_convert_internal.cpp*:
         >(op, container);
     }
 
+
+.. raw:: latex
+
+    [Continued on the next page]
+
+    \pagebreak
+
 This is the function hierarchy for the code that converts Python ``list`` and ``tuple`` to C++ ``std::vector<T>`` or
 ``std::list<T>`` for all supported object types.
 
@@ -959,6 +1018,10 @@ This is the function hierarchy for the code that converts Python ``list`` and ``
             |                               |      |       |         Generated declaration
     py_list_to_cpp_std_list_like<double>   ...    ...     ...    <-- and implementation
                                                                      (one liners)
+
+
+More information can be found from this project
+`Python/C++ homogeneous containers on GitHub <https://github.com/paulross/PyCppContainers>`_.
 
 
 .. rubric:: Footnotes

@@ -197,12 +197,15 @@ Building Everything
 At the project root there is a script ``build_all.sh`` which, for every supported version of Python:
 
 - Creates a Python virtual environment (deleting any existing one).
+- Run ``pip install -r requirements.txt`` onn the virtual environment.
 - Run ``python setup.py develop`` in that virtual environment.
 - Run ``pytest tests/``.
 - Run ``python setup.py bdist_wheel``.
 - Run ``python setup.py sdist``.
 - Create the documentation.
 - Report the results.
+
+The script will halt on the first error returning the error code.
 
 Takes about 70 seconds per Python version.
 
