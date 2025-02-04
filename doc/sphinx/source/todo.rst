@@ -15,11 +15,6 @@ Existing TODOs
 .. todolist::
 
 
-.. todo::
-
-    Add a chapter on installation and testing.
-
-
 --------------------------------------------
 Work Estimate for v0.3.0 Release
 --------------------------------------------
