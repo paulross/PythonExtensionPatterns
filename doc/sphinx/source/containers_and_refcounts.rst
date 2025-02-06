@@ -1471,6 +1471,20 @@ The C function signature is:
 
     int PyDict_Next(PyObject *p, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue);
 
+.. index::
+    single: Dictionary; Py_BuildValue()
+
+``Py_BuildValue()``
+^^^^^^^^^^^^^^^^^^^^
+
+`Py_BuildValue()`_ is a very convenient way to create dictionaries.
+``Py_BuildValue("{OO}", key, value);`` will increment the refcount of the key and value and this can,
+potentially, leak.
+
+.. code-block:: c
+
+    int PyDict_Next(PyObject *p, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue);
+
 
 .. _chapter_containers_and_refcounts.sets:
 
