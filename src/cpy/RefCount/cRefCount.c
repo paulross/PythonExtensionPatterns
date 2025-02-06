@@ -2869,6 +2869,8 @@ test_PyDict_Pop_key_absent(PyObject *Py_UNUSED(module)) {
     return PyLong_FromLong(return_value);
 }
 
+#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
 static PyObject *
 test_PySet_Add(PyObject *Py_UNUSED(module)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
@@ -2985,8 +2987,6 @@ test_PySet_Pop(PyObject *Py_UNUSED(module)) {
     assert(!PyErr_Occurred());
     return PyLong_FromLong(return_value);
 }
-
-#endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 #define MODULE_NOARGS_ENTRY(name, doc)  \
     {                                   \
