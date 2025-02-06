@@ -233,6 +233,12 @@ int main(int argc, const char * argv[]) {
     dbg_PyDict_EVENT_MODIFIED_same_value_no_event();
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
 
+#pragma mark - Dictionaries
+    dbg_PySet_Add();
+    dbg_PySet_Discard();
+    dbg_PySet_Pop();
+
+
     printf("Bye, bye!\n");
     return failure;
 }

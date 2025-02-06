@@ -38,14 +38,14 @@ Python extension in C.
 I really struggled to bring my knowledge of both languages to their very complicated, and crucial, codebase.
 To be honest I don't think I did a great job, but as I was the 'owner' I somehow got away with it.
 
-After about six months of anxiety it occurred to me that, rather learning from their scrappy CPython C code,
+After some time it occurred to me that, rather learning from their scrappy CPython C code,
 I asked myself "how would you write a Python C Extension from scratch?".
 So on the commute and at weekends I did just that and slowly things became clearer.
 This eventually lead me to being invited to PyConUS to give a talk about the subject.
 This document is a synthesis of the latter journey which ended up giving me far more confidence about the subject than
 during my earlier difficulties.
 
-My fond hope is that you will find that this document makes it much easier to work in this field.
+My fond hope is that you will find that this document makes it much easier to work in this field than I found initially.
 Another way of saying that is that I dedicate this document to you, and your work.
 
 So why write Python C Extensions?
@@ -88,7 +88,8 @@ C and C++ have more specific deallocation policies than with a garbage collected
 The GIL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-C Extensions do not need the Global Interpreter Lock (GIL) when working with C/C++ code.
+C Extensions do not need the Global Interpreter Lock (GIL) when working with C/C++ code which do *not* make calls to
+the CPython API.
 
 ---------------------
 Why Not?
@@ -178,4 +179,4 @@ Next up: a simple example showing the effect on code performance.
 .. rubric:: Footnotes
 
 .. [#] Huge, but pretty consistent once mastered.
-.. [#] Version 0.2 of this project supports Python versions: 3.9, 3.10, 3.11, 3.12, 3.13.
+.. [#] Version 0.3 of this project supports Python versions: 3.9, 3.10, 3.11, 3.12, 3.13.

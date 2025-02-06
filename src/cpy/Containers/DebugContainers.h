@@ -78,6 +78,13 @@ void dbg_PyDict_Pop_key_present(void);
 void dbg_PyDict_Pop_key_absent(void);
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
+#pragma mark - Sets
+
+void dbg_PySet_Add(void);
+void dbg_PySet_Discard(void);
+void dbg_PySet_Pop(void);
+
+
 #if ACCEPT_SIGSEGV
 void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void);
 void dbg_PyList_SetItem_SIGSEGV_on_same_value(void);

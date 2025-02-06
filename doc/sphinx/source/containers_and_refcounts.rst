@@ -823,7 +823,6 @@ Summary
 
 
 .. Links, mostly to the Python documentation:
-   TODO: Investigate/create tests for all of these.
 
 .. Setters
 
@@ -1481,10 +1480,14 @@ The C function signature is:
 ``Py_BuildValue("{OO}", key, value);`` will increment the refcount of the key and value and this can,
 potentially, leak.
 
-.. code-block:: c
 
-    int PyDict_Next(PyObject *p, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue);
+.. Links, mostly to the Python documentation:
 
+.. Setters
+
+.. _PySet_Add(): https://docs.python.org/3/c-api/set.html#c.PySet_Add
+.. _PySet_Discard(): https://docs.python.org/3/c-api/set.html#c.PySet_Discard
+.. _PySet_Pop(): https://docs.python.org/3/c-api/set.html#c.PySet_Pop
 
 .. _chapter_containers_and_refcounts.sets:
 
@@ -1495,21 +1498,128 @@ potentially, leak.
 Sets
 -----------------------
 
-.. todo::
+.. index::
+    single: PySet_Add()
+    single: Set; PySet_Add()
 
-    Complete chapter :ref:`chapter_containers_and_refcounts` section :ref:`chapter_containers_and_refcounts.sets`.
+``PySet_Add()``
+--------------------
+
+`PySet_Add()`_ is fairly straightforward.
+The set will increment the reference count of the value thus:
+
+.. code-block:: c
+
+    PyObject *container = PySet_New(NULL);
+    /* Py_REFCNT(container) is 1 */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* Py_REFCNT(value) is 1 */
+    int ret_val = PySet_Add(container, value);
+    assert(ret_val == 0);
+    /* Py_REFCNT(value) is now 2 */
+
+    /* Add duplicate. */
+    ret_val = PySet_Add(container, value);
+    assert(ret_val == 0);
+    /* Py_REFCNT(value) is still 2 */
+
+    /* Clean up. */
+    Py_DECREF(container);
+    /* Py_REFCNT(value) is now 1 */
+    Py_DECREF(value);
+
+.. index::
+    single: PySet_Discard()
+    single: Set; PySet_Discard()
+
+``PySet_Discard()``
+--------------------
+
+`PySet_Discard()`_ is also fairly straightforward.
+The set will discard (:ref:`chapter_containers_and_refcounts.discarded`) the value thus:
+
+.. code-block:: c
+
+    PyObject *container = PySet_New(NULL);
+    /* Py_REFCNT(container) is 1 */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* Py_REFCNT(value) is 1 */
+    int ret_val = PySet_Add(container, value);
+    assert(ret_val == 0);
+    /* Py_REFCNT(value) is now 2 */
+
+    /* Discard. */
+    ret_val = PySet_Discard(container, value);
+    assert(ret_val == 1);
+    /* Py_REFCNT(value) is now 1 */
+
+    /* Clean up. */
+    Py_DECREF(container);
+    /* Py_REFCNT(value) is still 1 */
+    Py_DECREF(value);
+
+.. index::
+    single: PySet_Pop()
+    single: Set; PySet_Pop()
+
+``PySet_Pop()``
+--------------------
+
+`PySet_Pop()`_ will return a *new* reference to the existing object and it is up to caller to decrement the
+reference count appropriately.
+
+For example, the reference counts work as follows:
+
+.. code-block:: c
+
+    PyObject *container = PySet_New(NULL);
+    /* Py_REFCNT(container) is 1 */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* Py_REFCNT(value) is 1 */
+    int ret_val = PySet_Add(container, value);
+    assert(ret_val == 0);
+    /* Py_REFCNT(value) is now 2 */
+
+    /* Pop. */
+    PyObject *popped_value = PySet_Pop(container);
+    assert(popped_value == value);
+    /* Py_REFCNT(value) is still 2 */
+
+    /* Clean up. */
+    Py_DECREF(container);
+    /* Py_REFCNT(value) is still 2 so need to double Py_DECREF calls. */
+    Py_DECREF(value);
+    Py_DECREF(value);
+
+So this is how `PySet_Pop()`_  might be used in practice:
+
+.. code-block:: c
 
 
-.. _chapter_containers_and_refcounts.summary:
+    void add_to_set(PyObject *container) {
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        /* Py_REFCNT(value) is 1 */
+        int ret_val = PySet_Add(container, value);
+        assert(ret_val == 0);
+        /* Py_REFCNT(value) is now 2 */
+        /* Decrement our local value */
+        Py_DECREF(value);
+        /* Now the container has the only reference to the value. */
+    }
 
------------------------
-Summary
------------------------
+    void pop_from_set(PyObject *container) {
+        PyObject *value = PySet_Pop(container);
+        /* Do something with the value... */
 
-.. todo::
+        /* Then as we 'own' value we need to free it. */
+        Py_DECREF(value);
+    }
 
-    Complete chapter :ref:`chapter_containers_and_refcounts` section :ref:`chapter_containers_and_refcounts.summary`.
-
+    PyObject *container = PySet_New(NULL);
+    add_to_set(container);
+    pop_from_set(container);
+    /* Clean up. */
+    Py_DECREF(container);
 
 .. Example footnote [#]_.
 

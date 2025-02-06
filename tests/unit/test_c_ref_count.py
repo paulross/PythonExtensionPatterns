@@ -48,6 +48,9 @@ def test_module_dir_pre_3_13():
         'test_PyList_SetItem_replace_same',
         'test_PyList_SetItem_steals',
         'test_PyList_SetItem_steals_replace',
+        'test_PySet_Add',
+        'test_PySet_Discard',
+        'test_PySet_Pop',
         'test_PyTuple_Py_BuildValue',
         'test_PyTuple_Py_PyTuple_Pack',
         'test_PyTuple_SET_ITEM_NULL',
@@ -114,6 +117,9 @@ def test_module_dir_3_13():
         'test_PyList_SetItem_replace_same',
         'test_PyList_SetItem_steals',
         'test_PyList_SetItem_steals_replace',
+        'test_PySet_Add',
+        'test_PySet_Discard',
+        'test_PySet_Pop',
         'test_PyTuple_Py_BuildValue',
         'test_PyTuple_Py_PyTuple_Pack',
         'test_PyTuple_SET_ITEM_NULL',
@@ -371,3 +377,15 @@ def test_PyDict_Pop_key_present():
 @pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
 def test_PyDict_Pop_key_absent():
     assert cRefCount.test_PyDict_Pop_key_absent() == 0
+
+
+def test_PySet_Add():
+    assert cRefCount.test_PySet_Add() == 0
+
+
+def test_PySet_Discard():
+    assert cRefCount.test_PySet_Discard() == 0
+
+
+def test_PySet_Pop():
+    assert cRefCount.test_PySet_Pop() == 0

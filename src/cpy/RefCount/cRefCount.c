@@ -2581,7 +2581,7 @@ test_PyDict_SetDefault_default_used(void) {
     TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_default, 1L, "container after PyObject *container = PyDict_New();");
 
     get_item = PyDict_SetDefault(container, key, value_default);
-    if (! get_item) {
+    if (!get_item) {
         assert(0);
     }
     assert(PyDict_Size(container) == 1);
@@ -2869,6 +2869,123 @@ test_PyDict_Pop_key_absent(PyObject *Py_UNUSED(module)) {
     return PyLong_FromLong(return_value);
 }
 
+static PyObject *
+test_PySet_Add(PyObject *Py_UNUSED(module)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    PyObject *container = PySet_New(NULL);
+    assert(container);
+    assert(PySet_GET_SIZE(container) == 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "container after PyObject *container = PySet_New(NULL);");
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "New value");
+
+    int ret_val = PySet_Add(container, value);
+    if (ret_val != 0) {
+        return PyLong_FromLong(-1);
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after PySet_Add()");
+
+    // Add duplicate.
+    ret_val = PySet_Add(container, value);
+    if (ret_val != 0) {
+        return PyLong_FromLong(-1);
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after second PySet_Add()");
+
+    Py_DECREF(container);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value after Py_DECREF(container);");
+
+    /* Clean up. */
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PySet_Discard(PyObject *Py_UNUSED(module)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    PyObject *container = PySet_New(NULL);
+    assert(container);
+    assert(PySet_GET_SIZE(container) == 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "container after PyObject *container = PySet_New(NULL);");
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "New value");
+
+    int ret_val = PySet_Add(container, value);
+    if (ret_val != 0) {
+        return PyLong_FromLong(-1);
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after PySet_Add()");
+
+    // Discard.
+    if (PySet_Discard(container, value) != 1) {
+        return PyLong_FromLong(-2);
+    }
+    assert(PySet_GET_SIZE(container) == 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value after PySet_Discard(container, value)");
+
+    Py_DECREF(container);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value after Py_DECREF(container);");
+
+    /* Clean up. */
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
+static PyObject *
+test_PySet_Pop(PyObject *Py_UNUSED(module)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    PyObject *container = PySet_New(NULL);
+    assert(container);
+    assert(PySet_GET_SIZE(container) == 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "container after PyObject *container = PySet_New(NULL);");
+
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "New value");
+
+    int ret_val = PySet_Add(container, value);
+    if (ret_val != 0) {
+        return PyLong_FromLong(-1);
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after PySet_Add()");
+
+    // Pop.
+    PyObject *popped_value = PySet_Pop(container);
+    assert(popped_value == value);
+    assert(PySet_GET_SIZE(container) == 0);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after PySet_Pop(container)");
+
+    Py_DECREF(container);
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value after Py_DECREF(container);");
+
+    /* Clean up. */
+    Py_DECREF(value);
+    Py_DECREF(value);
+
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 #define MODULE_NOARGS_ENTRY(name, doc)  \
@@ -2986,6 +3103,10 @@ static PyMethodDef module_methods[] = {
         MODULE_NOARGS_ENTRY(test_PyDict_Pop_key_absent,
                             "Check that PyDict_Pop() works when the key is absent."),
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+#pragma mark - Testing Sets
+        MODULE_NOARGS_ENTRY(test_PySet_Add, "Check PySet_Add()."),
+        MODULE_NOARGS_ENTRY(test_PySet_Discard, "Check test_PySet_Discard()."),
+        MODULE_NOARGS_ENTRY(test_PySet_Pop, "Check PySet_Pop()."),
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
