@@ -11,10 +11,93 @@
 #include <Python.h>
 #include "structmember.h"
 
+// Example test case: Modules/_testcapimodule.c test_structseq_newtype_doesnt_leak()
+static PyObject *
+test_structseq_newtype_doesnt_leak(PyObject *Py_UNUSED(self),
+                                   PyObject *Py_UNUSED(args))
+{
+    PyStructSequence_Desc descr;
+    PyStructSequence_Field descr_fields[3];
+
+    descr_fields[0] = (PyStructSequence_Field){"foo", "foo value"};
+    descr_fields[1] = (PyStructSequence_Field){NULL, "some hidden value"};
+    descr_fields[2] = (PyStructSequence_Field){0, NULL};
+
+    descr.name = "_testcapi.test_descr";
+    descr.doc = "This is used to test for memory leaks in NewType";
+    descr.fields = descr_fields;
+    descr.n_in_sequence = 1;
+
+    PyTypeObject* structseq_type = PyStructSequence_NewType(&descr);
+    assert(structseq_type != NULL);
+    assert(PyType_Check(structseq_type));
+    assert(PyType_FastSubclass(structseq_type, Py_TPFLAGS_TUPLE_SUBCLASS));
+    Py_DECREF(structseq_type);
+
+    Py_RETURN_NONE;
+}
+
+// Fairly complicated examples in: Modules/posixmodule.c
+// A simple example:
+
+PyDoc_STRVAR(TerminalSize_docstring,
+             "A tuple of (columns, lines) for holding terminal window size");
+
+static PyStructSequence_Field TerminalSize_fields[] = {
+        {"columns", "width of the terminal window in characters"},
+        {"lines", "height of the terminal window in characters"},
+        {NULL, NULL}
+};
+
+static PyStructSequence_Desc TerminalSize_desc = {
+        "os.terminal_size",
+        TerminalSize_docstring,
+        TerminalSize_fields,
+        3,
+};
+
+//void foo() {
+////    {PyStructSequence_UnnamedField, "height of the terminal window in characters"},
+//    TerminalSize_desc.fields[2].name = PyStructSequence_UnnamedField;
+//}
+
+// PyObject *TerminalSizeType = (PyObject *)PyStructSequence_NewType(&TerminalSize_desc);
+
+// Module initialisation
+typedef struct {
+    PyObject *billion;
+    PyObject *DirEntryType;
+    PyObject *ScandirIteratorType;
+#if defined(HAVE_SCHED_SETPARAM) || defined(HAVE_SCHED_SETSCHEDULER) || defined(POSIX_SPAWN_SETSCHEDULER) || defined(POSIX_SPAWN_SETSCHEDPARAM)
+    PyObject *SchedParamType;
+#endif
+    PyObject *StatResultType;
+    PyObject *StatVFSResultType;
+    PyObject *TerminalSizeType;
+    PyObject *TimesResultType;
+    PyObject *UnameResultType;
+#if defined(HAVE_WAITID) && !defined(__APPLE__)
+    PyObject *WaitidResultType;
+#endif
+#if defined(HAVE_WAIT3) || defined(HAVE_WAIT4)
+    PyObject *struct_rusage;
+#endif
+    PyObject *st_mode;
+} _posixstate;
+
+#if 0
+/* initialize TerminalSize_info */
+PyObject *TerminalSizeType = (PyObject *)PyStructSequence_NewType(&TerminalSize_desc);
+if (TerminalSizeType == NULL) {
+return -1;
+}
+Py_INCREF(TerminalSizeType);
+PyModule_AddObject(m, "terminal_size", TerminalSizeType);
+state->TerminalSizeType = TerminalSizeType;
+#endif
 
 
-
-
+/* Example of a C struct to PyStructSequence ??? */
 
 
 
