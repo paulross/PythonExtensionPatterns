@@ -9,7 +9,8 @@ Introduction
 ============
 
 This projects explores reliable patterns of coding Python Extensions in C.
-It covers the essentials of reference counts, exceptions and creating functions that are safe and efficient.
+It covers the essentials of reference counts, exceptions and creating objects and functions that are safe and
+efficient.
 
 Writing Python C Extensions can be daunting; you have to cast aside the security and fluidity of Python and embrace C,
 not just C but Pythons C API, which is huge [#]_ and changes between versions [#]_.
