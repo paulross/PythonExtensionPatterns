@@ -2702,12 +2702,3 @@ void dbg_PyDict_GetItem_key_NULL(void) {
 }
 
 #endif // ACCEPT_SIGSEGV
-
-/**
- * TODO:
- *
- * We should cover named tuples/dataclasses etc.:
- * https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
- *
- */
-

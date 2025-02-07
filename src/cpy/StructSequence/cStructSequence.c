@@ -5,6 +5,14 @@
 // Documentation: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
 // Example test case: Modules/_testcapimodule.c test_structseq_newtype_doesnt_leak()
 // Fairly complicated example: Modules/posixmodule.c
+/**
+ * TODO:
+ *
+ * We should cover named tuples/dataclasses etc.:
+ * https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
+ *
+ */
+
 
 #define PY_SSIZE_T_CLEAN
 
