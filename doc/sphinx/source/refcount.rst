@@ -767,7 +767,7 @@ memory at the process end.
 In this case you could make the choice to ignore decrementing reference counts (or gratuitously increase the reference
 count) so that objects are never free'd thus a segmentation fault is impossible.
 This is similar to the way some compilers use ``malloc()`` but never bother with ``free()``.
-Also refered to as the
+Also referred to as the
 `Null Garbage Collector [devblogs.microsoft.com] <https://devblogs.microsoft.com/oldnewthing/20180228-00/?p=98125>`_.
 The rationale is that there may be any number of references to an internal data structure and it is dangerous to
 invalidate any of them whereas if the compiler is a short running process then leaks are unimportant (you hope).
