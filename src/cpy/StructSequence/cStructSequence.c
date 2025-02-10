@@ -69,6 +69,16 @@ static PyStructSequence_Desc TerminalSize_desc = {
 //    TerminalSize_desc.fields[2].name = PyStructSequence_UnnamedField;
 //}
 
+// Adding a type to a module. From _lsprof.c
+//state->stats_entry_type = PyStructSequence_NewType(&profiler_entry_desc);
+//if (state->stats_entry_type == NULL) {
+//return -1;
+//}
+//if (PyModule_AddType(module, state->stats_entry_type) < 0) {
+//return -1;
+//}
+
+
 // PyObject *TerminalSizeType = (PyObject *)PyStructSequence_NewType(&TerminalSize_desc);
 
 // Module initialisation

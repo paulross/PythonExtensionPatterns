@@ -233,11 +233,14 @@ int main(int argc, const char * argv[]) {
     dbg_PyDict_EVENT_MODIFIED_same_value_no_event();
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
 
-#pragma mark - Dictionaries
+#pragma mark - Sets
     dbg_PySet_Add();
     dbg_PySet_Discard();
     dbg_PySet_Pop();
 
+#pragma mark - Struct Sequence
+    dbg_PyStructSequence_simple_ctor();
+    dbg_PyStructSequence_setitem_abandons();
 
     printf("Bye, bye!\n");
     return failure;

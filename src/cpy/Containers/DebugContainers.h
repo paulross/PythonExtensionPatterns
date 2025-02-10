@@ -84,6 +84,10 @@ void dbg_PySet_Add(void);
 void dbg_PySet_Discard(void);
 void dbg_PySet_Pop(void);
 
+#pragma mark - Struct Sequence
+
+void dbg_PyStructSequence_simple_ctor(void);
+void dbg_PyStructSequence_setitem_abandons(void);
 
 #if ACCEPT_SIGSEGV
 void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void);

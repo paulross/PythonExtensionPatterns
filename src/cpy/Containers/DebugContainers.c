@@ -2501,6 +2501,108 @@ void dbg_PySet_Pop(void) {
     assert(!PyErr_Occurred());
 }
 
+#pragma mark - Struct Sequence
+
+static PyStructSequence_Field struct_sequence_simple_type_fields[] = {
+        {"family_name", "Family name."},
+        {"given_name", "Given name."},
+        {0, ""}
+};
+
+static PyStructSequence_Desc struct_sequence_simple_type_desc = {
+        "module.struct_sequence_simple",
+        ".",
+        struct_sequence_simple_type_fields,
+        2,
+};
+
+static PyTypeObject *example_type = NULL;
+
+void dbg_PyStructSequence_simple_ctor(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    if (example_type == NULL) {
+        example_type = PyStructSequence_NewType(&struct_sequence_simple_type_desc);
+    }
+    assert(example_type != NULL);
+
+    PyObject *instance = PyStructSequence_New(example_type);
+
+    ref_count = Py_REFCNT(instance);
+    assert(ref_count == 1);
+
+    /* Get an unset item. */
+    PyObject *get_item = NULL;
+    get_item = PyStructSequence_GetItem(instance, 0);
+    assert(get_item == NULL);
+
+    /* Now set items. */
+    PyObject *set_item = NULL;
+    set_item = new_unique_string(__FUNCTION__, "NAME");
+    PyStructSequence_SetItem(instance, 0, set_item);
+    ref_count = Py_REFCNT(set_item);
+    assert(ref_count == 1);
+    set_item = new_unique_string(__FUNCTION__, "GENDER");
+    PyStructSequence_SetItem(instance, 1, set_item);
+    ref_count = Py_REFCNT(set_item);
+    assert(ref_count == 1);
+
+    /* Get items. */
+    get_item = PyStructSequence_GetItem(instance, 0);
+    assert(get_item != NULL);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 1);
+    get_item = PyStructSequence_GetItem(instance, 1);
+    assert(get_item != NULL);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 1);
+
+    /* Clean up. */
+    Py_DECREF(instance);
+}
+
+void dbg_PyStructSequence_setitem_abandons(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    if (example_type == NULL) {
+        example_type = PyStructSequence_NewType(&struct_sequence_simple_type_desc);
+    }
+    assert(example_type != NULL);
+
+    PyObject *instance = PyStructSequence_New(example_type);
+
+    ref_count = Py_REFCNT(instance);
+    assert(ref_count == 1);
+
+    /* Now set items. */
+    PyObject *set_item = NULL;
+    set_item = new_unique_string(__FUNCTION__, "NAME");
+    PyStructSequence_SetItem(instance, 0, set_item);
+    ref_count = Py_REFCNT(set_item);
+    assert(ref_count == 1);
+    /* Set it again. */
+    PyStructSequence_SetItem(instance, 0, set_item);
+    ref_count = Py_REFCNT(set_item);
+    assert(ref_count == 1);
+
+    /* Clean up. */
+    Py_DECREF(instance);
+}
+
 #pragma mark - Code that sefgfaults
 
 #if ACCEPT_SIGSEGV
