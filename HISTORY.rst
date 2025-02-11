@@ -5,17 +5,17 @@ History
 0.3 (TODO)
 =====================
 
-- Add a chapter "Containers and Reference Counts" that corrects and clarifies the official Python documentation.
-- Add a chapter "Struct Sequence Objects (Named Tuples in C)" that corrects and clarifies the official Python documentation.
-- Add a chapter "Watchers" with practical examples for dictionary watchers (Python 3.12+).
-- Add a chapter "Context Managers".
-- Add a chapter "Installation".
-- Update "Homogeneous Python Containers and C++".
-- Add a chapter "Debugging Python with CLion".
-- Add a chapter "Source Code Layout".
-- Expand the chapter "Memory Leaks".
+- Add "Containers and Reference Counts" that corrects and clarifies the official Python documentation.
+- Add "Struct Sequence Objects (Named Tuples in C)" that corrects and clarifies the official Python documentation.
+- Add "Watchers" with practical examples for dictionary watchers (Python 3.12+).
+- Add "Context Managers" chapter.
+- Add "Installation" chapter.
+- Update "Homogeneous Python Containers and C++" chapter.
+- Add "Debugging Python with CLion" chapter.
+- Add "Source Code Layout" chapter.
+- Expand the "Memory Leaks" chapter.
 - Add an extensive index.
-- Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13 (possibly backwards compatible with Python 3.6, 3.7, 3.8).
+- Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13.
 
 ..
     .. todo::
