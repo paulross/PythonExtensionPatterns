@@ -1,3 +1,4 @@
 Sphinx>=7.4
 psutil>=6.0
+pymemtrace>=0.2
 pytest>=8.3

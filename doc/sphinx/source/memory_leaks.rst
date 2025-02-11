@@ -15,15 +15,14 @@ Memory Leaks
 *******************
 
 This chapter describes some techniques for detecting and fixing memory leaks.
+Much of this is taken from the `pymemtrace project <https://github.com/paulross/pymemtrace>`_
 
-=============================
-Tracking Down Memory Leaks
-=============================
+.. toctree::
+    :maxdepth: 3
 
-
-.. todo::
-
-    Add memory leaks introduction from pymemtrace.
+    memory_leaks/introduction
+    memory_leaks/tools
+    memory_leaks/techniques
 
 
 =============================
@@ -38,8 +37,6 @@ The documentation contains advice on handling memory leaks.
 * Documentation: `<https://pymemtrace.readthedocs.io/en/latest/index.html>`_
 
 Here is the introduction to that project:
-
-
 
 ``pymemtrace`` provides tools for tracking and understanding Python memory usage at different levels, at different
 granularities and with different runtime costs.
@@ -146,4 +143,4 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 
 .. todo::
 
-    Add pymemtrace to requirements and illustrate with running code and examples.
+    Add pymemtrace with running code and examples.
