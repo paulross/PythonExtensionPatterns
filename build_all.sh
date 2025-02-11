@@ -221,6 +221,15 @@ show_results_of_dist() {
   echo "---> twine upload dist/*"
 }
 
+echo "===> Start date:"
+date
+echo "Options:"
+echo "===> OPT_REMOVE_REBUILD_VENVS: $OPT_REMOVE_REBUILD_VENVS"
+echo "===>  OPT_BUILD_DOCUMENTATION: $OPT_BUILD_DOCUMENTATION"
+# See: https://stackoverflow.com/questions/41150814/how-to-echo-all-values-from-array-in-bash
+IFS=","
+echo "===>          PYTHON_VERSIONS: ${PYTHON_VERSIONS[*]}"
+
 #echo "===> Clean and build C++ code"
 #build_cpp
 #echo "===> Running C++ tests"
@@ -251,6 +260,6 @@ fi
 echo "===> dist/ result:"
 show_results_of_dist
 #deactivate_virtual_environment
-echo "===> Date:"
+echo "===> End date:"
 date
 echo "===> All done"
