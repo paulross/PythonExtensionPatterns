@@ -1,7 +1,7 @@
 Introduction
 ====================
 
-This describes tools and techniques that can identify memory leaks in Long running Python programs.
+This describes tools and techniques that can identify memory leaks in long running Python programs.
 
 Is it a Leak?
 ------------------
