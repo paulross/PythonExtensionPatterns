@@ -3,18 +3,27 @@ Tools for Detecting Memory Leaks
 
 Tools for analysing memory can be characterised by:
 
-=========================== ====================================================================================================
-Characteristic              Description
-=========================== ====================================================================================================
-**Availability**            Does it come with the platform? Is it within Python or the standard library? Does it need third
-                            party library installation or requires a special build of some sort?
-**Memory Granularity**      How detailed is the memory measurement? Somewhere between every ``malloc``
-                            or the overall memory usage as seen by the OS.
-**Execution Granularity**   How detailed is the memory measurement? Per line, per function, for Python or C code?
-**Memory Cost**             What is the extra memory consumption is introduced by using this tool?
-**Execution Cost**          What is the extra runtime introduced by using this tool?
-**Developer Cost**          How hard it is to use the tool?
-=========================== ====================================================================================================
+.. list-table:: Tool Characteristics
+   :widths: 25 75
+   :header-rows: 1
+
+   * - Characteristic
+     - Description
+   * - **Availability**
+     - Does it come with the platform?
+       Is it within Python or the standard library?
+       Does it need third party library installation or requires a special Python build of some sort?
+   * - **Memory Granularity**
+     - How detailed is the memory measurement?
+       Somewhere between every ``malloc`` or the overall memory usage as seen by the OS.
+   * - **Execution Granularity**
+     - How detailed is the execution measurement? Per line, per function, for Python or C code?
+   * - **Memory Cost**
+     - What is the extra memory consumption is introduced by using this tool?
+   * - **Execution Cost**
+     - What is the extra runtime introduced by using this tool?
+   * - **Developer Cost**
+     - How hard it is to use the tool?
 
 Each tool makes trade offs between each of these characteristics.
 
@@ -126,28 +135,6 @@ Characteristic              Description
 **Developer Cost**          Straightforward.
 =========================== ====================================================================================================
 
-
-.. list-table:: **Summary**
-   :widths: 30 30 30 30 30 30 30
-   :header-rows: 1
-
-   * - Tool
-     - Availability
-     - Memory Granularity
-     - Execution Granularity
-     - Memory Cost
-     - Execution Cost
-     - Developer Cost
-   * - ``process``
-     - RSS (total Python and C memory).
-     - Regular time intervals.
-     - Near zero.
-     - Near zero.
-     - Near zero.
-     - Near zero.
-
-
-
 ``sys``
 """""""""""""""""""""
 
@@ -157,32 +144,31 @@ The :py:mod:`sys` has a number of useful functions, mostly CPython specific.
 
 
 .. list-table:: ``sys`` Tools
-   :widths: 20 40 60
+   :widths: 35 30 50
    :header-rows: 1
 
    * - Tool
      - Description
      - Notes
-   * - ``sys.getallocatedblocks()``
-     - Returns the number of allocated blocks, regardless of size.
-       `<https://docs.python.org/dev/library/sys.html#sys.getallocatedblocks>`_
+   * - ``getallocatedblocks()``
+     - Returns the number of
+       `allocated blocks <https://docs.python.org/dev/library/sys.html#sys.getallocatedblocks>`_, regardless of size.
      - This has no information about the size of any block.
        CPython only.
        Implemented in ``Objects/obmalloc.c`` as ``_Py_GetAllocatedBlocks``.
        As implemented in Python 3.9 this returns the total reference count of every *pool* in every *arena*.
-   * - ``sys.getrefcount(object)``
-     - Returns the reference count of an object.
-       `<https://docs.python.org/dev/library/sys.html#sys.getrefcount>`_
+   * - ``getrefcount(object)``
+     - Returns the `reference count <https://docs.python.org/dev/library/sys.html#sys.getrefcount>`_ of an object.
      - This is increased by one for the duration of the call.
-   * - ``sys.getsizeof(object)``
-     - Returns the size of an object in bytes.
-       `<https://docs.python.org/dev/library/sys.html#sys.getsizeof>`_
+   * - ``getsizeof(object)``
+     - Returns the `size of an object <https://docs.python.org/dev/library/sys.html#sys.getsizeof>`_ in bytes.
      - Builtin objects will return correct results.
        Others are implementation specific.
        User defined objects can implement ``__sizeof__`` which will be called if available.
-   * - ``sys._debugmallocstats(object)``
-     - Prints the state of the Python Memory Allocator ``pymalloc`` to stderr.
-       `<https://docs.python.org/dev/library/sys.html#sys._debugmallocstats>`_
+   * - ``_debugmallocstats(object)``
+     - Prints the state of the
+       `Python Memory Allocator <https://docs.python.org/dev/library/sys.html#sys._debugmallocstats>`_
+       ``pymalloc`` to stderr.
      - See :ref:`examples-debug_malloc_stats` for a ``pymemtrace`` wrapper that makes this much more useful.
 
 

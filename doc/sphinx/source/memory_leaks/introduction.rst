@@ -6,7 +6,7 @@ This describes tools and techniques that can identify memory leaks in long runni
 Is it a Leak?
 ------------------
 
-Rising memory is not necessarily a leak, it can be every internal data structures that grow naturally.
+Rising memory is not necessarily a leak, it can be internal data structures that grow naturally.
 A common strategy for hash tables, arrays and the like is that when they reach capacity they reallocate themselves
 into twice the original memory and this can look, superficially like a memory leak.
 
