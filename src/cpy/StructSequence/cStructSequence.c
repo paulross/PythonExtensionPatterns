@@ -13,12 +13,12 @@
  *
  */
 
-
 #define PY_SSIZE_T_CLEAN
 
 #include <Python.h>
 #include "structmember.h"
 
+#if 0
 // Example test case: Modules/_testcapimodule.c test_structseq_newtype_doesnt_leak()
 static PyObject *
 test_structseq_newtype_doesnt_leak(PyObject *Py_UNUSED(self),
@@ -46,6 +46,7 @@ test_structseq_newtype_doesnt_leak(PyObject *Py_UNUSED(self),
 }
 
 // Fairly complicated examples in: Modules/posixmodule.c
+
 // A simple example:
 
 PyDoc_STRVAR(TerminalSize_docstring,
@@ -63,6 +64,7 @@ static PyStructSequence_Desc TerminalSize_desc = {
         TerminalSize_fields,
         3,
 };
+#endif
 
 //void foo() {
 ////    {PyStructSequence_UnnamedField, "height of the terminal window in characters"},
@@ -81,7 +83,7 @@ static PyStructSequence_Desc TerminalSize_desc = {
 
 // PyObject *TerminalSizeType = (PyObject *)PyStructSequence_NewType(&TerminalSize_desc);
 
-// Module initialisation
+#if 0
 typedef struct {
     PyObject *billion;
     PyObject *DirEntryType;
@@ -103,7 +105,7 @@ typedef struct {
     PyObject *st_mode;
 } _posixstate;
 
-#if 0
+// Module initialisation
 /* initialize TerminalSize_info */
 PyObject *TerminalSizeType = (PyObject *)PyStructSequence_NewType(&TerminalSize_desc);
 if (TerminalSizeType == NULL) {
@@ -115,73 +117,184 @@ state->TerminalSizeType = TerminalSizeType;
 #endif
 
 
-/* Example of a C struct to PyStructSequence ??? */
+#pragma mark A registered Named Tuple
 
+PyDoc_STRVAR(
+        NTRegistered_docstring,
+        "A named tuple type with two fields that is"
+        "registered with the cStructSequence module."
+);
 
+static PyStructSequence_Field NTRegistered_fields[] = {
+        {"field_one", "The first field of the named tuple."},
+        {"field_two", "The second field of the named tuple."},
+        {NULL, NULL}
+};
 
+static PyStructSequence_Desc NTRegistered_desc = {
+        "cStructSequence.NTRegistered",
+        NTRegistered_docstring,
+        NTRegistered_fields,
+        2,
+};
 
-//typedef struct {
-//    PyObject_HEAD
-//    long *array_long;
-//    ssize_t size;
-//} SequenceOfLong;
+#pragma mark A un-registered Named Tuple
 
-//static PyObject *
-//iterate_and_print(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
-//    assert(!PyErr_Occurred());
-//    static char *kwlist[] = {"sequence", NULL};
-//    PyObject *sequence = NULL;
-//
-//    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &sequence)) {
-//        return NULL;
-//    }
-////    if (!PyIter_Check(sequence)) {
-////        PyErr_Format(PyExc_TypeError, "Object of type %s does support the iterator protocol",
-////                     Py_TYPE(sequence)->tp_name);
-////        return NULL;
-////    }
-//    PyObject *iterator = PyObject_GetIter(sequence);
-//    if (iterator == NULL) {
-//        /* propagate error */
-//        assert(PyErr_Occurred());
-//        return NULL;
-//    }
-//    PyObject *item = NULL;
-//    long index = 0;
-//    fprintf(stdout, "%s:\n", __FUNCTION__ );
-//    while ((item = PyIter_Next(iterator))) {
-//        /* do something with item */
-//        fprintf(stdout, "[%ld]: ", index);
-//        if (PyObject_Print(item, stdout, Py_PRINT_RAW) == -1) {
-//            /* Handle error. */
-//            Py_DECREF(item);
-//            Py_DECREF(iterator);
-//            if (!PyErr_Occurred()) {
-//                PyErr_Format(PyExc_RuntimeError,
-//                             "Can not print an item of type %s",
-//                             Py_TYPE(sequence)->tp_name);
-//            }
-//            return NULL;
-//        }
-//        fprintf(stdout, "\n");
-//        ++index;
-//        /* release reference when done */
-//        Py_DECREF(item);
-//    }
-//    Py_DECREF(iterator);
-//    if (PyErr_Occurred()) {
-//        /* propagate error */
-//        return NULL;
-//    }
-//    fprintf(stdout, "%s: DONE\n", __FUNCTION__ );
-//    fflush(stdout);
-//    assert(!PyErr_Occurred());
-//    Py_RETURN_NONE;
-//}
+PyDoc_STRVAR(
+        NTUnRegistered_docstring,
+        "A named tuple type with two fields that is"
+        " not registered with the cStructSequence module."
+);
+
+static PyStructSequence_Field NTUnRegistered_fields[] = {
+        {"field_one", "The first field of the named tuple."},
+        {"field_two", "The second field of the named tuple."},
+        {NULL, NULL}
+};
+
+static PyStructSequence_Desc NTUnRegistered_desc = {
+        "cStructSequence.NTUnRegistered",
+        NTUnRegistered_docstring,
+        NTUnRegistered_fields,
+        2,
+};
+
+/* Type initailised dynamically by NTUnRegistered_create(). */
+static PyTypeObject *static_NTUnRegisteredType = NULL;
+
+/* A function that creates a cStructSequence.NTUnRegistered dynamically. */
+PyObject *
+NTUnRegistered_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+    assert(!PyErr_Occurred());
+    static char *kwlist[] = {"field_one", "field_two", NULL};
+    PyObject *field_one = NULL;
+    PyObject *field_two = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &field_one, &field_two)) {
+        return NULL;
+    }
+    /* Initialise the static static_NTUnRegisteredType.
+     * Note: PyStructSequence_NewType returns a new reference.
+     */
+    if (!static_NTUnRegisteredType) {
+        static_NTUnRegisteredType = PyStructSequence_NewType(&NTUnRegistered_desc);
+        if (!static_NTUnRegisteredType) {
+            PyErr_SetString(
+                PyExc_MemoryError,
+                "Can not initialise a type with PyStructSequence_NewType()"
+            );
+            return NULL;
+        }
+    }
+    PyObject *result = PyStructSequence_New(static_NTUnRegisteredType);
+    if (!result) {
+        PyErr_SetString(
+            PyExc_MemoryError,
+            "Can not create a Struct Sequence with PyStructSequence_New()"
+        );
+        return NULL;
+    }
+    /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
+     * https://docs.python.org/3/c-api/arg.html#other-objects
+     * "A new strong reference to the object is not created (i.e. its reference count is not increased)."
+     * So we increment as PyStructSequence_SetItem seals the reference otherwise if the callers arguments
+     * go out of scope we will/may get undefined behaviour when accessing the named tuple fields.
+     */
+    Py_INCREF(field_one);
+    Py_INCREF(field_two);
+    PyStructSequence_SetItem(result, 0, field_one);
+    PyStructSequence_SetItem(result, 1, field_two);
+    return result;
+}
+
+#pragma mark Example of a C struct to PyStructSequence
+
+/**
+ * Representation of a simple transaction.
+ */
+struct cTransaction {
+    long id;            /* The transaction id. */
+    char *reference;    /* The transaction reference. */
+    double amount;      /* The transaction amount. */
+};
+
+/**
+ * An example function that might recover a transaction from within C code,
+ * possibly a C library.
+ * In practice this will actually do something more useful that this function does!
+ *
+ * @param id The transaction ID.
+ * @return A struct cTransaction corresponding to the transaction ID.
+ */
+static struct cTransaction get_transaction(long id) {
+    struct cTransaction ret = {id, "Some reference.", 42.76};
+    return ret;
+}
+
+PyDoc_STRVAR(
+        cTransaction_docstring,
+        "Example of a named tuple type representing a transaction created in C."
+        " The type not registered with the cStructSequence module."
+);
+
+static PyStructSequence_Field cTransaction_fields[] = {
+        {"id", "The transaction id."},
+        {"reference", "The transaction reference."},
+        {"amount", "The transaction amount."},
+        {NULL, NULL}
+};
+
+static PyStructSequence_Desc cTransaction_desc = {
+        "cStructSequence.cTransaction",
+        cTransaction_docstring,
+        cTransaction_fields,
+        3,
+};
+
+/* Type initialised dynamically by get__cTransactionType(). */
+static PyTypeObject *static_cTransactionType = NULL;
+
+static PyTypeObject *get_cTransactionType(void) {
+    if (static_cTransactionType == NULL) {
+        static_cTransactionType = PyStructSequence_NewType(&cTransaction_desc);
+        if (static_cTransactionType == NULL) {
+            PyErr_SetString(
+                PyExc_MemoryError,
+                "Can not initialise a cTransaction type with PyStructSequence_NewType()"
+            );
+            return NULL;
+        }
+    }
+    return static_cTransactionType;
+}
+
+/* A function that creates a cStructSequence.NTUnRegistered dynamically. */
+PyObject *
+cTransaction_get(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+    assert(!PyErr_Occurred());
+    static char *kwlist[] = {"id", NULL};
+    long id = 0l;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "l", kwlist, &id)) {
+        return NULL;
+    }
+    PyObject *result = PyStructSequence_New(get_cTransactionType());
+    if (!result) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+
+    struct cTransaction transaction = get_transaction(id);
+    PyStructSequence_SetItem(result, 0, PyLong_FromLong(transaction.id));
+    PyStructSequence_SetItem(result, 1, PyUnicode_FromString(transaction.reference));
+    PyStructSequence_SetItem(result, 2, PyFloat_FromDouble(transaction.amount));
+    return result;
+}
 
 static PyMethodDef cStructSequence_methods[] = {
-//        {"iterate_and_print", (PyCFunction) iterate_and_print, METH_VARARGS,
-//                "Iteratee through the argument printing the values."},
+        {"NTUnRegistered_create", (PyCFunction) NTUnRegistered_create, METH_VARARGS | METH_KEYWORDS,
+                        "Create a NTUnRegistered from the given values."},
+        {"cTransaction_get", (PyCFunction) cTransaction_get, METH_VARARGS | METH_KEYWORDS,
+                        "Example of getting a transaction."},
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
@@ -189,8 +302,7 @@ static PyModuleDef cStructSequence_cmodule = {
         PyModuleDef_HEAD_INIT,
         .m_name = "cStructSequence",
         .m_doc = (
-                "Example module that creates an extension type"
-                "that has forward and reverse iterators."
+                "Example module that works with Struct Sequence (named tuple) objects."
         ),
         .m_size = -1,
         .m_methods = cStructSequence_methods,
@@ -203,38 +315,15 @@ PyInit_cStructSequence(void) {
     if (m == NULL) {
         return NULL;
     }
+    /* Initialise NTRegisteredType */
+    PyObject *NTRegisteredType = (PyObject *) PyStructSequence_NewType(&NTRegistered_desc);
+    if (NTRegisteredType == NULL) {
+        Py_DECREF(m);
+        return NULL;
+    }
+    Py_INCREF(NTRegisteredType);
+    PyModule_AddObject(m, "NTRegisteredType", NTRegisteredType);
 
-//    if (PyType_Ready(&SequenceOfLongType) < 0) {
-//        Py_DECREF(m);
-//        return NULL;
-//    }
-//    Py_INCREF(&SequenceOfLongType);
-//    if (PyModule_AddObject(
-//            m,
-//            "SequenceOfLong",
-//            (PyObject *) &SequenceOfLongType) < 0
-//            ) {
-//        Py_DECREF(&SequenceOfLongType);
-//        Py_DECREF(m);
-//        return NULL;
-//    }
-//    if (PyType_Ready(&SequenceOfLongIteratorType) < 0) {
-//        Py_DECREF(m);
-//        return NULL;
-//    }
-//    Py_INCREF(&SequenceOfLongIteratorType);
-//    // Not strictly necessary unless you need to expose this type.
-//    // For type checking for example.
-//    if (PyModule_AddObject(
-//            m,
-//            "SequenceOfLongIterator",
-//            (PyObject *) &SequenceOfLongIteratorType) < 0
-//            ) {
-//        Py_DECREF(&SequenceOfLongType);
-//        Py_DECREF(&SequenceOfLongIteratorType);
-//        Py_DECREF(m);
-//        return NULL;
-//    }
     return m;
 }
 
