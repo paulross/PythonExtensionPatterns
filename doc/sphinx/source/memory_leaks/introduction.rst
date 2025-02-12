@@ -1,3 +1,6 @@
+.. moduleauthor:: Paul Ross <apaulross@gmail.com>
+.. sectionauthor:: Paul Ross <apaulross@gmail.com>
+
 Introduction
 ====================
 
@@ -12,7 +15,7 @@ into twice the original memory and this can look, superficially like a memory le
 
 Python data structures are not particularly efficient, an ``int`` is typically 24 bytes, a ``datetime`` 48 bytes and so on.
 
-A further source of 'leaks' are caches.
+A further source of 'leaks', or code that can mask memory loaks, are caches, in-memory databases and so on.
 
 Sources of Leaks
 ------------------
@@ -27,6 +30,8 @@ Here is a non-exhaustive list in rough order of popularity:
 * Bugs in C/C++ wrappers such as Cython or pybind11.
 * Bugs in Python.
 
+.. index:: see: Memory Management; CPython Memory Management
+.. index:: single: CPython Memory Management
 
 A Bit About (C)Python Memory Management
 ------------------------------------------
@@ -35,6 +40,8 @@ Python objects are allocated on the heap with their parent references on the sta
 When the stack unwinds the reference goes out of scope and, without any other action, the heap allocated would be leaked.
 Python uses a couple of techniques to prevent this; reference counting and Garbage Collection.
 Bear in mind that Python is quite old and the Garbage Collector reflects that.
+
+.. index:: single: CPython Memory Management; Reference Counts
 
 Reference Counts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -60,6 +67,8 @@ The count is one higher than you might expect as it includes the (temporary) ref
 
 Reference counting is always switched on in Python.
 
+.. index:: single: CPython Memory Management; Interned Objects
+
 .. note::
 
     Some objects are *interned*, that is their reference count never goes to zero so that they are, in effect, permanent.
@@ -76,6 +85,8 @@ Reference counting is always switched on in Python.
         >>> sys.getrefcount(400)
         2
 
+.. index:: single: CPython Memory Management; Cyclic References
+
 Reference counts have one major problem, cyclic references. Consider this:
 
 .. code-block:: python
@@ -88,6 +99,8 @@ Reference counts have one major problem, cyclic references. Consider this:
 
 ``a`` references ``b`` and ``b`` references ``a`` so you can not delete either without deleting the other.
 To get round this problem Python uses a simple garbage collector.
+
+.. index:: single: CPython Memory Management; Garbage Collection
 
 Garbage Collection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -110,6 +123,8 @@ In particular:
   knowing if some C/C++ code might have a reference to it.
   In Java this is easier as the VM controls the whole estate and can safely delete unreachable objects.
 
+
+.. index:: single: CPython Memory Management; Memory Allocator
 
 The Big Picture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -142,6 +157,8 @@ Here is a visualisation of memory allocators from top to bottom (from the Python
 
 Layer +2 is significant, it is the CPython's Object Allocator (``pymalloc``).
 
+.. index:: single: CPython Memory Management; pymalloc
+
 CPython's Object Allocator (``pymalloc``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -158,6 +175,8 @@ A summary of ``pymalloc``:
 * A *Pool* is a chunk of memory the size of a OS page, usually 4096 bytes.
 * A *Pool* is subdivided into *Block*'s which all have the same size for that Pool.
 * A *Block* is memory sized between 8 and 512 (modulo 8).
+
+.. index:: single: CPython Memory Management; sys._debugmallocstats
 
 To understand this better try:
 
@@ -229,6 +248,8 @@ In summary:
 
 See :ref:`examples-debug_malloc_stats` for examples of ``pymemtrace.debug_malloc_stats`` that can make this information
 much more useful.
+
+.. index:: single: CPython Memory Management; pymalloc deallocation
 
 Memory De-allocation
 """""""""""""""""""""

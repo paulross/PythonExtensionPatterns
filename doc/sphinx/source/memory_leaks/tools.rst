@@ -1,3 +1,8 @@
+.. moduleauthor:: Paul Ross <apaulross@gmail.com>
+.. sectionauthor:: Paul Ross <apaulross@gmail.com>
+
+.. index:: single: Memory Leaks; Tools
+
 Tools for Detecting Memory Leaks
 ====================================
 
@@ -27,6 +32,8 @@ Tools for analysing memory can be characterised by:
 
 Each tool makes trade offs between each of these characteristics.
 
+.. index:: single: Memory Leaks; Platform Tools
+
 Platform Tools
 ------------------
 
@@ -43,6 +50,7 @@ Characteristic              Description
 **Developer Cost**          Easy.
 =========================== ====================================================================================================
 
+Here are some tools available on differenct platforms:
 
 Windows
 ^^^^^^^^^^^^^^^^^^^
@@ -66,7 +74,7 @@ The Sysinternals ``procexp`` (see below) is a more sophisticated version.
 This is a Microsoft tool for logging performance and plotting it in real time.
 It is quite capable but a little fiddly to set up.
 The third party Python library ``psutil`` is a useful alternative and the ``pymentrace.procces`` also provides memory
-plotting of arbitrary processes: :ref:`examples-process` using ``gnuplot``.
+plotting of arbitrary processes: :ref:`chapter_memory_leaks.pymemtrace.proces` using ``gnuplot``.
 
 Sysinternals Suite
 """"""""""""""""""""""""""""
@@ -115,8 +123,10 @@ Mac OS X is DTrace aware, this needs a special build of Python, here is an
 `introduction <https://github.com/paulross/dtrace-py>`_ that takes you through building and using a DTrace aware version
 of Python on Mac OS X.
 
-Some examples of using DTrace with ``pymemtrace``: :ref:`examples-dtrace`.
+Some examples of using DTrace with
+`pymemtrace <https://pymemtrace.readthedocs.io/en/latest/examples/dtrace.html>`_.
 
+.. index:: single: Memory Leaks; Python Tools
 
 Python Tools
 ------------------
@@ -169,6 +179,8 @@ The :py:mod:`sys` has a number of useful functions, mostly CPython specific.
      - Prints the state of the
        `Python Memory Allocator <https://docs.python.org/dev/library/sys.html#sys._debugmallocstats>`_
        ``pymalloc`` to stderr.
+       ``pymentrace``'s :ref:`examples-debug_malloc_stats` is a very useful wrapper around
+       :py:func:`sys._debugmallocstats` which can report changes to Python's small object allocator.
      - See :ref:`examples-debug_malloc_stats` for a ``pymemtrace`` wrapper that makes this much more useful.
 
 
@@ -176,14 +188,18 @@ The :py:mod:`sys` has a number of useful functions, mostly CPython specific.
 """""""""""""""""""""
 
 The :py:mod:`gc` controls the Python garbage collector.
-See the techniques section for some use of this.
+Turning the garbage collector off with ``gc.disable()`` is worth trying to see what effect, if any, it has.
 
 ``tracemalloc``
 """""""""""""""""""""
 
 :py:mod:`tracemalloc` is a useful module that can trace memory blocks allocate by Python.
 It is invasive and using it consumes a significant amount of memory itself.
-See :ref:`examples-trace_malloc` for a ``pymemtrace`` wrapper that makes this much more useful.
+See :ref:`examples-trace_malloc` for a ``pymemtrace`` wrapper that makes this much more useful by report changes to
+Python's memory allocator..
+
+
+.. index:: single: Memory Leaks; Third Party Python Tools
 
 Third Party Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -194,7 +210,9 @@ Third Party Modules
 ``psutil`` is an excellent, third party, package that can report high level information on a process.
 `psutil on PyPi <https://pypi.org/project/psutil/>`_
 
-See :ref:`tech_notes-rss_cost` for some notes on the cost of computing the Resident Set Size (RSS).
+Here are some notes on the
+`cost of computing <https://pymemtrace.readthedocs.io/en/latest/tech_notes/rss_cost.html>`_
+the Resident Set Size (RSS).
 
 ``objgraph``
 """""""""""""""""""""
@@ -203,6 +221,16 @@ See :ref:`tech_notes-rss_cost` for some notes on the cost of computing the Resid
 This is quite invasive and expensive but can be very useful in specific cases.
 If you want the pretty pictured you need to install graphviz, xdot etc.
 `objgraph on PyPi <https://pypi.org/project/objgraph/>`_
+
+
+TODO: Finish this.
+
+objgraph: https://pypi.org/project/objgraph/
+
+Guppy 3: https://github.com/zhuyifei1999/guppy3/ and https://pypi.org/project/guppy3/
+memory_profiler: http://pypi.python.org/pypi/memory_profiler
+
+.. index:: single: Memory Leaks; Python Debugging Tools
 
 Debugging Tools
 ------------------
@@ -225,5 +253,6 @@ Building a debug version of Python in a variety of forms:
 `<https://pythonextensionpatterns.readthedocs.io/en/latest/debugging/debug_python.html#debug-version-of-python-label>`_
 
 Building a DTrace aware version of Python: `<https://github.com/paulross/dtrace-py>`_
-Some examples of using that with ``pymemtrace``: :ref:`examples-dtrace` with some technical notes on this:
-:ref:`tech_notes-dtrace`.
+Here are some examples of using DTrace with
+`pymemtrace <https://pymemtrace.readthedocs.io/en/latest/examples/dtrace.html>`_ with some
+`technical notes <https://pymemtrace.readthedocs.io/en/latest/tech_notes/dtrace.html>`_ on using DTrace.

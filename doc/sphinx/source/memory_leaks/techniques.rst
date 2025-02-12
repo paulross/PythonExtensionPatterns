@@ -1,3 +1,8 @@
+.. moduleauthor:: Paul Ross <apaulross@gmail.com>
+.. sectionauthor:: Paul Ross <apaulross@gmail.com>
+
+.. index:: single: Memory Leaks; Techniques
+
 Techniques
 ====================================
 
@@ -31,59 +36,9 @@ Using Platform Tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The high level investigation will usually concentrate on using platform tools such as builtin memory management tools or
-Python tools such as  ``pymentrace``'s :ref:`examples-process` or ``psutil`` will prove useful.
-
-
-Specific Tricks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-TODO: Finish this.
-
-Turn the GC Off
-"""""""""""""""""""""
-
-Turning the garbage collector off with ``gc.disable()`` is worth trying to see what effect, if any, it has.
-
-Medium Level
-------------------
-
-TODO: Finish this.
-
-Information From the ``sys`` Module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``pymentrace``'s :ref:`examples-debug_malloc_stats` is a very useful wrapper around
-:py:func:`sys._debugmallocstats` which can report changes to Python's small object allocator.
-
-
-``tracemalloc``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``pymentrace``'s :ref:`examples-trace_malloc` is a very useful wrapper around
-:py:mod:`tracemalloc` which can report changes to Python's memory allocator.
-
-``objgraph``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-TODO: Finish this.
-
+Python tools such as  ``pymentrace``'s :ref:`chapter_memory_leaks.pymemtrace.proces` or ``psutil`` will prove useful.
 
 Specific Tricks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 TODO: Finish this.
-
-Finding Which Python Objects are Holding References to an Object
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-TODO: Finish this.
-
-C/C++ Increasing Reference Count Excessively
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-TODO: Finish this.
-
-Low Level
-------------------
-
-TODO: Finish this
