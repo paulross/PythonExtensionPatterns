@@ -22,7 +22,7 @@ It is worth spending a fair bit of time at high level before diving into the cod
 * It is usually non-invasive.
 * It will quickly find out the *scale* of the problem.
 * It will quickly find out the *repeatability* of the problem.
-* You should be able to create the test that shows that the leak is **fixed**.
+* You should be able to create the test that shows that the leak is firstly not fixed, then fixed.
 
 At the end of this you should be able to state:
 

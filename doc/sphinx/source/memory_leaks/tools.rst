@@ -154,7 +154,7 @@ The :py:mod:`sys` has a number of useful functions, mostly CPython specific.
 
 
 .. list-table:: ``sys`` Tools
-   :widths: 35 30 50
+   :widths: 40 40 40
    :header-rows: 1
 
    * - Tool
@@ -179,9 +179,10 @@ The :py:mod:`sys` has a number of useful functions, mostly CPython specific.
      - Prints the state of the
        `Python Memory Allocator <https://docs.python.org/dev/library/sys.html#sys._debugmallocstats>`_
        ``pymalloc`` to stderr.
-       ``pymentrace``'s :ref:`examples-debug_malloc_stats` is a very useful wrapper around
+       ``pymentrace``'s :ref:`memory_leaks.pymemtrace.debug_malloc_stats` is a very useful wrapper around
        :py:func:`sys._debugmallocstats` which can report changes to Python's small object allocator.
-     - See :ref:`examples-debug_malloc_stats` for a ``pymemtrace`` wrapper that makes this much more useful.
+     - See :ref:`memory_leaks.pymemtrace.debug_malloc_stats` for a ``pymemtrace`` wrapper that makes this much
+       more useful.
 
 
 ``gc``
@@ -195,9 +196,8 @@ Turning the garbage collector off with ``gc.disable()`` is worth trying to see w
 
 :py:mod:`tracemalloc` is a useful module that can trace memory blocks allocate by Python.
 It is invasive and using it consumes a significant amount of memory itself.
-See :ref:`examples-trace_malloc` for a ``pymemtrace`` wrapper that makes this much more useful by report changes to
-Python's memory allocator..
-
+See :ref:`memory_leaks.pymemtrace.trace_malloc` for a ``pymemtrace`` wrapper that makes this much more useful by
+report changes to Python's memory allocator..
 
 .. index:: single: Memory Leaks; Third Party Python Tools
 
@@ -214,21 +214,38 @@ Here are some notes on the
 `cost of computing <https://pymemtrace.readthedocs.io/en/latest/tech_notes/rss_cost.html>`_
 the Resident Set Size (RSS).
 
+
+.. _objgraph: https://pypi.org/project/objgraph/
+
 ``objgraph``
 """""""""""""""""""""
 
-``objgraph`` is a wrapper around the Python garbage collector that can take a snapshot of the Python objects in scope.
+`objgraph`_ is a wrapper around the Python garbage collector that can take a snapshot of the Python objects in scope.
 This is quite invasive and expensive but can be very useful in specific cases.
-If you want the pretty pictured you need to install graphviz, xdot etc.
-`objgraph on PyPi <https://pypi.org/project/objgraph/>`_
+It does some excellent visualisations using graphviz, xdot etc.
 
 
-TODO: Finish this.
+.. _guppy_3: https://pypi.org/project/guppy3/
+.. _guppy_3_source: https://github.com/zhuyifei1999/guppy3/
 
-objgraph: https://pypi.org/project/objgraph/
+``Guppy 3``
+"""""""""""""""""""""
 
-Guppy 3: https://github.com/zhuyifei1999/guppy3/ and https://pypi.org/project/guppy3/
-memory_profiler: http://pypi.python.org/pypi/memory_profiler
+`guppy_3`_ (source: `guppy_3_source`_) is a project that gives a highly detailed picture of the current state of the
+Python heap.
+
+
+.. _memory_profiler: http://pypi.python.org/pypi/memory_profiler
+.. _memory_profiler_src: https://github.com/pythonprofilers/memory_profiler
+
+``memory_profiler``
+"""""""""""""""""""""
+
+Sadly `memory_profiler`_ (source: `memory_profiler_src`_) this excellent project is no longer actively maintained
+(volunteers welcome, contact f@bianp.net).
+It gives an annotated version of your source code line by line with the memory usage.
+It is pure Python and relies just on ``psutil``.
+
 
 .. index:: single: Memory Leaks; Python Debugging Tools
 
@@ -253,6 +270,6 @@ Building a debug version of Python in a variety of forms:
 `<https://pythonextensionpatterns.readthedocs.io/en/latest/debugging/debug_python.html#debug-version-of-python-label>`_
 
 Building a DTrace aware version of Python: `<https://github.com/paulross/dtrace-py>`_
-Here are some examples of using DTrace with
-`pymemtrace <https://pymemtrace.readthedocs.io/en/latest/examples/dtrace.html>`_ with some
+Here are some examples of using
+`DTrace with pymemtrace <https://pymemtrace.readthedocs.io/en/latest/examples/dtrace.html>`_ with some
 `technical notes <https://pymemtrace.readthedocs.io/en/latest/tech_notes/dtrace.html>`_ on using DTrace.

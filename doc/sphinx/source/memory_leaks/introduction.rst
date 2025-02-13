@@ -39,7 +39,7 @@ A Bit About (C)Python Memory Management
 Python objects are allocated on the heap with their parent references on the stack.
 When the stack unwinds the reference goes out of scope and, without any other action, the heap allocated would be leaked.
 Python uses a couple of techniques to prevent this; reference counting and Garbage Collection.
-Bear in mind that Python is quite old and the Garbage Collector reflects that.
+Bear in mind that Python is quite old and the Garbage Collector reflects that [#]_.
 
 .. index:: single: CPython Memory Management; Reference Counts
 
@@ -118,7 +118,7 @@ In particular:
 * The GC only looks at unreachable objects.
 * The GC only deals with cyclic references.
 * The GC is easily defeated, even inadvertently, for example if objects implement ``__del__``.
-* A real restriction on the GC is due to C/C++ extensions.]
+* A real restriction on the GC is due to C/C++ extensions.
   An unreachable C/C++ object from Python code with a zero reference count can not be deleted as there is no way of
   knowing if some C/C++ code might have a reference to it.
   In Java this is easier as the VM controls the whole estate and can safely delete unreachable objects.
@@ -246,8 +246,8 @@ In summary:
               between 8 and 512 bytes and divided by that into Blocks.
               So there are between 512 x 8 byte blocks and 8 x 512 byte blocks in a Pool.
 
-See :ref:`examples-debug_malloc_stats` for examples of ``pymemtrace.debug_malloc_stats`` that can make this information
-much more useful.
+See :ref:`memory_leaks.pymemtrace.debug_malloc_stats` for examples of ``pymemtrace.debug_malloc_stats``
+that can make this information much more useful.
 
 .. index:: single: CPython Memory Management; pymalloc deallocation
 
@@ -260,3 +260,11 @@ Memory De-allocation
 * There is no attempt to reorganise ``pymalloc`` periodically reduce the memory use such as a copying garbage collector might do.
 
 This means that pools and arenas can exist for a very long time.
+
+.. Example footnote [#]_.
+
+.. rubric:: Footnotes
+
+.. [#] This chapter discusses Pythons memory management system however the design of that may change over the range of
+    Python versions that this project covers.
+    Therefore some descriptions may be inaccurate or obsolete depending on the Python version under consideration.

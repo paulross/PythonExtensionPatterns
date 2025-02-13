@@ -75,7 +75,7 @@ Each tool can be characterised by:
 Clearly there are trade-offs between these depending on the problem you are trying to solve.
 
 .. list-table:: **Tool Characteristics**
-   :widths: 25 30 30 20 20
+   :widths: 30 30 30 20 20
    :header-rows: 1
 
    * - Tool
@@ -97,7 +97,7 @@ Clearly there are trade-offs between these depending on the problem you are tryi
      - Every ``malloc()`` and ``free()``.
      - Per function call and return.
      - Minimal.
-     - x90 to x100.
+     - x100.
    * - ``trace_malloc``
      - Every Python object.
      - Per Python line, per function call.
@@ -145,15 +145,7 @@ for monitoring the memory usage of a process at regular intervals.
 of the current process at regular intervals (the CLI version can monitor any user specified process).
 The log format is designed so that the data can be easily extracted using, say, regular expressions.
 
-Here is an example that creates randomly sized large strings.
-Of interest is the line:
-
-.. code-block:: python
-
-    process.add_message_to_queue(f'String of {size:,d} bytes')
-
-Which injects a message into the log output.
-Here is the example:
+Here is an example that creates randomly sized large strings:
 
 .. code-block:: python
 
@@ -194,7 +186,7 @@ Here is the example:
     if __name__ == '__main__':
         sys.exit(main())
 
-Might give:
+Might give this, although verbose, it is quite searchable:
 
 .. code-block:: text
 
@@ -232,8 +224,18 @@ Here is the memory data from one line in more detail.
         "label": "String of 246,415,360 bytes"
     }
 
+Of interest is the line:
+
+.. code-block:: python
+
+    process.add_message_to_queue(f'String of {size:,d} bytes')
+
+Which injects a message into the log output and that has the JSON key of "label".
+
+
 ``pymemtrace.process`` provides and number of ways of tabulating and plotting this data that gives a clearer picture,
 at a high level, of what is happening to the process memory.
+Some can be seen <here <https://pymemtrace.readthedocs.io/en/latest/examples/process.html>`_
 
 .. index::
     single: pymemtrace; cPyMemTrace
@@ -246,13 +248,14 @@ at a high level, of what is happening to the process memory.
 `Resident Set Size <https://en.wikipedia.org/wiki/Resident_set_size>`_
 for every Python and C call and return.
 
-``cPyMemTrace`` writes this data to a log file with a name of the form:
+``cPyMemTrace`` writes this data to a log file to the current working directory with a name of the following form,
+it combines:
 
 - ``YYYYMMDD`` The date.
 - ``_HHMMSS`` The time.
-- ``_PID``
+- ``_PID`` The process ID.
 - ``_P`` or ``_T`` depending on whether it is a profile function or a trace function.
-- ``n`` where n is the stack depth of the current profile or trace function as multiple nested profile or trace
+- ``_n`` where n is the stack depth of the current profile or trace function as multiple nested profile or trace
   functions are allowed.
 - The Python version such as ``PY3.13.0b3``.
 - ``.log``.
@@ -279,7 +282,8 @@ Here is a simple example:
             l.pop()
 
 This produces a log file in the current working directory.
-For brevity the log file does not show every change in the RSS but only when the RSS changes by some threshold.
+For brevity the log file does not show every profile or trace event but only those when the RSS changes by some
+threshold.
 By default this threshold is the system page size (typically 4096 bytes) [#]_.
 
 Here is an example output:
@@ -351,6 +355,25 @@ There is some discussion about the performance of ``cPyMemTrace`` here in the
 and some more
 `cPyMemTrace code examples here <https://github.com/paulross/pymemtrace/blob/master/pymemtrace/examples/ex_cPyMemTrace.py>`_
 
+Tracers can be nested such as this and each level gets logged to its own file, for example:
+
+.. code-block:: python
+
+    from pymemtrace import cPyMemTrace
+
+    with cPyMemTrace.Profile():
+        # Do stuff at stack level 0
+        # This gets logged into, say: "20241107_195847_62264_P_0_PY3.13.0b3.log"
+        with cPyMemTrace.Profile():
+            # Do stuff at stack level 0
+            # This gets logged into, say: "20241107_195847_62264_P_1_PY3.13.0b3.log"
+            pass
+        # Do stuff at stack level 0
+        # This gets logged again into: "20241107_195847_62264_P_0_PY3.13.0b3.log"
+
+
+
+
 .. index::
     single: pymemtrace; DTrace
     single: DTrace
@@ -360,7 +383,7 @@ and some more
 
 With an OS that supports DTrace (for example Mac OS X) ``pymemtrace`` provides some D scripts that support memory
 profiling.
-DTrace is an extremely powerful tool that can produce and enormous amount of detailed information on memory
+DTrace is an extremely powerful tool that can produce an enormous amount of detailed information on memory
 allocations and de-allocations.
 
 This is beyond the scope of *this* document however some examples are shown in `DTrace examples`_.
@@ -369,177 +392,15 @@ and some more
 `DTrace code examples here <https://github.com/paulross/pymemtrace/blob/master/pymemtrace/examples/ex_dtrace.py>`_.
 
 .. index::
-    single: pymemtrace; Debug Malloc Stats
-    single: Debug Malloc Stats
-    single: sys._debugmallocstats()
-
-``pymemtrace`` Debug Malloc Stats
-=================================
-
-CPython has the function the :py:func:`sys._debugmallocstats()` that can dump the status of the Python small object
-memory allocator.
-For example:
-
-.. code-block:: python
-
-    >>> import sys
-    >>> sys._debugmallocstats()
-    Small block threshold = 512, in 32 size classes.
-
-    class   size   num pools   blocks in use  avail blocks
-    -----   ----   ---------   -------------  ------------
-        0     16           1              90           931
-        1     32           2             830           190
-        2     48           9            2916           144
-        3     64          48           11539           701
-        4     80          30            6076            44
-        5     96           6             999            21
-        6    112           4             454           126
-        7    128           8             943            73
-        8    144           2             188            38
-        9    160          19            1915            23
-       10    176           2             126            58
-       11    192           2             100            70
-       12    208           5             342            48
-       13    224           4             277            11
-       14    240           5             271            69
-       15    256           4             189            63
-       16    272           3             144            36
-       17    288           3             125            43
-       18    304           2              88            18
-       19    320           2              78            24
-       20    336           2              54            42
-       21    352           2              50            42
-       22    368           2              54            34
-       23    384           2              49            35
-       24    400           5             171            29
-       25    416           2              40            38
-       26    432           1              26            11
-       27    448           1              28             8
-       28    464           1              34             1
-       29    480           1              28             6
-       30    496           1              26             6
-       31    512           2              41            21
-
-    # arenas allocated total           =                    3
-    # arenas reclaimed                 =                    0
-    # arenas highwater mark            =                    3
-    # arenas allocated current         =                    3
-    3 arenas * 1048576 bytes/arena     =            3,145,728
-
-    # bytes in allocated blocks        =            2,654,688
-    # bytes in available blocks        =              322,672
-    6 unused pools * 16384 bytes       =               98,304
-    # bytes lost to pool headers       =                8,784
-    # bytes lost to quantization       =               12,128
-    # bytes lost to arena alignment    =               49,152
-    Total                              =            3,145,728
-
-    arena map counts
-    # arena map mid nodes              =                    1
-    # arena map bot nodes              =                    1
-
-    # bytes lost to arena map root     =              262,144
-    # bytes lost to arena map mid      =              262,144
-    # bytes lost to arena map bot      =              131,072
-    Total                              =              655,360
-
-               55 free PyDictObjects * 48 bytes each =                2,640
-               6 free PyFloatObjects * 24 bytes each =                  144
-               80 free PyListObjects * 40 bytes each =                3,200
-       3 free 1-sized PyTupleObjects * 32 bytes each =                   96
-     814 free 2-sized PyTupleObjects * 40 bytes each =               32,560
-      58 free 3-sized PyTupleObjects * 48 bytes each =                2,784
-      20 free 4-sized PyTupleObjects * 56 bytes each =                1,120
-       6 free 5-sized PyTupleObjects * 64 bytes each =                  384
-       3 free 6-sized PyTupleObjects * 72 bytes each =                  216
-       1 free 7-sized PyTupleObjects * 80 bytes each =                   80
-       3 free 8-sized PyTupleObjects * 88 bytes each =                  264
-       2 free 9-sized PyTupleObjects * 96 bytes each =                  192
-     1 free 10-sized PyTupleObjects * 104 bytes each =                  104
-     1 free 11-sized PyTupleObjects * 112 bytes each =                  112
-     0 free 12-sized PyTupleObjects * 120 bytes each =                    0
-     3 free 13-sized PyTupleObjects * 128 bytes each =                  384
-     0 free 14-sized PyTupleObjects * 136 bytes each =                    0
-     4 free 15-sized PyTupleObjects * 144 bytes each =                  576
-     1 free 16-sized PyTupleObjects * 152 bytes each =                  152
-     1 free 17-sized PyTupleObjects * 160 bytes each =                  160
-     1 free 18-sized PyTupleObjects * 168 bytes each =                  168
-     0 free 19-sized PyTupleObjects * 176 bytes each =                    0
-     2 free 20-sized PyTupleObjects * 184 bytes each =                  368
-    >>>
-
-The drawback of this is that you really want to see the before and after snapshot when a particular operation is
-performed and that means comparing quite verbose output.
-
-``pymemtrace`` has a module ``debug_malloc_stats`` that can provide is a wrapper around the
-:py:func:`sys._debugmallocstats` function which take snapshots of
-memory before and after code execution and report the significant differences of the Python small object allocator.
-It uses a text parser to show only the differences between before and after.
-For example:
-
-.. code-block:: python
-
-    from pymemtrace import debug_malloc_stats
-
-    print(f'example_debug_malloc_stats_for_documentation()')
-    list_of_strings = []
-    with debug_malloc_stats.DiffSysDebugMallocStats() as malloc_diff:
-        for i in range(1, 9):
-            list_of_strings.append(' ' * (i * 8))
-    print(f'DiffSysDebugMallocStats.diff():')
-    print(f'{malloc_diff.diff()}')
-
-The output is:
-
-.. code-block:: text
-
-    example_debug_malloc_stats_for_documentation()
-    DiffSysDebugMallocStats.diff():
-    class   size   num pools   blocks in use  avail blocks
-    -----   ----   ---------   -------------  ------------
-        1     32          +1             +52           +74
-        2     48          +0             +17           -17
-        3     64          +0             +33           -33
-        4     80          +1             +51            -1
-        5     96          +2             +34           +50
-        6    112          +0              +2            -2
-        7    128          +0              +1            -1
-       10    176          +0              +1            -1
-       12    208          +0              +1            -1
-       17    288          +0              +1            -1
-       18    304          +0              +2            -2
-       25    416          +0              +3            -3
-       26    432          +0              +3            -3
-       27    448          +0              +3            -3
-       29    480          +0              +3            -3
-       30    496          +0              +1            -1
-       31    512          +0              +1            -1
-
-    # bytes in allocated blocks        =              +19,904
-    # bytes in available blocks        =               -3,808
-    -4 unused pools * 4096 bytes       =              -16,384
-    # bytes lost to pool headers       =                 +192
-    # bytes lost to quantization       =                  +96
-
-      -1 free 1-sized PyTupleObjects * 32 bytes each =                  -32
-      +1 free 5-sized PyTupleObjects * 64 bytes each =                  +64
-               +2 free PyDictObjects * 48 bytes each =                  +96
-               -2 free PyListObjects * 40 bytes each =                  -80
-             +1 free PyMethodObjects * 48 bytes each =                  +48
-
-There are more examples in https://pymemtrace.readthedocs.io/en/latest/examples/debug_malloc_stats.html
-and some more
-`debug_malloc_stats code examples here <https://github.com/paulross/pymemtrace/blob/master/pymemtrace/examples/ex_debug_malloc_stats.py>`_
-
-.. index::
     single: pymemtrace; tracemalloc
     single: tracemalloc
 
-``pymemtrace`` tracemalloc
+.. _memory_leaks.pymemtrace.trace_malloc:
+
+``pymemtrace`` trace_malloc
 =================================
 
-Python has the :py:mod:`tracemalloc`
+Python has the :py:mod:`tracemalloc` module
 (`documentation <https://docs.python.org/3/library/tracemalloc.html#module-tracemalloc>`_)
 that can provide the following information:
 
@@ -634,6 +495,175 @@ Would log something like the following:
 Here are more `examples <https://pymemtrace.readthedocs.io/en/latest/examples/trace_malloc.html>`_
 and some more
 `trace_malloc code examples here <https://github.com/paulross/pymemtrace/blob/master/pymemtrace/examples/ex_trace_malloc.py>`_
+
+
+.. index::
+    single: pymemtrace; Debug Malloc Stats
+    single: Debug Malloc Stats
+    single: sys._debugmallocstats()
+
+.. _memory_leaks.pymemtrace.debug_malloc_stats:
+
+``pymemtrace`` Debug Malloc Stats
+=================================
+
+CPython has the function the :py:func:`sys._debugmallocstats()` that can dump the status of the Python small object
+memory allocator.
+For example:
+
+.. code-block:: python
+
+    Python 3.13.0 (v3.13.0:60403a5409f, Oct  7 2024, 00:37:40) [Clang 15.0.0 (clang-1500.3.9.4)] on darwin
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> import sys
+    >>> sys._debugmallocstats()
+    Small block threshold = 512, in 32 size classes.
+
+    class   size   num pools   blocks in use  avail blocks
+    -----   ----   ---------   -------------  ------------
+        0     16           1              90           931
+        1     32           2             830           190
+        2     48           9            2916           144
+        3     64          48           11539           701
+        4     80          30            6076            44
+        5     96           6             999            21
+        6    112           4             454           126
+        7    128           8             943            73
+        8    144           2             188            38
+        9    160          19            1915            23
+       10    176           2             126            58
+       11    192           2             100            70
+       12    208           5             342            48
+       13    224           4             277            11
+       14    240           5             271            69
+       15    256           4             189            63
+       16    272           3             144            36
+       17    288           3             125            43
+       18    304           2              88            18
+       19    320           2              78            24
+       20    336           2              54            42
+       21    352           2              50            42
+       22    368           2              54            34
+       23    384           2              49            35
+       24    400           5             171            29
+       25    416           2              40            38
+       26    432           1              26            11
+       27    448           1              28             8
+       28    464           1              34             1
+       29    480           1              28             6
+       30    496           1              26             6
+       31    512           2              41            21
+
+    # arenas allocated total           =                    3
+    # arenas reclaimed                 =                    0
+    # arenas highwater mark            =                    3
+    # arenas allocated current         =                    3
+    3 arenas * 1048576 bytes/arena     =            3,145,728
+
+    # bytes in allocated blocks        =            2,654,688
+    # bytes in available blocks        =              322,672
+    6 unused pools * 16384 bytes       =               98,304
+    # bytes lost to pool headers       =                8,784
+    # bytes lost to quantization       =               12,128
+    # bytes lost to arena alignment    =               49,152
+    Total                              =            3,145,728
+
+    arena map counts
+    # arena map mid nodes              =                    1
+    # arena map bot nodes              =                    1
+
+    # bytes lost to arena map root     =              262,144
+    # bytes lost to arena map mid      =              262,144
+    # bytes lost to arena map bot      =              131,072
+    Total                              =              655,360
+
+               55 free PyDictObjects * 48 bytes each =                2,640
+               6 free PyFloatObjects * 24 bytes each =                  144
+               80 free PyListObjects * 40 bytes each =                3,200
+       3 free 1-sized PyTupleObjects * 32 bytes each =                   96
+     814 free 2-sized PyTupleObjects * 40 bytes each =               32,560
+      58 free 3-sized PyTupleObjects * 48 bytes each =                2,784
+      20 free 4-sized PyTupleObjects * 56 bytes each =                1,120
+       6 free 5-sized PyTupleObjects * 64 bytes each =                  384
+       3 free 6-sized PyTupleObjects * 72 bytes each =                  216
+       1 free 7-sized PyTupleObjects * 80 bytes each =                   80
+       3 free 8-sized PyTupleObjects * 88 bytes each =                  264
+       2 free 9-sized PyTupleObjects * 96 bytes each =                  192
+     1 free 10-sized PyTupleObjects * 104 bytes each =                  104
+     1 free 11-sized PyTupleObjects * 112 bytes each =                  112
+     0 free 12-sized PyTupleObjects * 120 bytes each =                    0
+     3 free 13-sized PyTupleObjects * 128 bytes each =                  384
+     0 free 14-sized PyTupleObjects * 136 bytes each =                    0
+     4 free 15-sized PyTupleObjects * 144 bytes each =                  576
+     1 free 16-sized PyTupleObjects * 152 bytes each =                  152
+     1 free 17-sized PyTupleObjects * 160 bytes each =                  160
+     1 free 18-sized PyTupleObjects * 168 bytes each =                  168
+     0 free 19-sized PyTupleObjects * 176 bytes each =                    0
+     2 free 20-sized PyTupleObjects * 184 bytes each =                  368
+    >>>
+
+The drawback of this is that you really want to see the before and after snapshot when a particular operation is
+performed and this means comparing quite verbose output.
+
+``pymemtrace`` has a module ``debug_malloc_stats`` that can provide is a wrapper around the
+:py:func:`sys._debugmallocstats` function which take snapshots of
+memory before and after code execution and report the significant differences of the Python small object allocator.
+It uses a text parser to show only the differences between before and after.
+For example:
+
+.. code-block:: python
+
+    from pymemtrace import debug_malloc_stats
+
+    print(f'example_debug_malloc_stats_for_documentation()')
+    list_of_strings = []
+    with debug_malloc_stats.DiffSysDebugMallocStats() as malloc_diff:
+        for i in range(1, 9):
+            list_of_strings.append(' ' * (i * 8))
+    print(f'DiffSysDebugMallocStats.diff():')
+    print(f'{malloc_diff.diff()}')
+
+The output is:
+
+.. code-block:: text
+
+    example_debug_malloc_stats_for_documentation()
+    DiffSysDebugMallocStats.diff():
+    class   size   num pools   blocks in use  avail blocks
+    -----   ----   ---------   -------------  ------------
+        1     32          +1             +52           +74
+        2     48          +0             +17           -17
+        3     64          +0             +33           -33
+        4     80          +1             +51            -1
+        5     96          +2             +34           +50
+        6    112          +0              +2            -2
+        7    128          +0              +1            -1
+       10    176          +0              +1            -1
+       12    208          +0              +1            -1
+       17    288          +0              +1            -1
+       18    304          +0              +2            -2
+       25    416          +0              +3            -3
+       26    432          +0              +3            -3
+       27    448          +0              +3            -3
+       29    480          +0              +3            -3
+       30    496          +0              +1            -1
+       31    512          +0              +1            -1
+
+    # bytes in allocated blocks        =              +19,904
+    # bytes in available blocks        =               -3,808
+    -4 unused pools * 4096 bytes       =              -16,384
+    # bytes lost to pool headers       =                 +192
+    # bytes lost to quantization       =                  +96
+
+      -1 free 1-sized PyTupleObjects * 32 bytes each =                  -32
+      +1 free 5-sized PyTupleObjects * 64 bytes each =                  +64
+               +2 free PyDictObjects * 48 bytes each =                  +96
+               -2 free PyListObjects * 40 bytes each =                  -80
+             +1 free PyMethodObjects * 48 bytes each =                  +48
+
+There are more examples in https://pymemtrace.readthedocs.io/en/latest/examples/debug_malloc_stats.html
+and some more
+`debug_malloc_stats code examples here <https://github.com/paulross/pymemtrace/blob/master/pymemtrace/examples/ex_debug_malloc_stats.py>`_
 
 .. Example footnote [#]_.
 
