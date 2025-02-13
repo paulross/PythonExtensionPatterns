@@ -25,7 +25,10 @@ Subjects Covered
 
 - Introduction
 - A Simple Example
+- Installation
 - PyObjects and Reference Counting
+- Containers and Reference Counts
+- Struct Sequence Objects (a namedtuple in C)
 - Exception Raising
 - A Pythonic Coding Pattern for C Functions
 - Parsing Python Arguments
@@ -37,6 +40,7 @@ Subjects Covered
 - Capsules
 - Iterators and Generators
 - Pickling C Extension Types
+- Watchers
 - Setting Compiler Flags
 - Debugging
 - Memory Leaks
