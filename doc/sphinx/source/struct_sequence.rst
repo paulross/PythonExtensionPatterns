@@ -10,7 +10,8 @@
 
 .. _namedtuple: https://docs.python.org/3/library/collections.html#collections.namedtuple
 
-.. _Struct Sequence Objects: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
+.. _Struct Sequence API: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
+.. _Struct Sequence Object: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
 .. _PyStructSequence_NewType(): https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_NewType
 .. _PyStructSequence_InitType(): https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_InitType
 .. _PyStructSequence_InitType2(): https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_InitType2
@@ -23,6 +24,8 @@
 .. _PyStructSequence_SetItem(): https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_SetItem
 .. _PyStructSequence_SET_ITEM(): https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_SET_ITEM
 
+.. _PyTypeObject: https://docs.python.org/3/c-api/type.html#c.PyTypeObject
+
 .. _chapter_struct_sequence:
 
 .. index:: single: Struct Sequence
@@ -31,8 +34,7 @@
 Struct Sequence Objects (a ``namedtuple`` in C)
 ==================================================
 
-A ``Struct Sequence`` object is, more or less, the C equivalent of Python's `namedtuple`_ type.
-These are very useful in creating the equivalent of a C ``struct`` in Python.
+A `Struct Sequence Object`_ object is, more or less, the C equivalent of Python's `namedtuple`_ type.
 
 As a reminder here is how named tuples work in Python:
 
@@ -49,6 +51,10 @@ As a reminder here is how named tuples work in Python:
     'foo'
     >>> nt.index('bar')
     1
+
+The C `Struct Sequence API`_ allows you to define and create `Struct Sequence Object`_ within C but act (almost) like
+``collections.namedtuple`` objects.
+These are very useful in creating the equivalent of a C ``struct`` in Python.
 
 ------------------------------------------------------------------
 Differences Between a C Struct Sequence and a Python `namedtuple`_
@@ -68,29 +74,64 @@ Unlike a Python `namedtuple`_ a C Struct Sequence does *not* have the following 
 A Basic C Struct Sequence
 ------------------------------------------------------------------
 
+Here is an example of defining a Struct Sequence in C (the code is in ``src/cpy/StructSequence/cStructSequence.c``).
+
+Documentation String
+--------------------
+
+First create a named documentation string:
+
 .. code-block:: c
 
     PyDoc_STRVAR(
-            BasicNT_docstring,
-            "A basic named tuple type with two fields."
+        BasicNT_docstring,
+        "A basic named tuple type with two fields."
     );
+
+Field Specifications
+--------------------
+
+Now create the field definitions as an array of `PyStructSequence_Field`_.
+These are just pairs of ``{field_name, field_description}``:
 
 .. code-block:: c
 
     static PyStructSequence_Field BasicNT_fields[] = {
-            {"field_one", "The first field of the named tuple."},
-            {"field_two", "The second field of the named tuple."},
-            {NULL, NULL}
+        {"field_one", "The first field of the named tuple."},
+        {"field_two", "The second field of the named tuple."},
+        {NULL, NULL}
     };
+
+Struct Sequence Type Specification
+----------------------------------
+
+Now create the `PyStructSequence_Desc`_ that is a name, documentation, fields and the number of fields visible in
+Python.
+The latter value is explained later but for the moment make it the number of declared fields.
 
 .. code-block:: c
 
     static PyStructSequence_Desc BasicNT_desc = {
-            "cStructSequence.BasicNT",
-            BasicNT_docstring,
-            BasicNT_fields,
-            2,
+        "cStructSequence.BasicNT",
+        BasicNT_docstring,
+        BasicNT_fields,
+        2,
     };
+
+Creating an Instance
+--------------------
+
+Here is a function ``BasicNT_create()`` that creates a Struct Sequence from arguments provided from a Python session.
+Things to note:
+
+- There is a static `PyTypeObject`_ which holds a reference to the Struct Sequence type.
+- This is initialised with `PyStructSequence_NewType()`_ that takes the ``BasicNT_desc`` described above.
+- Then the function `PyStructSequence_New()`_ is used to create a new, empty, instance of that type.
+- Finally `PyStructSequence_SetItem()`_ is used to set each individual field from the given arguments.
+
+.. note::
+
+    The careful use of ``Py_INCREF`` when setting the fields.
 
 .. code-block:: c
 
@@ -125,9 +166,12 @@ A Basic C Struct Sequence
         }
         /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
          * https://docs.python.org/3/c-api/arg.html#other-objects
-         * "A new strong reference to the object is not created (i.e. its reference count is not increased)."
-         * So we increment as PyStructSequence_SetItem seals the reference otherwise if the callers arguments
-         * go out of scope we will/may get undefined behaviour when accessing the named tuple fields.
+         * "A new strong reference to the object is not created
+         * (i.e. its reference count is not increased)."
+         *
+         * So we increment as PyStructSequence_SetItem seals the reference otherwise
+         * if the callers arguments goes out of scope we will/may get undefined behaviour
+         * when accessing the named tuple fields.
          */
         Py_INCREF(field_one);
         Py_INCREF(field_two);
@@ -136,16 +180,26 @@ A Basic C Struct Sequence
         return result;
     }
 
+This function is then added to the ``cStructSequence`` module like this:
+
 .. code-block:: c
 
     static PyMethodDef cStructSequence_methods[] = {
-            /* More stuff here... */
-            {"BasicNT_create", (PyCFunction) BasicNT_create, METH_VARARGS | METH_KEYWORDS,
-                            "Create a BasicNT from the given values."},
-            /* More stuff here... */
-            {NULL, NULL, 0, NULL} /* Sentinel */
+        /* More stuff here... */
+        {
+            "BasicNT_create",
+            (PyCFunction) BasicNT_create,
+            METH_VARARGS | METH_KEYWORDS,
+            "Create a BasicNT from the given values."
+        },
+        /* More stuff here... */
+        {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
+Using an Instance
+--------------------
+
+And can be used like this:
 
 .. code-block:: python
 
@@ -167,19 +221,17 @@ A Basic C Struct Sequence
         assert basic_nt.n_unnamed_fields == 0
 
 
-TODO: Provide basic code here.
-
 -------------------------------------------------
 Whether to Provide Access to the Type from Python
 -------------------------------------------------
 
-One decision to be made is whether to expose your Struct Sequence type from the module.
-There are two use cases for this:
+One decision to be made is whether to expose your Struct Sequence *type* from the module.
+There are only two use cases for this:
 
 - Do you want the user to be able to create your Struct Sequence/``namedtuple`` directly from Python?
   In which case then you need to expose the type of your Struct Sequence from the module.
   Then anyone can create these objects directly from Python.
-- If not, for example the objects are created only in C, then you do not need to expose the *type* in the module
+- If the objects are created only in C then you do not need to expose the *type* in the module
   but you can create functions the create those Python objects (and their types) dynamically.
 
 Firstly, exposing the Struct Sequence type to Python.
@@ -190,15 +242,6 @@ Exposing the Type from the CPython Module
 In this case the Struct Sequence can be created *from* Python (as well as from C).
 
 For example here is a simple Struct Sequence ``cStructSequence.NTRegistered`` that contains two fields.
-
-The complete code is in ``src/cpy/StructSequence/cStructSequence.c`` which
-creates the module ``cStructSequence``.).
-
-There are three steps in this code:
-
-- Creating the documentation.
-- Defining the fields.
-- Creating the Struct Sequence description that will define the type.
 
 First, creating the documentation:
 
@@ -514,3 +557,12 @@ And then this can be called from Python like this:
     assert nt.id == 17145
     assert nt.reference == "Some reference."
     assert nt.amount == 42.76
+
+.. _n_in_sequence: https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_Desc.n_in_sequence
+
+---------------------------------------------
+The Importance of the ``n_in_sequence`` Field
+---------------------------------------------
+
+`PyStructSequence_Desc`_ has a field `n_in_sequence`_ which needs some explaining (the Python documentation is pretty
+silent on this.
