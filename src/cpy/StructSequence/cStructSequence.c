@@ -62,60 +62,71 @@ static PyStructSequence_Desc TerminalSize_desc = {
         "os.terminal_size",
         TerminalSize_docstring,
         TerminalSize_fields,
-        3,
+        2,
 };
 #endif
 
-//void foo() {
-////    {PyStructSequence_UnnamedField, "height of the terminal window in characters"},
-//    TerminalSize_desc.fields[2].name = PyStructSequence_UnnamedField;
-//}
+#pragma mark A basic Named Tuple
 
-// Adding a type to a module. From _lsprof.c
-//state->stats_entry_type = PyStructSequence_NewType(&profiler_entry_desc);
-//if (state->stats_entry_type == NULL) {
-//return -1;
-//}
-//if (PyModule_AddType(module, state->stats_entry_type) < 0) {
-//return -1;
-//}
+PyDoc_STRVAR(
+        BasicNT_docstring,
+        "A basic named tuple type with two fields."
+);
 
+static PyStructSequence_Field BasicNT_fields[] = {
+        {"field_one", "The first field of the named tuple."},
+        {"field_two", "The second field of the named tuple."},
+        {NULL, NULL}
+};
 
-// PyObject *TerminalSizeType = (PyObject *)PyStructSequence_NewType(&TerminalSize_desc);
+static PyStructSequence_Desc BasicNT_desc = {
+        "cStructSequence.BasicNT",
+        BasicNT_docstring,
+        BasicNT_fields,
+        2,
+};
 
-#if 0
-typedef struct {
-    PyObject *billion;
-    PyObject *DirEntryType;
-    PyObject *ScandirIteratorType;
-#if defined(HAVE_SCHED_SETPARAM) || defined(HAVE_SCHED_SETSCHEDULER) || defined(POSIX_SPAWN_SETSCHEDULER) || defined(POSIX_SPAWN_SETSCHEDPARAM)
-    PyObject *SchedParamType;
-#endif
-    PyObject *StatResultType;
-    PyObject *StatVFSResultType;
-    PyObject *TerminalSizeType;
-    PyObject *TimesResultType;
-    PyObject *UnameResultType;
-#if defined(HAVE_WAITID) && !defined(__APPLE__)
-    PyObject *WaitidResultType;
-#endif
-#if defined(HAVE_WAIT3) || defined(HAVE_WAIT4)
-    PyObject *struct_rusage;
-#endif
-    PyObject *st_mode;
-} _posixstate;
+static PyObject *
+BasicNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+    assert(!PyErr_Occurred());
+    static char *kwlist[] = {"field_one", "field_two", NULL};
+    PyObject *field_one = NULL;
+    PyObject *field_two = NULL;
+    static PyTypeObject *static_BasicNT_Type = NULL;
 
-// Module initialisation
-/* initialize TerminalSize_info */
-PyObject *TerminalSizeType = (PyObject *)PyStructSequence_NewType(&TerminalSize_desc);
-if (TerminalSizeType == NULL) {
-return -1;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &field_one, &field_two)) {
+        return NULL;
+    }
+    if (!static_BasicNT_Type) {
+        static_BasicNT_Type = PyStructSequence_NewType(&BasicNT_desc);
+        if (!static_BasicNT_Type) {
+            PyErr_SetString(
+                    PyExc_MemoryError,
+                    "Can not initialise a BasicNT type with PyStructSequence_NewType()"
+            );
+            return NULL;
+        }
+    }
+    PyObject *result = PyStructSequence_New(static_BasicNT_Type);
+    if (!result) {
+        PyErr_SetString(
+                PyExc_MemoryError,
+                "Can not create a Struct Sequence with PyStructSequence_New()"
+        );
+        return NULL;
+    }
+    /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
+     * https://docs.python.org/3/c-api/arg.html#other-objects
+     * "A new strong reference to the object is not created (i.e. its reference count is not increased)."
+     * So we increment as PyStructSequence_SetItem seals the reference otherwise if the callers arguments
+     * go out of scope we will/may get undefined behaviour when accessing the named tuple fields.
+     */
+    Py_INCREF(field_one);
+    Py_INCREF(field_two);
+    PyStructSequence_SetItem(result, 0, field_one);
+    PyStructSequence_SetItem(result, 1, field_two);
+    return result;
 }
-Py_INCREF(TerminalSizeType);
-PyModule_AddObject(m, "terminal_size", TerminalSizeType);
-state->TerminalSizeType = TerminalSizeType;
-#endif
-
 
 #pragma mark A registered Named Tuple
 
@@ -163,7 +174,7 @@ static PyStructSequence_Desc NTUnRegistered_desc = {
 static PyTypeObject *static_NTUnRegisteredType = NULL;
 
 /* A function that creates a cStructSequence.NTUnRegistered dynamically. */
-PyObject *
+static PyObject *
 NTUnRegistered_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     assert(!PyErr_Occurred());
     static char *kwlist[] = {"field_one", "field_two", NULL};
@@ -290,7 +301,11 @@ cTransaction_get(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     return result;
 }
 
+#pragma mark - cStructSequence module methods
+
 static PyMethodDef cStructSequence_methods[] = {
+        {"BasicNT_create", (PyCFunction) BasicNT_create, METH_VARARGS | METH_KEYWORDS,
+                        "Create a BasicNT from the given values."},
         {"NTUnRegistered_create", (PyCFunction) NTUnRegistered_create, METH_VARARGS | METH_KEYWORDS,
                         "Create a NTUnRegistered from the given values."},
         {"cTransaction_get", (PyCFunction) cTransaction_get, METH_VARARGS | METH_KEYWORDS,

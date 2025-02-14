@@ -8,6 +8,7 @@ from cPyExtPatt import cStructSequence
 def test_c_struct_sequence_dir():
     result = dir(cStructSequence)
     assert result == [
+        'BasicNT_create',
         'NTRegisteredType',
         'NTUnRegistered_create',
         '__doc__',
@@ -18,6 +19,22 @@ def test_c_struct_sequence_dir():
         '__spec__',
         'cTransaction_get',
     ]
+
+
+def test_basic_nt_create():
+    basic_nt = cStructSequence.BasicNT_create('foo', 'bar')
+    assert str(type(basic_nt)) == "<class 'cStructSequence.BasicNT'>"
+
+
+def test_basic_nt_create_attributes():
+    basic_nt = cStructSequence.BasicNT_create('foo', 'bar')
+    assert basic_nt.field_one == "foo"
+    assert basic_nt.field_two == "bar"
+    assert basic_nt.index("foo") == 0
+    assert basic_nt.index("bar") == 1
+    assert basic_nt.n_fields == 2
+    assert basic_nt.n_sequence_fields == 2
+    assert basic_nt.n_unnamed_fields == 0
 
 
 def test_nt_registered_type():

@@ -34,19 +34,21 @@ Struct Sequence Objects (a ``namedtuple`` in C)
 A ``Struct Sequence`` object is, more or less, the C equivalent of Python's `namedtuple`_ type.
 These are very useful in creating the equivalent of a C ``struct`` in Python.
 
-The following code is, effectively, doing this in Python:
+As a reminder here is how named tuples work in Python:
 
 .. code-block:: python
 
     >>> from collections import namedtuple
-    >>> nt = namedtuple('MyNamedTuple', ['foo', 'bar'])
-    >>> nt
+    >>> nt_type = namedtuple('MyNamedTuple', ['field_one', 'field_two'])
+    >>> nt_type
     <class '__main__.MyNamedTuple'>
-    >>> nt._fields
-    ('foo', 'bar')
-
-
-TODO: Provide basic code here.
+    >>> nt_type._fields
+    ('field_one', 'field_two')
+    >>> nt = nt_type(['foo', 'bar'])
+    >>> nt.field_one
+    'foo'
+    >>> nt.index('bar')
+    1
 
 ------------------------------------------------------------------
 Differences Between a C Struct Sequence and a Python `namedtuple`_
@@ -61,6 +63,111 @@ Unlike a Python `namedtuple`_ a C Struct Sequence does *not* have the following 
 - `_fields <https://docs.python.org/3/library/collections.html#collections.somenamedtuple._fields>`_
 - `_field_defaults <https://docs.python.org/3/library/collections.html#collections.somenamedtuple._field_defaults>`_
 
+
+------------------------------------------------------------------
+A Basic C Struct Sequence
+------------------------------------------------------------------
+
+.. code-block:: c
+
+    PyDoc_STRVAR(
+            BasicNT_docstring,
+            "A basic named tuple type with two fields."
+    );
+
+.. code-block:: c
+
+    static PyStructSequence_Field BasicNT_fields[] = {
+            {"field_one", "The first field of the named tuple."},
+            {"field_two", "The second field of the named tuple."},
+            {NULL, NULL}
+    };
+
+.. code-block:: c
+
+    static PyStructSequence_Desc BasicNT_desc = {
+            "cStructSequence.BasicNT",
+            BasicNT_docstring,
+            BasicNT_fields,
+            2,
+    };
+
+.. code-block:: c
+
+    static PyObject *
+    BasicNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+        assert(!PyErr_Occurred());
+        static char *kwlist[] = {"field_one", "field_two", NULL};
+        PyObject *field_one = NULL;
+        PyObject *field_two = NULL;
+        static PyTypeObject *static_BasicNT_Type = NULL;
+
+        if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &field_one, &field_two)) {
+            return NULL;
+        }
+        if (!static_BasicNT_Type) {
+            static_BasicNT_Type = PyStructSequence_NewType(&BasicNT_desc);
+            if (!static_BasicNT_Type) {
+                PyErr_SetString(
+                        PyExc_MemoryError,
+                        "Can not initialise a BasicNT type with PyStructSequence_NewType()"
+                );
+                return NULL;
+            }
+        }
+        PyObject *result = PyStructSequence_New(static_BasicNT_Type);
+        if (!result) {
+            PyErr_SetString(
+                    PyExc_MemoryError,
+                    "Can not create a Struct Sequence with PyStructSequence_New()"
+            );
+            return NULL;
+        }
+        /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
+         * https://docs.python.org/3/c-api/arg.html#other-objects
+         * "A new strong reference to the object is not created (i.e. its reference count is not increased)."
+         * So we increment as PyStructSequence_SetItem seals the reference otherwise if the callers arguments
+         * go out of scope we will/may get undefined behaviour when accessing the named tuple fields.
+         */
+        Py_INCREF(field_one);
+        Py_INCREF(field_two);
+        PyStructSequence_SetItem(result, 0, field_one);
+        PyStructSequence_SetItem(result, 1, field_two);
+        return result;
+    }
+
+.. code-block:: c
+
+    static PyMethodDef cStructSequence_methods[] = {
+            /* More stuff here... */
+            {"BasicNT_create", (PyCFunction) BasicNT_create, METH_VARARGS | METH_KEYWORDS,
+                            "Create a BasicNT from the given values."},
+            /* More stuff here... */
+            {NULL, NULL, 0, NULL} /* Sentinel */
+    };
+
+
+.. code-block:: python
+
+    from cPyExtPatt import cStructSequence
+
+    def test_basic_nt_create():
+        basic_nt = cStructSequence.BasicNT_create('foo', 'bar')
+        assert str(type(basic_nt)) == "<class 'cStructSequence.BasicNT'>"
+
+
+    def test_basic_nt_create_attributes():
+        basic_nt = cStructSequence.BasicNT_create('foo', 'bar')
+        assert basic_nt.field_one == "foo"
+        assert basic_nt.field_two == "bar"
+        assert basic_nt.index("foo") == 0
+        assert basic_nt.index("bar") == 1
+        assert basic_nt.n_fields == 2
+        assert basic_nt.n_sequence_fields == 2
+        assert basic_nt.n_unnamed_fields == 0
+
+
+TODO: Provide basic code here.
 
 -------------------------------------------------
 Whether to Provide Access to the Type from Python
