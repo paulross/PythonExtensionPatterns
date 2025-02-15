@@ -66,7 +66,7 @@ static PyStructSequence_Desc TerminalSize_desc = {
 };
 #endif
 
-#pragma mark A basic Named Tuple
+#pragma mark - A basic Named Tuple
 
 PyDoc_STRVAR(
         BasicNT_docstring,
@@ -128,7 +128,7 @@ BasicNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     return result;
 }
 
-#pragma mark A registered Named Tuple
+#pragma mark - A registered Named Tuple
 
 PyDoc_STRVAR(
         NTRegistered_docstring,
@@ -218,7 +218,7 @@ NTUnRegistered_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwd
     return result;
 }
 
-#pragma mark Example of a C struct to PyStructSequence
+#pragma mark - Example of a C struct to PyStructSequence
 
 /**
  * Representation of a simple transaction.
@@ -301,6 +301,74 @@ cTransaction_get(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     return result;
 }
 
+#pragma mark - A registered Named Tuple with excess fields
+
+PyDoc_STRVAR(
+        ExcessNT_docstring,
+        "A basic named tuple type with excess fields."
+);
+
+static PyStructSequence_Field ExcessNT_fields[] = {
+        {"field_one", "The first field of the named tuple."},
+        {"field_two", "The second field of the named tuple."},
+        {"field_three", "The third field of the named tuple, not available to Python."},
+        {NULL, NULL}
+};
+
+static PyStructSequence_Desc ExcessNT_desc = {
+        "cStructSequence.ExcessNT",
+        ExcessNT_docstring,
+        ExcessNT_fields,
+        2, /* Of three fields only two are available to Python. */
+};
+
+static PyObject *
+ExcessNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+    assert(!PyErr_Occurred());
+    static char *kwlist[] = {"field_one", "field_two", "field_three", NULL};
+    PyObject *field_one = NULL;
+    PyObject *field_two = NULL;
+    PyObject *field_three = NULL;
+    /* Type initialised dynamically by get__cTransactionType(). */
+    static PyTypeObject *static_ExcessNT_Type = NULL;
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOO", kwlist, &field_one, &field_two, &field_three)) {
+        return NULL;
+    }
+    if (!static_ExcessNT_Type) {
+        static_ExcessNT_Type = PyStructSequence_NewType(&ExcessNT_desc);
+        if (!static_ExcessNT_Type) {
+            PyErr_SetString(
+                    PyExc_MemoryError,
+                    "Can not initialise a ExcessNT type with PyStructSequence_NewType()"
+            );
+            return NULL;
+        }
+    }
+    PyObject *result = PyStructSequence_New(static_ExcessNT_Type);
+    if (!result) {
+        PyErr_SetString(
+                PyExc_MemoryError,
+                "Can not create a ExcessNT Struct Sequence with PyStructSequence_New()"
+        );
+        return NULL;
+    }
+    /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
+     * https://docs.python.org/3/c-api/arg.html#other-objects
+     * "A new strong reference to the object is not created (i.e. its reference count is not increased)."
+     * So we increment as PyStructSequence_SetItem seals the reference otherwise if the callers arguments
+     * go out of scope we will/may get undefined behaviour when accessing the named tuple fields.
+     */
+    Py_INCREF(field_one);
+    Py_INCREF(field_two);
+    Py_INCREF(field_three);
+    PyStructSequence_SetItem(result, 0, field_one);
+    PyStructSequence_SetItem(result, 1, field_two);
+    PyStructSequence_SetItem(result, 2, field_three);
+    return result;
+}
+
 #pragma mark - cStructSequence module methods
 
 static PyMethodDef cStructSequence_methods[] = {
@@ -310,6 +378,8 @@ static PyMethodDef cStructSequence_methods[] = {
                         "Create a NTUnRegistered from the given values."},
         {"cTransaction_get", (PyCFunction) cTransaction_get, METH_VARARGS | METH_KEYWORDS,
                         "Example of getting a transaction."},
+        {"ExcessNT_create", (PyCFunction) ExcessNT_create, METH_VARARGS | METH_KEYWORDS,
+                        "Create a ExcessNT from the given values."},
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

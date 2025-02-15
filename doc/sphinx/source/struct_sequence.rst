@@ -565,4 +565,4 @@ The Importance of the ``n_in_sequence`` Field
 ---------------------------------------------
 
 `PyStructSequence_Desc`_ has a field `n_in_sequence`_ which needs some explaining (the Python documentation is pretty
-silent on this.
+silent on this).

@@ -8,7 +8,8 @@ from cPyExtPatt import cStructSequence
 def test_c_struct_sequence_dir():
     result = dir(cStructSequence)
     assert result == [
-        'BasicNT_create',
+    'BasicNT_create',
+        'ExcessNT_create',
         'NTRegisteredType',
         'NTUnRegistered_create',
         '__doc__',
@@ -554,3 +555,34 @@ def test_nt_cTransaction_get_fields():
     assert nt.id == 17145
     assert nt.reference == "Some reference."
     assert nt.amount == 42.76
+
+
+def test_excess_nt_create():
+    nt = cStructSequence.ExcessNT_create('bar', 'foo', 'baz')
+    assert str(type(nt)) == "<class 'cStructSequence.ExcessNT'>"
+
+
+@pytest.mark.parametrize(
+    'attr, value',
+    (
+            ('n_fields', 3,),
+            ('n_sequence_fields', 2,),
+            ('n_unnamed_fields', 0,),
+    )
+)
+def test_excess_nt_getattr(attr, value):
+    nt = cStructSequence.ExcessNT_create('bar', 'foo', 'baz')
+    result = getattr(nt, attr)
+    assert result == value
+
+
+def test_excess_nt_field_three_index_missing():
+    nt = cStructSequence.ExcessNT_create('bar', 'foo', 'baz')
+    with pytest.raises(IndexError) as err:
+        nt[2]
+    assert err.value.args[0] == 'tuple index out of range'
+
+
+def test_excess_nt_field_three_avalible():
+    nt = cStructSequence.ExcessNT_create('bar', 'foo', 'baz')
+    assert nt.field_three == 'baz'
