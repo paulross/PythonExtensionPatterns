@@ -2603,6 +2603,38 @@ void dbg_PyStructSequence_setitem_abandons(void) {
     Py_DECREF(instance);
 }
 
+PyDoc_STRVAR(
+    struct_sequence_n_in_sequence_too_large_docstring,
+    "This uses struct_sequence_simple_type_fields but n_in_sequence is 3 rather than 2."
+);
+
+/*
+ * This uses struct_sequence_simple_type_fields but n_in_sequence is 3 rather than 2.
+ */
+static PyStructSequence_Desc struct_sequence_n_in_sequence_too_large_type_desc = {
+        "module.struct_sequence_n_in_sequence_too_large",
+        struct_sequence_n_in_sequence_too_large_docstring,
+        struct_sequence_simple_type_fields,
+        3,
+};
+
+void dbg_PyStructSequence_n_in_sequence_too_large(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+    static PyTypeObject *example_type = NULL;
+
+    if (example_type == NULL) {
+        example_type = PyStructSequence_NewType(&struct_sequence_n_in_sequence_too_large_type_desc);
+    }
+    assert(example_type == NULL);
+}
+
 #pragma mark - Code that sefgfaults
 
 #if ACCEPT_SIGSEGV

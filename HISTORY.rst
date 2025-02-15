@@ -6,7 +6,7 @@ History
 =====================
 
 - Add "Containers and Reference Counts" that corrects and clarifies the official Python documentation.
-- Add "Struct Sequence Objects (Named Tuples in C)" that corrects and clarifies the official Python documentation.
+- Add "Struct Sequences (namedtuple in C)" that corrects and clarifies the official Python documentation.
 - Add "Watchers" with practical examples for dictionary watchers (Python 3.12+).
 - Add "Context Managers" chapter.
 - Add "Installation" chapter.

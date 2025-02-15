@@ -241,6 +241,7 @@ int main(int argc, const char * argv[]) {
 #pragma mark - Struct Sequence
     dbg_PyStructSequence_simple_ctor();
     dbg_PyStructSequence_setitem_abandons();
+    dbg_PyStructSequence_n_in_sequence_too_large();
 
     printf("Bye, bye!\n");
     return failure;

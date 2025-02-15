@@ -9,9 +9,11 @@
     Specific container links are just before the appropriate section.
 
 .. _namedtuple: https://docs.python.org/3/library/collections.html#collections.namedtuple
+.. _namedtuples: https://docs.python.org/3/library/collections.html#collections.namedtuple
 
 .. _Struct Sequence API: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
 .. _Struct Sequence Object: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
+.. _Struct Sequence Objects: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
 .. _PyStructSequence_NewType(): https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_NewType
 .. _PyStructSequence_InitType(): https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_InitType
 .. _PyStructSequence_InitType2(): https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_InitType2
@@ -31,7 +33,7 @@
 .. index:: single: Struct Sequence
 
 ==================================================
-Struct Sequence Objects (a ``namedtuple`` in C)
+Struct Sequences (a ``namedtuple`` in C)
 ==================================================
 
 A `Struct Sequence Object`_ object is, more or less, the C equivalent of Python's `namedtuple`_ type.
@@ -52,7 +54,7 @@ As a reminder here is how named tuples work in Python:
     >>> nt.index('bar')
     1
 
-The C `Struct Sequence API`_ allows you to define and create `Struct Sequence Object`_ within C but act (almost) like
+The C `Struct Sequence API`_ allows you to define and create `Struct Sequence Objects`_ within C but act (almost) like
 ``collections.namedtuple`` objects.
 These are very useful in creating the equivalent of a C ``struct`` in Python.
 
@@ -69,6 +71,10 @@ Unlike a Python `namedtuple`_ a C Struct Sequence does *not* have the following 
 - `_fields <https://docs.python.org/3/library/collections.html#collections.somenamedtuple._fields>`_
 - `_field_defaults <https://docs.python.org/3/library/collections.html#collections.somenamedtuple._field_defaults>`_
 
+`Struct Sequence Objects`_ also differ from `namedtuples`_  in the way that members can be accessed.
+`namedtuples`_ can access *all* their members either by name or by index.
+A `Struct Sequence Object`_ can be designed so that any attribute can be accessed by either name or index or both
+(or even neither!).
 
 ------------------------------------------------------------------
 A Basic C Struct Sequence
@@ -117,6 +123,14 @@ The latter value is explained later but for the moment make it the number of dec
         BasicNT_fields,
         2,
     };
+
+.. note::
+
+    If the given number of fields (``n_in_sequence``) is greater than the length of the fields array then
+    `PyStructSequence_NewType()`_ will return NULL.
+
+    There is a test example of this ``dbg_PyStructSequence_n_in_sequence_too_large()`` in
+    ``src/cpy/Containers/DebugContainers.c``.
 
 Creating an Instance
 --------------------

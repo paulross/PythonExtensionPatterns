@@ -6,6 +6,12 @@
 Coding Patterns for Python Extensions
 =====================================================
 
+.. Omitting test chapters that illustrate Sphinx markup:
+
+   _headings
+   _index_styles
+
+
 .. toctree::
     :numbered:
     :maxdepth: 3
@@ -38,7 +44,6 @@ Coding Patterns for Python Extensions
     miscellaneous
     further_reading
     todo
-    _index_styles
     HISTORY
 
 Search
