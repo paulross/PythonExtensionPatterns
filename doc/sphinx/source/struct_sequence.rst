@@ -58,6 +58,9 @@ The C `Struct Sequence API`_ allows you to define and create `Struct Sequence Ob
 ``collections.namedtuple`` objects.
 These are very useful in creating the equivalent of a C ``struct`` in Python.
 
+
+.. index:: single: Struct Sequence; Differences from namedtuple
+
 ------------------------------------------------------------------
 Differences Between a C Struct Sequence and a Python `namedtuple`_
 ------------------------------------------------------------------
@@ -71,16 +74,21 @@ Unlike a Python `namedtuple`_ a C Struct Sequence does *not* have the following 
 - `_fields <https://docs.python.org/3/library/collections.html#collections.somenamedtuple._fields>`_
 - `_field_defaults <https://docs.python.org/3/library/collections.html#collections.somenamedtuple._field_defaults>`_
 
-`Struct Sequence Objects`_ also differ from `namedtuples`_  in the way that members can be accessed.
+`Struct Sequence Objects`_ also differ from `namedtuples`_ in the way that members can be accessed.
 `namedtuples`_ can access *all* their members either by name or by index.
 A `Struct Sequence Object`_ can be designed so that any attribute can be accessed by either name or index or both
 (or even neither!).
+TODO: Check this against the n_in_sequence documentation below.
+
+.. index:: single: Struct Sequence; Basic Example
 
 ------------------------------------------------------------------
 A Basic C Struct Sequence
 ------------------------------------------------------------------
 
 Here is an example of defining a Struct Sequence in C (the code is in ``src/cpy/StructSequence/cStructSequence.c``).
+
+.. index:: single: Struct Sequence; Basic Example; Documentation String
 
 Documentation String
 --------------------
@@ -93,6 +101,8 @@ First create a named documentation string:
         BasicNT_docstring,
         "A basic named tuple type with two fields."
     );
+
+.. index:: single: Struct Sequence; Basic Example; Field Specifications
 
 Field Specifications
 --------------------
@@ -107,6 +117,8 @@ These are just pairs of ``{field_name, field_description}``:
         {"field_two", "The second field of the named tuple."},
         {NULL, NULL}
     };
+
+.. index:: single: Struct Sequence; Basic Example; Type Specification
 
 Struct Sequence Type Specification
 ----------------------------------
@@ -126,11 +138,13 @@ The latter value is explained later but for the moment make it the number of dec
 
 .. note::
 
-    If the given number of fields (``n_in_sequence``) is greater than the length of the fields array then
+    If the given number of fields (`n_in_sequence`_) is greater than the length of the fields array then
     `PyStructSequence_NewType()`_ will return NULL.
 
     There is a test example of this ``dbg_PyStructSequence_n_in_sequence_too_large()`` in
     ``src/cpy/Containers/DebugContainers.c``.
+
+.. index:: single: Struct Sequence; Basic Example; Creating an Instance
 
 Creating an Instance
 --------------------
@@ -160,6 +174,12 @@ Things to note:
         if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &field_one, &field_two)) {
             return NULL;
         }
+        /* The two fields are PyObjects. If your design is that those arguments should be
+         * specific types then take the opportunity here to test that they are the
+         * expected types.
+         */
+
+        /* Now check that the type is available. */
         if (!static_BasicNT_Type) {
             static_BasicNT_Type = PyStructSequence_NewType(&BasicNT_desc);
             if (!static_BasicNT_Type) {
@@ -250,6 +270,8 @@ There are only two use cases for this:
 
 Firstly, exposing the Struct Sequence type to Python.
 
+.. index:: single: Struct Sequence; Exposing the Type
+
 Exposing the Type from the CPython Module
 -----------------------------------------
 
@@ -337,6 +359,8 @@ This can be used thus in Python:
 
 There are tests for this in ``tests/unit/test_c_struct_sequence.py``.
 
+.. index:: single: Struct Sequence; Hiding the Type
+
 Hiding the Type in the Module
 ---------------------------------
 
@@ -391,6 +415,11 @@ in this case taking variable and keyword arguments:
         if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &field_one, &field_two)) {
             return NULL;
         }
+        /* The two fields are PyObjects. If your design is that those arguments should be
+         * specific types then take the opportunity here to test that they are the
+         * expected types.
+         */
+
         /* Initialise the static static_NTUnRegisteredType.
          * Note: PyStructSequence_NewType returns a new reference.
          */
@@ -438,6 +467,8 @@ And this can be used thus:
     assert str(type(ntu)) == "<class 'cStructSequence.NTUnRegistered'>"
 
 A common use of this is converting a C ``struct`` to a Python ``namedtuple``.
+
+.. index:: single: Struct Sequence; C structs
 
 -----------------------------------------
 Converting a C ``struct`` to a namedtuple
@@ -574,9 +605,46 @@ And then this can be called from Python like this:
 
 .. _n_in_sequence: https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_Desc.n_in_sequence
 
+.. index:: single: Struct Sequence; Controlling Member Access
+
 ---------------------------------------------
+Controlling Member Access
+---------------------------------------------
+
+`Struct Sequence Objects`_ differ from `namedtuples`_ in the way that members can be accessed.
+A `Struct Sequence Object`_ can be designed so that any attribute can be accessed by either name or index or both
+(or even neither!).
+This describes how to do this.
+
+.. index:: single: Struct Sequence; n_in_sequence
+
 The Importance of the ``n_in_sequence`` Field
 ---------------------------------------------
 
 `PyStructSequence_Desc`_ has a field `n_in_sequence`_ which needs some explaining (the Python documentation is pretty
 silent on this).
+Normally `n_in_sequence`_ is equal to the number of fields, however what happens if it is not?
+
+``n_in_sequence`` > Number of Fields
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned above if the given number of fields (`n_in_sequence`_) is greater than the length of the fields array then
+`PyStructSequence_NewType()`_ will return NULL.
+
+There is a test example of this ``dbg_PyStructSequence_n_in_sequence_too_large()`` in
+``src/cpy/Containers/DebugContainers.c``.
+
+``n_in_sequence`` < Number of Fields
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this case the members with an index >= `n_in_sequence`_ will raise an ``IndexError``.
+However that same member can always be accessed from Python by name.
+
+There some illustrative tests ``test_excess_nt_*`` in ``tests/unit/test_c_struct_sequence.py`` for this.
+
+.. index:: single: Struct Sequence; Unnamed Fields
+
+Unnamed Fields
+---------------------------------------------
+
+TODO: Finish this.

@@ -97,6 +97,9 @@ BasicNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &field_one, &field_two)) {
         return NULL;
     }
+    /* The two fields are PyObjects. If your design is that those arguments should be specific types
+     * then take the opportunity here to test that they are the expected types.
+     */
     if (!static_BasicNT_Type) {
         static_BasicNT_Type = PyStructSequence_NewType(&BasicNT_desc);
         if (!static_BasicNT_Type) {
@@ -184,6 +187,9 @@ NTUnRegistered_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwd
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &field_one, &field_two)) {
         return NULL;
     }
+    /* The two fields are PyObjects. If your design is that those arguments should be specific types
+     * then take the opportunity here to test that they are the expected types.
+     */
     /* Initialise the static static_NTUnRegisteredType.
      * Note: PyStructSequence_NewType returns a new reference.
      */
@@ -336,6 +342,9 @@ ExcessNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOO", kwlist, &field_one, &field_two, &field_three)) {
         return NULL;
     }
+    /* The three fields are PyObjects. If your design is that those arguments should be specific types
+     * then take the opportunity here to test that they are the expected types.
+     */
     if (!static_ExcessNT_Type) {
         static_ExcessNT_Type = PyStructSequence_NewType(&ExcessNT_desc);
         if (!static_ExcessNT_Type) {

@@ -576,13 +576,13 @@ def test_excess_nt_getattr(attr, value):
     assert result == value
 
 
+def test_excess_nt_field_three_avalible():
+    nt = cStructSequence.ExcessNT_create('bar', 'foo', 'baz')
+    assert nt.field_three == 'baz'
+
+
 def test_excess_nt_field_three_index_missing():
     nt = cStructSequence.ExcessNT_create('bar', 'foo', 'baz')
     with pytest.raises(IndexError) as err:
         nt[2]
     assert err.value.args[0] == 'tuple index out of range'
-
-
-def test_excess_nt_field_three_avalible():
-    nt = cStructSequence.ExcessNT_create('bar', 'foo', 'baz')
-    assert nt.field_three == 'baz'
