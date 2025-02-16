@@ -4,7 +4,7 @@
 
 #include "PythonFileWrapper.h"
 
-#include <strstream>
+#include <sstream>
 
 /**
  * Macro that gets the given method and checks that it is callable.
@@ -13,7 +13,7 @@
 #define EXTRACT_METHOD_AND_CHECK(name)                                                          \
     m_python_##name##_method = PyObject_GetAttrString(python_file_object, #name); /* New ref. */\
     if (!m_python_##name##_method) {                                                            \
-        std::ostrstream oss;                                                                    \
+        std::ostringstream oss;                                                                    \
         oss << "PythonFileObjectWrapper: can not get method: " << #name << std::endl;           \
         Py_XDECREF(python_file_object);                                                         \
         Py_XDECREF(m_python_read_method);                                                       \
@@ -23,7 +23,7 @@
         throw ExceptionPythonFileObjectWrapper(oss.str());                                      \
     }                                                                                           \
     if (!PyCallable_Check(m_python_##name##_method)) {                                          \
-        std::ostrstream oss;                                                                    \
+        std::ostringstream oss;                                                                    \
         oss << "PythonFileObjectWrapper: method: " << #name << " is not callable" << std::endl; \
         Py_XDECREF(m_python_file_object);                                                       \
         Py_XDECREF(m_python_read_method);                                                       \
@@ -252,7 +252,7 @@ long PythonFileObjectWrapper::tell() {
 }
 
 std::string PythonFileObjectWrapper::str_pointers() const {
-    std::ostrstream oss;
+    std::ostringstream oss;
     oss << "PythonFileObjectWrapper:" << std::endl;
     oss << "m_python_file_object  " << std::hex << m_python_file_object << " type: "
         << Py_TYPE(m_python_file_object)->tp_name << " ref count=" << std::dec << m_python_file_object->ob_refcnt
