@@ -409,6 +409,8 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
     PyObject *field_one = NULL;
     PyObject *field_two = NULL;
     PyObject *field_three = NULL;
+    NTWithUnnamedField_fields[1].name = PyStructSequence_UnnamedField;
+    NTWithUnnamedField_desc.fields[1].name = PyStructSequence_UnnamedField;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOO", kwlist, &field_one, &field_two, &field_three)) {
         return NULL;
@@ -418,21 +420,21 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
      */
 
     if (!static_NTWithUnnamedField_Type) {
+//        if (NTWithUnnamedField_fields[1].name != NULL) {
+//            PyErr_SetString(
+//                    PyExc_RuntimeError,
+//                    "Field[1] not NULL"
+//            );
+//            return NULL;
+//        }
 
-        if (NTWithUnnamedField_fields[1].name != NULL) {
+//        NTWithUnnamedField_fields[1].name = PyStructSequence_UnnamedField;
+        NTWithUnnamedField_desc.fields[1].name = PyStructSequence_UnnamedField;
+
+        if (NTWithUnnamedField_desc.fields[1].name == NULL) {
             PyErr_SetString(
                     PyExc_RuntimeError,
-                    "Field[1] not NULL"
-            );
-            return NULL;
-        }
-
-        NTWithUnnamedField_fields[1].name = PyStructSequence_UnnamedField;
-
-        if (NTWithUnnamedField_fields[1].name == NULL) {
-            PyErr_SetString(
-                    PyExc_RuntimeError,
-                    "Field[1] now is NULL"
+                    "Field[1] now is still NULL"
             );
             return NULL;
         }
@@ -445,14 +447,15 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
             );
             return NULL;
         }
-        if (PyErr_Occurred()) {
-            printf("TRACE - A\n");
-            return NULL;
-        }
+//        if (PyStructSequence_InitType2(static_NTWithUnnamedField_Type, &NTWithUnnamedField_desc)) {
+//            assert (PyErr_Occurred());
+//            printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
+//            return NULL;
+//        }
     }
 
     if (PyErr_Occurred()) {
-        printf("TRACE - B\n");
+        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
         return NULL;
     }
     if (NTWithUnnamedField_fields[1].name == NULL) {
@@ -462,9 +465,16 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
         );
         return NULL;
     }
+    if (NTWithUnnamedField_desc.fields[1].name == NULL) {
+        PyErr_SetString(
+                PyExc_RuntimeError,
+                "NTWithUnnamedField_desc.fields[1].name is NULL"
+        );
+        return NULL;
+    }
 
     if (PyErr_Occurred()) {
-        printf("TRACE - C\n");
+        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
         return NULL;
     }
     PyObject *result = PyStructSequence_New(static_NTWithUnnamedField_Type);
@@ -476,7 +486,7 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
         return NULL;
     }
     if (PyErr_Occurred()) {
-        printf("TRACE - D\n");
+        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
         return NULL;
     }
     /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
@@ -492,17 +502,39 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
     PyStructSequence_SetItem(result, 1, field_two);
     PyStructSequence_SetItem(result, 2, field_three);
 
+    for (int i = 0; i < 3; ++i) {
+        PyObject *item = PyStructSequence_GetItem(result, i);
+//        PyStructSequence_Field *field = (PyStructSequence_Field*) item;
+        printf("Item %d repr(): ", i);
+        PyObject_Print(item, stdout, 0);
+        printf("\n");
+    }
+
     printf("PyObject_Print(result, stdout, Py_PRINT_RAW);\n");
-    PyObject_Print(result, stdout, Py_PRINT_RAW);
+    /*
+     * Py_PRINT_RAW; Is defined as 1. If given the str() function is called.
+     * If 0 the repr() function is called.
+     */
+//    PyObject_Print(result, stdout, Py_PRINT_RAW);
+//    if (PyErr_Occurred()) {
+//        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
+//        return NULL;
+//    }
+//    PyStructSequence *pyss = (PyStructSequence *)result;
+//    assert(pyss.fields)
     printf("PyObject_Print(result, stdout, 0);\n");
     PyObject_Print(result, stdout, 0);
-    printf("PyObject_Print(result, stdout, 1);\n");
-    PyObject_Print(result, stdout, 1);
-
     if (PyErr_Occurred()) {
-        printf("TRACE - E\n");
+        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
         return NULL;
     }
+    printf("PyObject_Print(result, stdout, 1);\n");
+    PyObject_Print(result, stdout, 1);
+    if (PyErr_Occurred()) {
+        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
+        return NULL;
+    }
+
     return result;
 }
 

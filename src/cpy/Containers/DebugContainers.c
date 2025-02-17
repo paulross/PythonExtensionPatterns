@@ -2516,7 +2516,7 @@ static PyStructSequence_Desc struct_sequence_simple_type_desc = {
         2,
 };
 
-static PyTypeObject *example_type = NULL;
+static PyTypeObject *static_struct_sequence_simple_type = NULL;
 
 void dbg_PyStructSequence_simple_ctor(void) {
     printf("%s():\n", __FUNCTION__);
@@ -2528,15 +2528,15 @@ void dbg_PyStructSequence_simple_ctor(void) {
     assert(!PyErr_Occurred());
     Py_ssize_t ref_count;
 
-    if (example_type == NULL) {
-        example_type = PyStructSequence_NewType(&struct_sequence_simple_type_desc);
+    if (static_struct_sequence_simple_type == NULL) {
+        static_struct_sequence_simple_type = PyStructSequence_NewType(&struct_sequence_simple_type_desc);
     }
-    assert(example_type != NULL);
+    assert(static_struct_sequence_simple_type != NULL);
     /* Hmm the refcount is 8. */
 //    ref_count = Py_REFCNT(example_type);
 //    assert(ref_count == 1);
 
-    PyObject *instance = PyStructSequence_New(example_type);
+    PyObject *instance = PyStructSequence_New(static_struct_sequence_simple_type);
 
     ref_count = Py_REFCNT(instance);
     assert(ref_count == 1);
@@ -2569,7 +2569,7 @@ void dbg_PyStructSequence_simple_ctor(void) {
 
     /* Clean up. */
     Py_DECREF(instance);
-    Py_DECREF(example_type);
+    Py_DECREF(static_struct_sequence_simple_type);
 }
 
 void dbg_PyStructSequence_setitem_abandons(void) {
@@ -2582,15 +2582,15 @@ void dbg_PyStructSequence_setitem_abandons(void) {
     assert(!PyErr_Occurred());
     Py_ssize_t ref_count;
 
-    if (example_type == NULL) {
-        example_type = PyStructSequence_NewType(&struct_sequence_simple_type_desc);
+    if (static_struct_sequence_simple_type == NULL) {
+        static_struct_sequence_simple_type = PyStructSequence_NewType(&struct_sequence_simple_type_desc);
     }
-    assert(example_type != NULL);
+    assert(static_struct_sequence_simple_type != NULL);
     /* Hmm the ref count is 7. */
 //    ref_count = Py_REFCNT(example_type);
 //    assert(ref_count == 1);
 
-    PyObject *instance = PyStructSequence_New(example_type);
+    PyObject *instance = PyStructSequence_New(static_struct_sequence_simple_type);
 
     ref_count = Py_REFCNT(instance);
     assert(ref_count == 1);
@@ -2608,7 +2608,7 @@ void dbg_PyStructSequence_setitem_abandons(void) {
 
     /* Clean up. */
     Py_DECREF(instance);
-    Py_DECREF(example_type);
+    Py_DECREF(static_struct_sequence_simple_type);
 }
 
 PyDoc_STRVAR(
@@ -2714,6 +2714,8 @@ void dbg_PyStructSequence_with_unnamed_field(void) {
     assert(get_item != NULL);
     ref_count = Py_REFCNT(get_item);
     assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
 
     /* Clean up. */
     Py_DECREF(instance);

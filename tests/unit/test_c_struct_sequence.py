@@ -586,3 +586,8 @@ def test_excess_nt_field_three_index_missing():
     with pytest.raises(IndexError) as err:
         nt[2]
     assert err.value.args[0] == 'tuple index out of range'
+
+
+def test_nt_with_unnamed_field_create():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    print(repr(ntuf))
