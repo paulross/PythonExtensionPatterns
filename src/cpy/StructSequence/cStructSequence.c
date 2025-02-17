@@ -197,8 +197,8 @@ NTUnRegistered_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwd
         static_NTUnRegisteredType = PyStructSequence_NewType(&NTUnRegistered_desc);
         if (!static_NTUnRegisteredType) {
             PyErr_SetString(
-                PyExc_MemoryError,
-                "Can not initialise a type with PyStructSequence_NewType()"
+                    PyExc_MemoryError,
+                    "Can not initialise a type with PyStructSequence_NewType()"
             );
             return NULL;
         }
@@ -206,8 +206,8 @@ NTUnRegistered_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwd
     PyObject *result = PyStructSequence_New(static_NTUnRegisteredType);
     if (!result) {
         PyErr_SetString(
-            PyExc_MemoryError,
-            "Can not create a Struct Sequence with PyStructSequence_New()"
+                PyExc_MemoryError,
+                "Can not create a Struct Sequence with PyStructSequence_New()"
         );
         return NULL;
     }
@@ -255,9 +255,9 @@ PyDoc_STRVAR(
 );
 
 static PyStructSequence_Field cTransaction_fields[] = {
-        {"id", "The transaction id."},
+        {"id",        "The transaction id."},
         {"reference", "The transaction reference."},
-        {"amount", "The transaction amount."},
+        {"amount",    "The transaction amount."},
         {NULL, NULL}
 };
 
@@ -276,8 +276,8 @@ static PyTypeObject *get_cTransactionType(void) {
         static_cTransactionType = PyStructSequence_NewType(&cTransaction_desc);
         if (static_cTransactionType == NULL) {
             PyErr_SetString(
-                PyExc_MemoryError,
-                "Can not initialise a cTransaction type with PyStructSequence_NewType()"
+                    PyExc_MemoryError,
+                    "Can not initialise a cTransaction type with PyStructSequence_NewType()"
             );
             return NULL;
         }
@@ -315,8 +315,8 @@ PyDoc_STRVAR(
 );
 
 static PyStructSequence_Field ExcessNT_fields[] = {
-        {"field_one", "The first field of the named tuple."},
-        {"field_two", "The second field of the named tuple."},
+        {"field_one",   "The first field of the named tuple."},
+        {"field_two",   "The second field of the named tuple."},
         {"field_three", "The third field of the named tuple, not available to Python."},
         {NULL, NULL}
 };
@@ -337,7 +337,6 @@ ExcessNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     PyObject *field_three = NULL;
     /* Type initialised dynamically by get__cTransactionType(). */
     static PyTypeObject *static_ExcessNT_Type = NULL;
-
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOO", kwlist, &field_one, &field_two, &field_three)) {
         return NULL;
@@ -378,17 +377,148 @@ ExcessNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     return result;
 }
 
+#pragma mark - A registered Named Tuple with an unnamed field
+
+PyDoc_STRVAR(
+        NTWithUnnamedField_docstring,
+        "A basic named tuple type with an unnamed field."
+);
+
+static PyStructSequence_Field NTWithUnnamedField_fields[] = {
+        {"field_one",   "The first field of the named tuple."},
+        /* Use NULL then replace with PyStructSequence_UnnamedField
+         * otherwise get an error "initializer element is not a compile-time constant" */
+        {NULL,          "Documentation for an unnamed field."},
+        {"field_three", "The third field of the named tuple, not available to Python."},
+        {NULL, NULL}
+};
+
+static PyStructSequence_Desc NTWithUnnamedField_desc = {
+        "cStructSequence.NTWithUnnamedField",
+        NTWithUnnamedField_docstring,
+        NTWithUnnamedField_fields,
+        3, /* Of three fields only two are available to Python by name. */
+};
+
+static PyTypeObject *static_NTWithUnnamedField_Type = NULL;
+
+static PyObject *
+NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+    assert(!PyErr_Occurred());
+    static char *kwlist[] = {"field_one", "field_two", "field_three", NULL};
+    PyObject *field_one = NULL;
+    PyObject *field_two = NULL;
+    PyObject *field_three = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOO", kwlist, &field_one, &field_two, &field_three)) {
+        return NULL;
+    }
+    /* The three fields are PyObjects. If your design is that those arguments should be specific types
+     * then take the opportunity here to test that they are the expected types.
+     */
+
+    if (!static_NTWithUnnamedField_Type) {
+
+        if (NTWithUnnamedField_fields[1].name != NULL) {
+            PyErr_SetString(
+                    PyExc_RuntimeError,
+                    "Field[1] not NULL"
+            );
+            return NULL;
+        }
+
+        NTWithUnnamedField_fields[1].name = PyStructSequence_UnnamedField;
+
+        if (NTWithUnnamedField_fields[1].name == NULL) {
+            PyErr_SetString(
+                    PyExc_RuntimeError,
+                    "Field[1] now is NULL"
+            );
+            return NULL;
+        }
+
+        static_NTWithUnnamedField_Type = PyStructSequence_NewType(&NTWithUnnamedField_desc);
+        if (!static_NTWithUnnamedField_Type) {
+            PyErr_SetString(
+                    PyExc_MemoryError,
+                    "Can not initialise a NTWithUnnamedField type with PyStructSequence_NewType()"
+            );
+            return NULL;
+        }
+        if (PyErr_Occurred()) {
+            printf("TRACE - A\n");
+            return NULL;
+        }
+    }
+
+    if (PyErr_Occurred()) {
+        printf("TRACE - B\n");
+        return NULL;
+    }
+    if (NTWithUnnamedField_fields[1].name == NULL) {
+        PyErr_SetString(
+                PyExc_RuntimeError,
+                "Field[1] still is NULL"
+        );
+        return NULL;
+    }
+
+    if (PyErr_Occurred()) {
+        printf("TRACE - C\n");
+        return NULL;
+    }
+    PyObject *result = PyStructSequence_New(static_NTWithUnnamedField_Type);
+    if (!result) {
+        PyErr_SetString(
+                PyExc_MemoryError,
+                "Can not create a NTWithUnnamedField Struct Sequence with PyStructSequence_New()"
+        );
+        return NULL;
+    }
+    if (PyErr_Occurred()) {
+        printf("TRACE - D\n");
+        return NULL;
+    }
+    /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
+     * https://docs.python.org/3/c-api/arg.html#other-objects
+     * "A new strong reference to the object is not created (i.e. its reference count is not increased)."
+     * So we increment as PyStructSequence_SetItem seals the reference otherwise if the callers arguments
+     * go out of scope we will/may get undefined behaviour when accessing the named tuple fields.
+     */
+    Py_INCREF(field_one);
+    Py_INCREF(field_two);
+    Py_INCREF(field_three);
+    PyStructSequence_SetItem(result, 0, field_one);
+    PyStructSequence_SetItem(result, 1, field_two);
+    PyStructSequence_SetItem(result, 2, field_three);
+
+    printf("PyObject_Print(result, stdout, Py_PRINT_RAW);\n");
+    PyObject_Print(result, stdout, Py_PRINT_RAW);
+    printf("PyObject_Print(result, stdout, 0);\n");
+    PyObject_Print(result, stdout, 0);
+    printf("PyObject_Print(result, stdout, 1);\n");
+    PyObject_Print(result, stdout, 1);
+
+    if (PyErr_Occurred()) {
+        printf("TRACE - E\n");
+        return NULL;
+    }
+    return result;
+}
+
 #pragma mark - cStructSequence module methods
 
 static PyMethodDef cStructSequence_methods[] = {
-        {"BasicNT_create", (PyCFunction) BasicNT_create, METH_VARARGS | METH_KEYWORDS,
+        {"BasicNT_create",            (PyCFunction) BasicNT_create,            METH_VARARGS | METH_KEYWORDS,
                         "Create a BasicNT from the given values."},
-        {"NTUnRegistered_create", (PyCFunction) NTUnRegistered_create, METH_VARARGS | METH_KEYWORDS,
+        {"NTUnRegistered_create",     (PyCFunction) NTUnRegistered_create,     METH_VARARGS | METH_KEYWORDS,
                         "Create a NTUnRegistered from the given values."},
-        {"cTransaction_get", (PyCFunction) cTransaction_get, METH_VARARGS | METH_KEYWORDS,
+        {"cTransaction_get",          (PyCFunction) cTransaction_get,          METH_VARARGS | METH_KEYWORDS,
                         "Example of getting a transaction."},
-        {"ExcessNT_create", (PyCFunction) ExcessNT_create, METH_VARARGS | METH_KEYWORDS,
+        {"ExcessNT_create",           (PyCFunction) ExcessNT_create,           METH_VARARGS | METH_KEYWORDS,
                         "Create a ExcessNT from the given values."},
+        {"NTWithUnnamedField_create", (PyCFunction) NTWithUnnamedField_create, METH_VARARGS | METH_KEYWORDS,
+                        "Create a NTWithUnnamedField from the given values."},
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

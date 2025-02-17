@@ -242,6 +242,7 @@ int main(int argc, const char * argv[]) {
     dbg_PyStructSequence_simple_ctor();
     dbg_PyStructSequence_setitem_abandons();
     dbg_PyStructSequence_n_in_sequence_too_large();
+    dbg_PyStructSequence_with_unnamed_field();
 
     printf("Bye, bye!\n");
     return failure;

@@ -89,6 +89,7 @@ void dbg_PySet_Pop(void);
 void dbg_PyStructSequence_simple_ctor(void);
 void dbg_PyStructSequence_setitem_abandons(void);
 void dbg_PyStructSequence_n_in_sequence_too_large(void);
+void dbg_PyStructSequence_with_unnamed_field(void);
 
 #if ACCEPT_SIGSEGV
 void dbg_PyTuple_SetItem_SIGSEGV_on_same_value(void);
