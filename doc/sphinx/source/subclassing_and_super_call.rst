@@ -293,7 +293,7 @@ Here are a couple of ways of calling ``super()`` correctly:
 The full code is in ``src/cpy/Util/py_call_super.h`` and ``src/cpy/Util/py_call_super.c``.
 
 .. index::
-    single: Subclassing; Calling super() from C; Direct
+    single: Subclassing; Directly Calling super() from C
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Construct a ``super`` object directly
@@ -442,7 +442,7 @@ And the implementation file would be py_call_super.c, this is the code above wit
 
 
 .. index::
-    single: Subclassing; Calling super() from builtins
+    single: Subclassing; Calling super() From builtins
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Extract the ``super`` object from the builtins

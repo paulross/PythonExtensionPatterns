@@ -156,7 +156,7 @@ Getting and Setting
 ------------------------------------
 
 .. index::
-    single: Module Globules; Getting; From Python
+    single: Module Globules; Getting From Python
 
 ^^^^^^^^^^^^^^^^^^
 From Python
@@ -179,7 +179,7 @@ Once the module is built we can access the globals from Python as usual::
     {b'123': 123, b'asd': 9, b'66': 66}
 
 .. index::
-    single: Module Globules; Getting; From C
+    single: Module Globules; Getting From C
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Getting Module Globals From C
@@ -241,7 +241,7 @@ From Python we would see this (C's ``print_global_INT()`` is mapped to Python's 
     Integer: "INT" 42 C long: 42 
 
 .. index::
-    single: Module Globules; Setting; From C
+    single: Module Globules; Setting From C
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting Module Globals From C

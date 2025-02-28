@@ -1162,6 +1162,7 @@ Failure
 
 .. index::
     single: Dictionary; PyDict_GetItem()
+    pair: Getters; Dictionary
 
 ``PyDict_GetItem()``
 -----------------------------------------
@@ -1177,6 +1178,7 @@ the key does not exist in the dictionary.
 
 .. index::
     single: Dictionary; PyDict_GetItemRef()
+    pair: Getters; Dictionary
 
 ``PyDict_GetItemRef()`` [Python 3.13+]
 -----------------------------------------
@@ -1207,6 +1209,7 @@ For code and tests see:
 
 .. index::
     single: Dictionary; PyDict_SetDefaultRef(); Failure
+    pair: Setters; Dictionary
 
 Failure
 ^^^^^^^
@@ -1501,6 +1504,7 @@ Sets
 .. index::
     single: PySet_Add()
     single: Set; PySet_Add()
+    pair: Setters; Set
 
 ``PySet_Add()``
 --------------------

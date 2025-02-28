@@ -355,7 +355,7 @@ This can be tested with the code in ``tests/unit/test_c_capsules.py``:
 
 .. index::
     single: Capsules; Using Existing API
-    single: Subclassing; ``datetime`` Example
+    single: Subclassing; datetime Example
 
 ================================
 Using an Existing Capsule

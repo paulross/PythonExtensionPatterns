@@ -88,7 +88,7 @@ A Basic C Struct Sequence
 
 Here is an example of defining a Struct Sequence in C (the code is in ``src/cpy/StructSequence/cStructSequence.c``).
 
-.. index:: single: Struct Sequence; Basic Example; Documentation String
+.. index:: single: Struct Sequence; Documentation String
 
 Documentation String
 --------------------
@@ -102,7 +102,7 @@ First create a named documentation string:
         "A basic named tuple type with two fields."
     );
 
-.. index:: single: Struct Sequence; Basic Example; Field Specifications
+.. index:: single: Struct Sequence; Field Specifications
 
 Field Specifications
 --------------------
@@ -118,7 +118,7 @@ These are just pairs of ``{field_name, field_description}``:
         {NULL, NULL}
     };
 
-.. index:: single: Struct Sequence; Basic Example; Type Specification
+.. index:: single: Struct Sequence; Type Specification
 
 Struct Sequence Type Specification
 ----------------------------------
@@ -144,7 +144,7 @@ The latter value is explained later but for the moment make it the number of dec
     There is a test example of this ``dbg_PyStructSequence_n_in_sequence_too_large()`` in
     ``src/cpy/Containers/DebugContainers.c``.
 
-.. index:: single: Struct Sequence; Basic Example; Creating an Instance
+.. index:: single: Struct Sequence; Creating an Instance
 
 Creating an Instance
 --------------------
