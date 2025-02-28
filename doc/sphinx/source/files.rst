@@ -4,12 +4,17 @@
 .. toctree::
     :maxdepth: 2
 
+.. index::
+    single: File Paths and Files
 
 **********************
 File Paths and Files
 **********************
 
 This chapter describes reading and writing files from C extensions.
+
+.. index::
+    single: File Paths
 
 ====================================
 File Paths
@@ -31,6 +36,9 @@ In summary:
 
 The example code is in ``src/cpy/cFile.cpp``, ``src/cpy/PythonFileWrapper.h`` and
 ``src/cpy/PythonFileWrapper.cpp`` and the tests are in ``tests/unit/test_c_file.py``.
+
+.. index::
+    single: File Paths; Parsing Arguments
 
 ----------------------------------------
 Parsing File Paths as Arguments
@@ -107,12 +115,18 @@ Here is the C code:
         return ret;
     }
 
+.. index::
+    single: Files
+
 =============================
 Files
 =============================
 
 This section describes how to interoperate between Python files, C ``FILE*`` and C++ ``iostream`` objects.
 
+
+.. index::
+    single: Files; Python Files; Reading
 
 ----------------------------
 Reading a Python File
@@ -196,6 +210,9 @@ Here is the C code:
         return ret;
     }
 
+.. index::
+    single: Files; Python Files; Writing
+
 ----------------------------
 Writing to a Python File
 ----------------------------
@@ -258,6 +275,10 @@ Here is the C code:
     finally:
         return ret;
     }
+
+
+.. index::
+    single: Files; Python Files; C++ Wrapper
 
 A C++ Python File Wrapper
 ----------------------------------

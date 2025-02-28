@@ -6,6 +6,9 @@
 
 .. _chapter_context_manager:
 
+.. index::
+    single: Context Managers
+
 ***************************
 Context Managers
 ***************************
@@ -13,6 +16,9 @@ Context Managers
 This chapter describes how to write
 `context mangers <https://docs.python.org/3/glossary.html#term-context-manager>`_
 for your C objects.
+
+.. index::
+    single: Context Managers; C Functions
 
 ===========================
 C Functions
@@ -22,6 +28,9 @@ This is a summary of what is required for the C functions implementing a context
 manager.
 The is no specific ``tp_...`` slot for the context manager functions ``__enter__`` and ``__exit__``, instead they are added
 to the object as named, looked up, Python methods.
+
+.. index::
+    single: Context Managers; __enter__
 
 --------------------------------------
 ``__enter__``
@@ -51,6 +60,9 @@ return ``self``:
         Py_INCREF(self);
         return (PyObject *)self;
     }
+
+.. index::
+    single: Context Managers; __exit__
 
 --------------------------------------
 ``__exit__``
@@ -104,6 +116,9 @@ Understanding the Context Manager
 What is worth understanding is the way that reference counts are incremented and
 decremented and the interplay between your C code and the CPython interpreter.
 
+.. index::
+    single: Context Managers; Without target
+
 ----------------------------------
 A Context Manager Without a Target
 ----------------------------------
@@ -151,6 +166,10 @@ The sequence of reference count changes are as follows:
 #. As the context manager goes out of scope the CPython interpreter decrements the reference
    count to 0 and then calls our C function ``ContextManager_dealloc`` with a reference count
    of 0 and that frees the object.
+
+
+.. index::
+    single: Context Managers; With target
 
 ----------------------------------
 A Context Manager With a Target
@@ -203,6 +222,9 @@ The sequence of reference count changes are now as follows:
 #. When ``context`` goes out of scope, say on a function return or a ``del`` statement the
    CPython interpreter decrements the reference count to 0 and then calls our C function
    ``ContextManager_dealloc`` which frees the object.
+
+.. index::
+    single: Context Managers; Minimal in C
 
 ===============================
 Minimal Context Manager in C

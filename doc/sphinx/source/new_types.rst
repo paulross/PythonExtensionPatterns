@@ -4,6 +4,9 @@
 .. toctree::
     :maxdepth: 2
 
+.. index::
+    single: New Types; Creating
+
 ====================================
 Creating New Types
 ====================================
@@ -17,12 +20,20 @@ This section is a cookbook of tricks and examples.
 Properties
 ------------------------------------
 
+.. index::
+    single: New Types; Existing Python Properties
+    single: New Types; Existing C Properties
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Referencing Existing Properties
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the property is part of the extension type then it is fairly easy to make it directly accessible as 
-`described here <https://docs.python.org/extending/newtypes.html#adding-data-and-methods-to-the-basic-example>`_ 
+`described here <https://docs.python.org/extending/newtypes.html#adding-data-and-methods-to-the-basic-example>`_
+
+.. note:: Terminology
+
+    In this section "property", "attribute" and "field" are used interchangeably.
 
 For example the ``Noddy`` struct has a Python object (a Python string) and a C object (an C int):
 
@@ -59,6 +70,10 @@ And the type struct must reference this array of ``PyMemberDef`` thus:
     };
 
 `Reference to PyMemberdef. <https://docs.python.org/3/c-api/structures.html#c.PyMemberDef>`_
+
+.. index::
+    single: New Types; Dynamic Python Properties
+    single: New Types; Created Python Properties
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Created Properties
@@ -104,6 +119,10 @@ Subclassing
 
 This large subject gets it own chapter: :ref:`chapter_subclassing_and_using_super`.
 
+
+.. index::
+    single: New Types; Examples
+
 ---------------
 Examples
 ---------------
@@ -112,6 +131,12 @@ See ``src/cpy/cObject.c`` for some examples, the tests for these are in ``tests/
 
 - ``Null`` is a basic class that does nothing.
 - ``Str`` is a subclass of the builtin ``str`` class.
+
+
+.. index::
+    single: New Types; Set Attributes Dynamically
+    single: New Types; Get Attributes Dynamically
+    single: New Types; Delete Attributes Dynamically
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting, Getting and Deleting Attributes Dynamically

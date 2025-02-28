@@ -4,6 +4,9 @@
 .. toctree::
     :maxdepth: 2
 
+.. index::
+    single: Pickling
+
 ====================================
 Pickling C Extension Types
 ====================================
@@ -25,6 +28,9 @@ The ``CustomObject`` definition that needs to be pickled and un-pickled looks li
         PyObject *last;  /* last name */
         int number;
     } CustomObject;
+
+.. index::
+    single: Pickling; Version Control
 
 Pickle Version Control
 -------------------------------
@@ -55,7 +61,10 @@ Now we can implement ``__getstate__`` and ``__setstate__``, think of these as sy
 
 First ``__getstate__``.
 
-Implementing ``__getstate__``
+.. index::
+    single: Pickling; __getstate__
+
+Implementing  ``__getstate__``
 ---------------------------------
 
 ``__getstate__`` pickles the object.
@@ -87,6 +96,9 @@ Here is the C implementation:
 
     See :ref:`chapter_refcount.stolen.warning_pydict_setitem`
 
+.. index::
+    single: Pickling; __setstate__
+
 Implementing ``__setstate__``
 ---------------------------------
 
@@ -100,6 +112,10 @@ We are being passed an arbitrary Python object and need to check:
 
 Note that our ``__new__`` method (``Custom_new()``) has already been called on ``self``.
 Before setting any member value we need to de-allocate the existing value set by ``Custom_new()`` otherwise we will have a memory leak.
+
+.. index::
+    single: Pickling; __setstate__
+    single: Pickling; __setstate__ Error Checking
 
 Error Checking
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -326,6 +342,9 @@ Here is some Python code that exercises our module (tests are in ``tests/unit/te
 So we have pickled one object and recreated a different, but equivalent, instance from the pickle of the original
 object which is what we set out to do.
 
+.. index::
+    single: Pickling; pickletools
+
 The Pickled Object in Detail
 -------------------------------------
 
@@ -390,6 +409,8 @@ The expected output will be something like this:
       101: .    STOP                                   Stop the unpickling machine.
     highest protocol among opcodes = 4
 
+.. index::
+    single: Pickling; External State
 
 Pickling Objects with External State
 -----------------------------------------
@@ -404,6 +425,9 @@ There is some useful information in
 
     Marshalling support for use with the `marshall <https://docs.python.org/3/library/marshal.html#module-marshal>`_
     module is given by the `C Marshall API <https://docs.python.org/3/c-api/marshal.html>`_
+
+.. index::
+    single: Pickling; References
 
 References
 -----------------------

@@ -6,6 +6,9 @@
 
 .. _chapter_capsules:
 
+.. index::
+    single: Capsules
+
 ***************
 Capsules
 ***************
@@ -17,6 +20,9 @@ When modules are used as shared libraries the symbols in one extension might not
 `Capsules <https://docs.python.org/3/extending/extending.html#providing-a-c-api-for-an-extension-module>`_
 are a means by which this can be achieved by passing C pointers from one extension module to another.
 
+
+.. index::
+    single: Capsules; Simple Example
 
 ================================
 A Simple Example
@@ -91,6 +97,10 @@ This can be tested with the code in ``tests/unit/test_c_capsules.py``:
     def test_spam():
         result = spam.system("ls -l")
         assert result == 0
+
+
+.. index::
+    single: Capsules; Exporting
 
 ---------------------------
 An Exportable Extension
@@ -248,6 +258,9 @@ This can be tested with the code in ``tests/unit/test_c_capsules.py``:
         result = spam_capsule.system("ls -l")
         assert result == 0
 
+.. index::
+    single: Capsules; Using Exported API
+
 ---------------------------
 A Client Extension
 ---------------------------
@@ -339,6 +352,10 @@ This can be tested with the code in ``tests/unit/test_c_capsules.py``:
 
 
 .. _chapter_capsules_using_an_existing_capsule:
+
+.. index::
+    single: Capsules; Using Existing API
+    single: Subclassing; ``datetime`` Example
 
 ================================
 Using an Existing Capsule

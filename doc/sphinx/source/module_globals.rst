@@ -4,6 +4,10 @@
 .. toctree::
     :maxdepth: 2
 
+.. index::
+    single: Module Globules; Setting
+    single: Module Globules; Getting
+
 ====================================
 Setting and Getting Module Globals
 ====================================
@@ -27,6 +31,10 @@ These are the names of the objects that will appear in the Python module::
     >>> import cModuleGlobals
     >>> dir(cModuleGlobals)
     ['INT', 'LST', 'MAP', 'STR', 'TUP', '__doc__', '__file__', '__loader__', '__name__', '__package__', 'print']
+
+
+.. index::
+    single: Module Globules; Initialising
 
 ------------------------------------
 Initialising Module Globals
@@ -147,6 +155,9 @@ The dict is added in a separate C function merely for readability:
 Getting and Setting
 ------------------------------------
 
+.. index::
+    single: Module Globules; Getting; From Python
+
 ^^^^^^^^^^^^^^^^^^
 From Python
 ^^^^^^^^^^^^^^^^^^
@@ -166,6 +177,9 @@ Once the module is built we can access the globals from Python as usual::
     >>> cModuleGlobals.MAP[b'asd'] = 9
     >>> cModuleGlobals.MAP
     {b'123': 123, b'asd': 9, b'66': 66}
+
+.. index::
+    single: Module Globules; Getting; From C
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Getting Module Globals From C
@@ -225,6 +239,9 @@ From Python we would see this (C's ``print_global_INT()`` is mapped to Python's 
     Module:
     <module 'cModuleGlobals' from './cModuleGlobals.so'>
     Integer: "INT" 42 C long: 42 
+
+.. index::
+    single: Module Globules; Setting; From C
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting Module Globals From C

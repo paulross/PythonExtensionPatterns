@@ -14,6 +14,9 @@ This chapter describes how to write iterators for your C objects.
 These iterators allow your objects to be used with
 `Generators <https://docs.python.org/3/glossary.html#term-generator>`_.
 
+.. index::
+    single: Iterators
+
 ===========================
 Iterators
 ===========================
@@ -213,6 +216,9 @@ This can be used thus:
 But we can't (yet) iterate across the sequence.
 To do that we need to add an iterator.
 
+.. index::
+    single: Iterators; Adding an Iterator
+
 --------------------------------------
 Adding an Iterator
 --------------------------------------
@@ -367,6 +373,9 @@ a ``__next__`` method, the iterator instance provides that:
             .tp_new = SequenceOfLong_new,
     };
 
+.. index::
+    single: Iterators; Module Initialisation
+
 -----------------------------------------
 A Note on Module Initialisation
 -----------------------------------------
@@ -433,6 +442,9 @@ However the following is optional, as the comment suggests:
 
 If you omit that the code will work just fine, the iterator is instantiated dynamically, it is just that the type is
 not exposed in the module.
+
+.. index::
+    single: Iterators; Iterating Python In C
 
 ------------------------------
 Iterating a Python Object in C
@@ -618,6 +630,10 @@ Result in the stdout:
             cIterator.iterate_and_print(arg)
             captured = capfd.readouterr()
             assert captured.out == expected
+
+
+.. index::
+    single: Generators
 
 ===========================
 Generators

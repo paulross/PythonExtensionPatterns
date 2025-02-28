@@ -16,6 +16,9 @@
 
 .. _chapter_watchers:
 
+.. index::
+    single: Watchers
+
 ======================================
 Watchers
 ======================================
@@ -41,6 +44,9 @@ Here is an example of a dictionary watcher.
 .. _PyDict_WatchCallback(): https://docs.python.org/3/c-api/dict.html#c.PyDict_WatchCallback
 
 .. _chapter_watchers_dictionary:
+
+.. index::
+    single: Watchers; Dictionary
 
 ---------------------------
 Dictionary Watchers
@@ -123,6 +129,9 @@ There are some obvious variations here:
 - Different outputs, such as JSON.
 
 But how does this watcher work?
+
+.. index::
+    single: Watchers; Dictionary; Implementation
 
 Low Level C Implementation
 --------------------------
@@ -406,6 +415,12 @@ Now create the table of module methods:
             {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
+.. index::
+    single: Watchers; Dictionary; Context Manager
+
+Creating the Context Manager
+-----------------------------
+
 These are all fine but to be Pythonic it would be helpful to create a Context Manager
 (see :ref:`chapter_context_manager`) in C.
 The context manager holds a reference to the dictionary and the watcher ID.
@@ -517,6 +532,12 @@ Now we define the context manager methods and type:
             .tp_init = (initproc) PyDictWatcher_init
     };
 
+.. index::
+    single: Watchers; Dictionary; Module, Setup and Test
+
+Module, Setup and Test
+-----------------------------
+
 Now we create the ``cWatchers`` module,
 
 .. code-block:: c
@@ -587,6 +608,9 @@ And the result on ``stdout`` is something like:
         Dict: {}
         Key (str): age
         New value (int): 42
+
+.. index::
+    single: Watchers; Dictionary; No Context Manager
 
 Without the Context Manager
 ---------------------------

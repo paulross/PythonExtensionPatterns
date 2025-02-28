@@ -4,6 +4,9 @@
 .. toctree::
     :maxdepth: 3
 
+.. index::
+    single: Compiler Flags
+
 =================================
 Setting Compiler Flags
 =================================
@@ -11,6 +14,8 @@ Setting Compiler Flags
 It is sometimes difficult to decide what flags to set for the compiler and the best advice is to use the same flags that
 the version of Python you are using was compiled with. Here are a couple of ways to do that.
 
+.. index::
+    single: Compiler Flags; CLI
 
 ---------------------------------
 From the Command Line
@@ -32,8 +37,11 @@ where X is the major version and Y the minor version. For example (output is wra
     -g -O3 -Wall -arch arm64 -arch x86_64 -g
 
 
+.. index::
+    single: Compiler Flags; Programmatically
+
 --------------------------------------------------
-Programatically from Within a Python Process
+Programmatically from Within a Python Process
 --------------------------------------------------
 
 The ``sysconfig`` module contains information about the build environment for the particular version of Python:
@@ -62,6 +70,9 @@ The ``sysconfig`` module contains information about the build environment for th
      'stdlib': '/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13'}
     >>> sysconfig.get_paths()['include']
     '/Library/Frameworks/Python.framework/Versions/3.13/include/python3.13'
+
+.. index::
+    single: Compiler Flags; sysconfig
 
 --------------------------------------------------
 From the Command Line using ``sysconfig``
@@ -99,6 +110,8 @@ This very verbose output will give you a complete picture of your environment:
         AR = "/usr/bin/xcrun ar"
         ...
 
+.. index::
+    single: Compiler Flags; setup.py
 
 --------------------------------------------------
 Setting Flags Automatically in ``setup.py``

@@ -6,11 +6,18 @@
 
 .. _chapter_subclassing_and_using_super:
 
+.. index::
+    single: Subclassing
+    single: Subclassing; Using super()
+
 **************************************
 Subclassing and Using ``super()``
 **************************************
 
 This chapter describes how to subclass existing types and how to call ``super()`` in C where necessary.
+
+.. index::
+    single: Subclassing; Basic
 
 =================================
 Basic Subclassing
@@ -172,6 +179,9 @@ The extension can used like this:
 This is fine for subclasses that just add some additional functionality however if you want to overload the super class
 you need to be able to call ``super()`` from C which is described next.
 
+.. index::
+    single: Subclassing; Calling super() from C
+
 =================================
 Calling ``super()`` from C
 =================================
@@ -281,6 +291,9 @@ Here are a couple of ways of calling ``super()`` correctly:
 * Extract the ``super`` object from the builtins module and call that.
 
 The full code is in ``src/cpy/Util/py_call_super.h`` and ``src/cpy/Util/py_call_super.c``.
+
+.. index::
+    single: Subclassing; Calling super() from C; Direct
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Construct a ``super`` object directly
@@ -427,6 +440,10 @@ And the implementation file would be py_call_super.c, this is the code above wit
         return result;
     }
 
+
+.. index::
+    single: Subclassing; Calling super() from builtins
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Extract the ``super`` object from the builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -555,6 +572,10 @@ Here is the function with full error checking:
         Py_XDECREF(func);
         return result;
     }
+
+
+.. index::
+    single: Subclassing; With Overloading
 
 =====================================
 Subclassing with Overloading
@@ -704,6 +725,10 @@ The extension can used like this:
     obj.append(42)
     assert obj.appends == 1
     assert obj == [42, ]
+
+
+.. index::
+    single: Subclassing; datetime Example
 
 --------------------------------------
 Another Example of Using this API

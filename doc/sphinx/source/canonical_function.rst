@@ -1,6 +1,8 @@
 .. toctree::
     :maxdepth: 3
 
+.. index::
+    single: C Functions; Coding Pattern
 
 ===========================================
 A Pythonic Coding Pattern for C Functions
@@ -145,6 +147,8 @@ Notice the ``except:`` block falls through to the ``finally:`` block.
         return ret;
     }
 
+.. index::
+    single: C Functions; Full Coding Pattern
 
 The Function Code as One
 ========================
