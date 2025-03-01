@@ -3,6 +3,8 @@
 
 .. _cpp_and_buffer_protocol:
 
+.. index::
+    single: C++; Buffer Protocol
 
 ====================================
 C++ and the Python Buffer Protocol

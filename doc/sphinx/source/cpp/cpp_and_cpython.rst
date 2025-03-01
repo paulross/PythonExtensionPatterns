@@ -6,6 +6,11 @@
 
 .. _cpp_and_cpython:
 
+.. index::
+    single: C++; PyObject* Wrappers
+    single: C++; References
+    single: C++; Reference Counts
+
 ============================================
 C++ RAII Wrappers Around ``PyObject*``
 ============================================
@@ -40,6 +45,10 @@ It is sometimes useful to wrap up a ``PyObject*`` in a class that will manage th
         PyObject *m_ref;
     };
 
+.. index::
+    single: C++; Borrowed PyObject* Wrappers
+    single: C++; Borrowed References
+
 -------------------------------------------------
 C++ RAII Wrapper for a Borrowed ``PyObject*``
 -------------------------------------------------
@@ -69,6 +78,10 @@ This can be used with borrowed references as follows:
     } // Decrement reference here.
 
 
+.. index::
+    single: C++; New PyObject* Wrappers
+    single: C++; New References
+
 -------------------------------------------------
 C++ RAII Wrapper for a New ``PyObject*``
 -------------------------------------------------
@@ -97,6 +110,9 @@ This new reference wrapper can be used as follows:
 
 
 .. _cpp_and_cpython.handling_default_arguments:
+
+.. index::
+    single: C++; Default Mutable Arguments
 
 ============================================
 Handling Default Arguments
@@ -147,6 +163,10 @@ Suppose we have the Python function signature of ``def function(encoding='utf8',
     }
 
 The full code is in ``src/cpy/cParseArgsHelper.cpp`` and the tests in ``tests/unit/test_c_parse_args_helper.py``.
+
+.. index::
+    single: C++; Homogeneous Containers
+    single: C++; Project PyCppContainers
 
 ============================================
 Homogeneous Python Containers and C++

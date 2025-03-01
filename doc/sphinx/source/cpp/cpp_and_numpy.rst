@@ -3,6 +3,9 @@
 
 .. _cpp_and_numpy:
 
+.. index::
+    pair: C++; Numpy
+
 ====================================
 C++ and the Numpy C API
 ====================================
@@ -10,6 +13,9 @@ C++ and the Numpy C API
 `Numpy <http://www.numpy.org>`_ is a powerful arrary based data structure with fast vector and array operations.
 It has a fully featured `C API <https://docs.scipy.org/doc/numpy/reference/c-api.html>`_.
 This section describes some aspects of using Numpy with C++.
+
+.. index::
+    single: C++; Initialising Numpy
 
 ------------------------------------
 Initialising Numpy
@@ -46,6 +52,10 @@ asserted:
 .. code-block:: cpp
 
     assert(PyArray_API);
+
+.. index::
+    single: C++; Numpy Initialisation Techniques
+    single: Numpy; C++ Initialisation Techniques
 
 ------------------------------------
 Numpy Initialisation Techniques

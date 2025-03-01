@@ -10,6 +10,10 @@
 
 .. _leaked-new-references-label:
 
+.. index::
+    single: References; Finding Leaks
+    single: Reference Counts; Finding Leaks
+
 ===============================================
 Leaked New References
 ===============================================
@@ -77,6 +81,10 @@ In Python first we check what the size of a long is then we call the leaky funct
     >>>
 
 This should generate a leak of 44Mb or thereabouts.
+
+.. index::
+    single: References; Recognising Leaks
+    single: Reference Counts; Recognising Leaks
 
 ----------------------------------
 Recognising Leaked New References
@@ -177,6 +185,10 @@ And those references are not collectable::
 
 
 .. _leaked-new-references-valgrind-label:
+
+.. index::
+    single: References; Valgrind
+    single: Reference Counts; Valgrind
 
 ------------------------------------------
 Finding Where the Leak is With Valgrind

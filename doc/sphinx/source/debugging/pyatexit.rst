@@ -7,13 +7,22 @@
 .. toctree::
     :maxdepth: 3
 
+.. index::
+    single: Debugging; pyatexit
+
 =======================================================
 Instrumenting the Python Process for Your Structures
 =======================================================
 
-Some debugging problems can be solved by instrumenting your C extensions for the duration of the Python process and reporting what happened when the process terminates. The data could be: the number of times classes were instantiated, functions called, memory allocations/deallocations or anything else that you wish.
+Some debugging problems can be solved by instrumenting your C extensions for the duration of the Python process and
+reporting what happened when the process terminates.
+The data could be: the number of times classes were instantiated, functions called, memory allocations/deallocations
+or anything else that you wish.
 
-To take a simple case, suppose we have a class that implements a up/down counter and we want to count how often each ``inc()`` and ``dec()`` function is called during the entirety of the Python process. We will create a C extension that has a class that has a single member (an interger) and two functions that increment or decrement that number. If it was in Python it would look like this:
+To take a simple case, suppose we have a class that implements a up/down counter and we want to count how often each
+``inc()`` and ``dec()`` function is called during the entirety of the Python process.
+We will create a C extension that has a class that has a single member (an interger) and two functions that increment
+or decrement that number. If it was in Python it would look like this:
 
 .. code-block:: python
     
@@ -27,15 +36,19 @@ To take a simple case, suppose we have a class that implements a up/down counter
         def dec(self):
             self.count -= 1
 
-What we would like to do is to count how many times ``inc()`` and ``dec()`` are called on *all* instances of these objects and summarise them when the Python process exits [#f1]_.
+What we would like to do is to count how many times ``inc()`` and ``dec()`` are called on *all* instances of these
+objects and summarise them when the Python process exits [#f1]_.
 
-There is an interpreter hook ``Py_AtExit()`` that allows you to register C functions that will be executed as the Python interpreter exits. This allows you to dump information that you have gathered about your code execution.
+There is an interpreter hook ``Py_AtExit()`` that allows you to register C functions that will be executed as the
+Python interpreter exits.
+This allows you to dump information that you have gathered about your code execution.
 
 -------------------------------------------
 An Implementation of a Counter
 -------------------------------------------
 
-First here is the module ``pyatexit`` with the class ``pyatexit.Counter`` with no intrumentation (it is equivelent to the Python code above). We will add the instrumentation later:
+First here is the module ``pyatexit`` with the class ``pyatexit.Counter`` with no intrumentation (it is equivalent to
+the Python code above). We will add the instrumentation later:
 
 .. code-block:: c
     
@@ -187,13 +200,15 @@ Building this with ``python3 setup.py build_ext --inplace`` we can check everyth
 Instrumenting the Counter
 -------------------------------------------
 
-To add the instrumentation we will declare a macro ``COUNT_ALL_DEC_INC`` to control whether the compilation includes instrumentation.
+To add the instrumentation we will declare a macro ``COUNT_ALL_DEC_INC`` to control whether the compilation includes
+instrumentation.
 
 .. code-block:: c
 
     #define COUNT_ALL_DEC_INC
 
-In the global area of the file declare some global counters and a function to write them out on exit. This must be a ``void`` function taking no arguments:
+In the global area of the file declare some global counters and a function to write them out on exit.
+This must be a ``void`` function taking no arguments:
 
 .. code-block:: c
 
@@ -210,7 +225,8 @@ In the global area of the file declare some global counters and a function to wr
     }
     #endif
 
-In the ``Py_Counter_new`` function we add some code to register this function. This must be only done once so we use the static ``has_registered_exit_function`` to guard this:
+In the ``Py_Counter_new`` function we add some code to register this function.
+This must be only done once so we use the static ``has_registered_exit_function`` to guard this:
 
 .. code-block:: c
 
@@ -234,10 +250,12 @@ In the ``Py_Counter_new`` function we add some code to register this function. T
     }
 
 .. note::
-    ``Py_AtExit`` can take, at most, 32 functions. If the function can not be registered then ``Py_AtExit`` will return -1.
+    ``Py_AtExit`` can take, at most, 32 functions. If the function can not be registered then ``Py_AtExit`` will
+    return -1.
     
 .. warning::
-    Since Python’s internal finalization will have completed before the cleanup function, no Python APIs should be called by any registered function.
+    Since Python’s internal finalization will have completed before the cleanup function, no Python APIs should be
+    called by any registered function.
 
 
 Now we modify the ``inc()`` and ``dec()`` functions thus:
@@ -284,4 +302,5 @@ Now when we build this extension and run it we see the following:
 
 .. rubric:: Footnotes
 
-.. [#f1] The ``atexit`` module in Python can be used to similar effect however registered functions are called at a different stage of interpreted teardown than ``Py_AtExit``.
+.. [#f1] The ``atexit`` module in Python can be used to similar effect however registered functions are called at a
+    different stage of interpreted teardown than ``Py_AtExit``.

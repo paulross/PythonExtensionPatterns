@@ -9,6 +9,9 @@
 
 .. _gcov-label:
 
+.. index::
+    single: Debugging; gcov
+
 ===============================================
 Using gcov for C/C++ Code Coverage
 ===============================================

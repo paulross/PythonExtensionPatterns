@@ -7,6 +7,8 @@
 .. toctree::
     :maxdepth: 3
 
+.. index::
+    single: Debugging; Tools
 
 =================================
 Debugging Tools
@@ -19,6 +21,9 @@ First create your toolbox, in this one we have:
 * OS memory monitioring - this is a quick and simple way of identifying whether memory leaks are happening or not. An example is given below: :ref:`simple-memory-monitor-label`
 
 .. _debug-tools-debug-python-label:
+
+.. index::
+    single: Debugging; A Debug Python Version
 
 ------------------------------------------------
 Build a Debug Version of Python
@@ -43,6 +48,9 @@ See here :ref:`debug-version-of-python-label` for instructions on how to do this
 
 .. _debug-tools-valgrind-label:
 
+.. index::
+    single: Debugging; Valgrind
+
 ------------------------------------------------
 Valgrind
 ------------------------------------------------
@@ -55,6 +63,12 @@ Here :ref:`leaked-new-references-valgrind-label` is an example of finding a leak
 
 
 .. _simple-memory-monitor-label:
+
+.. index::
+    single: Debugging; Memory Monitor
+    single: Memory Monitor
+    see: Memory Monitor; pymemtrace
+    see: pymemtrace; Memory Monitor
 
 ------------------------------------------------
 A Simple Memory Monitor

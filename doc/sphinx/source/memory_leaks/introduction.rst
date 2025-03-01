@@ -6,6 +6,9 @@ Introduction
 
 This describes tools and techniques that can identify memory leaks in long running Python programs.
 
+.. index::
+    single: Memory Leaks; Is it a Leak?
+
 Is it a Leak?
 ------------------
 
@@ -16,6 +19,9 @@ into twice the original memory and this can look, superficially like a memory le
 Python data structures are not particularly efficient, an ``int`` is typically 24 bytes, a ``datetime`` 48 bytes and so on.
 
 A further source of 'leaks', or code that can mask memory loaks, are caches, in-memory databases and so on.
+
+.. index::
+    single: Memory Leaks; Sources
 
 Sources of Leaks
 ------------------

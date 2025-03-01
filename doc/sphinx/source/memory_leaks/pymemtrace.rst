@@ -2,6 +2,8 @@
 .. sectionauthor:: Paul Ross <apaulross@gmail.com>
 
 
+.. _memory-leaks.pymemtrace:
+
 .. index::
     single: pymemtrace
     single: Memory Leaks; pymemtrace

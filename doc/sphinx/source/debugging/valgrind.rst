@@ -10,6 +10,9 @@
 
 .. _valgrind-label:
 
+.. index::
+    single: Valgrind
+
 ===============================================
 Valgrind
 ===============================================
@@ -20,6 +23,9 @@ This is about how to build Valgrind, a Valgrind friendly version of Python and f
 
     These instructions have been tested on Mac OS X 10.9 (Mavericks).
     They may or may not work on other OS's
+
+.. index::
+    single: Valgrind; Building
 
 ---------------------------------
 Building Valgrind
@@ -37,6 +43,9 @@ This should be fairly straightforward:
     make install
 
 .. _building-python-for-valgrind-label:
+
+.. index::
+    single: Valgrind; Building Python For
 
 ---------------------------------
 Building Python for Valgrind
@@ -101,6 +110,9 @@ Check debug build
     1
 
 .. _using-valgrind-label:
+
+.. index::
+    single: Valgrind; Using
 
 ---------------------------------
 Using Valgrind

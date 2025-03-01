@@ -10,7 +10,8 @@
 
 .. _memory_leaks-label:
 
-.. index:: single: Memory Leaks
+.. index::
+    single: Memory Leaks
 
 *******************
 Memory Leaks

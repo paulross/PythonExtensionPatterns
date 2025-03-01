@@ -4,6 +4,9 @@
 .. toctree::
     :maxdepth: 2
 
+.. index::
+    single: Thread Safety
+
 *******************************
 Thread Safety
 *******************************
@@ -51,6 +54,9 @@ This class deliberately has ``sleep()`` calls to allow a thread switch to take p
 The code (C and C++) is in ``src/cpy/Threads`` and the tests are in ``tests/unit/test_c_threads.py``.
 
 Lets walk through it.
+
+.. index::
+    single: Thread Safety; Creating a Lock
 
 ====================================
 Coding up the Lock
@@ -133,6 +139,8 @@ When deallocating the object we should free the lock pointer with ``PyThread_fre
         Py_TYPE(self)->tp_free((PyObject *)self);
     }
 
+.. index::
+    single: Thread Safety; Using a Lock
 
 ====================================
 Using the Lock
@@ -278,6 +286,9 @@ The lock is automatically freed when we exit the code block:
         sleep_milliseconds(250L);
         return result;
     }
+
+.. index::
+    single: Thread Safety; Examples
 
 ====================================
 Example Code and Tests

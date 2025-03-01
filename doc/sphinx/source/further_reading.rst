@@ -6,11 +6,17 @@
 
 .. _further_reading:
 
+.. index::
+    single: Further Reading
+
 ***************************
 Further Reading
 ***************************
 
 Some other sources of information for you.
+
+.. index::
+    single: Further Reading; General
 
 ============================================
 C Extensions - General
@@ -22,6 +28,9 @@ C Extensions - General
   `Documentation <https://llllllllll.github.io/c-extension-tutorial/index.html>`_
   and `Code <https://github.com/llllllllll/c-extension-tutorial>`_
 
+.. index::
+    single: Further Reading; Books
+
 ============================================
 Books
 ============================================
@@ -29,6 +38,9 @@ Books
 * The `CPython Internals book (RealPython) <https://www.amazon.co.uk/CPython-Internals-Guide-Python-Interpreter/dp/1775093344>`_
 * The `Python Cookbook <https://www.amazon.co.uk/Python-Cookbook-David-Beazley/dp/1449340377/>`_
   by David Beazley and Brian Jones.
+
+.. index::
+    single: Further Reading; Projects
 
 ============================================
 Projects

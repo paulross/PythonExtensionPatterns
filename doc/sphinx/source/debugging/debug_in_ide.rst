@@ -9,6 +9,9 @@
 
 .. _debug-in-ide-label:
 
+.. index::
+    single: Debugging; IDEs
+
 ===============================================
 Debuging Python C Extensions in an IDE
 ===============================================
@@ -339,6 +342,9 @@ The complete code for ``py_import_call_execute.c`` is here:
     //    extern "C" {
     #endif
 
+
+.. index::
+    single: Debugging; Xcode
 
 --------------------------------------------
 Debugging Python C Extensions in Xcode

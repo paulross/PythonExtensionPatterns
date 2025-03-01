@@ -6,9 +6,15 @@
 
 .. _miscellaneous:
 
+.. index::
+    single: Miscellaneous
+
 ====================================
 Miscellaneous
 ====================================
+
+This chapter covers various miscellaneous issues that the author has found with creating Python Extensions over the
+years.
 
 ------------------------------------
 No ``PyInit_...`` Function Found  

@@ -7,6 +7,8 @@
 .. toctree::
     :maxdepth: 3
 
+.. index::
+    single: Debugging; Tactics
 
 =================================
 Debugging Tactics
@@ -14,6 +16,10 @@ Debugging Tactics
 
 So what is the problem that you are trying to solve?
 
+
+.. index::
+    single: Access After Free
+    single: Debugging; Access After Free
 
 ----------------------------
 Access After Free

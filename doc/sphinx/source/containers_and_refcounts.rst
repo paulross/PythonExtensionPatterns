@@ -261,8 +261,7 @@ Lets see:
         PyTuple_SetItem(container, 0, value);
         /* value ref count is still 1 as it has been *stolen*. */
 
-        /* But this ends up with adding a garbage value to the tuple.
-         * Which can only lead to trouble later on. */
+        /* Repeating the same call will only lead to trouble later on (maybe). */
         PyTuple_SetItem(container, 0, value);
         /* And this will segfault as, during execution, it will
          * try to decrement a value that does not exist. */
@@ -271,9 +270,9 @@ Lets see:
 
     What is happening is that the second time `PyTuple_SetItem()`_ is called it decrements the reference count of the
     existing member that happens to be ``value``.
-    This brings ``value``'s reference count from one down to zero
+    In this case thsi brings ``value``'s reference count from one down to zero
     At that point ``value`` is free'd.
-    Then `PyTuple_SetItem()`_ blithely sets ``value`` which is now garbage.
+    Then `PyTuple_SetItem()`_ blithely sets ``value`` which is now, likely, garbage.
 
     A simple change to `PyTuple_SetItem()`_ would prevent this from producing undefined behaviour by checking if the
     replacement is the same as the existing value.

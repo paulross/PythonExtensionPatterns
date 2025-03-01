@@ -6,6 +6,9 @@
 
 .. _cpp_and_unicode:
 
+.. index::
+    pair: C++; Unicode
+
 ====================================
 Python Unicode Strings and C++
 ====================================
@@ -186,6 +189,10 @@ Here is an example of using this module:
     0x00018000    98304 "98304"
     >>> r == s
     True
+
+.. index::
+    single: C++; bytes
+    single: C++; bytearray
 
 -----------------------------------------------------------------------
 Working with ``bytes``, ``bytearray`` and UTF-8 Unicode Arguments

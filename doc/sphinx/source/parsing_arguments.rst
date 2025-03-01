@@ -683,6 +683,7 @@ Here is the C code.
 
 .. index::
     single: Parsing Arguments Example; Default Mutable Arguments
+    single: Default Mutable Arguments
 
 Being Pythonic with Default Mutable Arguments
 =============================================

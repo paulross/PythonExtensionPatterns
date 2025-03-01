@@ -39,6 +39,7 @@ where X is the major version and Y the minor version. For example (output is wra
 
 .. index::
     single: Compiler Flags; Programmatically
+    single: sysconfig; importing
 
 --------------------------------------------------
 Programmatically from Within a Python Process
@@ -73,6 +74,7 @@ The ``sysconfig`` module contains information about the build environment for th
 
 .. index::
     single: Compiler Flags; sysconfig
+    single: sysconfig; CLI
 
 --------------------------------------------------
 From the Command Line using ``sysconfig``

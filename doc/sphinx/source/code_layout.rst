@@ -4,6 +4,9 @@
 .. toctree::
     :maxdepth: 3
 
+.. index::
+    single: Source Code Layout
+
 =================================
 Source Code Layout 
 =================================

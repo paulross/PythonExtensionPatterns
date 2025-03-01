@@ -9,6 +9,9 @@
 
 .. _debug-version-of-python-label:
 
+.. index::
+    single: Debugging; Debug Version of Python
+
 ===============================================
 Building and Using a Debug Version of Python
 ===============================================
@@ -104,6 +107,9 @@ In the source directory:
 
 .. _debug-version-of-python-memory_alloc-label:
 
+.. index::
+    single: Debugging; Python's Memory Allocator
+
 ---------------------------
 Python's Memory Allocator
 ---------------------------
@@ -166,6 +172,9 @@ And we call this from the interpreter we get a diagnostic:
     >>> cPyRefs.afterFree()
     <refcnt -2604246222170760229 at 0x10a474130>
     >>> 
+
+.. index::
+    single: Debugging; PyMalloc Statistics
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Getting Statistics on PyMalloc
@@ -255,6 +264,9 @@ I have no special knowledge about the output you see when running Python this wa
     Total                              =          166,985,728
     loose_new_reference: DONE
 
+
+.. index::
+    pair: Debugging; sysconfig
 
 -----------------------------------------------------------
 Identifying the Python Build Configuration from the Runtime
