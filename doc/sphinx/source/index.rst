@@ -16,7 +16,6 @@ Coding Patterns for Python Extensions
     :numbered:
     :maxdepth: 3
 
-    _index_styles
     introduction
     simple_example
     install
