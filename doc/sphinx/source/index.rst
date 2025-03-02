@@ -18,7 +18,6 @@ Coding Patterns for Python Extensions
 
     introduction
     simple_example
-    install
     refcount
     containers_and_refcounts
     struct_sequence
@@ -42,6 +41,7 @@ Coding Patterns for Python Extensions
     code_layout
     cpp
     miscellaneous
+    install
     further_reading
     todo
     HISTORY

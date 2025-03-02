@@ -23,6 +23,9 @@ patterns that you can use to avoid them.
 This also might help if you are considering code to submit to the Python standard library which depends extensively on
 C extensions.
 
+This is primarily a documentation project, with code.
+If you want that code see :ref:`chapter_installation`, otherwise read on.
+
 .. index::
     single: Personal Note
 
@@ -180,4 +183,8 @@ Next up: a simple example showing the effect on code performance.
 .. rubric:: Footnotes
 
 .. [#] Huge, but pretty consistent once mastered.
+       However there are some deficiencies in the official Python documentation and some of
+       these are described in this project. For example in the chapters
+       :ref:`chapter_containers_and_refcounts`
+       and :ref:`chapter_struct_sequence`.
 .. [#] Version 0.3 of this project supports Python versions: 3.9, 3.10, 3.11, 3.12, 3.13.

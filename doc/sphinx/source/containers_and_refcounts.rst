@@ -186,9 +186,12 @@ For example:
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_SetItem_steals`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SetItem_steals`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_SetItem_steals``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_SetItem_steals()``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyTuple_SetItem_steals()``.
 
 Whilst we are here this is an example of testing the behaviour by manipulating reference counts which we then check
 with ``assert()``.
@@ -281,12 +284,15 @@ Lets see:
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_SetItem_steals_replace`` and ``dbg_PyTuple_SetItem_replace_with_same``
-  in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SetItem_steals_replace`` and ``test_PyTuple_SetItem_replace_same``
-  in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals_replace``
-  and ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_replace_same``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_SetItem_steals_replace``
+    * ``dbg_PyTuple_SetItem_replace_with_same``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_SetItem_steals_replace``
+    *  ``test_PyTuple_SetItem_replace_same``
+* Python: in ``tests.unit.test_c_ref_count``
+    * ``test_PyTuple_SetItem_steals_replace()``
+    * ``test_PyTuple_SetItem_replace_same()``
 
 .. index:: single: PyTuple_SetItem(); Failures
 
@@ -369,9 +375,12 @@ Basic Usage
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_PyTuple_SET_ITEM_steals``in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_PyTuple_SET_ITEM_steals`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_PyTuple_SET_ITEM_steals``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_PyTuple_SET_ITEM_steals()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_PyTuple_SET_ITEM_steals()``
+* Python: in ``tests.unit.test_c_ref_count``
+    * ``test_PyTuple_PyTuple_SET_ITEM_steals()``
 
 .. index::
     single: PyTuple_SET_ITEM(); Replacement
@@ -406,12 +415,15 @@ This is because `PyTuple_SET_ITEM()`_ *abandons* the previous reference
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_SET_ITEM_steals_replace`` and ``dbg_PyTuple_SET_ITEM_replace_with_same``
-  in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SetItem_steals_replace`` and ``test_PyTuple_SET_ITEM_replace_same``
-  in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_steals_replace`` and
-  ``tests.unit.test_c_ref_count.test_PyTuple_SET_ITEM_replace_same``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_SET_ITEM_steals_replace()``
+    * ``dbg_PyTuple_SET_ITEM_replace_with_same()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_SetItem_steals_replace()``
+    * ``test_PyTuple_SET_ITEM_replace_same()``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyTuple_SetItem_steals_replace``
+    * ``test_PyTuple_SET_ITEM_replace_same``.
 
 .. index:: single: PyTuple_SET_ITEM(); Failures
 
@@ -453,9 +465,12 @@ Setting a ``NULL`` will not cause an error:
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_SetIem_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SetItem_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_NULL``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_SetIem_NULL()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_SetItem_NULL()``
+* Python: in ``tests/unit/test_c_ref_count.py``
+    * ``test_PyTuple_SetItem_NULL()``.
 
 And:
 
@@ -468,9 +483,12 @@ And:
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_SET_ITEM_NULL`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SET_ITEM_NULL`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SET_ITEM_NULL``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_SET_ITEM_NULL()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_SET_ITEM_NULL()``
+* Python: in ``tests/unit/test_c_ref_count.py``
+    * ``test_PyTuple_SET_ITEM_NULL()``.
 
 .. index::
     single: PyTuple_SetItem(); Replacing NULL
@@ -490,9 +508,12 @@ Replacing a ``NULL`` will not cause an error, the replaced value reference is *s
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_SetIem_NULL_SetIem`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SetItem_NULL_SetIem`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_NULL_SetIem``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_SetIem_NULL_SetIem``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_SetItem_NULL_SetIem``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyTuple_SetItem_NULL_SetIem()``.
 
 And:
 
@@ -505,9 +526,12 @@ And:
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_SET_ITEM_NULL_SET_ITEM`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_SET_ITEM_NULL_SET_ITEM``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_SET_ITEM_NULL_SET_ITEM()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_SET_ITEM_NULL_SET_ITEM()``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyTuple_SET_ITEM_NULL_SET_ITEM()``.
 
 .. _chapter_containers_and_refcounts.tuples.PyTuple_Pack:
 
@@ -547,9 +571,12 @@ For example:
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_PyTuple_Pack`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_Py_PyTuple_Pack`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_Py_PyTuple_Pack``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_PyTuple_Pack``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_Py_PyTuple_Pack``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyTuple_Py_PyTuple_Pack()``.
 
 .. _chapter_containers_and_refcounts.tuples.Py_BuildValue:
 
@@ -581,9 +608,12 @@ potentially, leak:
 
 For code and tests see:
 
-* C: ``dbg_PyTuple_Py_BuildValue`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyTuple_Py_BuildValue`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyTuple_Py_BuildValue``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyTuple_Py_BuildValue()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyTuple_Py_BuildValue``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyTuple_Py_BuildValue()``.
 
 .. index::
     single: PyTuple_GetItem()
@@ -591,6 +621,13 @@ For code and tests see:
     single: PyTuple_GET_ITEM()
     single: Tuple; PyTuple_GET_ITEM()
     pair: Getters; Tuple
+
+.. _chapter_containers_and_refcounts.tuples.Getters:
+
+.. index::
+    single: Tuple; Getters
+    single: Tuple; PyTuple_GetItem()
+    single: Tuple; PyTuple_GET_ITEM()
 
 Tuple Getters
 ---------------------
@@ -600,7 +637,7 @@ There are these APIS for getting an item from a tuple:
 * `PyTuple_GetItem()`_, it returns a borrowed reference and will error
   if the supplied container is not tuple or the index is negative or out of range.
 * `PyTuple_GET_ITEM()`_, it returns a borrowed reference and there is
-  no error checking for the index being in range.
+  no error checking for the container being a tuple or the index being in range.
   The type checking is performed as an assertion if Python is built in
   `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
   `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
@@ -649,6 +686,8 @@ Lists
 
 .. _chapter_containers_and_refcounts.lists.PyList_SET_ITEM:
 
+.. _chapter_containers_and_refcounts.lists.PyList_SET_ITEM.failures:
+
 ``PyList_SetItem()`` and ``PyList_SET_ITEM()``
 ----------------------------------------------
 
@@ -667,9 +706,12 @@ On replacement with `PyList_SetItem()`_ heed the warning in
 `Py_BuildValue()`_ also behaves identically, as far as reference counts are concerned, with Lists as it does with
 Tuples (see :ref:`chapter_containers_and_refcounts.tuples.Py_BuildValue`).
 
+
 .. index::
     single: PyList_Append()
     single: List; PyList_Append()
+
+.. _chapter_containers_and_refcounts.lists.PyList_Append:
 
 ``PyList_Append()``
 ---------------------
@@ -707,16 +749,32 @@ For code and tests, including failure modes, see:
     single: PyList_Insert()
     single: List;  PyList_Insert()
 
+.. _chapter_containers_and_refcounts.lists.PyList_Insert:
+
 ``PyList_Insert()``
 ---------------------
 
 `PyList_Insert()`_ (a C function) inserts an object before a specific index in a list with error checking.
 This increments the reference count of the given value which will be decremented on container destruction.
 
+`PyList_Insert()`_ is equivalent to ``list.insert(...)``, for example:
+
+.. code-block:: python
+
+    >>> l = []
+    >>> l.insert(123, "Hello")
+    >>> l.insert(-123, "World")
+    >>> l
+    ['World', 'Hello']
+
 `PyList_Insert()`_ can fail for two reasons:
 
 * The given container is not a list.
 * The given value is NULL.
+
+.. note::
+
+    `PyList_Insert()`_ does not fail because of any value of the index, either positive or negative.
 
 On failure the reference count of value is unchanged, returns -1, and a ``SystemError`` is set with the text
 "bad argument to internal function".
@@ -735,28 +793,6 @@ For code and tests, including failure modes, see:
         [Continued on the next page]
 
         \pagebreak
-
-.. note::
-
-    The Python documentation for `PyList_Insert()`_ does not make this clear the index can be negative in
-    which case the index is calculated from the end.
-
-    For example (``dbg_PyList_Insert_Negative_Index()`` in ``src/cpy/Containers/DebugContainers.c``):
-
-    .. code-block:: c
-
-        PyObject *container = PyList_New(0);
-        PyObject *value = new_unique_string(__FUNCTION__, NULL);
-        // Insert at end
-        if (PyList_Insert(container, -1L, value)) {
-            assert(0);
-        }
-        assert(Py_REFCNT(value) == 2);
-        PyObject *get_item;
-        // PyList_Insert at -1 actually inserts at 0.
-        assert(PyList_GET_SIZE(container) == 1L);
-        get_item = PyList_GET_ITEM(container, 0L);
-        assert(get_item == value);
 
 .. note::
 
@@ -780,6 +816,29 @@ For code and tests, including failure modes, see:
         get_item = PyList_GET_ITEM(container, 0L);
         assert(get_item == value);
 
+.. note::
+
+    Neither the Python documentation for `PyList_Insert()`_ or ``list.insert()`` does not make this clear that index
+    can be negative in which case the index is calculated from the end.
+    If that index calculation is less than zero it is truncated to zero.
+
+    For example (``dbg_PyList_Insert_Negative_Index()`` in ``src/cpy/Containers/DebugContainers.c``):
+
+    .. code-block:: c
+
+        PyObject *container = PyList_New(0);
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        // Insert at end
+        if (PyList_Insert(container, -1L, value)) {
+            assert(0);
+        }
+        assert(Py_REFCNT(value) == 2);
+        PyObject *get_item;
+        // PyList_Insert at -1 actually inserts at 0.
+        assert(PyList_GET_SIZE(container) == 1L);
+        get_item = PyList_GET_ITEM(container, 0L);
+        assert(get_item == value);
+
 .. index::
     single: PyList_GetItem()
     single: List; PyList_GetItem()
@@ -788,6 +847,8 @@ For code and tests, including failure modes, see:
     single: PyList_GetItemRef()
     single: List; PyList_GetItemRef()
     pair: Getters; List
+
+.. _chapter_containers_and_refcounts.lists.Getters:
 
 List Getters
 ---------------------
@@ -803,7 +864,7 @@ There are these APIS for getting an item from a list:
   `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
   If not the results are undefined.
 * `PyList_GetItemRef()`_ [From Python 3.13 onwards].
-  Like `PyList_GetItem()`_ but his returns a new *strong* reference to the existing object.
+  Like `PyList_GetItem()`_ but his returns a new *strong* (i.e. incremented) reference to the existing object.
 
 .. index:: single: List; API Summary
 
@@ -870,6 +931,8 @@ This section describes how reference counts are affected when building and acces
     single: PyDict_SetItem()
     single: Dictionary; PyDict_SetItem()
 
+.. _chapter_containers_and_refcounts.dictionaries.setitem:
+
 ``PyDict_SetItem()``
 --------------------
 
@@ -934,6 +997,8 @@ Now replace the value with the same value, reference counts remain the same:
     assert(Py_REFCNT(value_a) == 1);
     assert(Py_REFCNT(value_b) == 2);
 
+.. _chapter_containers_and_refcounts.dictionaries.setitem.failure:
+
 ``PyDict_SetItem()`` Failure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -948,9 +1013,12 @@ Now replace the value with the same value, reference counts remain the same:
 
 For code and tests see:
 
-* C: ``dbg_PyDict_SetItem_*`` in ``src/cpy/Containers/DebugContainers.c``.
-* CPython: ``test_PyDict_SetItem_*`` in ``src/cpy/RefCount/cRefCount.c``.
-* Python: ``tests.unit.test_c_ref_count.test_PyDict_SetItem_increments``.
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_SetItem_*()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyDict_SetItem_*()``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyDict_SetItem_increments()``
 
 .. note::
 
@@ -958,6 +1026,7 @@ For code and tests see:
     is non zero.
     ``ACCEPT_SIGSEGV`` is defined in ``src/cpy/Containers/DebugContainers.h``.
 
+.. _chapter_containers_and_refcounts.dictionaries.setdefault:
 
 ``PyDict_SetDefault()``
 ------------------------
@@ -1367,7 +1436,7 @@ This section describes other dictionary APIs that are simple to describe and hav
 
 .. note::
 
-    There are no tests for many of these APIs in this project.
+    There are no tests for many of these APIs in the current version of this project.
 
 
 .. index::
@@ -1623,6 +1692,101 @@ So this is how `PySet_Pop()`_  might be used in practice:
     pop_from_set(container);
     /* Clean up. */
     Py_DECREF(container);
+
+--------------
+Summary
+--------------
+
+This summarises where the Python documentation is wrong, absent or misleading and where you might get into trouble.
+
+.. index::
+    single: Tuple; Summary
+    pair: Tuple; Gotchas
+    single: Tuple; PyTuple_SetItem()
+    single: Tuple; PyTuple_SET_ITEM()
+    single: Tuple; PyTuple_Pack()
+    single: Tuple; Py_BuildValue()
+    single: Tuple; PyTuple_GET_ITEM()
+
+Tuples
+--------------
+
+- `PyTuple_SetItem()`_ will lead to a SIGSEGV if the existing value is the same as the inserted value.
+  See :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem`.
+- On failure `PyTuple_SetItem()`_ will decrement the reference count of the given value and this might well lead to a
+  SIGSEGV.
+  See :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem.failures`.
+- `PyTuple_SET_ITEM()`_ will lead to a memory leak when replacing an existing value as it abandons the previous
+  reference.
+  See :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM`.
+- `PyTuple_SET_ITEM()`_ does no error checking so is capable of writing to arbitrary memory locations on error.
+  See :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.failures`.
+- Both `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ accept ``NULL`` as the value argument and behave as documented.
+- `PyTuple_Pack()`_ will leak the given arguments. See :ref:`chapter_containers_and_refcounts.tuples.PyTuple_Pack`.
+- `Py_BuildValue()`_ will leak the given arguments when used with the ``"O"`` argument.
+  See :ref:`chapter_containers_and_refcounts.tuples.Py_BuildValue`.
+- `PyTuple_GET_ITEM()`_ can try to access arbitrary memory locations if the arguments are wrong.
+  See :ref:`chapter_containers_and_refcounts.tuples.Getters`.
+
+
+.. index::
+    single: List; Summary
+    pair: List; Gotchas
+    single: List; PyList_SetItem()
+    single: List; PyList_SET_ITEM()
+    single: List; PyList_Append()
+    single: List; PyList_Insert()
+    single: List; Py_BuildValue()
+    single: List; PyList_GET_ITEM()
+
+Lists
+--------------
+
+- `PyList_SetItem()`_ will lead to a SIGSEGV if the existing value is the same as the inserted value.
+  See :ref:`chapter_containers_and_refcounts.lists.PyList_SetItem`.
+- On failure `PyList_SetItem()`_ will decrement the reference count of the given value and this might well lead to a
+  SIGSEGV.
+  See :ref:`chapter_containers_and_refcounts.lists.PyList_SET_ITEM.failures`.
+- `PyList_SET_ITEM()`_ will lead to a memory leak when replacing an existing value as it abandons the previous
+  reference.
+  See :ref:`chapter_containers_and_refcounts.lists.PyList_SET_ITEM`.
+- `PyList_SET_ITEM()`_ does no error checking so is capable of writing to arbitrary memory locations on error.
+  See :ref:`chapter_containers_and_refcounts.lists.PyList_SET_ITEM.failures`.
+- Both `PyList_SetItem()`_ and `PyList_SET_ITEM()`_ accept ``NULL`` as the value argument and behave as documented.
+- `PyList_Append()`_ will increment the reference count of the given argument and so may leak.
+  `PyList_Append()`_ uses `PyList_SET_ITEM()`_ in its implementation so those appropriate warnings apply.
+  See :ref:`chapter_containers_and_refcounts.lists.PyList_Append`
+  and :ref:`chapter_containers_and_refcounts.lists.PyList_SET_ITEM`.
+- `PyList_Insert()`_ is poorly documented in the official Python documentation.
+  See :ref:`chapter_containers_and_refcounts.lists.PyList_Insert`.
+- `Py_BuildValue()`_ will leak the given arguments when used with the ``"O"`` argument.
+  Simlar to tuples, describe here: :ref:`chapter_containers_and_refcounts.tuples.Py_BuildValue`.
+- `PyList_GET_ITEM()`_ can try to access arbitrary memory locations if the arguments are wrong.
+  See :ref:`chapter_containers_and_refcounts.lists.Getters`.
+
+
+.. index::
+    single: Dictionary; Summary
+    pair: Dictionary; Gotchas
+    single: Dictionary; PyDict_SetItem()
+    single: Dictionary; PyDict_SetDefault()
+
+Dictionaries
+--------------
+
+- `PyDict_SetItem()`_ generally increments the reference count of the given key/value however this API
+  has some complicated rules about key/value reference counts that are not described in the Python documentation.
+  See :ref:`chapter_containers_and_refcounts.dictionaries.setitem`.
+- With `PyDict_SetItem()`_ if either the key or value is ``NULL`` there will be a SIGSEGV.
+  See :ref:`chapter_containers_and_refcounts.dictionaries.setitem`.
+- Otherwise `PyDict_SetItem()`_ has generally graceful behaviour on failure.
+  See :ref:`chapter_containers_and_refcounts.dictionaries.setitem.failure`.
+- `PyDict_SetDefault()`_ has generally graceful behaviour on failure.
+  See :ref:`chapter_containers_and_refcounts.dictionaries.setdefault`.
+
+TODO: Here
+
+
 
 .. Example footnote [#]_.
 
