@@ -1569,6 +1569,10 @@ potentially, leak.
 Sets
 -----------------------
 
+The set API is simple with no real difficulties for the user.
+
+.. _chapter_containers_and_refcounts.sets.pyset_add:
+
 .. index::
     single: PySet_Add()
     single: Set; PySet_Add()
@@ -1578,7 +1582,32 @@ Sets
 --------------------
 
 `PySet_Add()`_ is fairly straightforward.
-The set will increment the reference count of the value thus:
+The set will increment the reference count of the value if it is *not* already in the set.
+
+This returns 0 on success or -1 on failure in which case an exception will have been set which will be:
+
+* A ``SystemError`` if set is not an instance of set or its subtype.
+* A ``TypeError`` if the key is unhashable.
+* A ``MemoryError`` if there is no room to grow.
+
+Here is an example:
+
+.. code-block:: c
+
+    PyObject *container = PySet_New(NULL);
+    /* Py_REFCNT(container) is 1 */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    /* Py_REFCNT(value) is 1 */
+    int ret_val = PySet_Add(container, value);
+    assert(ret_val == 0);
+    /* Py_REFCNT(value) is now 2 */
+
+    /* Clean up. */
+    Py_DECREF(container);
+    /* Py_REFCNT(value) is now 1 */
+    Py_DECREF(value);
+
+When adding something that already exists in the set does *not* increment the reference count:
 
 .. code-block:: c
 
@@ -1599,6 +1628,8 @@ The set will increment the reference count of the value thus:
     Py_DECREF(container);
     /* Py_REFCNT(value) is now 1 */
     Py_DECREF(value);
+
+.. _chapter_containers_and_refcounts.sets.pyset_discard:
 
 .. index::
     single: PySet_Discard()
@@ -1629,6 +1660,8 @@ The set will discard (:ref:`chapter_containers_and_refcounts.discarded`) the val
     Py_DECREF(container);
     /* Py_REFCNT(value) is still 1 */
     Py_DECREF(value);
+
+.. _chapter_containers_and_refcounts.sets.pyset_pop:
 
 .. index::
     single: PySet_Pop()
@@ -1784,8 +1817,21 @@ Dictionaries
 - `PyDict_SetDefault()`_ has generally graceful behaviour on failure.
   See :ref:`chapter_containers_and_refcounts.dictionaries.setdefault`.
 
-TODO: Here
+Sets
+--------------
 
+The set API is much cleaner than the others and contains few gotchas.
+In summary:
+
+- `PySet_Add()`_ will increment the reference count of the value if it is not already in the set.
+  See :ref:`chapter_containers_and_refcounts.sets.pyset_add`.
+- `PySet_Discard()`_ will decrement the reference count of the value and returns it.
+  It is up to the caller to decrement the reference count of the returned value.
+  See :ref:`chapter_containers_and_refcounts.sets.pyset_discard`.
+- `PySet_Pop()`_ does not decrement the reference count of the returned value, it is
+  *abandoned* (:ref:`chapter_containers_and_refcounts.abandoned`).
+  It is up to the caller to decrement the reference count of the returned value.
+  See :ref:`chapter_containers_and_refcounts.sets.pyset_pop`.
 
 
 .. Example footnote [#]_.
