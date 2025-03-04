@@ -7,11 +7,14 @@ from cPyExtPatt import cStructSequence
 
 def test_c_struct_sequence_dir():
     result = dir(cStructSequence)
+    print()
+    print(result)
     assert result == [
-    'BasicNT_create',
+        'BasicNT_create',
         'ExcessNT_create',
         'NTRegisteredType',
         'NTUnRegistered_create',
+        'NTWithUnnamedField_create',
         '__doc__',
         '__file__',
         '__loader__',

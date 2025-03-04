@@ -522,16 +522,19 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
 //    }
 //    PyStructSequence *pyss = (PyStructSequence *)result;
 //    assert(pyss.fields)
+
+    assert(!PyErr_Occurred());
+
     printf("PyObject_Print(result, stdout, 0);\n");
     PyObject_Print(result, stdout, 0);
     if (PyErr_Occurred()) {
-        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
+        printf("TRACE - %s %s#%d\n", __FUNCTION__, __FILE__, __LINE__);
         return NULL;
     }
     printf("PyObject_Print(result, stdout, 1);\n");
     PyObject_Print(result, stdout, 1);
     if (PyErr_Occurred()) {
-        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
+        printf("TRACE - %s %s#%d\n", __FUNCTION__, __FILE__, __LINE__);
         return NULL;
     }
 

@@ -128,6 +128,7 @@ Module                      Description
 ``cRefCount``               Reference count explorations.
 ``cCtxMgr``                 Example of a context manager.
 ``cStructSequence``         Example of a named tuple in C.
+``cWatchers``               Example of a dictionary watcher in C.
 =========================== =================================================================
 
 In addition there are these modules availlable in Python 3.12+:

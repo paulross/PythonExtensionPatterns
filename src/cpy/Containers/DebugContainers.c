@@ -2634,7 +2634,7 @@ void dbg_PyStructSequence_n_in_sequence_too_large(void) {
         return;
     }
     assert(!PyErr_Occurred());
-    Py_ssize_t ref_count;
+//    Py_ssize_t ref_count;
     static PyTypeObject *example_type = NULL;
 
     if (example_type == NULL) {
@@ -2675,7 +2675,7 @@ void dbg_PyStructSequence_with_unnamed_field(void) {
             3,
     };
 
-    static PyTypeObject *example_type = NULL;
+    PyTypeObject *example_type = NULL;
     if (example_type == NULL) {
         example_type = PyStructSequence_NewType(&struct_sequence_with_unnamed_field_type_desc);
     }
