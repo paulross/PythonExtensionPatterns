@@ -318,6 +318,7 @@ setup(
     maintainer='Paul Ross',
     maintainer_email='apaulross@gmail.com',
     description='Python C Extension Patterns.',
+    url='https://github.com/paulross/PythonExtensionPatterns',
     long_description=long_description,
     long_description_content_type='text/x-rst',
     platforms=['Mac OSX', 'POSIX', ],

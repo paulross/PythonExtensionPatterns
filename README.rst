@@ -7,7 +7,7 @@ If you need to write C extension for Python then this is the place for you.
 The full documentation is on
 `Read the Docs <http://pythonextensionpatterns.readthedocs.org/en/latest/index.html>`_.
 
-Code examples and documentation source are right here on GitHub.
+Code examples and documentation source are `on GitHub <https://github.com/paulross/PythonExtensionPatterns>`_.
 
 ==================
 Videos
