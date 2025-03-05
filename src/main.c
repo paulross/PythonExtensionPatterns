@@ -116,39 +116,8 @@ finally:
 
 #endif
 
-int main(int argc, const char * argv[]) {
-    // insert code here...
-    printf("Hello, World!\n");
-    Py_Initialize();
-    const char *cwd = current_working_directory("..");
-    int failure = 0;
-
-    int32_t py_version_hex = PY_VERSION_HEX;
-    printf("Python version %d.%d.%d Release level: 0x%x Serial: %d Numeric: %12d 0x%08x",
-           PY_MAJOR_VERSION, PY_MINOR_VERSION, PY_MICRO_VERSION,
-           PY_RELEASE_LEVEL, PY_RELEASE_SERIAL,
-           py_version_hex, py_version_hex
-    );
-//    failure = add_path_to_sys_module(cwd);
-//    if (failure) {
-//        printf("add_path_to_sys_module(): Failed with error code %d\n", failure);
-//        goto finally;
-//    }
-
-//    failure = dbg_cPyRefs();
-//    if (failure) {
-//        printf("dbg_cPyRefs(): Failed with error code %d\n", failure);
-//        return  -1;
-//    }
-
-//    /* cPyExtPatt.cRefCount tests*/
-//    failure = test_dbg_cRefCount();
-//    if (failure) {
-//        printf("test_dbg_cRefCount(): Failed with error code %d\n", failure);
-//        goto finally;
-//    }
-
 #pragma mark - Tuples
+void dbg_PyTuple(void) {
     dbg_PyTuple_SetItem_steals();
     dbg_PyTuple_SET_ITEM_steals();
     dbg_PyTuple_SetItem_steals_replace();
@@ -163,8 +132,14 @@ int main(int argc, const char * argv[]) {
     dbg_PyTuple_SetItem_fails_out_of_range();
     dbg_PyTuple_PyTuple_Pack();
     dbg_PyTuple_Py_BuildValue();
+#if ACCEPT_SIGSEGV
+    /* Comment out as desired. */
+    dbg_PyTuple_SetItem_SIGSEGV_on_same_value();
+#endif
+}
 
 #pragma mark - Lists
+void dbg_PyList(void) {
     dbg_PyList_SetItem_steals();
     dbg_PyList_SET_ITEM_steals();
     dbg_PyList_SetItem_steals_replace();
@@ -186,7 +161,13 @@ int main(int argc, const char * argv[]) {
     dbg_PyList_Insert_fails_not_a_list();
     dbg_PyList_Insert_fails_NULL();
     dbg_PyList_Py_BuildValue();
+#if ACCEPT_SIGSEGV
+    /* Comment out as desired. */
+    dbg_PyList_SetItem_SIGSEGV_on_same_value();
+#endif
+}
 
+void dbg_PyDict(void) {
 #pragma mark - Dictionaries
     dbg_PyDict_SetItem_increments();
 
@@ -219,8 +200,6 @@ int main(int argc, const char * argv[]) {
 
 #if ACCEPT_SIGSEGV
     /* Comment out as desired. */
-    dbg_PyTuple_SetItem_SIGSEGV_on_same_value();
-    dbg_PyList_SetItem_SIGSEGV_on_same_value();
     dbg_PyDict_SetItem_SIGSEGV_on_key_NULL();
     dbg_PyDict_SetItem_SIGSEGV_on_value_NULL();
     dbg_PyDict_GetItem_key_NULL();
@@ -232,17 +211,60 @@ int main(int argc, const char * argv[]) {
     dbg_PyDict_EVENT_MODIFIED();
     dbg_PyDict_EVENT_MODIFIED_same_value_no_event();
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
+}
 
 #pragma mark - Sets
+void dbg_PySet(void) {
     dbg_PySet_Add();
     dbg_PySet_Discard();
     dbg_PySet_Pop();
+}
 
 #pragma mark - Struct Sequence
+void dbg_PyStructSequence(void) {
     dbg_PyStructSequence_simple_ctor();
     dbg_PyStructSequence_setitem_abandons();
     dbg_PyStructSequence_n_in_sequence_too_large();
     dbg_PyStructSequence_with_unnamed_field();
+}
+
+int main(int argc, const char * argv[]) {
+    // insert code here...
+    printf("Hello, World!\n");
+    Py_Initialize();
+    const char *cwd = current_working_directory("..");
+    int failure = 0;
+
+    int32_t py_version_hex = PY_VERSION_HEX;
+    printf("Python version %d.%d.%d Release level: 0x%x Serial: %d Numeric: %12d 0x%08x",
+           PY_MAJOR_VERSION, PY_MINOR_VERSION, PY_MICRO_VERSION,
+           PY_RELEASE_LEVEL, PY_RELEASE_SERIAL,
+           py_version_hex, py_version_hex
+    );
+//    failure = add_path_to_sys_module(cwd);
+//    if (failure) {
+//        printf("add_path_to_sys_module(): Failed with error code %d\n", failure);
+//        goto finally;
+//    }
+
+//    failure = dbg_cPyRefs();
+//    if (failure) {
+//        printf("dbg_cPyRefs(): Failed with error code %d\n", failure);
+//        return  -1;
+//    }
+
+//    /* cPyExtPatt.cRefCount tests*/
+//    failure = test_dbg_cRefCount();
+//    if (failure) {
+//        printf("test_dbg_cRefCount(): Failed with error code %d\n", failure);
+//        goto finally;
+//    }
+
+    dbg_PyTuple();
+    dbg_PyList();
+    dbg_PyDict();
+    dbg_PySet();
+    dbg_PyStructSequence();
 
     printf("Bye, bye!\n");
     return failure;
