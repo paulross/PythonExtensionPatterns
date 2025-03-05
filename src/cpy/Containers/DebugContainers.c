@@ -2662,17 +2662,17 @@ void dbg_PyStructSequence_with_unnamed_field(void) {
             {"family_name", "Family name."},
             /* Use NULL then replace with PyStructSequence_UnnamedField
              * otherwise get an error "initializer element is not a compile-time constant" */
-            {NULL, "Documentation for an unnamed field."},
             {"given_name", "Given name."},
+            {PyStructSequence_UnnamedField, "Documentation for an unnamed field."},
             {NULL, NULL}
     };
-    struct_sequence_with_unnamed_fields[1].name = PyStructSequence_UnnamedField;
+//    struct_sequence_with_unnamed_fields[2].name = PyStructSequence_UnnamedField;
 
     PyStructSequence_Desc struct_sequence_with_unnamed_field_type_desc = {
             "module.struct_sequence_simple_with_unnamed_field",
             "Documentation.",
             struct_sequence_with_unnamed_fields,
-            3,
+            2,
     };
 
     PyTypeObject *example_type = NULL;
@@ -2704,6 +2704,17 @@ void dbg_PyStructSequence_with_unnamed_field(void) {
     PyStructSequence_SetItem(instance, 1, set_item);
     ref_count = Py_REFCNT(set_item);
     assert(ref_count == 1);
+
+    assert(!PyErr_Occurred());
+    fprintf(stdout, "Calling PyObject_Print(instance, stdout, 0);\n");
+    PyObject_Print(instance, stdout, 0);
+    fprintf(stdout, "\n");
+    assert(!PyErr_Occurred());
+    fprintf(stdout, "Calling PyObject_Print(instance, stdout, Py_PRINT_RAW);\n");
+    PyObject_Print(instance, stdout, Py_PRINT_RAW);
+    printf("\n");
+    assert(!PyErr_Occurred());
+    fprintf(stdout, "Calling PyObject_Print DONE\n");
 
     /* Get items. */
     get_item = PyStructSequence_GetItem(instance, 0);
