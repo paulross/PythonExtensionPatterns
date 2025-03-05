@@ -10,18 +10,19 @@ Added Chapters
 
 - "Containers and Reference Counts" which describes where the Python documentation is wrong, absent or misleading.
 - "Struct Sequences (namedtuple in C)" which corrects and clarifies the Python documentation.
-- "Context Managers" chapter.
+- "Context Managers" with practical C code examples.
 - "Watchers" with practical examples for dictionary watchers (Python 3.12+).
-- "Installation" chapter.
-- "Debugging Python with CLion" chapter.
-- "Source Code Layout" chapter.
-- The Index.
+- "Installation" for the project.
+- "Debugging Python with CLion".
+- "Source Code Layout" for the project.
 
 Changed Chapters
 ----------------
 
 - Update the "Homogeneous Python Containers and C++" chapter.
 - Expand the "Memory Leaks" chapter.
+- Extended the "Logging" chapter to show how to access the CPython frame from C.
+- The Index.
 
 Other
 ------
