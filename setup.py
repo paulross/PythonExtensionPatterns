@@ -267,12 +267,10 @@ ext_modules = [
     Extension(f"{PACKAGE_NAME}.cRefCount",
               include_dirs=[
                   '/usr/local/include',
-                  'src/cpy/Containers',
                   'src/cpy',
               ],
               sources=[
                   'src/cpy/RefCount/cRefCount.c',
-                  'src/cpy/Containers/DebugContainers.c',
                   "src/cpy/pyextpatt_util.c",
               ],
               extra_compile_args=extra_compile_args_c,
@@ -285,8 +283,11 @@ ext_modules = [
               language='c',
               ),
     Extension(name=f"{PACKAGE_NAME}.cStructSequence",
-              include_dirs=[],
-              sources=["src/cpy/StructSequence/cStructSequence.c", ],
+              include_dirs=[
+              ],
+              sources=[
+                  "src/cpy/StructSequence/cStructSequence.c",
+              ],
               extra_compile_args=extra_compile_args_c,
               language='c',
               ),

@@ -7,7 +7,7 @@
 #include "Python.h"
 
 /* For access to new_unique_string().*/
-#include "DebugContainers.h"
+#include "pyextpatt_util.h"
 
 #define CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(return_value)       \
 do {                                                            \

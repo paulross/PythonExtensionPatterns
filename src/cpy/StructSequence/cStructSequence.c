@@ -379,6 +379,13 @@ ExcessNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
 
 #pragma mark - A registered Named Tuple with an unnamed field
 
+/* Version as a single 4-byte hex number, e.g. 0x010502B2 == 1.5.2b2.
+ * Use this for numeric comparisons, e.g. #if PY_VERSION_HEX >= ...
+ *
+ * This is Python 3.11+ specific code.
+ */
+#if PY_VERSION_HEX >= 0x030B0000
+
 static PyStructSequence_Field NTWithUnnamedField_fields[] = {
         {"field_one", "The first field of the named tuple."},
         /* Use NULL then replace with PyStructSequence_UnnamedField
@@ -461,6 +468,7 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
     assert(!PyErr_Occurred());
     return result;
 }
+#endif
 
 #pragma mark - cStructSequence module methods
 
@@ -473,8 +481,13 @@ static PyMethodDef cStructSequence_methods[] = {
                         "Example of getting a transaction."},
         {"ExcessNT_create",           (PyCFunction) ExcessNT_create,           METH_VARARGS | METH_KEYWORDS,
                         "Create a ExcessNT from the given values."},
+/* Python 3.11 specific code. Earlier versions have a problem with:
+ * symbol not found in flat namespace '_PyStructSequence_UnnamedField'
+ */
+#if PY_VERSION_HEX >= 0x030B0000
         {"NTWithUnnamedField_create", (PyCFunction) NTWithUnnamedField_create, METH_VARARGS | METH_KEYWORDS,
                         "Create a NTWithUnnamedField from the given values."},
+#endif
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
