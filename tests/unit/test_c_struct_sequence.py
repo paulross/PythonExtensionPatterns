@@ -1,3 +1,4 @@
+import pprint
 import sys
 
 import pytest
@@ -591,6 +592,98 @@ def test_excess_nt_field_three_index_missing():
     assert err.value.args[0] == 'tuple index out of range'
 
 
-def test_nt_with_unnamed_field_create():
+def test_nt_with_unnamed_field_create_dir():
     ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
-    print(repr(ntuf))
+    # print()
+    # pprint.pprint(dir(ntuf))
+    assert dir(ntuf) == [
+        '__add__',
+        '__class__',
+        '__class_getitem__',
+        '__contains__',
+        '__delattr__',
+        '__dir__',
+        '__doc__',
+        '__eq__',
+        '__format__',
+        '__ge__',
+        '__getattribute__',
+        '__getitem__',
+        '__getnewargs__',
+        '__getstate__',
+        '__gt__',
+        '__hash__',
+        '__init__',
+        '__init_subclass__',
+        '__iter__',
+        '__le__',
+        '__len__',
+        '__lt__',
+        '__match_args__',
+        '__module__',
+        '__mul__',
+        '__ne__',
+        '__new__',
+        '__reduce__',
+        '__reduce_ex__',
+        '__replace__',
+        '__repr__',
+        '__rmul__',
+        '__setattr__',
+        '__sizeof__',
+        '__str__',
+        '__subclasshook__',
+        'count',
+        'field_one',
+        'index',
+        'n_fields',
+        'n_sequence_fields',
+        'n_unnamed_fields'
+    ]
+
+
+def test_nt_with_unnamed_field_create_len():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    assert len(ntuf) == 1
+
+
+def test_nt_with_unnamed_field_create_n_fields():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    assert ntuf.n_fields == 2
+
+
+def test_nt_with_unnamed_field_create_n_sequence_fields():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    assert ntuf.n_sequence_fields == 1
+
+
+def test_nt_with_unnamed_field_create_n_unnamed_fields():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    assert ntuf.n_unnamed_fields == 1
+
+
+def test_nt_with_unnamed_field_create_index_tuple():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    assert tuple(ntuf) == ('foo',)
+
+
+def test_nt_with_unnamed_field_create_index_fields():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    assert ntuf[0] == 'foo'
+
+
+def test_nt_with_unnamed_field_create_index_fields_raises():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    with pytest.raises(IndexError) as err:
+        assert ntuf[1] == 'bar'
+    assert err.value.args[0] == 'tuple index out of range'
+
+
+def test_nt_with_unnamed_field_create_repr():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    assert repr(ntuf) == "cStructSequence.NTWithUnnamedField(field_one='foo')"
+
+
+def test_nt_with_unnamed_field_create_str():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    assert str(ntuf) == "cStructSequence.NTWithUnnamedField(field_one='foo')"

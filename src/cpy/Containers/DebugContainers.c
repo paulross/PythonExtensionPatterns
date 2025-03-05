@@ -2709,10 +2709,16 @@ void dbg_PyStructSequence_with_unnamed_field(void) {
     fprintf(stdout, "Calling PyObject_Print(instance, stdout, 0);\n");
     PyObject_Print(instance, stdout, 0);
     fprintf(stdout, "\n");
+//    if (PyErr_Occurred()) {
+//        PyErr_Print();
+//    }
     assert(!PyErr_Occurred());
     fprintf(stdout, "Calling PyObject_Print(instance, stdout, Py_PRINT_RAW);\n");
     PyObject_Print(instance, stdout, Py_PRINT_RAW);
     printf("\n");
+//    if (PyErr_Occurred()) {
+//        PyErr_Print();
+//    }
     assert(!PyErr_Occurred());
     fprintf(stdout, "Calling PyObject_Print DONE\n");
 

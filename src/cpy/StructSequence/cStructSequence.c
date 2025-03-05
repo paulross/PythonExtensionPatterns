@@ -379,28 +379,49 @@ ExcessNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
 
 #pragma mark - A registered Named Tuple with an unnamed field
 
+static PyStructSequence_Field NTWithUnnamedField_fields[] = {
+        {"field_one", "The first field of the named tuple."},
+        /* Use NULL then replace with PyStructSequence_UnnamedField
+         * otherwise get an error "initializer element is not a compile-time constant" */
+        {"field_two", "The second field of the named tuple, not available to Python."},
+        {NULL,        "Documentation for an unnamed field."},
+        {NULL, NULL}
+};
+
 PyDoc_STRVAR(
         NTWithUnnamedField_docstring,
         "A basic named tuple type with an unnamed field."
 );
 
-static PyStructSequence_Field NTWithUnnamedField_fields[] = {
-        {"field_one",   "The first field of the named tuple."},
-        /* Use NULL then replace with PyStructSequence_UnnamedField
-         * otherwise get an error "initializer element is not a compile-time constant" */
-        {NULL,          "Documentation for an unnamed field."},
-        {"field_three", "The third field of the named tuple, not available to Python."},
-        {NULL, NULL}
-};
-
 static PyStructSequence_Desc NTWithUnnamedField_desc = {
         "cStructSequence.NTWithUnnamedField",
         NTWithUnnamedField_docstring,
         NTWithUnnamedField_fields,
-        3, /* Of three fields only two are available to Python by name. */
+        1, /* Of three fields only one is available to Python by name. */
 };
 
 static PyTypeObject *static_NTWithUnnamedField_Type = NULL;
+
+/**
+ * Initialises and returns the \c NTWithUnnamedField_Type.
+ * @return The initialised type.
+ */
+static PyTypeObject *get_NTWithUnnamedField_Type(void) {
+    if (!static_NTWithUnnamedField_Type) {
+        /* Substitute PyStructSequence_UnnamedField for NULL. */
+        NTWithUnnamedField_fields[1].name = PyStructSequence_UnnamedField;
+        /* Create and initialise the type. */
+        static_NTWithUnnamedField_Type = PyStructSequence_NewType(&NTWithUnnamedField_desc);
+        if (!static_NTWithUnnamedField_Type) {
+            PyErr_SetString(
+                    PyExc_RuntimeError,
+                    "Can not initialise a NTWithUnnamedField type with PyStructSequence_NewType()"
+            );
+            return NULL;
+        }
+    }
+    return static_NTWithUnnamedField_Type;
+}
 
 static PyObject *
 NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
@@ -409,8 +430,6 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
     PyObject *field_one = NULL;
     PyObject *field_two = NULL;
     PyObject *field_three = NULL;
-    NTWithUnnamedField_fields[1].name = PyStructSequence_UnnamedField;
-    NTWithUnnamedField_desc.fields[1].name = PyStructSequence_UnnamedField;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOO", kwlist, &field_one, &field_two, &field_three)) {
         return NULL;
@@ -419,74 +438,12 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
      * then take the opportunity here to test that they are the expected types.
      */
 
-    if (!static_NTWithUnnamedField_Type) {
-//        if (NTWithUnnamedField_fields[1].name != NULL) {
-//            PyErr_SetString(
-//                    PyExc_RuntimeError,
-//                    "Field[1] not NULL"
-//            );
-//            return NULL;
-//        }
-
-//        NTWithUnnamedField_fields[1].name = PyStructSequence_UnnamedField;
-        NTWithUnnamedField_desc.fields[1].name = PyStructSequence_UnnamedField;
-
-        if (NTWithUnnamedField_desc.fields[1].name == NULL) {
-            PyErr_SetString(
-                    PyExc_RuntimeError,
-                    "Field[1] now is still NULL"
-            );
-            return NULL;
-        }
-
-        static_NTWithUnnamedField_Type = PyStructSequence_NewType(&NTWithUnnamedField_desc);
-        if (!static_NTWithUnnamedField_Type) {
-            PyErr_SetString(
-                    PyExc_MemoryError,
-                    "Can not initialise a NTWithUnnamedField type with PyStructSequence_NewType()"
-            );
-            return NULL;
-        }
-//        if (PyStructSequence_InitType2(static_NTWithUnnamedField_Type, &NTWithUnnamedField_desc)) {
-//            assert (PyErr_Occurred());
-//            printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
-//            return NULL;
-//        }
-    }
-
-    if (PyErr_Occurred()) {
-        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
-        return NULL;
-    }
-    if (NTWithUnnamedField_fields[1].name == NULL) {
-        PyErr_SetString(
-                PyExc_RuntimeError,
-                "Field[1] still is NULL"
-        );
-        return NULL;
-    }
-    if (NTWithUnnamedField_desc.fields[1].name == NULL) {
-        PyErr_SetString(
-                PyExc_RuntimeError,
-                "NTWithUnnamedField_desc.fields[1].name is NULL"
-        );
-        return NULL;
-    }
-
-    if (PyErr_Occurred()) {
-        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
-        return NULL;
-    }
-    PyObject *result = PyStructSequence_New(static_NTWithUnnamedField_Type);
+    PyObject *result = PyStructSequence_New(get_NTWithUnnamedField_Type());
     if (!result) {
         PyErr_SetString(
-                PyExc_MemoryError,
+                PyExc_RuntimeError,
                 "Can not create a NTWithUnnamedField Struct Sequence with PyStructSequence_New()"
         );
-        return NULL;
-    }
-    if (PyErr_Occurred()) {
-        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
         return NULL;
     }
     /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
@@ -501,43 +458,7 @@ NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject 
     PyStructSequence_SetItem(result, 0, field_one);
     PyStructSequence_SetItem(result, 1, field_two);
     PyStructSequence_SetItem(result, 2, field_three);
-
-    for (int i = 0; i < 3; ++i) {
-        PyObject *item = PyStructSequence_GetItem(result, i);
-//        PyStructSequence_Field *field = (PyStructSequence_Field*) item;
-        printf("Item %d repr(): ", i);
-        PyObject_Print(item, stdout, 0);
-        printf("\n");
-    }
-
-    printf("PyObject_Print(result, stdout, Py_PRINT_RAW);\n");
-    /*
-     * Py_PRINT_RAW; Is defined as 1. If given the str() function is called.
-     * If 0 the repr() function is called.
-     */
-//    PyObject_Print(result, stdout, Py_PRINT_RAW);
-//    if (PyErr_Occurred()) {
-//        printf("TRACE - %s %d\n", __FUNCTION__, __LINE__);
-//        return NULL;
-//    }
-//    PyStructSequence *pyss = (PyStructSequence *)result;
-//    assert(pyss.fields)
-
     assert(!PyErr_Occurred());
-
-    printf("PyObject_Print(result, stdout, 0);\n");
-    PyObject_Print(result, stdout, 0);
-    if (PyErr_Occurred()) {
-        printf("TRACE - %s %s#%d\n", __FUNCTION__, __FILE__, __LINE__);
-        return NULL;
-    }
-    printf("PyObject_Print(result, stdout, 1);\n");
-    PyObject_Print(result, stdout, 1);
-    if (PyErr_Occurred()) {
-        printf("TRACE - %s %s#%d\n", __FUNCTION__, __FILE__, __LINE__);
-        return NULL;
-    }
-
     return result;
 }
 

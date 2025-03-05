@@ -30,10 +30,11 @@
 
 .. _chapter_struct_sequence:
 
-.. index:: single: Struct Sequence
+.. index::
+    single: Struct Sequence
 
 ==================================================
-Struct Sequences (a ``namedtuple`` in C)
+Struct Sequence (a ``namedtuple`` in C)
 ==================================================
 
 A `Struct Sequence Object`_ object is, more or less, the C equivalent of Python's `namedtuple`_ type.
@@ -59,11 +60,12 @@ The C `Struct Sequence API`_ allows you to define and create `Struct Sequence Ob
 These are very useful in creating the equivalent of a C ``struct`` in Python.
 
 
-.. index:: single: Struct Sequence; Differences from namedtuple
+.. index::
+    single: Struct Sequence; Differences from namedtuple
 
-------------------------------------------------------------------
+-------------------------------------------------------------------
 Differences Between a C Struct Sequence and a Python `namedtuple`_
-------------------------------------------------------------------
+-------------------------------------------------------------------
 
 Unlike a Python `namedtuple`_ a C Struct Sequence does *not* have the following functions and attributes
 (the official Python documentation does not point this out):
@@ -78,9 +80,9 @@ Unlike a Python `namedtuple`_ a C Struct Sequence does *not* have the following 
 `namedtuples`_ can access *all* their members either by name or by index.
 A `Struct Sequence Object`_ can be designed so that any attribute can be accessed by either name or index or both
 (or even neither!).
-TODO: Check this against the n_in_sequence documentation below.
 
-.. index:: single: Struct Sequence; Basic Example
+.. index::
+    single: Struct Sequence; Basic Example
 
 ------------------------------------------------------------------
 A Basic C Struct Sequence
@@ -88,7 +90,8 @@ A Basic C Struct Sequence
 
 Here is an example of defining a Struct Sequence in C (the code is in ``src/cpy/StructSequence/cStructSequence.c``).
 
-.. index:: single: Struct Sequence; Documentation String
+.. index::
+    single: Struct Sequence; Documentation String
 
 Documentation String
 --------------------
@@ -102,7 +105,8 @@ First create a named documentation string:
         "A basic named tuple type with two fields."
     );
 
-.. index:: single: Struct Sequence; Field Specifications
+.. index::
+    single: Struct Sequence; Field Specifications
 
 Field Specifications
 --------------------
@@ -118,7 +122,8 @@ These are just pairs of ``{field_name, field_description}``:
         {NULL, NULL}
     };
 
-.. index:: single: Struct Sequence; Type Specification
+.. index::
+    single: Struct Sequence; Type Specification
 
 Struct Sequence Type Specification
 ----------------------------------
@@ -144,7 +149,8 @@ The latter value is explained later but for the moment make it the number of dec
     There is a test example of this ``dbg_PyStructSequence_n_in_sequence_too_large()`` in
     ``src/cpy/Containers/DebugContainers.c``.
 
-.. index:: single: Struct Sequence; Creating an Instance
+.. index::
+    single: Struct Sequence; Creating an Instance
 
 Creating an Instance
 --------------------
@@ -270,7 +276,8 @@ There are only two use cases for this:
 
 Firstly, exposing the Struct Sequence type to Python.
 
-.. index:: single: Struct Sequence; Exposing the Type
+.. index::
+    single: Struct Sequence; Exposing the Type
 
 Exposing the Type from the CPython Module
 -----------------------------------------
@@ -359,7 +366,8 @@ This can be used thus in Python:
 
 There are tests for this in ``tests/unit/test_c_struct_sequence.py``.
 
-.. index:: single: Struct Sequence; Hiding the Type
+.. index::
+    single: Struct Sequence; Hiding the Type
 
 Hiding the Type in the Module
 ---------------------------------
@@ -468,7 +476,8 @@ And this can be used thus:
 
 A common use of this is converting a C ``struct`` to a Python ``namedtuple``.
 
-.. index:: single: Struct Sequence; C structs
+.. index::
+    single: Struct Sequence; C structs
 
 -----------------------------------------
 Converting a C ``struct`` to a namedtuple
@@ -605,7 +614,8 @@ And then this can be called from Python like this:
 
 .. _n_in_sequence: https://docs.python.org/3/c-api/tuple.html#c.PyStructSequence_Desc.n_in_sequence
 
-.. index:: single: Struct Sequence; Controlling Member Access
+.. index::
+    single: Struct Sequence; Controlling Member Access
 
 ---------------------------------------------
 Controlling Member Access
@@ -616,7 +626,8 @@ A `Struct Sequence Object`_ can be designed so that any attribute can be accesse
 (or even neither!).
 This describes how to do this.
 
-.. index:: single: Struct Sequence; n_in_sequence
+.. index::
+    single: Struct Sequence; n_in_sequence
 
 The Importance of the ``n_in_sequence`` Field
 ---------------------------------------------
@@ -642,9 +653,205 @@ However that same member can always be accessed from Python by name.
 
 There some illustrative tests ``test_excess_nt_*`` in ``tests/unit/test_c_struct_sequence.py`` for this.
 
-.. index:: single: Struct Sequence; Unnamed Fields
+.. index::
+    single: Struct Sequence; Unnamed Fields
+    single: Struct Sequence; PyStructSequence_UnnamedField
 
+---------------------------------------------
 Unnamed Fields
 ---------------------------------------------
 
-TODO: Finish this.
+The Struct Sequence C API provides for having *unnamed* fields.
+These are fields unavailable to Python code but available to C code.
+The rules using these are quite involved and the Python documentation is poor at describing them so I'll do my best
+here.
+
+The rules appear to be:
+
+* Unnamed fields in the `PyStructSequence_Field`_ *must* follow named fields.
+* Named fields in the `PyStructSequence_Field`_ can *not* follow unnamed fields.
+* The ``n_in_sequence`` in the type `PyStructSequence_Desc`_ must be <= the number of *named* fields.
+
+Failing to follow the rules will cause a ``SystemError`` when you use ``repr()`` or ``str()`` such as:
+
+.. code-block::
+
+    SystemError: In structseq_repr(), member 2 name is NULL for type module.struct_sequence_simple_with_unnamed_field
+
+
+`PyStructSequence_UnnamedField`_ is the sentinel that describes the 'name' of the unnamed field.
+However you can not use it directly when declaring a `PyStructSequence_Field`_:
+
+.. code-block:: c
+
+    static PyStructSequence_Field NTWithUnnamedField_fields[] = {
+            {"field_one", "The first field of the named tuple."},
+            {PyStructSequence_UnnamedField, "Documentation for an unnamed field."},
+            {NULL, NULL}
+    };
+
+This will fail with a compilation error along the lines of:
+
+.. code-block:: text
+
+    cStructSequence.c:391:10: fatal error: initializer element is not a compile-time constant
+            {PyStructSequence_UnnamedField, "Documentation for an unnamed field."},
+             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    1 error generated.
+
+Instead declare the field name as NULL:
+
+.. code-block:: c
+
+    static PyStructSequence_Field NTWithUnnamedField_fields[] = {
+        {"field_one",   "The first field of the named tuple."},
+        /* Use NULL then replace with PyStructSequence_UnnamedField
+         * otherwise get an error "initializer element is not a compile-time constant" */
+        {NULL,          "Documentation for an unnamed field."},
+        {NULL, NULL}
+    };
+
+Then before the type is used the ``NULL`` needs to be replaced with `PyStructSequence_UnnamedField`_.
+Here is the complete code that demonstrates initialising a static Struct Sequence type
+``static_NTWithUnnamedField_Type``.
+
+Field Declaration
+-----------------
+
+First declare the fields:
+
+.. code-block:: c
+
+    static PyStructSequence_Field NTWithUnnamedField_fields[] = {
+        {"field_one",   "The first field of the named tuple."},
+        /* Use NULL then replace with PyStructSequence_UnnamedField
+         * otherwise get an error "initializer element is not a compile-time constant" */
+        {NULL,          "Documentation for an unnamed field."},
+        {NULL, NULL}
+    };
+
+Then the field description:
+
+.. code-block:: c
+
+    PyDoc_STRVAR(
+        NTWithUnnamedField_docstring,
+        "A basic named tuple type with an unnamed field."
+    );
+
+    static PyStructSequence_Desc NTWithUnnamedField_desc = {
+        "cStructSequence.NTWithUnnamedField",
+        NTWithUnnamedField_docstring,
+        NTWithUnnamedField_fields,
+        1, /* Of two fields only one available to Python by name. */
+    };
+
+Type Declaration
+----------------
+
+Now the Struct Sequence type, for convenience the static is accessed with a *getter* that also serves as an
+initialisation function:
+
+.. code-block:: c
+
+    static PyTypeObject *static_NTWithUnnamedField_Type = NULL;
+
+    /**
+     * Initialises and returns the \c NTWithUnnamedField_Type.
+     * @return The initialised type.
+     */
+    static PyTypeObject *get_NTWithUnnamedField_Type(void) {
+        if (!static_NTWithUnnamedField_Type) {
+            /* Substitute PyStructSequence_UnnamedField for NULL. */
+            NTWithUnnamedField_fields[1].name = PyStructSequence_UnnamedField;
+            /* Create and initialise the type. */
+            static_NTWithUnnamedField_Type = PyStructSequence_NewType(
+                &NTWithUnnamedField_desc
+            );
+            if (!static_NTWithUnnamedField_Type) {
+                PyErr_SetString(
+                    PyExc_RuntimeError,
+                    "Can not initialise a NTWithUnnamedField type with PyStructSequence_NewType()"
+                );
+                return NULL;
+            }
+        }
+        return static_NTWithUnnamedField_Type;
+    }
+
+Struct Sequence Creation
+------------------------
+
+Here is the constructor that takes three arguments:
+
+.. code-block:: c
+
+    static PyObject *
+    NTWithUnnamedField_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+        assert(!PyErr_Occurred());
+        static char *kwlist[] = {"field_one", "field_two", "field_three", NULL};
+        PyObject *field_one = NULL;
+        PyObject *field_two = NULL;
+        PyObject *field_three = NULL;
+
+        if (
+            !PyArg_ParseTupleAndKeywords(
+                args, kwds, "OOO", kwlist, &field_one, &field_two, &field_three
+            )
+        ) {
+            return NULL;
+        }
+        /* The three fields are PyObjects.
+         *  If your design is that those arguments should be specific types
+         * then take the opportunity here to test that they are the expected types.
+         */
+
+        PyObject *result = PyStructSequence_New(get_NTWithUnnamedField_Type());
+        if (!result) {
+            PyErr_SetString(
+                    PyExc_RuntimeError,
+                    "Can not create a NTWithUnnamedField Struct"
+                    " Sequence with PyStructSequence_New()"
+            );
+            return NULL;
+        }
+        /* PyArg_ParseTupleAndKeywords with "O" gives a borrowed reference.
+         * https://docs.python.org/3/c-api/arg.html#other-objects
+         * "A new strong reference to the object is not created
+         * (i.e. its reference count is not increased)."
+         * So we increment as PyStructSequence_SetItem seals the reference otherwise
+         * if the callers arguments go out of scope we will/may get undefined
+         * behaviour when accessing the named tuple fields.
+         */
+        Py_INCREF(field_one);
+        Py_INCREF(field_two);
+        Py_INCREF(field_three);
+        PyStructSequence_SetItem(result, 0, field_one);
+        PyStructSequence_SetItem(result, 1, field_two);
+        PyStructSequence_SetItem(result, 2, field_three);
+        assert(!PyErr_Occurred());
+        return result;
+    }
+
+Access from Python
+------------------
+
+Once built this can be accessed from Python (see ``tests/unit/test_c_struct_sequence.py``):
+
+.. code-block:: python
+
+    from cPyExtPatt import cStructSequence
+
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    # All these tests are True
+    assert len(ntuf) == 1
+    assert ntuf.n_fields == 2
+    assert ntuf.n_sequence_fields == 1
+    assert ntuf.n_unnamed_fields == 1
+    assert tuple(ntuf) == ('foo',)
+    assert ntuf[0] == 'foo'
+    # Will raise an IndexError
+    # assert ntuf[1] == 'bar'
+    assert err.value.args[0] == 'tuple index out of range'
+    assert repr(ntuf) == "cStructSequence.NTWithUnnamedField(field_one='foo')"
+    assert str(ntuf) == "cStructSequence.NTWithUnnamedField(field_one='foo')"
