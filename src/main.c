@@ -167,8 +167,8 @@ void dbg_PyList(void) {
 #endif
 }
 
-void dbg_PyDict(void) {
 #pragma mark - Dictionaries
+void dbg_PyDict(void) {
     dbg_PyDict_SetItem_increments();
 
 #if ACCEPT_SIGSEGV
