@@ -2,14 +2,14 @@
 History
 =====================
 
-0.3 (TODO)
+0.3.0 (TODO)
 =====================
 
 Added Chapters
 --------------
 
-- "Containers and Reference Counts" which describes where the Python documentation is wrong, absent or misleading.
-- "Struct Sequences (namedtuple in C)" which corrects and clarifies the Python documentation.
+- "Containers and Reference Counts" showing where the Python documentation is wrong, absent or misleading.
+- "Struct Sequences (namedtuple in C)" that corrects and clarifies the Python documentation.
 - "Context Managers" with practical C code examples.
 - "Watchers" with practical examples for dictionary watchers (Python 3.12+).
 - "Installation" for the project.
