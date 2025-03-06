@@ -127,19 +127,9 @@ py_file_line_function(PyObject *Py_UNUSED(module)) {
 
     PyFrameObject *frame = PyEval_GetFrame();
     if (frame) {
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
-        /* See https://docs.python.org/3.11/whatsnew/3.11.html#pyframeobject-3-11-hiding */
         file_name = PyUnicode_1BYTE_DATA(PyFrame_GetCode(frame)->co_filename);
-#else
-        file_name = PyUnicode_1BYTE_DATA(frame->f_code->co_filename);
-#endif // PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
         line_number = PyFrame_GetLineNumber(frame);
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
-        /* See https://docs.python.org/3.11/whatsnew/3.11.html#pyframeobject-3-11-hiding */
         func_name = (const char *) PyUnicode_1BYTE_DATA(PyFrame_GetCode(frame)->co_name);
-#else
-        func_name = (const char *) PyUnicode_1BYTE_DATA(frame->f_code->co_name);
-#endif // PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 11
     }
     /* Use 'z' that makes Python None if the string is NULL. */
     return Py_BuildValue("ziz", file_name, line_number, func_name);
