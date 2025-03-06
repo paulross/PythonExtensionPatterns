@@ -913,9 +913,6 @@ Summary
 .. _PyDict_Check(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Check
 .. _PyObject_Hash(): https://docs.python.org/3/c-api/object.html#c.PyObject_Hash
 
-..
-    TODO: Py_BuildValue with a dict.
-
 .. index::
     single: Dictionary
 
@@ -1221,13 +1218,6 @@ For code and tests see:
 Failure
 ^^^^^^^
 
-.. todo::
-
-    Explore the reference counts of key, value, default_value and result when `PyDict_SetDefaultRef()`_ fails.
-    There are multiple failure modes.
-    The simplest failure mode (not a dictionary) does not change the reference counts at all.
-
-
 .. index::
     single: Dictionary; PyDict_GetItem()
     pair: Getters; Dictionary
@@ -1281,13 +1271,6 @@ For code and tests see:
 
 Failure
 ^^^^^^^
-
-.. todo::
-
-    Explore the reference counts of key, value, default_value and result when `PyDict_GetItemRef()`_ fails.
-    There are multiple failure modes.
-    The simplest failure mode (not a dictionary) does not change the reference counts at all.
-
 
 .. index::
     single: Dictionary; PyDict_Pop()
@@ -1418,13 +1401,6 @@ For code and tests see:
 
 Failure
 ^^^^^^^
-
-.. todo::
-
-    Explore the reference counts of key, value, default_value and result when `PyDict_Pop()`_ fails.
-    There are multiple failure modes.
-    The simplest failure mode (not a dictionary) does not change the reference counts at all.
-
 
 .. index::
     single: Dictionary; Other APIs
