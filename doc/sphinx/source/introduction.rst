@@ -165,6 +165,22 @@ There are many other alternatives such as ``pypy``, ``numba`` that are worth kno
 .. _introduction_summary_advice:
 
 ------------------------------------
+A Faustian Bargain
+------------------------------------
+
+The ability to write C code and link it to the Python runtime has played a huge part in Python's success story.
+Much of the stdlib, and third party packages like ``numpy`` gives C like performance with Python's simple interface.
+This gives the reference implementation, CPython, huge power and ease of use.
+
+However the downside is that it becomes very difficult to create *alternative* implementations of the Python language
+and, who knows, these might be faster, use less memory or have better parallelism.
+This is because any alternate implementation must work the thousands of CPython C extensions out there, with all their
+quirks,to have any chance of being compatible with existing code.
+
+This means that CPython extensions, the subject of this project, will be around for a long time.
+It is a skill worth learning.
+
+------------------------------------
 Summary Advice
 ------------------------------------
 
