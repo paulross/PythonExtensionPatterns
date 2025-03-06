@@ -90,6 +90,17 @@ py_log_message(PyObject *Py_UNUSED(module), PyObject *args) {
     return py_log_msg(log_level, "%s", message);
 }
 
+static PyObject *
+py_log_set_level(PyObject *Py_UNUSED(module), PyObject *args) {
+    assert(g_logger);
+    PyObject *py_log_level;
+
+    if (!PyArg_ParseTuple(args, "O", &py_log_level)) {
+        return NULL;
+    }
+    return PyObject_CallMethod(g_logger, "setLevel", "O", py_log_level);
+}
+
 /**
  * Returns a tuple of the file, line and function of the current Python frame.
  * Returns (None, 0, None) on failure.
@@ -130,6 +141,12 @@ c_file_line_function(PyObject *Py_UNUSED(module)) {
 }
 
 static PyMethodDef logging_methods[] = {
+        {
+                "py_log_set_level",
+                (PyCFunction) py_log_set_level,
+                METH_VARARGS,
+                "Set the logging level."
+        },
         {
                 "log",
                 (PyCFunction) py_log_message,

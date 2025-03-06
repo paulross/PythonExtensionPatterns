@@ -23,11 +23,13 @@ def test_c_logging_dir():
         'c_file_line_function',
         'log',
         'py_file_line_function',
+        'py_log_set_level',
     ]
 
 
 def test_c_logging_log():
-    result = cLogging.log(cLogging.CRITICAL, "Test log message")
+    cLogging.py_log_set_level(10)
+    result = cLogging.log(cLogging.ERROR, "Test log message")
     assert result is not None
 
 
