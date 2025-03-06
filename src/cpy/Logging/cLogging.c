@@ -31,6 +31,7 @@ static PyObject *py_get_logger(char *logger_name) {
         const char *err_msg = "failed to call logging.getLogger";
         PyErr_SetString(PyExc_RuntimeError, err_msg);
     }
+    fprintf(stdout, "%s()#%d logger=0x%p\n", __FUNCTION__, __LINE__, (void *)logger);
     return logger;
 }
 
@@ -38,13 +39,22 @@ static PyObject *py_get_logger(char *logger_name) {
 static PyObject *
 py_log_msg(int log_level, char *printf_fmt, ...) {
     assert(g_logger);
+    assert(!PyErr_Occurred());
     PyObject *log_msg = NULL;
     PyObject *ret = NULL;
     va_list fmt_args;
 
+    fprintf(stdout, "%s()#%d g_logger=0x%p\n", __FUNCTION__, __LINE__, (void *)g_logger);
+    fprintf(stdout, "%s()#%d log_level=%d print_fmt=\"%s\"\n", __FUNCTION__, __LINE__, log_level, printf_fmt);
+
     va_start(fmt_args, printf_fmt);
     log_msg = PyUnicode_FromFormatV(printf_fmt, fmt_args);
     va_end(fmt_args);
+
+    fprintf(stdout, "%s()#%d log_message: \"", __FUNCTION__, __LINE__);
+    PyObject_Print(log_msg, stdout, Py_PRINT_RAW);
+    fprintf(stdout, "\"\n");
+
     if (log_msg == NULL) {
         /* fail. */
         ret = PyObject_CallMethod(
@@ -52,29 +62,31 @@ py_log_msg(int log_level, char *printf_fmt, ...) {
                 "critical",
                 "O", "Unable to create log message."
         );
-        return ret;
+    } else {
+        /* call function depending on loglevel */
+        switch (log_level) {
+            case LOGGING_DEBUG:
+                ret = PyObject_CallMethod(g_logger, "debug", "O", log_msg);
+                break;
+            case LOGGING_INFO:
+                ret = PyObject_CallMethod(g_logger, "info", "O", log_msg);
+                break;
+            case LOGGING_WARNING:
+                ret = PyObject_CallMethod(g_logger, "warning", "O", log_msg);
+                break;
+            case LOGGING_ERROR:
+                ret = PyObject_CallMethod(g_logger, "error", "O", log_msg);
+                break;
+            case LOGGING_CRITICAL:
+                ret = PyObject_CallMethod(g_logger, "critical", "O", log_msg);
+                break;
+            default:
+                ret = PyObject_CallMethod(g_logger, "critical", "O", log_msg);
+                break;
+        }
+        assert(!PyErr_Occurred());
     }
-    /* call function depending on loglevel */
-    switch (log_level) {
-        case LOGGING_DEBUG:
-            ret = PyObject_CallMethod(g_logger, "debug", "O", log_msg);
-            break;
-        case LOGGING_INFO:
-            ret = PyObject_CallMethod(g_logger, "info", "O", log_msg);
-            break;
-        case LOGGING_WARNING:
-            ret = PyObject_CallMethod(g_logger, "warning", "O", log_msg);
-            break;
-        case LOGGING_ERROR:
-            ret = PyObject_CallMethod(g_logger, "error", "O", log_msg);
-            break;
-        case LOGGING_CRITICAL:
-            ret = PyObject_CallMethod(g_logger, "critical", "O", log_msg);
-            break;
-        default:
-            ret = PyObject_CallMethod(g_logger, "critical", "O", log_msg);
-            break;
-    }
+//    PyObject_CallMethod(g_logger, "flush", "");
     Py_DECREF(log_msg);
     return ret;
 }
@@ -105,7 +117,7 @@ py_log_set_level(PyObject *Py_UNUSED(module), PyObject *args) {
  * Returns a tuple of the file, line and function of the current Python frame.
  * Returns (None, 0, None) on failure.
  * @param _unused_module
- * @return
+ * @return PyObject *, a tuple of three values.
  */
 static PyObject *
 py_file_line_function(PyObject *Py_UNUSED(module)) {
@@ -218,6 +230,8 @@ PyMODINIT_FUNC PyInit_cLogging(void) {
     /* cleanup logger references */
     Py_XDECREF(g_logging_module);
     Py_XDECREF(g_logger);
+    Py_XDECREF(m);
+    m = NULL;
     finally:
     return m;
 }
