@@ -159,6 +159,16 @@ Creating Specialised Exceptions
 ---------------------------------
 
 Often you need to create an Exception class that is specialised to a particular module.
+The following C code is equivalent to the Python code:
+
+.. code-block:: python
+
+    class ExceptionBase(Exception):
+        pass
+
+    class SpecialisedError(ExceptionBase):
+        pass
+
 This can be done quite easily using either the ``PyErr_NewException`` or the ``PyErr_NewExceptionWithDoc`` functions.
 These create new exception classes that can be added to a module.
 For example:
@@ -166,11 +176,15 @@ For example:
 .. code-block:: c
 
     /** Specialise exceptions base exception. */
-    static PyObject *ExceptionBase = 0;
+    static PyObject *ExceptionBase = NULL;
     /** Specialise exceptions derived from base exception. */
-    static PyObject *SpecialisedError = 0;
+    static PyObject *SpecialisedError = NULL;
 
     /* NOTE: Functions that might raise one of these exceptions will go here. See below. */
+
+Now define the module, ``cExceptions_methods`` is explained later:
+
+.. code-block:: c
 
     static PyModuleDef cExceptions_module = {
             PyModuleDef_HEAD_INIT,
@@ -180,6 +194,10 @@ For example:
             cExceptions_methods,
             NULL, NULL, NULL, NULL,
     };
+
+Initialise the module, this registers the exception types and the class hierarchy:
+
+.. code-block:: c
 
     PyMODINIT_FUNC
     PyInit_cExceptions(void) {
@@ -294,3 +312,20 @@ Or fish it out of the module (this will be slower):
         }
         return NULL;
     }
+
+Here is some test code from ``tests/unit/test_c_exceptions.py``:
+
+.. code-block:: python
+
+    from cPyExtPatt import cExceptions
+
+    def test_raise_exception_base():
+        with pytest.raises(cExceptions.ExceptionBase) as err:
+            cExceptions.raise_exception_base()
+        assert err.value.args[0] == 'One 1 two 2 three 3.'
+
+
+    def test_raise_specialised_error():
+        with pytest.raises(cExceptions.SpecialisedError) as err:
+            cExceptions.raise_specialised_error()
+        assert err.value.args[0] == 'One 1 two 2 three 3.'

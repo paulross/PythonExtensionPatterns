@@ -56,9 +56,9 @@ static PyObject *raise_error_overwrite(PyObject *Py_UNUSED(module)) {
 }
 
 /** Specialise exceptions base exception. */
-static PyObject *ExceptionBase = 0;
+static PyObject *ExceptionBase = NULL;
 /** Specialise exceptions derived from base exception. */
-static PyObject *SpecialisedError = 0;
+static PyObject *SpecialisedError = NULL;
 
 
 /** Raises a ExceptionBase. */

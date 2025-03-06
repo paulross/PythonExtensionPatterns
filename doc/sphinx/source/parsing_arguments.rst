@@ -532,6 +532,8 @@ The complete C code is:
         return Py_BuildValue("y#", arg.buf, arg.len);
     }
 
+See ``tests/unit/test_c_parse_args.py`` for some Python uses of this code.
+
 .. index::
     single: Parsing Arguments Example; Positional Only Arguments
     single: Parsing Arguments Example; Keyword Only Arguments
@@ -690,6 +692,11 @@ Being Pythonic with Default Mutable Arguments
 
 If the arguments default to some C fundamental type the code above is fine.
 However if the arguments default to Python objects then a little more work is needed.
+
+.. note::
+
+    See :ref:`cpp_and_cpython.handling_default_arguments` for a way of simplifying this with C++.
+
 Here is a function that has a tuple and a dict as default arguments, in other words the Python signature:
 
 .. code-block:: python

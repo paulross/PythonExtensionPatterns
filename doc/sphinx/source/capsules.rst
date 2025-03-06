@@ -366,15 +366,15 @@ In this case we want to create a subclass of the ``datetime.datetime`` object th
 `naive` datetimes.
 
 Here is the C Extension code to create a ``datetimetz`` module and a ``datetimetz.datetimetz`` object.
-This code is lightly edited for clarity and works with Python 3.10+.
-The actual code is in ``src/cpy/Capsules/datetimetz.c`` (which works with Python 3.9 as well)
+This code is lightly edited for clarity and works with Python 3.10+ (using the modern API).
+The actual code is in ``src/cpy/Capsules/datetimetz.c`` (which works with the Python 3.9 API as well)
 and the tests are in ``tests/unit/test_c_capsules.py``.
 
 --------------------------------
 Writing the Code for the Object
 --------------------------------
 
-Firstly the declaration of the timezone aware datetime, it just inherits from ``datetime.datetime``:
+Firstly the declaration of the timezone aware datetime, it just inherits from ``datetime.datetime`` :
 
 .. code-block:: c
 
@@ -421,8 +421,8 @@ Now the code for creating a new instance:
     }
 
 So far a new ``datetimetz`` object must be created with a ``tzinfo`` but the ``datetime.datetime`` has an API
-``replace`` that creates a new datetime with different properties, including ``tzinfo``.
-We need to guard against the user trying to change the timezone.
+``replace()`` that creates a new datetime with different properties, including ``tzinfo``.
+We need to guard against the user trying to change the timezone to None.
 To do this we call the super class function and then check, and raise, if a ``tzinfo`` is absent.
 This uses the utility function that call Python's ``super()`` function.
 That code is in ``src/cpy/Util/py_call_super.h`` and ``src/cpy/Util/py_call_super.c``:
@@ -472,6 +472,10 @@ Finally the module code:
             ),
             .m_size = -1,
     };
+
+Initialise the module, this is when we use the existing capsule:
+
+.. code-block:: c
 
     PyMODINIT_FUNC
     PyInit_datetimetz(void) {
@@ -635,6 +639,19 @@ The error is handled correctly by the superclass.
             d.tzinfo = None
         assert err.value.args[0] == "attribute 'tzinfo' of 'datetime.datetime' objects is not writable"
 
+Check that ``.replace()`` works as expected with ``tzinfo``:
+
+.. code-block:: python
+
+    def test_datetimetz_datetimetz_replace_raises_tzinfo():
+        d = datetimetz.datetimetz(
+            2024, 7, 15, 10, 21, 14,
+            tzinfo=zoneinfo.ZoneInfo('Europe/London')
+        )
+        with pytest.raises(TypeError) as err:
+            d.replace(tzinfo=None)
+        assert err.value.args[0] == 'No time zone provided.'
+
 Some equality tests.
 We want to fail when comparing our ``datetimetz`` with a naive ``datatime`` object.
 
@@ -659,7 +676,7 @@ We want to fail when comparing our ``datetimetz`` with a naive ``datatime`` obje
         d_no_tz = datetime.datetime(2024, 7, 15, 10, 21, 14)
         assert d_no_tz != d
 
-Some datetime comparison tests that show our ``datetimetz`` inter-operates correctly with itself and a ``datetime``
+Some datetime subtraction tests that show our ``datetimetz`` inter-operates correctly with itself and a ``datetime``
 object.
 
 .. code-block:: python
@@ -723,17 +740,4 @@ object.
         with pytest.raises(TypeError) as err:
             d_tz - d
         assert err.value.args[0] == "can't subtract offset-naive and offset-aware datetimes"
-
-Check that ``.replace()`` works as expected with ``tzinfo``:
-
-.. code-block:: python
-
-    def test_datetimetz_datetimetz_replace_raises_tzinfo():
-        d = datetimetz.datetimetz(
-            2024, 7, 15, 10, 21, 14,
-            tzinfo=zoneinfo.ZoneInfo('Europe/London')
-        )
-        with pytest.raises(TypeError) as err:
-            d.replace(tzinfo=None)
-        assert err.value.args[0] == 'No time zone provided.'
 

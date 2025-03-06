@@ -150,6 +150,12 @@ Notice the ``except:`` block falls through to the ``finally:`` block.
 .. index::
     single: C Functions; Full Coding Pattern
 
+.. raw:: latex
+
+    [Continued on the next page]
+
+    \pagebreak
+
 The Function Code as One
 ========================
 

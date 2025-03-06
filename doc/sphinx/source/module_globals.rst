@@ -131,7 +131,7 @@ The dict is added in a separate C function merely for readability:
         Py_XDECREF(val);
         key = PyBytes_FromString("123");
         val = PyLong_FromLong(123);
-        if (PyDict_SetItem(pMap, PyBytes_FromString("123"), PyLong_FromLong(123))) {
+        if (PyDict_SetItem(pMap, key, value)) {
             goto except;
         }
         Py_XDECREF(key);
