@@ -140,6 +140,15 @@ Error Checking
                          PICKLE_VERSION_KEY);
             return NULL;
         }
+        if (!PyLong_Check(temp)) {
+            PyErr_Format(
+                PyExc_KeyError,
+                "Pickled dict version key \"%s\" is not a long but type \"%s\".",
+                PICKLE_VERSION_KEY,
+                temp->ob_type->tp_name
+            );
+            return NULL;
+        }
         int pickle_version = (int) PyLong_AsLong(temp);
         if (pickle_version != PICKLE_VERSION) {
             PyErr_Format(PyExc_ValueError,
@@ -153,32 +162,49 @@ Set the ``first`` Member
 
 .. code-block:: c
 
-        /* NOTE: Custom_new() will have been invoked so self->first and self->last
-         * will have been allocated so we have to de-allocate them. */
-        Py_DECREF(self->first);
-        self->first = PyDict_GetItemString(state, "first"); /* Borrowed reference. */
-        if (self->first == NULL) {
-            /* PyDict_GetItemString does not set any error state so we have to. */
-            PyErr_SetString(PyExc_KeyError, "No \"first\" in pickled dict.");
-            return NULL;
-        }
-        /* Increment the borrowed reference for our instance of it. */
-        Py_INCREF(self->first);
+    /* NOTE: Custom_new() will have been invoked so self->first and self->last
+     * will have been allocated so we have to de-allocate them. */
+    temp = PyDict_GetItemString(state, "first"); /* Borrowed reference. */
+    if (temp == NULL) {
+        /* PyDict_GetItemString does not set any error state so we have to. */
+        PyErr_SetString(PyExc_KeyError, "No \"first\" in pickled dict.");
+        return NULL;
+    }
+    if (!PyUnicode_Check(temp)) {
+        PyErr_Format(
+                PyExc_KeyError,
+                "Pickled dict key \"first\" is not a str but type \"%s\".",
+                temp->ob_type->tp_name
+        );
+        return NULL;
+    }
+    Py_DECREF(self->first);
+    self->first = temp;
+    Py_INCREF(self->first);
 
 Set the ``last`` Member
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: c
 
-        /* Similar to self->first above. */
-        Py_DECREF(self->last);
-        self->last = PyDict_GetItemString(state, "last"); /* Borrowed reference. */
-        if (self->last == NULL) {
-            /* PyDict_GetItemString does not set any error state so we have to. */
-            PyErr_SetString(PyExc_KeyError, "No \"last\" in pickled dict.");
-            return NULL;
-        }
-        Py_INCREF(self->last);
+    /* Similar to self->first above. */
+    temp = PyDict_GetItemString(state, "last"); /* Borrowed reference. */
+    if (temp == NULL) {
+        /* PyDict_GetItemString does not set any error state so we have to. */
+        PyErr_SetString(PyExc_KeyError, "No \"last\" in pickled dict.");
+        return NULL;
+    }
+    if (!PyUnicode_Check(temp)) {
+        PyErr_Format(
+                PyExc_KeyError,
+                "Pickled dict key \"last\" is not a str but type \"%s\".",
+                temp->ob_type->tp_name
+        );
+        return NULL;
+    }
+    Py_DECREF(self->last);
+    self->last = temp;
+    Py_INCREF(self->last);
 
 Set the ``number`` Member
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -187,14 +213,22 @@ This is a C fundamental type so the code is slightly different:
 
 .. code-block:: c
 
-        /* Borrowed reference but no need to incref as we create a C long from it. */
-        PyObject *number = PyDict_GetItemString(state, "number");
-        if (number == NULL) {
-            /* PyDict_GetItemString does not set any error state so we have to. */
-            PyErr_SetString(PyExc_KeyError, "No \"number\" in pickled dict.");
-            return NULL;
-        }
-        self->number = (int) PyLong_AsLong(number);
+    /* Borrowed reference but no need to incref as we create a C long from it. */
+    PyObject *number = PyDict_GetItemString(state, "number");
+    if (number == NULL) {
+        /* PyDict_GetItemString does not set any error state so we have to. */
+        PyErr_SetString(PyExc_KeyError, "No \"number\" in pickled dict.");
+        return NULL;
+    }
+    if (!PyLong_Check(number)) {
+        PyErr_Format(
+                PyExc_KeyError,
+                "Pickled dict key \"number\" is not an int but type \"%s\".",
+                number->ob_type->tp_name
+        );
+        return NULL;
+    }
+    self->number = (int) PyLong_AsLong(number);
 
 And we are done.
 
@@ -208,65 +242,93 @@ And we are done.
 
 .. code-block:: c
 
-    /* Un-pickle the object */
     static PyObject *
     Custom___setstate__(CustomObject *self, PyObject *state) {
-        /* Error check. */
+
         if (!PyDict_CheckExact(state)) {
             PyErr_SetString(PyExc_ValueError, "Pickled object is not a dict.");
             return NULL;
         }
         /* Version check. */
-        /* Borrowed reference but no need to increment as we create a C long
-         * from it. */
+        /* Borrowed reference but no need to increment as we create a C long from it. */
         PyObject *temp = PyDict_GetItemString(state, PICKLE_VERSION_KEY);
         if (temp == NULL) {
             /* PyDict_GetItemString does not set any error state so we have to. */
-            PyErr_Format(PyExc_KeyError, "No \"%s\" in pickled dict.",
-                         PICKLE_VERSION_KEY);
+            PyErr_Format(PyExc_KeyError, "No \"%s\" in pickled dict.", PICKLE_VERSION_KEY);
+            return NULL;
+        }
+        if (!PyLong_Check(temp)) {
+            PyErr_Format(
+                PyExc_KeyError,
+                "Pickled dict version key \"%s\" is not a long but type \"%s\".",
+                PICKLE_VERSION_KEY,
+                temp->ob_type->tp_name
+            );
             return NULL;
         }
         int pickle_version = (int) PyLong_AsLong(temp);
         if (pickle_version != PICKLE_VERSION) {
-            PyErr_Format(PyExc_ValueError,
-                         "Pickle version mismatch. Got version %d but expected version %d.",
+            PyErr_Format(PyExc_ValueError, "Pickle version mismatch. Got version %d but expected version %d.",
                          pickle_version, PICKLE_VERSION);
             return NULL;
         }
 
-        /* NOTE: Custom_new() will have been invoked so self->first and self->last
-         * will have been allocated so we have to de-allocate them. */
-        Py_DECREF(self->first);
-        self->first = PyDict_GetItemString(state, "first"); /* Borrowed reference. */
-        if (self->first == NULL) {
+        temp = PyDict_GetItemString(state, "first"); /* Borrowed reference. */
+        if (temp == NULL) {
             /* PyDict_GetItemString does not set any error state so we have to. */
             PyErr_SetString(PyExc_KeyError, "No \"first\" in pickled dict.");
             return NULL;
         }
-        /* Increment the borrowed reference for our instance of it. */
+        if (!PyUnicode_Check(temp)) {
+            PyErr_Format(
+                    PyExc_KeyError,
+                    "Pickled dict key \"first\" is not a str but type \"%s\".",
+                    temp->ob_type->tp_name
+            );
+            return NULL;
+        }
+        Py_DECREF(self->first);
+        self->first = temp;
         Py_INCREF(self->first);
 
-        /* Similar to self->first above. */
-        Py_DECREF(self->last);
-        self->last = PyDict_GetItemString(state, "last"); /* Borrowed reference. */
-        if (self->last == NULL) {
+        temp = PyDict_GetItemString(state, "last"); /* Borrowed reference. */
+        if (temp == NULL) {
             /* PyDict_GetItemString does not set any error state so we have to. */
             PyErr_SetString(PyExc_KeyError, "No \"last\" in pickled dict.");
             return NULL;
         }
+        if (!PyUnicode_Check(temp)) {
+            PyErr_Format(
+                    PyExc_KeyError,
+                    "Pickled dict key \"last\" is not a str but type \"%s\".",
+                    temp->ob_type->tp_name
+            );
+            return NULL;
+        }
+        Py_DECREF(self->last);
+        self->last = temp;
         Py_INCREF(self->last);
 
-        /* Borrowed reference but no need to incref as we create a C long from it. */
+        /* Borrowed reference but no need to increment as we create a C long from it. */
         PyObject *number = PyDict_GetItemString(state, "number");
         if (number == NULL) {
             /* PyDict_GetItemString does not set any error state so we have to. */
             PyErr_SetString(PyExc_KeyError, "No \"number\" in pickled dict.");
             return NULL;
         }
+        if (!PyLong_Check(number)) {
+            PyErr_Format(
+                    PyExc_KeyError,
+                    "Pickled dict key \"number\" is not an int but type \"%s\".",
+                    number->ob_type->tp_name
+            );
+            return NULL;
+        }
         self->number = (int) PyLong_AsLong(number);
 
         Py_RETURN_NONE;
     }
+
 
 Add the Special Methods
 ---------------------------------
