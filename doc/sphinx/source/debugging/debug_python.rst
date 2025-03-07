@@ -86,6 +86,21 @@ Macro               Description                                             Must
                     See: :ref:`debug-version-of-python-memory_alloc-label`
 =================== ======================================================= ==============
 
+
+.. list-table:: Debug Macros
+   :widths: 20 70 10
+   :header-rows: 1
+
+   * - Macro
+     - Description
+     - Rebuild EXT?
+   * - ``Py_DEBUG``
+     - A standard debug build. ``Py_DEBUG`` sets ``LLTRACE``, ``Py_REF_DEBUG``, ``Py_TRACE_REFS``, and
+       ``PYMALLOC_DEBUG`` (if ``WITH_PYMALLOC`` is enabled).
+     - Yes
+
+
+
 Here is the description of other debug macros that are set by one of the macros above:
 
 =================== =======================================================
