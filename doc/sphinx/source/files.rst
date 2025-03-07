@@ -7,14 +7,37 @@
 .. index::
     single: File Paths and Files
 
+..
+    Links, mostly to the Python documentation.
+    Specific container links are just before the appropriate section.
+
+.. _PyUnicode_FSConverter(): https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FSConverter
+.. _PyUnicode_FSDecoder(): https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FSDecoder
+.. _PyUnicode_DecodeFSDefaultAndSize(): https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_DecodeFSDefaultAndSize
+.. _PyUnicode_DecodeFSDefault(): https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_DecodeFSDefault
+.. _PyUnicode_EncodeFSDefault(): https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_EncodeFSDefault
+
+.. _PyArg_ParseTupleAndKeywords(): https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTupleAndKeywords
+
 **********************
 File Paths and Files
 **********************
 
-This chapter describes reading and writing files from C extensions.
+This chapter describes reading and writing files from CPython extensions.
 
 .. index::
     single: File Paths
+    single: File Path Codecs; PyUnicode_FSConverter()
+    single: File Path Codecs; PyUnicode_FSDecoder()
+    single: File Path Codecs; PyUnicode_DecodeFSDefaultAndSize()
+    single: File Path Codecs; PyUnicode_DecodeFSDefault()
+    single: File Path Codecs; PyUnicode_EncodeFSDefault()
+    single: PyUnicode_FSConverter()
+    single: PyUnicode_FSDecoder()
+    single: PyUnicode_DecodeFSDefaultAndSize()
+    single: PyUnicode_DecodeFSDefault()
+    single: PyUnicode_EncodeFSDefault()
+
 
 ====================================
 File Paths
@@ -28,14 +51,18 @@ see also `File Objects <https://docs.python.org/3/c-api/file.html>`_
 
 In summary:
 
-- ``PyUnicode_FSConverter`` Converts a Python a ``str`` or *path-like* object to a Python ``bytes`` object.
-- ``PyUnicode_FSDecoder`` Converts a Python ``bytes`` object to a Python ``str``.
-- ``PyUnicode_DecodeFSDefaultAndSize`` Takes a C string and length and returns a Python ``str``.
-- ``PyUnicode_DecodeFSDefault`` Takes a null terminated C string and length and returns a Python ``str``.
-- ``PyUnicode_EncodeFSDefault`` Takes a Python ``str`` and return a Python ``bytes`` object.
+- `PyUnicode_FSConverter()`_ Converts a Python a ``str`` or *path-like* object to a Python ``bytes`` object.
+- `PyUnicode_FSDecoder()`_ Converts a Python ``bytes`` object to a Python ``str``.
+- `PyUnicode_DecodeFSDefaultAndSize()`_ Takes a C string and length and returns a Python ``str``.
+- `PyUnicode_DecodeFSDefault()`_ Takes a null terminated C string and length and returns a Python ``str``.
+- `PyUnicode_EncodeFSDefault()`_ Takes a Python ``str`` and return a Python ``bytes`` object.
 
-The example code is in ``src/cpy/cFile.cpp``, ``src/cpy/PythonFileWrapper.h`` and
-``src/cpy/PythonFileWrapper.cpp`` and the tests are in ``tests/unit/test_c_file.py``.
+The example code is in:
+- ``src/cpy/cFile.cpp``
+- ``src/cpy/PythonFileWrapper.h``
+- ``src/cpy/PythonFileWrapper.cpp``
+
+The Python tests are in ``tests/unit/test_c_file.py``.
 
 .. index::
     single: File Paths; Parsing Arguments
@@ -46,15 +73,13 @@ Parsing File Paths as Arguments
 
 The Python API provides functionality for converting Python file paths (a ``str`` or *path-like* object)
 to C file paths (``char *``).
-From Python to C;
-`PyUnicode_FSConverter <https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FSConverter>`_
-and the reverse from C to Python
-`PyUnicode_DecodeFSDefaultAndSize <https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_DecodeFSDefaultAndSize>`_
+From Python to C; `PyUnicode_FSConverter()`_
+and the reverse from C to Python `PyUnicode_DecodeFSDefaultAndSize()`_
 
 Here is an example of taking a Python Unicode string representing a file path, converting it to C and then back
 to Python. The stages are:
 
-- Use ``PyArg_ParseTupleAndKeywords`` and ``PyUnicode_FSConverter`` to convert the path-like Python object to
+- Use `PyArg_ParseTupleAndKeywords()`_ and `PyUnicode_FSConverter()`_ to convert the path-like Python object to
   a Python ``bytes`` object. Note the use of the ``"O&"`` formatting string that takes a Python object and a
   conversion function.
 - Extract the raws bytes to use as a C path.
@@ -80,7 +105,6 @@ Here is the C code:
 
         /* Parse arguments */
         static char *kwlist[] = {"path", NULL};
-        /* Can be optional output path with "|O&". */
         if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&", kwlist, PyUnicode_FSConverter,
                                          &py_path)) {
             goto except;

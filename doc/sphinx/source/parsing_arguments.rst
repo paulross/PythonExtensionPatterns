@@ -4,6 +4,11 @@
 .. toctree::
     :maxdepth: 3
 
+.. Links to the Python documentation
+
+.. _PyArg_ParseTuple(): https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTuple
+.. _PyArg_ParseTupleAndKeywords(): https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTupleAndKeywords
+
 .. index::
     single: Parsing Arguments
 
@@ -133,8 +138,7 @@ Parsing the Arguments
 ------------------------------
 
 Once whe have the C function correctly declared then the arguments have to parsed according to their types.
-This is done using the `PyArg_ParseTuple <https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTuple>`_
-and `PyArg_ParseTupleAndKeywords <https://docs.python.org/3/c-api/arg.html#c.PyArg_ParseTupleAndKeywords>`_
+This is done using the `PyArg_ParseTuple()`_ and `PyArg_ParseTupleAndKeywords()`_
 (ignoring “old-style” functions which use `PyArg_Parse <https://docs.python.org/3/c-api/arg.html#c.PyArg_Parse>`_).
 
 These use formatting strings that can become bewilderingly complex so this tutorial uses examples as an introduction.
@@ -236,8 +240,6 @@ There is no parsing required here, a single ``PyObject`` is expected:
         // Py_DECREF(arg);
         Py_RETURN_NONE;
     }
-
-
 
 This function can be added to the module with the ``METH_O`` flag:
 
@@ -449,7 +451,7 @@ Keyword Arguments and C++11
 
 C++11 compilers warn when creating non-const ``char*`` from string literals as we have done with the keyword array
 above.
-The solution is to declare these ``const char*`` however ``PyArg_ParseTupleAndKeywords`` expects a ``char **``.
+The solution is to declare these ``const char*`` however `PyArg_ParseTupleAndKeywords()`_ expects a ``char **``.
 The solution is to cast away const in the call:
 
 .. code-block:: c
@@ -560,11 +562,11 @@ Suppose we want the functional equivalent of the Python function signature
 
 This is achieved by combining two techniques:
 
-- Positional only: The strings in the ``*kwlist`` passed to ``PyArg_ParseTupleAndKeywords`` are empty.
-- Keyword only: The formatting string passed to ``PyArg_ParseTupleAndKeywords`` uses the ``'$'`` character.
+- Positional only: The strings in the ``*kwlist`` passed to `PyArg_ParseTupleAndKeywords()`_ are empty.
+- Keyword only: The formatting string passed to `PyArg_ParseTupleAndKeywords()`_ uses the ``'$'`` character.
 
 A function using either positional only or keyword only arguments must use the flags ``METH_VARARGS | METH_KEYWORDS``
-and uses ``PyArg_ParseTupleAndKeywords``. Currently, all keyword-only arguments must also be optional arguments, so ``'|'`` must always be
+and uses `PyArg_ParseTupleAndKeywords()`_. Currently, all keyword-only arguments must also be optional arguments, so ``'|'`` must always be
 specified before ``'$'`` in the format string.
 
 Here is the C code:
@@ -610,7 +612,7 @@ Parsing Arguments With Functional Conversion to C
 
 Often you want to convert a Python argument to a C value(s) in a way that is not covered by the format strings
 provided by the Python C API. To do this you can provide a special conversion function in C and give it to
-``PyArg_ParseTuple`` or ``PyArg_ParseTupleAndKeywords``.
+`PyArg_ParseTuple()`_ or `PyArg_ParseTupleAndKeywords()`_.
 
 In this example we are expecting the Python argument to be a list of integers and we want the sum of them as
 a C ``long``. First create a C function that takes a Python list, checks it and sums the values.
