@@ -9,7 +9,6 @@
 
 ..
     Links, mostly to the Python documentation.
-    Specific container links are just before the appropriate section.
 
 .. _PyUnicode_FSConverter(): https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FSConverter
 .. _PyUnicode_FSDecoder(): https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FSDecoder

@@ -6,13 +6,18 @@
 
 .. _chapter_iterators_generators:
 
+..
+    Links, mostly to the Python documentation.
+
+.. _Generator: https://docs.python.org/3/glossary.html#term-generator
+
+
 ***************************
 Iterators and Generators
 ***************************
 
 This chapter describes how to write iterators for your C objects.
-These iterators allow your objects to be used with
-`Generators <https://docs.python.org/3/glossary.html#term-generator>`_.
+These iterators allow your objects to be used with a `Generator`_.
 
 .. index::
     single: Iterators
@@ -30,7 +35,7 @@ That iterator:
 
 - Has a strong reference to the originating object, thus its data.
   This strong reference keeps the originating object alive as long as the iterator is alive.
-- It has a notion of *state*, in other words 'where I was before and where I go next'.
+- It has a notion of *state*, in other words 'where I was before so know where to go next'.
 
 .. warning::
 
@@ -79,8 +84,8 @@ Essentially in Python this means I will be able do this:
 
 .. note::
 
-    Because of the entwined nature of the sequence and the iterator the code in ``src/cpy/Iterators/cIterator.c``
-    occasionally appears out of order.
+    Because of the entwined nature of the sequence object and the iterator object the code in
+    ``src/cpy/Iterators/cIterator.c`` occasionally appears out of order.
 
 Firstly, here is the C declaration of the ``SequenceOfLong`` struct:
 
@@ -94,10 +99,10 @@ Firstly, here is the C declaration of the ``SequenceOfLong`` struct:
     typedef struct {
         PyObject_HEAD
         long *array_long;
-        ssize_t size;
+        size_t size;
     } SequenceOfLong;
 
-This will be initialised with a Python sequence of integers:
+This will be instantiated with a Python sequence of integers:
 
 .. code-block:: c
 
@@ -113,6 +118,16 @@ This will be initialised with a Python sequence of integers:
         }
         return (PyObject *) self;
     }
+
+And initialised with a Python sequence of integers:
+
+.. note::
+
+    The use of the `Sequence Protocol <https://docs.python.org/3/c-api/sequence.html>`_ API such as
+    `PySequence_Length() <https://docs.python.org/3/c-api/sequence.html#c.PySequence_Length>`_
+    and `PySequence_GetItem() <https://docs.python.org/3/c-api/sequence.html#c.PySequence_GetItem>`_
+
+.. code-block:: c
 
     static int
     SequenceOfLong_init(SequenceOfLong *self, PyObject *args, PyObject *kwds) {
@@ -205,7 +220,7 @@ The type declaration then becomes:
             .tp_new = SequenceOfLong_new,
     };
 
-This can be used thus:
+This will be used thus:
 
 .. code-block:: python
 
@@ -256,6 +271,9 @@ Here are the ``__new__``, ``__init__`` and de-allocation methods:
     //      return Py_TYPE(op) == &SequenceOfLongType;
     // }
 
+Here is the initialisation function, note the line ``Py_INCREF(sequence);`` that keeps the original sequence alive.
+
+.. code-block:: c
 
     static int
     SequenceOfLongIterator_init(SequenceOfLongIterator *self, PyObject *args,
@@ -281,6 +299,11 @@ Here are the ``__new__``, ``__init__`` and de-allocation methods:
         self->index = 0;
         return 0;
     }
+
+Here is the de-allocation function once the iterator is deleted.
+Note the line ``Py_XDECREF(self->sequence);`` that allows the original sequence to be free'd.
+
+.. code-block:: c
 
     static void
     SequenceOfLongIterator_dealloc(SequenceOfLongIterator *self) {
@@ -314,13 +337,14 @@ Here is the iterator type declaration, note the use of
 and `tp_iternext <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_iternext>`_.
 
 - ``tp_iter`` signals that this object is an iterable and its result is the iterator.
-  The use of ``PyObject_SelfIter`` merely says "I am the iterator".
+  The use of ``PyObject_SelfIter`` merely says "I am an iterator".
 - ``tp_iternext`` is the function to call with the iterator as its sole argument
   and this returns the next item in the sequence.
 
 .. note::
 
-    ``PyObject_SelfIter`` is implemented thus:
+    `PyObject_SelfIter() <https://docs.python.org/3/c-api/object.html#c.PyObject_SelfIter>`_
+    is a supported CPython API and is implemented thus:
 
     .. code-block:: c
 
@@ -441,7 +465,7 @@ However the following is optional, as the comment suggests:
     }
 
 If you omit that the code will work just fine, the iterator is instantiated dynamically, it is just that the type is
-not exposed in the module.
+not exposed from the module.
 
 .. index::
     single: Iterators; Iterating Python In C
