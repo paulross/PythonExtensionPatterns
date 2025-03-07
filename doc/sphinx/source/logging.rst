@@ -28,34 +28,68 @@ Many thanks to `nnathan <https://github.com/nnathan>`_ for this.
 We import the module and define C equivalent logging functions that are
 compatible with the `*printf` family.
 
+Logging C Declarations
+----------------------
+
+First define the log levels, ``#define`` is used so the that switch case does not issue a compile time non-const error:
+
 .. code-block:: c
 
+    #define PPY_SSIZE_T_CLEAN
     #include <Python.h>
+    /* For va_start, va_end */
     #include <stdarg.h>
 
     /* logging levels defined by logging module
-     * NOTE: In Python logging FATAL = CRITICAL */
-    enum { LOGGING_INFO, LOGGING_WARNING, LOGGING_ERROR, LOGGING_FATAL, LOGGING_DEBUG, LOGGING_EXCEPTION };
+     * From: https://docs.python.org/3/library/logging.html#logging-levels */
+    #define LOGGING_DEBUG 10
+    #define LOGGING_INFO 20
+    #define LOGGING_WARNING 30
+    #define LOGGING_ERROR 40
+    #define LOGGING_CRITICAL 50
+    #define LOGGING_EXCEPTION 60
 
-    /* module globals */
-    static PyObject *g_logging_import = NULL;
+Logging C Globals
+----------------------
+
+Then two globals, the first is the imported logging module, the next the current logger:
+
+.. code-block:: c
+
+    /* This modules globals */
+    static PyObject *g_logging_module = NULL; /* Initialise by PyInit_cLogging() below. */
     static PyObject *g_logger = NULL;
 
-    /* Get a logger object from the logging module. */
+Logging C Functions
+----------------------
+
+Now a function to get a logger object from the logging module:
+
+.. code-block:: c
+
     static PyObject *py_get_logger(char *logger_name) {
+        assert(g_logging_module);
         PyObject *logger = NULL;
 
-        logger = PyObject_CallMethod(g_logging_import, "getLogger", "s", logger_name);
+        logger = PyObject_CallMethod(g_logging_module, "getLogger", "s", logger_name);
         if (logger == NULL) {
             const char *err_msg = "failed to call logging.getLogger";
             PyErr_SetString(PyExc_RuntimeError, err_msg);
         }
+        /*
+        fprintf(stdout, "%s()#%d logger=0x%p\n", __FUNCTION__, __LINE__, (void *)logger);
+         */
         return logger;
     }
 
-    /* main interface to logging function */
+Now the main interface to logging function:
+
+.. code-block:: c
+
     static PyObject *
     py_log_msg(int log_level, char *printf_fmt, ...) {
+        assert(g_logger);
+        assert(!PyErr_Occurred());
         PyObject *log_msg = NULL;
         PyObject *ret = NULL;
         va_list fmt_args;
@@ -63,36 +97,60 @@ compatible with the `*printf` family.
         va_start(fmt_args, printf_fmt);
         log_msg = PyUnicode_FromFormatV(printf_fmt, fmt_args);
         va_end(fmt_args);
+
         if (log_msg == NULL) {
-            /* fail silently. */
-            return ret;
-        }
-        /* call function depending on loglevel */
-        switch (log_level) {
-            case LOGGING_INFO:
-                ret = PyObject_CallMethod(g_logger, "info", "O", log_msg);
-                break;
-            case LOGGING_WARNING:
-                ret = PyObject_CallMethod(g_logger, "warning", "O", log_msg);
-                break;
-            case LOGGING_ERROR:
-                ret = PyObject_CallMethod(g_logger, "error", "O", log_msg);
-                break;
-            case LOGGING_FATAL:
-                ret = PyObject_CallMethod(g_logger, "fatal", "O", log_msg);
-                break;
-            case LOGGING_DEBUG:
-                ret = PyObject_CallMethod(g_logger, "debug", "O", log_msg);
-                break;
-            case LOGGING_EXCEPTION:
-                ret = PyObject_CallMethod(g_logger, "exception", "O", log_msg);
-                break;
-            default:
-                break;
+            /* fail. */
+            ret = PyObject_CallMethod(
+                    g_logger,
+                    "critical",
+                    "O", "Unable to create log message."
+            );
+        } else {
+            /* call function depending on loglevel */
+            switch (log_level) {
+                case LOGGING_DEBUG:
+                    ret = PyObject_CallMethod(g_logger, "debug", "O", log_msg);
+                    break;
+                case LOGGING_INFO:
+                    ret = PyObject_CallMethod(g_logger, "info", "O", log_msg);
+                    break;
+                case LOGGING_WARNING:
+                    ret = PyObject_CallMethod(g_logger, "warning", "O", log_msg);
+                    break;
+                case LOGGING_ERROR:
+                    ret = PyObject_CallMethod(g_logger, "error", "O", log_msg);
+                    break;
+                case LOGGING_CRITICAL:
+                    ret = PyObject_CallMethod(g_logger, "critical", "O", log_msg);
+                    break;
+                default:
+                    ret = PyObject_CallMethod(g_logger, "critical", "O", log_msg);
+                    break;
+            }
+            assert(!PyErr_Occurred());
         }
         Py_DECREF(log_msg);
         return ret;
     }
+
+A function to set a log level:
+
+.. code-block:: c
+
+    static PyObject *
+    py_log_set_level(PyObject *Py_UNUSED(module), PyObject *args) {
+        assert(g_logger);
+        PyObject *py_log_level;
+
+        if (!PyArg_ParseTuple(args, "O", &py_log_level)) {
+            return NULL;
+        }
+        return PyObject_CallMethod(g_logger, "setLevel", "O", py_log_level);
+    }
+
+And the main function to log a message:
+
+.. code-block:: c
 
     static PyObject *
     py_log_message(PyObject *Py_UNUSED(module), PyObject *args) {
@@ -103,18 +161,36 @@ compatible with the `*printf` family.
             return NULL;
         }
         return py_log_msg(log_level, "%s", message);
-    //    Py_RETURN_NONE;
     }
 
+cLogging Module
+----------------------
+
+Setup the module functions:
+
+.. code-block:: c
+
     static PyMethodDef logging_methods[] = {
-            {
-                    "log",
-                    (PyCFunction) py_log_message,
-                    METH_VARARGS,
-                    "Log a message."
-            },
-            {NULL, NULL, 0, NULL} /* Sentinel */
+        /* ... */
+        {
+            "py_log_set_level",
+            (PyCFunction) py_log_set_level,
+            METH_VARARGS,
+            "Set the logging level."
+        },
+        {
+            "log",
+            (PyCFunction) py_log_message,
+            METH_VARARGS,
+            "Log a message."
+        },
+        /* ... */
+        {NULL, NULL, 0, NULL} /* Sentinel */
     };
+
+The module definition:
+
+.. code-block:: c
 
     static PyModuleDef cLogging = {
             PyModuleDef_HEAD_INIT,
@@ -123,6 +199,10 @@ compatible with the `*printf` family.
             .m_size = -1,
             .m_methods = logging_methods,
     };
+
+The module initialisation, this is where the logging module is imported with ``PyImport_ImportModule()``:
+
+.. code-block:: c
 
     PyMODINIT_FUNC PyInit_cLogging(void) {
         PyObject *m = PyModule_Create(&cLogging);
@@ -173,11 +253,85 @@ compatible with the `*printf` family.
         return m;
     }
 
+Create in the ``setup.py``:
+
+.. code-block:: python
+
+    Extension(name=f"{PACKAGE_NAME}.Logging.cLogging",
+        include_dirs=[],
+        sources=["src/cpy/Logging/cLogging.c", ],
+        extra_compile_args=extra_compile_args_c,
+        language='c',
+    ),
+
+And run ``python setup.py develop``.
+
+Using and Testing
+-----------------
+
+Using From C
+^^^^^^^^^^^^^
+
 To simply use the interface defined in the above function, use it like the `printf` family of functions:
 
 .. code-block:: c
 
     py_log_msg(WARNING, "error code: %d", 10);
+
+Using From Python
+^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from cPyExtPatt.Logging import cLogging
+
+    cLogging.log(cLogging.ERROR, "Test log message")
+
+There are various tests in ``tests/unit/test_c_logging.py``.
+As pytest swallows logging messages there is a ``main()`` function in that script so you can run it from the command
+line:
+
+.. code-block:: python
+
+    def main():
+        logger.setLevel(logging.DEBUG)
+        logger.info('main')
+        logger.warning('Test warning message XXXX')
+        logger.debug('Test debug message XXXX')
+        logger.info('_test_logging')
+        test_logging()
+        print()
+        print(cLogging)
+        print(dir(cLogging))
+        print()
+        logger.info('cLogging.log():')
+        cLogging.py_log_set_level(10)
+        cLogging.log(cLogging.ERROR, "cLogging.log(): Test log message")
+
+        return 0
+
+
+    if __name__ == '__main__':
+        exit(main())
+
+Here is an example output:
+
+.. code-block:: bash
+
+    $python tests/unit/test_c_logging.py
+    2025-03-07 11:49:23,994 7064 INFO     main
+    2025-03-07 11:49:23,994 7064 WARNING  Test warning message XXXX
+    2025-03-07 11:49:23,994 7064 DEBUG    Test debug message XXXX
+    2025-03-07 11:49:23,994 7064 INFO     _test_logging
+    2025-03-07 11:49:23,994 7064 WARNING  Test warning message XXXX
+    2025-03-07 11:49:23,994 7064 DEBUG    Test debug message XXXX
+
+    <module 'cPyExtPatt.Logging.cLogging' from 'PythonExtensionPatterns/cPyExtPatt/Logging/cLogging.cpython-313-darwin.so'>
+    ['CRITICAL', 'DEBUG', 'ERROR', 'EXCEPTION', 'INFO', 'WARNING', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', 'c_file_line_function', 'log', 'py_file_line_function', 'py_log_set_level']
+
+    2025-03-07 11:49:23,994 7064 INFO     cLogging.log():
+    2025-03-07 11:49:23,994 7064 ERROR    cLogging.log(): Test log message
+
 
 .. _PyEval_GetFrame(): https://docs.python.org/3/c-api/reflection.html#c.PyEval_GetFrame
 .. _PyFrameObject: https://docs.python.org/3/c-api/frame.html#c.PyFrameObject

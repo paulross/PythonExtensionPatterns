@@ -15,11 +15,11 @@ logging.basicConfig(level=logging.DEBUG, stream=sys.stderr, format=DEFAULT_OPT_L
 logger = logging.getLogger(__file__)
 
 
-def _test_logging():
+def test_logging():
     logger.setLevel(logging.DEBUG)
     logger.warning('Test warning message XXXX')
     logger.debug('Test debug message XXXX')
-    assert 0
+    # assert 0
 
 
 def test_c_logging_dir():
@@ -44,30 +44,52 @@ def test_c_logging_dir():
     ]
 
 
-def _test_c_logging_log():
+def test_c_logging_log():
     print()
     cLogging.py_log_set_level(10)
     result = cLogging.log(cLogging.ERROR, "Test log message")
-    assert result is not None
+    assert result is None
 
 
-def _test_c_file_line_function_file():
+def test_c_file_line_function_file():
     file, line, function = cLogging.c_file_line_function()
     assert file == 'src/cpy/Logging/cLogging.c'
-    assert line == 148
+    assert line == 143
     assert function == 'c_file_line_function'
 
 
-def _test_py_file_line_function_file():
+def test_py_file_line_function_file():
     file, _line, _function = cLogging.py_file_line_function()
     assert file == __file__
 
 
-def _test_py_file_line_function_line():
+def test_py_file_line_function_line():
     _file, line, _function = cLogging.py_file_line_function()
-    assert line == 50
+    assert line == 67
 
 
-def _test_py_file_line_function_function():
+def test_py_file_line_function_function():
     _file, _line, function = cLogging.py_file_line_function()
     assert function == 'test_py_file_line_function_function'
+
+
+def main():
+    logger.setLevel(logging.DEBUG)
+    logger.info('main')
+    logger.warning('Test warning message XXXX')
+    logger.debug('Test debug message XXXX')
+    logger.info('_test_logging')
+    test_logging()
+    print()
+    print(cLogging)
+    print(dir(cLogging))
+    print()
+    logger.info('cLogging.log():')
+    cLogging.py_log_set_level(10)
+    cLogging.log(cLogging.ERROR, "cLogging.log(): Test log message")
+
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())

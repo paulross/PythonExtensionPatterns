@@ -18,7 +18,7 @@
 #define LOGGING_EXCEPTION 60
 
 /* This modules globals */
-static PyObject *g_logging_module = NULL;
+static PyObject *g_logging_module = NULL; /* Initialise by PyInit_cLogging() below. */
 static PyObject *g_logger = NULL;
 
 /* Get a logger object from the logging module. */
@@ -31,7 +31,9 @@ static PyObject *py_get_logger(char *logger_name) {
         const char *err_msg = "failed to call logging.getLogger";
         PyErr_SetString(PyExc_RuntimeError, err_msg);
     }
+    /*
     fprintf(stdout, "%s()#%d logger=0x%p\n", __FUNCTION__, __LINE__, (void *)logger);
+     */
     return logger;
 }
 
@@ -43,18 +45,18 @@ py_log_msg(int log_level, char *printf_fmt, ...) {
     PyObject *log_msg = NULL;
     PyObject *ret = NULL;
     va_list fmt_args;
-
+    /*
     fprintf(stdout, "%s()#%d g_logger=0x%p\n", __FUNCTION__, __LINE__, (void *)g_logger);
     fprintf(stdout, "%s()#%d log_level=%d print_fmt=\"%s\"\n", __FUNCTION__, __LINE__, log_level, printf_fmt);
-
+    */
     va_start(fmt_args, printf_fmt);
     log_msg = PyUnicode_FromFormatV(printf_fmt, fmt_args);
     va_end(fmt_args);
-
+    /*
     fprintf(stdout, "%s()#%d log_message: \"", __FUNCTION__, __LINE__);
     PyObject_Print(log_msg, stdout, Py_PRINT_RAW);
     fprintf(stdout, "\"\n");
-
+    */
     if (log_msg == NULL) {
         /* fail. */
         ret = PyObject_CallMethod(
@@ -86,7 +88,6 @@ py_log_msg(int log_level, char *printf_fmt, ...) {
         }
         assert(!PyErr_Occurred());
     }
-//    PyObject_CallMethod(g_logger, "flush", "");
     Py_DECREF(log_msg);
     return ret;
 }
