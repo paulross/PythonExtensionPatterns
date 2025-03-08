@@ -18,7 +18,8 @@ First create your toolbox, in this one we have:
 
 * Debug version of Python - great for finding out more detail of your Python code as it executes.
 * Valgrind - the goto tool for memory leaks. It is a little tricky to get working but should be in every developers toolbox.
-* OS memory monitioring - this is a quick and simple way of identifying whether memory leaks are happening or not. An example is given below: :ref:`simple-memory-monitor-label`
+* OS memory monitioring - this is a quick and simple way of identifying whether memory leaks are happening or not.
+  An example is given below: :ref:`simple-memory-monitor-label`
 
 .. _debug-tools-debug-python-label:
 
@@ -74,7 +75,10 @@ Here :ref:`leaked-new-references-valgrind-label` is an example of finding a leak
 A Simple Memory Monitor
 ------------------------------------------------
 
-Here is a simple process memory monitor using the ``psutil`` library:
+A useful technique is to monitor the memory usage of a Python program.
+Here is a simple process memory monitor using the ``psutil`` library.
+See the :ref:`memory_leaks-label` chapter for a more comprehensive approach, in particular
+:ref:`memory-leaks.pymemtrace`.
 
 
 .. code-block:: python

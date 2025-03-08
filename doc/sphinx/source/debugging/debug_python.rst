@@ -19,6 +19,9 @@ Building and Using a Debug Version of Python
 There is a spectrum of debug builds of Python that you can create. This chapter describes how to create them.
 
 
+.. index::
+    single: Debugging; Building Python
+
 --------------------------------------------
 Building a Standard Debug Version of Python
 --------------------------------------------
@@ -32,6 +35,9 @@ Download and unpack the Python source. Then in the source directory create a deb
     ../configure --with-pydebug
     make
     make test
+
+.. index::
+    single: Debugging; Python Build Macros
 
 -----------------------
 Specifying Macros
@@ -54,38 +60,20 @@ However the python documentation suggests the alternative way of specifying them
 
 I don't know why one way would be regarded as better than the other.
 
+.. index::
+    pair: Debugging; Py_DEBUG
+    pair: Debugging; Py_REF_DEBUG
+    pair: Debugging; Py_TRACE_REFS
+    pair: Debugging; WITH_PYMALLOC
+    pair: Debugging; PYMALLOC_DEBUG
+    pair: Debugging; LLTRACE
+
 ---------------------------
 The Debug Builds
 ---------------------------
 
-The builds are controlled by the following macros:
-            
-=================== ======================================================= ==============
-Macro               Description                                             Must Rebuild
-                                                                            Extensions?
-=================== ======================================================= ==============
-``Py_DEBUG``        A standard debug build. ``Py_DEBUG`` sets               Yes
-                    ``LLTRACE``, ``Py_REF_DEBUG``, ``Py_TRACE_REFS``, and
-                    ``PYMALLOC_DEBUG`` (if ``WITH_PYMALLOC`` is enabled).
-``Py_REF_DEBUG``    Turn on aggregate reference counting which will be      No
-                    displayed in the interactive interpreter when
-                    invoked with ``-X showrefcount`` on the command line.
-                    If you are not keeping references to objects and the
-                    count is increasing there is probably a leak.
-                    Also adds ``sys.gettotalrefcount()`` to the ``sys``
-                    module and this returns the total number of references.
-``Py_TRACE_REFS``   Turns on reference tracing.                             Yes
-                    Sets ``Py_REF_DEBUG``.
-``WITH_PYMALLOC``   Enables Pythons small memory allocator. For Valgrind    No
-                    this must be disabled, if using Pythons malloc
-                    debugger (using ``PYMALLOC_DEBUG``) this must be
-                    enabled.
-                    See: :ref:`debug-version-of-python-memory_alloc-label`
-``PYMALLOC_DEBUG``  Enables Python's malloc debugger that annotates         No
-                    memory blocks. Requires ``WITH_PYMALLOC``.
-                    See: :ref:`debug-version-of-python-memory_alloc-label`
-=================== ======================================================= ==============
-
+The builds are controlled by the following macros.
+The third column shows if CPython C extensions have to be rebuilt against that version of Python:
 
 .. list-table:: Debug Macros
    :widths: 20 70 10
@@ -98,8 +86,30 @@ Macro               Description                                             Must
      - A standard debug build. ``Py_DEBUG`` sets ``LLTRACE``, ``Py_REF_DEBUG``, ``Py_TRACE_REFS``, and
        ``PYMALLOC_DEBUG`` (if ``WITH_PYMALLOC`` is enabled).
      - Yes
-
-
+   * - ``Py_REF_DEBUG``
+     - Turn on aggregate reference counting which will be
+       displayed in the interactive interpreter when
+       invoked with ``-X showrefcount`` on the command line.
+       If you are not keeping references to objects and the
+       count is increasing there is probably a leak.
+       Also adds ``sys.gettotalrefcount()`` to the ``sys``
+       module and this returns the total number of references.
+     - No
+   * - ``Py_TRACE_REFS``
+     - Turns on reference tracing. Sets ``Py_REF_DEBUG``.
+     - Yes
+   * - ``WITH_PYMALLOC``
+     - Enables Pythons small memory allocator. For Valgrind
+       this must be disabled, if using Pythons malloc
+       debugger (using ``PYMALLOC_DEBUG``) this must be
+       enabled.
+       See: :ref:`debug-version-of-python-memory_alloc-label`
+     - No
+   * - ``PYMALLOC_DEBUG``
+     - Enables Python's malloc debugger that annotates
+       memory blocks. Requires ``WITH_PYMALLOC``.
+       See: :ref:`debug-version-of-python-memory_alloc-label`
+     - No
 
 Here is the description of other debug macros that are set by one of the macros above:
 
@@ -161,11 +171,17 @@ Or:
 
 This builds Python with the ``WITH_PYMALLOC`` and ``PYMALLOC_DEBUG`` macros defined.
 
+.. index::
+    pair: Debugging; Access After Free
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Finding Access after Free With ``PYMALLOC_DEBUG``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Python built with ``PYMALLOC_DEBUG`` is the most effective way of detecting access after free. For example if we have this CPython code:
+TODO:
+
+Python built with ``PYMALLOC_DEBUG`` is the most effective way of detecting access after free.
+For example if we have this CPython code:
 
 .. code-block:: c
 
@@ -180,13 +196,41 @@ And we call this from the interpreter we get a diagnostic:
 
 .. code-block:: python
 
-    Python 3.4.3 (default, Sep 16 2015, 16:56:10) 
+    Python 3.4.3 (default, Sep 16 2015, 16:56:10)
     [GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.51)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from cPyExtPatt import cPyRefs
     >>> cPyRefs.afterFree()
     <refcnt -2604246222170760229 at 0x10a474130>
-    >>> 
+    >>>
+
+.. code-block:: python
+
+    # $ python
+    # Python 3.9.7 (v3.9.7:1016ef3790, Aug 30 2021, 16:39:15)
+    # [Clang 6.0 (clang-600.0.57)] on darwin
+    # Type "help", "copyright", "credits" or "license" for more information.
+    >>> from cPyExtPatt import cPyRefs
+    >>> cPyRefs.access_after_free()
+    access_after_free(): Before Py_DECREF(0x0x7fe55f1e2fb0) Ref count: 1
+    1048576
+    access_after_free(): After Py_DECREF(0x0x7fe55f1e2fb0) Ref count: 140623120051984
+    1048576
+    >>>
+
+.. code-block:: python
+
+    # $ python
+    # Python 3.13.1 (v3.13.1:06714517797, Dec  3 2024, 14:00:22) [Clang 15.0.0 (clang-1500.3.9.4)] on darwin
+    # Type "help", "copyright", "credits" or "license" for more information.
+    >>> from cPyExtPatt import cPyRefs
+    >>> cPyRefs.access_after_free()
+    access_after_free(): Before Py_DECREF(0x0x102465890) Ref count: 1
+    1048576
+    access_after_free(): After Py_DECREF(0x0x102465890) Ref count: 4333131856
+    0
+    >>>
+
 
 .. index::
     single: Debugging; PyMalloc Statistics

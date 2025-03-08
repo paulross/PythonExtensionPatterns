@@ -78,9 +78,25 @@ static PyObject *subtract_two_longs(PyObject *Py_UNUSED(module)) {
  * Not pytest tested.
  * */
 static PyObject *access_after_free(PyObject *Py_UNUSED(module)) {
-    PyObject *pA = PyLong_FromLong(1024L);
+    PyObject *pA = PyLong_FromLong(1024L * 1024L);
+    fprintf(
+        stdout,
+        "%s(): Before Py_DECREF(0x%p) Ref count: %zd\n",
+        __FUNCTION__, (void *)pA, Py_REFCNT(pA)
+    );
+    PyObject_Print(pA, stdout, Py_PRINT_RAW);
+    fprintf(stdout, "\n");
+
     Py_DECREF(pA);
-    PyObject_Print(pA, stdout, 0);
+
+    fprintf(
+            stdout,
+            "%s(): After Py_DECREF(0x%p) Ref count: %zd\n",
+            __FUNCTION__, (void *)pA, Py_REFCNT(pA)
+    );
+    PyObject_Print(pA, stdout, Py_PRINT_RAW);
+    fprintf(stdout, "\n");
+
     Py_RETURN_NONE;
 }
 
