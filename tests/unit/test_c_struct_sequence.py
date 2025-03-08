@@ -613,54 +613,54 @@ def test_excess_nt_field_three_index_missing():
     assert err.value.args[0] == 'tuple index out of range'
 
 
-# @pytest.mark.skipif(not (sys.version_info.minor <= 11), reason='Python <= 3.11')
-# def test_nt_with_unnamed_field_create_dir_3_11_and_before():
-#     ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
-#     print()
-#     pprint.pprint(dir(ntuf))
-#     assert dir(ntuf) == [
-#         '__add__',
-#         '__class__',
-#         '__class_getitem__',
-#         '__contains__',
-#         '__delattr__',
-#         '__dir__',
-#         '__doc__',
-#         '__eq__',
-#         '__format__',
-#         '__ge__',
-#         '__getattribute__',
-#         '__getitem__',
-#         '__getnewargs__',
-#         '__getstate__',
-#         '__gt__',
-#         '__hash__',
-#         '__init__',
-#         '__init_subclass__',
-#         '__iter__',
-#         '__le__',
-#         '__len__',
-#         '__lt__',
-#         '__match_args__',
-#         '__module__',
-#         '__mul__',
-#         '__ne__',
-#         '__new__',
-#         '__reduce__',
-#         '__reduce_ex__',
-#         '__repr__',
-#         '__rmul__',
-#         '__setattr__',
-#         '__sizeof__',
-#         '__str__',
-#         '__subclasshook__',
-#         'count',
-#         'field_one',
-#         'index',
-#         'n_fields',
-#         'n_sequence_fields',
-#         'n_unnamed_fields'
-#     ]
+@pytest.mark.skipif(not (11 <= sys.version_info.minor <= 12), reason='Python 3.11, 3.12')
+def test_nt_with_unnamed_field_create_dir_3_11_and_before():
+    ntuf = cStructSequence.NTWithUnnamedField_create('foo', 'bar', 'baz')
+    print()
+    pprint.pprint(dir(ntuf))
+    assert dir(ntuf) == [
+        '__add__',
+        '__class__',
+        '__class_getitem__',
+        '__contains__',
+        '__delattr__',
+        '__dir__',
+        '__doc__',
+        '__eq__',
+        '__format__',
+        '__ge__',
+        '__getattribute__',
+        '__getitem__',
+        '__getnewargs__',
+        '__getstate__',
+        '__gt__',
+        '__hash__',
+        '__init__',
+        '__init_subclass__',
+        '__iter__',
+        '__le__',
+        '__len__',
+        '__lt__',
+        '__match_args__',
+        '__module__',
+        '__mul__',
+        '__ne__',
+        '__new__',
+        '__reduce__',
+        '__reduce_ex__',
+        '__repr__',
+        '__rmul__',
+        '__setattr__',
+        '__sizeof__',
+        '__str__',
+        '__subclasshook__',
+        'count',
+        'field_one',
+        'index',
+        'n_fields',
+        'n_sequence_fields',
+        'n_unnamed_fields',
+    ]
 
 
 @pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')

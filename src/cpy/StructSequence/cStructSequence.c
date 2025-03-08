@@ -383,6 +383,9 @@ ExcessNT_create(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
  * Use this for numeric comparisons, e.g. #if PY_VERSION_HEX >= ...
  *
  * This is Python 3.11+ specific code.
+ * Earlier versions give this compile time error:
+ * E   ImportError: dlopen(...cStructSequence.cpython-310-darwin.so, 0x0002): \
+ *  symbol not found in flat namespace '_PyStructSequence_UnnamedField'
  */
 #if PY_VERSION_HEX >= 0x030B0000
 
@@ -481,8 +484,10 @@ static PyMethodDef cStructSequence_methods[] = {
                         "Example of getting a transaction."},
         {"ExcessNT_create",           (PyCFunction) ExcessNT_create,           METH_VARARGS | METH_KEYWORDS,
                         "Create a ExcessNT from the given values."},
-/* Python 3.11 specific code. Earlier versions have a problem with:
- * symbol not found in flat namespace '_PyStructSequence_UnnamedField'
+/* Python 3.11+ specific code.
+ * Earlier versions give this compile time error:
+ * E   ImportError: dlopen(...cStructSequence.cpython-310-darwin.so, 0x0002): \
+ *  symbol not found in flat namespace '_PyStructSequence_UnnamedField'
  */
 #if PY_VERSION_HEX >= 0x030B0000
         {"NTWithUnnamedField_create", (PyCFunction) NTWithUnnamedField_create, METH_VARARGS | METH_KEYWORDS,

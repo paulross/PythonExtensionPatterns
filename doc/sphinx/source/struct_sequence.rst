@@ -666,6 +666,12 @@ These are fields unavailable to Python code but available to C code.
 The rules using these are quite involved and the Python documentation is poor at describing them so I'll do my best
 here.
 
+.. note::
+
+    Unnamed fields doe not appear to work in Python versions prior to 3.11 with the following compile time error:
+
+    ``E   ImportError: dlopen(... cStructSequence.cpython-310-darwin.so, 0x0002): symbol not found in flat namespace '_PyStructSequence_UnnamedField'``
+
 The rules appear to be:
 
 * Unnamed fields in the `PyStructSequence_Field`_ *must* follow named fields.
