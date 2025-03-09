@@ -26,15 +26,32 @@ There is a spectrum of debug builds of Python that you can create. This chapter 
 Building a Standard Debug Version of Python
 --------------------------------------------
 
-Download and unpack the Python source. Then in the source directory create a debug directory for the debug build:
+Download check and and unpack the Python source into the directory of your choice:
 
 .. code-block:: bash
 
-    mkdir debug
-    cd debug
-    ../configure --with-pydebug
-    make
-    make test
+    $ curl -o Python-3.13.2.tgz https://www.python.org/ftp/python/3.13.2/Python-3.13.2.tgz
+    # Get the Gzipped source tarball md5 from:
+    # https://www.python.org/downloads/release/python-3132/ "6192ce4725d9c9fc0e8a1cd38410b417"
+    $ md5 Python-3.13.2.tgz | grep 6192ce4725d9c9fc0e8a1cd38410b417
+    MD5 (Python-3.13.2.tgz) = 6192ce4725d9c9fc0e8a1cd38410b417
+    # No output would be a md5 missmatch.
+    $ tmp echo $?
+    0
+    # 1 would be a md5 missmatch.
+    $ tar -xzf Python-3.13.2.tgz
+    $ cd Python-3.13.2
+
+
+Then in the source directory create a debug directory for the debug build:
+
+.. code-block:: bash
+
+    $ mkdir debug
+    $ cd debug
+    $ ../configure --with-pydebug
+    $ make
+    $ make test
 
 .. index::
     single: Debugging; Python Build Macros
