@@ -78,11 +78,11 @@ add_executable(PythonExtensionPatterns
         src/main.c
 #        PythonExtensionPatterns/PythonExtensionPatterns/main.c
 #        PythonExtensionPatterns/PythonExtensionPatterns/PythonExtensionPatterns.c
-        src/cpy/cExceptions.c
-        src/cpy/cModuleGlobals.c
-        src/cpy/cObject.c
-        src/cpy/cParseArgs.c
-        src/cpy/cPyRefs.c
+        src/cpy/Exceptions/cExceptions.c
+        src/cpy/ModuleGlobals/cModuleGlobals.c
+        src/cpy/Object/cObject.c
+        src/cpy/ParseArgs/cParseArgs.c
+        src/cpy/RefCount/cPyRefs.c
         # TODO:
 #        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/main.c
 #        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_call_super.c
@@ -94,9 +94,8 @@ add_executable(PythonExtensionPatterns
         src/cCanonical.c
         src/scratch.c
         # Legacy code. Removed in the documentation for version 0.2.
-        src/cpy/cParseArgsHelper.cpp
+        src/cpy/ParseArgs/cParseArgsHelper.cpp
         src/cpy/Pickle/cCustomPickle.c
-        src/cpy/cParseArgsHelper.cpp
         src/cpy/File/cFile.cpp
         src/cpy/File/PythonFileWrapper.h
         src/cpy/File/PythonFileWrapper.cpp

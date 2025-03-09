@@ -80,38 +80,38 @@ for dir_path in (os.path.join(os.path.dirname(__file__), 'cPyExtPatt'),
 # See: https://setuptools.pypa.io/en/latest/userguide/ext_modules.html
 # language='c' or language='c++',
 ext_modules = [
-    Extension(f"{PACKAGE_NAME}.cExceptions", sources=['src/cpy/cExceptions.c', ],
+    Extension(f"{PACKAGE_NAME}.cExceptions", sources=['src/cpy/Exceptions/cExceptions.c', ],
               include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
               library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
               extra_compile_args=extra_compile_args_c,
               language='c',
               ),
-    Extension(f"{PACKAGE_NAME}.cModuleGlobals", sources=['src/cpy/cModuleGlobals.c', ],
+    Extension(f"{PACKAGE_NAME}.cModuleGlobals", sources=['src/cpy/ModuleGlobals/cModuleGlobals.c', ],
               include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
               library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
               extra_compile_args=extra_compile_args_c,
               language='c',
               ),
-    Extension(f"{PACKAGE_NAME}.cObject", sources=['src/cpy/cObject.c', ],
+    Extension(f"{PACKAGE_NAME}.cObject", sources=['src/cpy/Object/cObject.c', ],
               include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
               library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
               extra_compile_args=extra_compile_args_c,
               language='c',
               ),
-    Extension(f"{PACKAGE_NAME}.cParseArgs", sources=['src/cpy/cParseArgs.c', ],
+    Extension(f"{PACKAGE_NAME}.cParseArgs", sources=['src/cpy/ParseArgs/cParseArgs.c', ],
               include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
               library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
               extra_compile_args=extra_compile_args_c,
               language='c',
               ),
     # Legacy code, see src/cpy/cParseArgsHelper.cpp for comments.
-    Extension(f"{PACKAGE_NAME}.cParseArgsHelper", sources=['src/cpy/cParseArgsHelper.cpp', ],
+    Extension(f"{PACKAGE_NAME}.cParseArgsHelper", sources=['src/cpy/ParseArgs/cParseArgsHelper.cpp', ],
               include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
               library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
               extra_compile_args=extra_compile_args_cpp,
               language='c++11',
               ),
-    Extension(f"{PACKAGE_NAME}.cPyRefs", sources=['src/cpy/cPyRefs.c', ],
+    Extension(f"{PACKAGE_NAME}.cPyRefs", sources=['src/cpy/RefCount/cPyRefs.c', ],
               include_dirs=['/usr/local/include', ],  # os.path.join(os.getcwd(), 'include'),],
               library_dirs=[os.getcwd(), ],  # path to .a or .so file(s)
               # libraries = ['jpeg',],
