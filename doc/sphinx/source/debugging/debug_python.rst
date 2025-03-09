@@ -64,16 +64,16 @@ They can be specified at the configure stage, this works:
 
 .. code-block:: bash
 
-    ../configure CFLAGS='-DPy_DEBUG -DPy_TRACE_REFS' --with-pydebug
-    make
+    $ ../configure CFLAGS='-DPy_DEBUG -DPy_TRACE_REFS' --with-pydebug
+    $ make
 
 
 However the python documentation suggests the alternative way of specifying them when invoking make:
 
 .. code-block:: bash
 
-    ../configure --with-pydebug
-    make EXTRA_CFLAGS="-DPy_REF_DEBUG"
+    $ ../configure --with-pydebug
+    $ make EXTRA_CFLAGS="-DPy_REF_DEBUG"
 
 I don't know why one way would be regarded as better than the other.
 
@@ -136,16 +136,6 @@ Macro               Description
 ``LLTRACE``         Low level tracing. See ``Python/ceval.c``.
 =================== =======================================================
 
-In the source directory:
-
-.. code-block:: bash
-
-    mkdir debug
-    cd debug
-    ../configure --with-pydebug
-    make
-    make test
-
 
 .. _debug-version-of-python-memory_alloc-label:
 
@@ -167,8 +157,8 @@ To make a version of Python with its memory allocator suitable for use with Valg
 
 .. code-block:: bash
 
-    ../configure --with-pydebug --without-pymalloc
-    make
+    $ ../configure --with-pydebug --without-pymalloc
+    $ make
 
 See :ref:`using-valgrind-label` for using Valgrind.
 
@@ -176,15 +166,15 @@ To make a version of Python with its memory allocator using Python's malloc debu
 
 .. code-block:: bash
 
-    ../configure CFLAGS='-DPYMALLOC_DEBUG' --with-pydebug
-    make
+    $ ../configure CFLAGS='-DPYMALLOC_DEBUG' --with-pydebug
+    $ make
 
 Or:
 
 .. code-block:: bash
 
-    ../configure --with-pydebug
-    make EXTRA_CFLAGS="-DPYMALLOC_DEBUG"
+    $ ../configure --with-pydebug
+    $ make EXTRA_CFLAGS="-DPYMALLOC_DEBUG"
 
 This builds Python with the ``WITH_PYMALLOC`` and ``PYMALLOC_DEBUG`` macros defined.
 
@@ -225,7 +215,8 @@ For example if we have this CPython code:
         Py_RETURN_NONE;
     }
 
-And we call this from the interpreter we get a diagnostic:
+And we call this from the interpreter what we get is undefined and may vary from Python version to version.
+Here is Python 3.9:
 
 .. code-block:: python
 
@@ -241,6 +232,8 @@ And we call this from the interpreter we get a diagnostic:
     1048576
     >>>
 
+And Python 3.13:
+
 .. code-block:: python
 
     # $ python
@@ -254,6 +247,7 @@ And we call this from the interpreter we get a diagnostic:
     0
     >>>
 
+And we call this from the (debug) Python 3.13 interpreter we get a diagnostic:
 
 .. code-block:: python
 
@@ -275,88 +269,77 @@ And we call this from the interpreter we get a diagnostic:
 Getting Statistics on PyMalloc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If the environment variable ``PYTHONMALLOCSTATS`` exists when running Python built with ``WITH_PYMALLOC``+``PYMALLOC_DEBUG`` then a (detailed) report of pymalloc activity is output on stderr whenever a new 'arena' is allocated.
+If the environment variable ``PYTHONMALLOCSTATS`` exists when running Python built with
+``WITH_PYMALLOC``+``PYMALLOC_DEBUG`` then a (detailed) report of pymalloc activity is output on stderr whenever
+a new 'arena' is allocated.
 
 .. code-block:: bash
 
-    PYTHONMALLOCSTATS=1 python.exe
-    
+    $ PYTHONMALLOCSTATS=1 python
+
 I have no special knowledge about the output you see when running Python this way which looks like this::
 
-    >>> cPyRefs.leakNewRefs(1000, 10000)
+    >>> from cPyExtPatt import cPyRefs
+    >>> cPyRefs.leak_new_reference(1000, 10000)
     loose_new_reference: value=1000 count=10000
-    Small block threshold = 512, in 64 size classes.
+    Small block threshold = 512, in 32 size classes.
 
     class   size   num pools   blocks in use  avail blocks
     -----   ----   ---------   -------------  ------------
-        4     40           2             139            63
-        5     48           1               2            82
-      ...
-       62    504           3              21             3
-       63    512           3              18             3
+        1     32           1              83           427
+        2     48           1             146           194
+        3     64          48           12240             0
+        4     80          82           16690            38
+        5     96          74           12409           171
+        6    112          22            3099            91
+        7    128          10            1156           114
+        8    144          12            1346            10
+        9    160           4             389            19
+       10    176           4             366             2
+       11    192          32            2649            71
+       12    208           3             173            61
+       13    224           2             132            12
+       14    240          13             860            24
+       15    256           5             281            34
+       16    272           6             344            16
+       17    288           7             348            44
+       18    304           8             403            21
+       19    320           4             198             6
+       20    336           4             183             9
+       21    352           5             198            32
+       22    368           3             119            13
+       23    384           3             104            22
+       24    400           3             106            14
+       25    416           3              98            19
+       26    432           8             295             1
+       27    448           2              64             8
+       28    464           3              70            35
+       29    480           2              44            24
+       30    496           2              59             5
+       31    512           2              45            17
 
-    # times object malloc called       =            2,042,125
-    # arenas allocated total           =                  636
-    # arenas reclaimed                 =                    1
-    # arenas highwater mark            =                  635
-    # arenas allocated current         =                  635
-    635 arenas * 262144 bytes/arena    =          166,461,440
+    # arenas allocated total           =                    6
+    # arenas reclaimed                 =                    0
+    # arenas highwater mark            =                    6
+    # arenas allocated current         =                    6
+    6 arenas * 1048576 bytes/arena     =            6,291,456
 
-    # bytes in allocated blocks        =          162,432,624
-    # bytes in available blocks        =              116,824
-    0 unused pools * 4096 bytes        =                    0
-    # bytes lost to pool headers       =            1,950,720
-    # bytes lost to quantization       =            1,961,272
-    # bytes lost to arena alignment    =                    0
-    Total                              =          166,461,440
-    Small block threshold = 512, in 64 size classes.
+    # bytes in allocated blocks        =            5,927,280
+    # bytes in available blocks        =              224,832
+    0 unused pools * 16384 bytes       =                    0
+    # bytes lost to pool headers       =               18,144
+    # bytes lost to quantization       =               22,896
+    # bytes lost to arena alignment    =               98,304
+    Total                              =            6,291,456
 
-    class   size   num pools   blocks in use  avail blocks
-    -----   ----   ---------   -------------  ------------
-        4     40           2             139            63
-        5     48           1               2            82
-      ...
-       62    504           3              21             3
-       63    512           3              18             3
+    arena map counts
+    # arena map mid nodes              =                    1
+    # arena map bot nodes              =                    1
 
-    # times object malloc called       =            2,045,325
-    # arenas allocated total           =                  637
-    # arenas reclaimed                 =                    1
-    # arenas highwater mark            =                  636
-    # arenas allocated current         =                  636
-    636 arenas * 262144 bytes/arena    =          166,723,584
-
-    # bytes in allocated blocks        =          162,688,624
-    # bytes in available blocks        =              116,824
-    0 unused pools * 4096 bytes        =                    0
-    # bytes lost to pool headers       =            1,953,792
-    # bytes lost to quantization       =            1,964,344
-    # bytes lost to arena alignment    =                    0
-    Total                              =          166,723,584
-    Small block threshold = 512, in 64 size classes.
-
-    class   size   num pools   blocks in use  avail blocks
-    -----   ----   ---------   -------------  ------------
-        4     40           2             139            63
-        5     48           1               2            82
-      ...
-       62    504           3              21             3
-       63    512           3              18             3
-
-    # times object malloc called       =            2,048,525
-    # arenas allocated total           =                  638
-    # arenas reclaimed                 =                    1
-    # arenas highwater mark            =                  637
-    # arenas allocated current         =                  637
-    637 arenas * 262144 bytes/arena    =          166,985,728
-
-    # bytes in allocated blocks        =          162,944,624
-    # bytes in available blocks        =              116,824
-    0 unused pools * 4096 bytes        =                    0
-    # bytes lost to pool headers       =            1,956,864
-    # bytes lost to quantization       =            1,967,416
-    # bytes lost to arena alignment    =                    0
-    Total                              =          166,985,728
+    # bytes lost to arena map root     =              262,144
+    # bytes lost to arena map mid      =              262,144
+    # bytes lost to arena map bot      =              131,072
+    Total                              =              655,360
     loose_new_reference: DONE
 
 

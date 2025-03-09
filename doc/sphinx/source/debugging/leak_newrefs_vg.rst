@@ -69,7 +69,19 @@ And we add this to the ``cPyRefs`` module function table as the python function 
         {NULL, NULL, 0, NULL}  /* Sentinel */
     };
 
-In Python first we check what the size of a long is then we call the leaky function with the value 1000 (not the values -5 to 255 which are interned) one million times and there should be a leak of one million times the size of a long::
+In Python first we check what the size of a long is then we call the leaky function with the value 1000
+(not the values -5 to 255 which are interned) one million times and there should be a leak of one million times
+the size of a long:
+
+This is with a debug version of Python 3.13:
+
+.. code-block:: bash
+
+    $ python
+    Python 3.13.2 (main, Mar  9 2025, 13:27:38) [Clang 15.0.0 (clang-1500.0.40.1)] on darwin
+    Type "help", "copyright", "credits" or "license" for more information.
+
+.. code-block:: python
 
     >>> import sys
     >>> sys.getsizeof(1000)
