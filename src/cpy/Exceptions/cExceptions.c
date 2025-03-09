@@ -3,7 +3,7 @@
 //  PythonExtensionPatterns
 //
 //  Created by Paul Ross on 08/05/2014.
-//  Copyright (c) 2014-2024 Paul Ross. All rights reserved.
+//  Copyright (c) 2014-2025 Paul Ross. All rights reserved.
 //
 
 #include "Python.h"

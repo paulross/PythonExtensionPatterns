@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Python Extension Patterns'
-copyright = u'2014-2024, Paul Ross'
+copyright = u'2014-2025, Paul Ross'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
