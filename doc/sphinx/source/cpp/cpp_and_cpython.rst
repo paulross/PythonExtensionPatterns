@@ -15,10 +15,12 @@
 C++ RAII Wrappers Around ``PyObject*``
 ============================================
 
-It is sometimes useful to wrap up a ``PyObject*`` in a class that will manage the reference count. Here is a base class that shows the general idea, it takes a ``PyObject *`` and provides:
+It is sometimes useful to wrap up a ``PyObject*`` in a class that will manage the reference count.
+Here is a base class that shows the general idea, it takes a ``PyObject *`` and provides:
 
 * Construction with a ``PyObject *`` and access this with ``operator PyObject*() const``.
-* ``PyObject **operator&()`` to reset the underlying pointer, for example when using it with ``PyArg_ParseTupleAndKeywords``.
+* ``PyObject **operator&()`` to reset the underlying pointer, for example when using it with
+  ``PyArg_ParseTupleAndKeywords``.
 * Decrementing the reference count on destruction (potentially freeing the object).
 
 .. code-block:: cpp
