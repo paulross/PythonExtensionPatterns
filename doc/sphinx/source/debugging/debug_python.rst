@@ -185,24 +185,30 @@ For example if we have this CPython code:
 
 .. code-block:: c
 
-    static PyObject *access_after_free(PyObject *pModule) {
-        PyObject *pA = PyLong_FromLong(1024L);
+    static PyObject *access_after_free(PyObject *Py_UNUSED(module)) {
+        PyObject *pA = PyLong_FromLong(1024L * 1024L);
+        fprintf(
+            stdout,
+            "%s(): Before Py_DECREF(0x%p) Ref count: %zd\n",
+            __FUNCTION__, (void *)pA, Py_REFCNT(pA)
+        );
+        PyObject_Print(pA, stdout, Py_PRINT_RAW);
+        fprintf(stdout, "\n");
+
         Py_DECREF(pA);
-        PyObject_Print(pA, stdout, 0);
+
+        fprintf(
+                stdout,
+                "%s(): After Py_DECREF(0x%p) Ref count: %zd\n",
+                __FUNCTION__, (void *)pA, Py_REFCNT(pA)
+        );
+        PyObject_Print(pA, stdout, Py_PRINT_RAW);
+        fprintf(stdout, "\n");
+
         Py_RETURN_NONE;
     }
 
 And we call this from the interpreter we get a diagnostic:
-
-.. code-block:: python
-
-    Python 3.4.3 (default, Sep 16 2015, 16:56:10)
-    [GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.51)] on darwin
-    Type "help", "copyright", "credits" or "license" for more information.
-    >>> from cPyExtPatt import cPyRefs
-    >>> cPyRefs.afterFree()
-    <refcnt -2604246222170760229 at 0x10a474130>
-    >>>
 
 .. code-block:: python
 
@@ -231,6 +237,19 @@ And we call this from the interpreter we get a diagnostic:
     0
     >>>
 
+
+.. code-block:: python
+
+    # (PyExtPatt_3.13.2_Debug) PythonExtensionPatterns git:(develop) $ python
+    # Python 3.13.2 (main, Mar  9 2025, 11:01:02) [Clang 14.0.3 (clang-1403.0.22.14.1)] on darwin
+    # Type "help", "copyright", "credits" or "license" for more information.
+    >>> from cPyExtPatt import cPyRefs
+    >>> cPyRefs.access_after_free()
+    access_after_free(): Before Py_DECREF(0x0x10a984e00) Ref count: 1
+    1048576
+    access_after_free(): After Py_DECREF(0x0x10a984e00) Ref count: -2459565876494606883
+    <refcnt -2459565876494606883 at 0x10a984e00>
+    >>>
 
 .. index::
     single: Debugging; PyMalloc Statistics
