@@ -687,7 +687,7 @@ Here is the C code.
 
 .. index::
     single: Parsing Arguments Example; Default Mutable Arguments
-    single: Default Mutable Arguments
+    single: Default Mutable Arguments; C
 
 Being Pythonic with Default Mutable Arguments
 =============================================
@@ -899,7 +899,7 @@ Tests are in ``test_parse_args_with_mutable_defaults()`` in ``tests/unit/test_c_
     single: Parsing Arguments Example; Helper Macros
 
 Helper Macros
--------------
+=============
 
 Some macros can make this easier.
 These are in ``src/cpy/ParseArgs/cParseArgsHelper.cpp``.
@@ -947,6 +947,9 @@ And a macro to chek the type of the argument:
             );                                              \
             return NULL;                                    \
         }
+
+Immutable Arguments
+-------------------
 
 These can be used thus.
 This is equivalent to the Python function:
@@ -1015,3 +1018,134 @@ The code is:
 The tests are in ``tests/unit/test_c_parse_args_helper.py``.
 
 If you are in a C++ environment then the section on :ref:`cpp_and_cpython.handling_default_arguments` can help.
+
+Mutable Arguments
+-------------------
+
+These macros also work with mutable arguments.
+
+The following C code emulates this Python code:
+
+.. code-block:: python
+
+    def parse_mutable_defaults_with_helper_macro(obj, default_list=[]):
+        default_list.append(obj)
+        return default_list
+
+Here is the C code:
+
+.. code-block:: c
+
+    /** Parse the args where we are simulating mutable default of an empty list.
+     * This uses the helper macros.
+     *
+     * This is equivalent to:
+     *
+     *  def parse_mutable_defaults_with_helper_macro(obj, default_list=[]):
+     *      default_list.append(obj)
+     *      return default_list
+     *
+     * This adds the object to the list and returns None.
+     *
+     * This imitates the Python way of handling defaults.
+     */
+    static PyObject *parse_mutable_defaults_with_helper_macro(PyObject *Py_UNUSED(module),
+                                                              PyObject *args) {
+        PyObject *ret = NULL;
+        /* Pointers to the non-default argument, initialised by PyArg_ParseTuple below. */
+        PyObject *arg_0 = NULL;
+        /* Pointers to the default argument, initialised below. */
+        /* Initialise default arguments. Note: these might cause an early return. */
+        PY_DEFAULT_ARGUMENT_INIT(list_argument_m, PyList_New(0), NULL);
+
+        if (!PyArg_ParseTuple(args, "O|O", &arg_0, &list_argument_m)) {
+            goto except;
+        }
+        /* If optional argument absent then switch to defaults. */
+        PY_DEFAULT_ARGUMENT_SET(list_argument_m);
+        PY_DEFAULT_CHECK(list_argument_m, PyList_Check, "list");
+
+        /* Your code here...*/
+
+        /* Append the first argument to the second.
+         * PyList_Append() increments the refcount of arg_0. */
+        if (PyList_Append(list_argument_m, arg_0)) {
+            PyErr_SetString(PyExc_RuntimeError, "Can not append to list!");
+            goto except;
+        }
+
+        /* Success. */
+        assert(!PyErr_Occurred());
+        /* This increments the default or the given argument. */
+        Py_INCREF(list_argument_m);
+        ret = list_argument_m;
+        goto finally;
+    except:
+        assert(PyErr_Occurred());
+        Py_XDECREF(ret);
+        ret = NULL;
+    finally:
+        return ret;
+    }
+
+Here is some test code from ``tests/unit/test_c_parse_args_helper.py``.
+
+First a test to establish the Python behaviour:
+
+.. code-block:: python
+
+    def test_parse_mutable_defaults_with_helper_macro_python():
+        """A local Python equivalent of cParseArgsHelper.parse_mutable_defaults_with_helper_macro()."""
+
+        def parse_mutable_defaults_with_helper_macro(obj, default_list=[]):
+            default_list.append(obj)
+            return default_list
+
+        result = parse_mutable_defaults_with_helper_macro(1)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, ]
+        result = parse_mutable_defaults_with_helper_macro(2)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, 2]
+        result = parse_mutable_defaults_with_helper_macro(3)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, 2, 3]
+
+        local_list = []
+        assert sys.getrefcount(local_list) == 2
+        assert parse_mutable_defaults_with_helper_macro(10, local_list) == [10]
+        assert sys.getrefcount(local_list) == 2
+        assert parse_mutable_defaults_with_helper_macro(11, local_list) == [10, 11]
+        assert sys.getrefcount(local_list) == 2
+
+        result = parse_mutable_defaults_with_helper_macro(4)
+        assert result == [1, 2, 3, 4]
+        assert sys.getrefcount(result) == 3
+
+Now a similar test to establish the C behaviour:
+
+.. code-block:: python
+
+    from cPyExtPatt import cParseArgsHelper
+
+    def test_parse_mutable_defaults_with_helper_macro_c():
+        result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(1)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, ]
+        result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(2)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, 2]
+        result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(3)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, 2, 3]
+
+        local_list = []
+        assert sys.getrefcount(local_list) == 2
+        assert cParseArgsHelper.parse_mutable_defaults_with_helper_macro(10, local_list) == [10]
+        assert sys.getrefcount(local_list) == 2
+        assert cParseArgsHelper.parse_mutable_defaults_with_helper_macro(11, local_list) == [10, 11]
+        assert sys.getrefcount(local_list) == 2
+
+        result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(4)
+        assert result == [1, 2, 3, 4]
+        assert sys.getrefcount(result) == 3

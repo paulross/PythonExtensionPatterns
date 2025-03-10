@@ -114,7 +114,8 @@ This new reference wrapper can be used as follows:
 .. _cpp_and_cpython.handling_default_arguments:
 
 .. index::
-    single: C++; Default Mutable Arguments
+    single: Parsing Arguments Example; Default Mutable Arguments
+    single: Default Mutable Arguments; C++
 
 ============================================
 Handling Default Arguments
@@ -123,48 +124,260 @@ Handling Default Arguments
 Handling default, possibly mutable, arguments in a pythonic way is described here:
 :ref:`cpython_default_mutable_arguments`.
 It is quite complicated to get it right but C++ can ease the pain with a generic class to simplify handling default
-arguments in CPython functions:
+arguments in CPython functions.
+
+The actual code is in ``src/cpy/ParseArgs/cParseArgsHelper.cpp`` but here it is, simplified to its essentials:
 
 .. code-block:: cpp
 
     class DefaultArg {
     public:
-        DefaultArg(PyObject *new_ref) : m_arg { NULL }, m_default { new_ref } {}
-        // Allow setting of the (optional) argument with PyArg_ParseTupleAndKeywords
-        PyObject **operator&() { m_arg = NULL; return &m_arg; }
-        // Access the argument or the default if default.
-        operator PyObject*() const { return m_arg ? m_arg : m_default; }
-        // Test if constructed successfully from the new reference.
+        DefaultArg(PyObject *new_ref) : m_arg(NULL), m_default(new_ref) {}
+        /// Allow setting of the (optional) argument with
+        /// PyArg_ParseTupleAndKeywords
+        PyObject **operator&() {
+            m_arg = NULL;
+            return &m_arg;
+        }
+        /// Access the argument or the default if default.
+        operator PyObject *() const {
+            return m_arg ? m_arg : m_default;
+        }
+        PyObject *obj() const {
+            return m_arg ? m_arg : m_default;
+        }
+        /// Test if constructed successfully from the new reference.
         explicit operator bool() { return m_default != NULL; }
     protected:
         PyObject *m_arg;
         PyObject *m_default;
     };
 
-Suppose we have the Python function signature of ``def function(encoding='utf8', cache={}):`` then in C/C++ we can do this:
+---------------------------
+Immutable Default Arguments
+---------------------------
+
+Suppose we have the Python function equivalent to the Python function:
+
+.. code-block:: python
+
+    def parse_defaults_with_helper_class(
+        encoding_m: str = "utf-8",
+        the_id_m: int = 1024,
+        log_interval_m: float = 8.0):
+        return encoding_m, the_id_m, log_interval_m
+
+Here it is in C:
 
 .. code-block:: cpp
 
-    PyObject *
-    function(PyObject * /* module */, PyObject *args, PyObject *kwargs) {
-        /* ... */
-        static DefaultArg encoding(PyUnicode_FromString("utf8"));
-        static DefaultArg cache(PyDict_New());
-        /* Check constructed OK. */
-        if (! encoding || ! cache) {
+    static PyObject *
+    parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+        PyObject *ret = NULL;
+        /* Initialise default arguments. */
+        static DefaultArg encoding_c(PyUnicode_FromString("utf-8"));
+        static DefaultArg the_id_c(PyLong_FromLong(DEFAULT_ID));
+        static DefaultArg log_interval_c(PyFloat_FromDouble(DEFAULT_FLOAT));
+
+        /* Check that the defaults are non-NULL i.e. succesful. */
+        if (!encoding_c || !the_id_c || !log_interval_c) {
             return NULL;
         }
-        static const char *kwlist[] = { "encoding", "cache", NULL };
-        if (! PyArg_ParseTupleAndKeywords(args, kwargs, "|OO", const_cast<char**>(kwlist), &encoding, &cache)) {
+
+        static const char *kwlist[] = {"encoding", "the_id", "log_interval", NULL};
+        /* &encoding etc. accesses &m_arg in DefaultArg because of PyObject **operator&() */
+        if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOO",
+                                         const_cast<char **>(kwlist),
+                                         &encoding_c, &the_id_c, &log_interval_c)) {
             return NULL;
         }
-        /* Then just use encoding, cache as if they were a PyObject* (possibly
-         * might need to be cast to some specific PyObject*). */
-         
+
+        PY_DEFAULT_CHECK(encoding_c, PyUnicode_Check, "str");
+        PY_DEFAULT_CHECK(the_id_c, PyLong_Check, "int");
+        PY_DEFAULT_CHECK(log_interval_c, PyFloat_Check, "float");
+
+        /*
+         * Use encoding, the_id, must_log from here on as PyObject* since we have
+         * operator PyObject*() const ...
+         *
+         * So if we have a function:
+         * set_encoding(PyObject *obj) { ... }
+         */
+        // set_encoding(encoding);
         /* ... */
+
+        /* Py_BuildValue("O") increments the reference count. */
+        ret = Py_BuildValue("OOO", encoding_c.obj(), the_id_c.obj(), log_interval_c.obj());
+        return ret;
     }
 
 The full code is in ``src/cpy/cParseArgsHelper.cpp`` and the tests in ``tests/unit/test_c_parse_args_helper.py``.
+
+Here is an example test:
+
+.. code-block:: python
+
+    @pytest.mark.parametrize(
+        'args, expected',
+        (
+                (
+                        (),
+                        ('utf-8', 1024, 8.0),
+                ),
+                (
+                        ('Encoding', 4219, 16.0),
+                        ('Encoding', 4219, 16.0),
+                ),
+        ),
+    )
+    def test_parse_defaults_with_helper_class(args, expected):
+        assert cParseArgsHelper.parse_defaults_with_helper_class(*args) == expected
+
+-------------------------
+Mutable Default Arguments
+-------------------------
+
+The same class can be used for mutable arguments.
+The following emulates this Python function:
+
+.. code-block:: python
+
+    def parse_mutable_defaults_with_helper_class(obj, default_list=[]):
+        default_list.append(obj)
+        return default_list
+
+Here it is in C:
+
+.. code-block:: c
+
+    /** Parse the args where we are simulating mutable default of an empty list.
+     * This uses the helper class.
+     *
+     * This is equivalent to:
+     *
+     *  def parse_mutable_defaults_with_helper_class(obj, default_list=[]):
+     *      default_list.append(obj)
+     *      return default_list
+     *
+     * This adds the object to the list and returns None.
+     *
+     * This imitates the Python way of handling defaults.
+     */
+    static PyObject *parse_mutable_defaults_with_helper_class(PyObject *Py_UNUSED(module),
+                                                              PyObject *args) {
+        PyObject *ret = NULL;
+        /* Pointers to the non-default argument, initialised by PyArg_ParseTuple below. */
+        PyObject *arg_0 = NULL;
+        static DefaultArg list_argument_c(PyList_New(0));
+
+        if (!PyArg_ParseTuple(args, "O|O", &arg_0, &list_argument_c)) {
+            goto except;
+        }
+        PY_DEFAULT_CHECK(list_argument_c, PyList_Check, "list");
+
+        /* Your code here...*/
+
+        /* Append the first argument to the second.
+         * PyList_Append() increments the refcount of arg_0. */
+        if (PyList_Append(list_argument_c, arg_0)) {
+            PyErr_SetString(PyExc_RuntimeError, "Can not append to list!");
+            goto except;
+        }
+
+        /* Success. */
+        assert(!PyErr_Occurred());
+        /* This increments the default or the given argument. */
+        Py_INCREF(list_argument_c);
+        ret = list_argument_c;
+        goto finally;
+    except:
+        assert(PyErr_Occurred());
+        Py_XDECREF(ret);
+        ret = NULL;
+    finally:
+        return ret;
+    }
+
+The code is in ``src/cpy/ParseArgs/cParseArgsHelper.cpp``.
+
+Here are some tests from ``tests/unit/test_c_parse_args_helper.py``.
+Firstly establish the known Python behaviour:
+
+.. code-block:: python
+
+    def test_parse_mutable_defaults_with_helper_class_python():
+        """A local Python equivalent of cParseArgsHelper.parse_mutable_defaults_with_helper_class()."""
+
+        def parse_mutable_defaults_with_helper_class(obj, default_list=[]):
+            default_list.append(obj)
+            return default_list
+
+        result = parse_mutable_defaults_with_helper_class(1)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, ]
+        result = parse_mutable_defaults_with_helper_class(2)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, 2]
+        result = parse_mutable_defaults_with_helper_class(3)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, 2, 3]
+
+        local_list = []
+        assert sys.getrefcount(local_list) == 2
+        assert parse_mutable_defaults_with_helper_class(10, local_list) == [10]
+        assert sys.getrefcount(local_list) == 2
+        assert parse_mutable_defaults_with_helper_class(11, local_list) == [10, 11]
+        assert sys.getrefcount(local_list) == 2
+
+        result = parse_mutable_defaults_with_helper_class(4)
+        assert result == [1, 2, 3, 4]
+        assert sys.getrefcount(result) == 3
+
+And now the equivalent in C:
+
+.. code-block:: python
+
+    from cPyExtPatt import cParseArgsHelper
+
+    def test_parse_mutable_defaults_with_helper_class_c():
+        result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(1)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, ]
+        result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(2)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, 2]
+        result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(3)
+        assert sys.getrefcount(result) == 3
+        assert result == [1, 2, 3]
+
+        local_list = []
+        assert sys.getrefcount(local_list) == 2
+        assert cParseArgsHelper.parse_mutable_defaults_with_helper_class(10, local_list) == [10]
+        assert sys.getrefcount(local_list) == 2
+        assert cParseArgsHelper.parse_mutable_defaults_with_helper_class(11, local_list) == [10, 11]
+        assert sys.getrefcount(local_list) == 2
+
+        result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(4)
+        assert result == [1, 2, 3, 4]
+        assert sys.getrefcount(result) == 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .. index::
     single: C++; Homogeneous Containers

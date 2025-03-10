@@ -264,7 +264,7 @@ parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, Py
  *
  * This is equivalent to:
  *
- *  def parse_mutable_defaults_with_helper_macro(obj, default_list=[]):
+ *  def parse_mutable_defaults_with_helper_class(obj, default_list=[]):
  *      default_list.append(obj)
  *      return default_list
  *
