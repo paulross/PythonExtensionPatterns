@@ -114,8 +114,11 @@ This new reference wrapper can be used as follows:
 .. _cpp_and_cpython.handling_default_arguments:
 
 .. index::
+    single: Parsing Arguments Example; Helper Class
     single: Parsing Arguments Example; Default Mutable Arguments
-    single: Default Mutable Arguments; C++
+    single: Default Arguments; C++
+    single: Default Arguments, Immutable; C++
+    single: Default Arguments, Mutable; C++
 
 ============================================
 Handling Default Arguments
@@ -152,6 +155,10 @@ The actual code is in ``src/cpy/ParseArgs/cParseArgsHelper.cpp`` but here it is,
         PyObject *m_arg;
         PyObject *m_default;
     };
+
+.. index::
+    single: Parsing Arguments Example; Default Immutable Arguments
+    single: Default Arguments, Immutable; C++
 
 ---------------------------
 Immutable Default Arguments
@@ -232,6 +239,10 @@ Here is an example test:
     )
     def test_parse_defaults_with_helper_class(args, expected):
         assert cParseArgsHelper.parse_defaults_with_helper_class(*args) == expected
+
+.. index::
+    single: Parsing Arguments Example; Default Mutable Arguments
+    single: Default Arguments, Mutable; C++
 
 -------------------------
 Mutable Default Arguments
@@ -360,23 +371,6 @@ And now the equivalent in C:
         result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(4)
         assert result == [1, 2, 3, 4]
         assert sys.getrefcount(result) == 3
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 .. index::

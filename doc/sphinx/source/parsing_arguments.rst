@@ -469,6 +469,7 @@ The solution is to cast away const in the call:
 .. index::
     single: Parsing Arguments Example; Default String Arguments
     single: Parsing Arguments Example; Default Bytes Arguments
+    single: Default Arguments; C
 
 Default String and Bytes Arguments
 ------------------------------------------
@@ -537,6 +538,8 @@ The complete C code is:
 See ``tests/unit/test_c_parse_args.py`` for some Python uses of this code.
 
 .. index::
+    single: Positional Only Arguments
+    single: Keyword Only Arguments
     single: Parsing Arguments Example; Positional Only Arguments
     single: Parsing Arguments Example; Keyword Only Arguments
 
@@ -687,7 +690,7 @@ Here is the C code.
 
 .. index::
     single: Parsing Arguments Example; Default Mutable Arguments
-    single: Default Mutable Arguments; C
+    single: Default Arguments, Mutable; C
 
 Being Pythonic with Default Mutable Arguments
 =============================================
@@ -948,6 +951,9 @@ And a macro to chek the type of the argument:
             return NULL;                                    \
         }
 
+.. index::
+    single: Default Arguments, Immutable; C
+
 Immutable Arguments
 -------------------
 
@@ -1018,6 +1024,9 @@ The code is:
 The tests are in ``tests/unit/test_c_parse_args_helper.py``.
 
 If you are in a C++ environment then the section on :ref:`cpp_and_cpython.handling_default_arguments` can help.
+
+.. index::
+    single: Default Arguments, Mutable; C
 
 Mutable Arguments
 -------------------

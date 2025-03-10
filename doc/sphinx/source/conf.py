@@ -47,7 +47,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Python Extension Patterns'
-copyright = u'2014-2025, Paul Ross'
+copyright = u'2014-2025, Paul Ross <apaulross@gmail.com> All rights reserved.'
+author = 'Paul Ross <apaulross@gmail.com>'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -203,8 +204,10 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'PythonExtensionPatterns.tex', u'Python Extension Patterns',
-   u'Paul Ross', 'manual'),
+    (
+        'index', 'PythonExtensionPatterns.tex', u'Python Extension Patterns',
+        'Paul Ross <apaulross@gmail.com>', 'manual',
+    ),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

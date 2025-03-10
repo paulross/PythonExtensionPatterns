@@ -175,9 +175,9 @@ This gives the reference implementation, CPython, huge power and ease of use.
 However the downside is that it becomes very difficult to create *alternative* implementations of the Python language
 and, who knows, these might be faster, use less memory or have better parallelism.
 This is because any alternate implementation must work the thousands of CPython C extensions out there, with all their
-quirks,to have any chance of being compatible with existing code.
+quirks, to have any chance of being compatible with existing code.
 
-This means that CPython extensions, the subject of this project, will be around for a long time.
+Python C extensions will be around for a long time.
 It is a skill worth learning.
 
 ------------------------------------
