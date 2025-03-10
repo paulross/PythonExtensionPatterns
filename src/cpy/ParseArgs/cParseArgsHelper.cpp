@@ -22,6 +22,9 @@
 
 #include "Python.h"
 
+const long DEFAULT_ID = 1024L;
+const double DEFAULT_FLOAT = 8.0;
+
 /****************** Parsing arguments. ****************/
 
 
@@ -43,40 +46,52 @@
 #define PY_DEFAULT_ARGUMENT_SET(name) \
     if (! name) {                     \
         name = default_##name;        \
-    }                                 \
-    Py_INCREF(name)
+    }
 
-static PyObject*
+#define PY_DEFAULT_CHECK(name, check_function, type)    \
+    if (!check_function(name)) {                        \
+        PyErr_Format(                                   \
+            PyExc_TypeError,                            \
+            #name " must be " #type ", not \"%s\"",     \
+            Py_TYPE(name)->tp_name                      \
+        );                                              \
+        return NULL;                                    \
+    }
+
+
+static PyObject *
 parse_defaults_with_helper_macro(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     PyObject *ret = NULL;
     /* Initialise default arguments. Note: these might cause an early return. */
-    PY_DEFAULT_ARGUMENT_INIT(encoding,  PyUnicode_FromString("utf-8"),  NULL);
-    PY_DEFAULT_ARGUMENT_INIT(the_id,    PyLong_FromLong(0L),            NULL);
-    PY_DEFAULT_ARGUMENT_INIT(must_log,  PyBool_FromLong(1L),            NULL);
+    PY_DEFAULT_ARGUMENT_INIT(encoding_m, PyUnicode_FromString("utf-8"), NULL);
+    PY_DEFAULT_ARGUMENT_INIT(the_id_m, PyLong_FromLong(DEFAULT_ID), NULL);
+    PY_DEFAULT_ARGUMENT_INIT(log_interval_m, PyFloat_FromDouble(DEFAULT_FLOAT), NULL);
 
-    static const char *kwlist[] = { "encoding", "the_id", "must_log", NULL };
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|OOO",
-                                      const_cast<char**>(kwlist),
-                                      &encoding, &the_id, &must_log)) {
+    static const char *kwlist[] = {"encoding", "the_id", "log_interval", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOO",
+                                     const_cast<char **>(kwlist),
+                                     &encoding_m, &the_id_m, &log_interval_m)) {
         goto except;
     }
     /*
      * Assign absent arguments to defaults and increment the reference count.
      * Don't forget to decrement the reference count before returning!
      */
-    PY_DEFAULT_ARGUMENT_SET(encoding);
-    PY_DEFAULT_ARGUMENT_SET(the_id);
-    PY_DEFAULT_ARGUMENT_SET(must_log);
+    PY_DEFAULT_ARGUMENT_SET(encoding_m);
+    PY_DEFAULT_ARGUMENT_SET(the_id_m);
+    PY_DEFAULT_ARGUMENT_SET(log_interval_m);
+
+    PY_DEFAULT_CHECK(encoding_m, PyUnicode_Check, "str");
+    PY_DEFAULT_CHECK(the_id_m, PyLong_Check, "int");
+    PY_DEFAULT_CHECK(log_interval_m, PyFloat_Check, "float");
 
     /*
      * Use 'encoding': Python str, 'the_id': C long, 'must_log': C long from here on...
      */
 
-    Py_INCREF(encoding);
-    Py_INCREF(the_id);
-    Py_INCREF(must_log);
-    ret = Py_BuildValue("OOO", encoding, the_id, must_log);
-    assert(! PyErr_Occurred());
+    /* Py_BuildValue("O") increments the reference count. */
+    ret = Py_BuildValue("OOO", encoding_m, the_id_m, log_interval_m);
+    assert(!PyErr_Occurred());
     assert(ret);
     goto finally;
 except:
@@ -84,9 +99,9 @@ except:
     Py_XDECREF(ret);
     ret = NULL;
 finally:
-    Py_DECREF(encoding);
-    Py_DECREF(the_id);
-    Py_DECREF(must_log);
+//    Py_DECREF(encoding_m);
+//    Py_DECREF(the_id_m);
+//    Py_DECREF(log_interval_m);
     return ret;
 }
 
@@ -125,43 +140,56 @@ finally:
 class DefaultArg {
 public:
     DefaultArg(PyObject *new_ref) : m_arg(NULL), m_default(new_ref) {}
+
     /// Allow setting of the (optional) argument with
     /// PyArg_ParseTupleAndKeywords
-    PyObject **operator&() { m_arg = NULL; return &m_arg; }
+    PyObject **operator&() {
+        m_arg = NULL;
+        return &m_arg;
+    }
+
     /// Access the argument or the default if default.
     operator PyObject *() const {
         return m_arg ? m_arg : m_default;
     }
+
     PyObject *obj() const {
         return m_arg ? m_arg : m_default;
     }
+
     /// Test if constructed successfully from the new reference.
     explicit operator bool() { return m_default != NULL; }
+
 protected:
     PyObject *m_arg;
     PyObject *m_default;
 };
 
-static PyObject*
+static PyObject *
 parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
     PyObject *ret = NULL;
     /* Initialise default arguments. */
-    static DefaultArg encoding(PyUnicode_FromString("utf-8"));
-    static DefaultArg the_id(PyLong_FromLong(0L));
-    static DefaultArg must_log(PyBool_FromLong(1L));
+    static DefaultArg encoding_c(PyUnicode_FromString("utf-8"));
+    static DefaultArg the_id_c(PyLong_FromLong(DEFAULT_ID));
+    static DefaultArg log_interval_c(PyFloat_FromDouble(DEFAULT_FLOAT));
 
     /* Check that the defaults are non-NULL i.e. succesful. */
-    if (!encoding || !the_id || !must_log) {
+    if (!encoding_c || !the_id_c || !log_interval_c) {
         return NULL;
     }
 
-    static const char *kwlist[] = { "encoding", "the_id", "must_log", NULL };
+    static const char *kwlist[] = {"encoding", "the_id", "log_interval", NULL};
     /* &encoding etc. accesses &m_arg in DefaultArg because of PyObject **operator&() */
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|OOO",
-                                      const_cast<char**>(kwlist),
-                                      &encoding, &the_id, &must_log)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOO",
+                                     const_cast<char **>(kwlist),
+                                     &encoding_c, &the_id_c, &log_interval_c)) {
         return NULL;
     }
+
+    PY_DEFAULT_CHECK(encoding_c, PyUnicode_Check, "str");
+    PY_DEFAULT_CHECK(the_id_c, PyLong_Check, "int");
+    PY_DEFAULT_CHECK(log_interval_c, PyFloat_Check, "float");
+
     /*
      * Use encoding, the_id, must_log from here on as PyObject* since we have
      * operator PyObject*() const ...
@@ -171,10 +199,12 @@ parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, Py
      */
 //    set_encoding(encoding);
     /* ... */
-    Py_INCREF(encoding.obj());
-    Py_INCREF(the_id.obj());
-    Py_INCREF(must_log.obj());
-    ret = Py_BuildValue("OOO", encoding.obj(), the_id.obj(), must_log.obj());
+//    Py_INCREF(encoding.obj());
+//    Py_INCREF(the_id.obj());
+//    Py_INCREF(must_log.obj());
+
+    /* Py_BuildValue("O") increments the reference count. */
+    ret = Py_BuildValue("OOO", encoding_c.obj(), the_id_c.obj(), log_interval_c.obj());
     return ret;
 }
 
@@ -182,17 +212,17 @@ parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, Py
 static PyMethodDef cParseArgsHelper_methods[] = {
         {
                 "parse_defaults_with_helper_macro",
-                      (PyCFunction) parse_defaults_with_helper_macro,
-                            METH_VARARGS,
-                               "A function with immutable defaults."
+                (PyCFunction) parse_defaults_with_helper_macro,
+                METH_VARARGS,
+                "A function with immutable defaults."
         },
         {
                 "parse_defaults_with_helper_class",
-                      (PyCFunction) parse_defaults_with_helper_class,
-                            METH_VARARGS,
-                               "A function with mutable defaults."
+                (PyCFunction) parse_defaults_with_helper_class,
+                METH_VARARGS,
+                "A function with mutable defaults."
         },
-        {       NULL, NULL, 0, NULL} /* Sentinel */
+        {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 static PyModuleDef cParseArgsHelper_module = {
