@@ -211,10 +211,13 @@ static PyObject *parse_args_with_immutable_defaults(PyObject *Py_UNUSED(module),
 
 /** Parse the args where we are simulating mutable default of an empty list.
  *
- * Signature is:
+ * This is equivalent to:
  *
- * parse_args_with_mutable_defaults(obj, default_list=[])
+ *  def parse_args_with_mutable_defaults_macro_helper(obj, default_list=[]):
+ *      default_list.append(obj)
+ *      return default_list
  *
+ * See also parse_args_with_mutable_defaults_macro_helper() in cParseArgsHelper.cpp
  * This adds the object to the list and returns None.
  *
  * This imitates the Python way of handling defaults.
@@ -223,33 +226,25 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
                                                   PyObject *args) {
     PyObject *ret = NULL;
     /* Pointers to the non-default argument, initialised by PyArg_ParseTuple below. */
-    PyObject *pyObjArg_0 = NULL;
+    PyObject *arg_0 = NULL;
     /* Pointers to the default argument, initialised below. */
-    static PyObject *pyObjDefaultArg_1 = NULL;
+    static PyObject *arg_1_default = NULL;
     /* Set defaults for argument 1. */
-    if (!pyObjDefaultArg_1) {
-        pyObjDefaultArg_1 = PyList_New(0);
+    if (!arg_1_default) {
+        arg_1_default = PyList_New(0);
     }
     /* This pointer is the one we use in the body of the function, it
      * either points at the supplied argument or the default (static) argument.
-     * We treat this as "borrowed" references and so incref and decref them
-     * appropriately.
-     * NOTE: We use a flag arg_1_ref_incremented to determine if we need to decrement the refcount of pyObjArg_1.
      */
-    PyObject *pyObjArg_1 = NULL;
-//    /* Flag to say that we have incremented the borrowed reference. Used during error handling. */
-//    int ref_inc_arg_1 = 0;
+    PyObject *arg_1 = NULL;
 
-    if (!PyArg_ParseTuple(args, "O|O", &pyObjArg_0, &pyObjArg_1)) {
+    if (!PyArg_ParseTuple(args, "O|O", &arg_0, &arg_1)) {
         goto except;
     }
     /* If optional argument absent then switch to defaults. */
-    if (!pyObjArg_1) {
-        pyObjArg_1 = pyObjDefaultArg_1;
+    if (!arg_1) {
+        arg_1 = arg_1_default;
     }
-//    /* This increments the default or the given argument. */
-//    Py_INCREF(pyObjArg_1);
-//    ref_inc_arg_1 = 1;
 
 #if FPRINTF_DEBUG
     fprintf(stdout, "pyObjArg1 was: ");
@@ -258,8 +253,10 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
 #endif
 
     /* Your code here...*/
-    /* Append the first argument to the second. */
-    if (PyList_Append(pyObjArg_1, pyObjArg_0)) {
+
+    /* Append the first argument to the second.
+     * PyList_Append increments the reference count of arg_0. */
+    if (PyList_Append(arg_1, arg_0)) {
         PyErr_SetString(PyExc_RuntimeError, "Can not append to list!");
         goto except;
     }
@@ -272,18 +269,15 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
 
     /* Success. */
     assert(!PyErr_Occurred());
-    /* This increments the default or the given argument. */
-    Py_INCREF(pyObjArg_1);
-    ret = pyObjArg_1;
+    /* Increments the default or the given argument. */
+    Py_INCREF(arg_1);
+    ret = arg_1;
     goto finally;
-    except:
+except:
     assert(PyErr_Occurred());
     Py_XDECREF(ret);
     ret = NULL;
-    finally:
-//    if (ref_inc_arg_1) {
-//        Py_XDECREF(pyObjArg_1);
-//    }
+finally:
     return ret;
 }
 

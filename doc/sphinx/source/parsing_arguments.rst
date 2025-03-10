@@ -699,11 +699,15 @@ However if the arguments default to Python objects then a little more work is ne
 
     See :ref:`cpp_and_cpython.handling_default_arguments` for a way of simplifying this with C++.
 
-Here is a function that has a tuple and a dict as default arguments, in other words the Python signature:
+Here is a function that has an object and as default argument as a list, appends the object to the list and
+returns the list.
+The Python signature is:
 
 .. code-block:: python
 
-    def function(arg_0=(42, "this"), arg_1={}):
+    def function(arg_0, arg_1=[]):
+        arg_1.append(arg_0)
+        return arg_1
 
 The first argument is immutable, the second is mutable.
 We need to mimic the well known behaviour of Python with mutable arguments where default arguments are evaluated once
@@ -713,18 +717,15 @@ For example:
 
 .. code-block:: python
 
-    >>> def f(l=[]):
-    ...   l.append(9)
-    ...   print(l)
-    ...
-    >>> f()
-    [9]
-    >>> f()
-    [9, 9]
-    >>> f([])
-    [9]
-    >>> f()
-    [9, 9, 9]
+    >>> function(1)
+    [1]
+    >>> function(2)
+    [1, 2]
+    >>> my_list = []
+    >>> f(10, my_list)
+    [10]
+    >>> f(10)
+    [1, 2, 10]
 
 In C we can get this behaviour by treating the mutable argument as ``static``, the immutable argument does not need to
 be ``static`` but it will do no harm if it is (if non-``static`` it will have to be initialised on every function call).
@@ -735,48 +736,42 @@ So first we declare a ``static PyObject*`` for each default argument:
 
 .. code-block:: c
 
-    static PyObject *parse_args_with_python_defaults(PyObject *module, PyObject *args) {
+    /** Parse the args where we are simulating mutable default of an empty list.
+     *
+     * This is equivalent to:
+     *
+     *  def parse_args_with_mutable_defaults_macro_helper(obj, default_list=[]):
+     *      default_list.append(obj)
+     *      return default_list
+     *
+     * See also parse_args_with_mutable_defaults_macro_helper() in cParseArgsHelper.cpp
+     * This adds the object to the list and returns None.
+     *
+     * This imitates the Python way of handling defaults.
+     */
+    static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
+                                                      PyObject *args) {
         PyObject *ret = NULL;
+        /* Pointers to the non-default argument, initialised by PyArg_ParseTuple below. */
+        PyObject *arg_0 = NULL;
+        /* Pointers to the default argument, initialised below. */
+        static PyObject *arg_1_default = NULL;
+        /* Set defaults for argument 1. */
+        if (!arg_1_default) {
+            arg_1_default = PyList_New(0);
+        }
 
-        /* This first pointer need not be static as the argument is immutable
-         * but if non-static must be NULL otherwise the following code will be undefined.
-         */
-        static PyObject *pyObjDefaultArg_0;
-        static PyObject *pyObjDefaultArg_1; /* Must be static if mutable. */
-
-Then we declare a ``PyObject*`` for each argument that will either reference the default or the passed in argument. It is important that these ``pyObjArg_...`` pointers are NULL so that we can subsequently detect if ``PyArg_ParseTuple`` has set them non-``NULL``.
+Then we declare a ``PyObject*`` for each argument that will either reference the default or the passed in argument.
+It is important that these ``pyObjArg_...`` pointers are NULL so that we can subsequently detect if
+``PyArg_ParseTuple`` has set them non-``NULL``.
 
 .. code-block:: c
 
-        /* These 'working' pointers are the ones we use in the body of the function
-         * They either reference the supplied argument or the default (static) argument.
-         * We must treat these as "borrowed" references and so must incref them
-         * while they are in use then decref them when we exit the function.
-         */
-        PyObject *pyObjArg_0 = NULL;
-        PyObject *pyObjArg_1 = NULL;
+    /* This pointer is the one we use in the body of the function, it
+     * either points at the supplied argument or the default (static) argument.
+     */
+    PyObject *arg_1 = NULL;
 
-Then, if the default values have not been initialised, initialise them.
-In this case it is a bit tedious merely because of the nature of the arguments.
-So in practice this might be clearer if this was in separate function:
-
-.. code-block:: c
-
-        /* Initialise first argument to its default Python value. */
-        pyObjDefaultArg_0 = Py_BuildValue("OO", PyLong_FromLong(42),
-                                          PyUnicode_FromString("This"));
-        if (! pyObjDefaultArg_0) {
-            PyErr_SetString(PyExc_RuntimeError, "Can not create tuple!");
-            goto except;
-        }
-        /* Now the second argument. */
-        if (! pyObjDefaultArg_1) {
-            pyObjDefaultArg_1 = PyDict_New();
-        }
-        if (! pyObjDefaultArg_1) {
-            PyErr_SetString(PyExc_RuntimeError, "Can not create dict!");
-            goto except;
-        }
 
 Now parse the given arguments to see what, if anything, is there.
 ``PyArg_ParseTuple`` will set each working pointer non-``NULL`` if the argument is present.
@@ -784,37 +779,40 @@ As we set the working pointers ``NULL`` prior to this call we can now tell if an
 
 .. code-block:: c
 
-        if (! PyArg_ParseTuple(args, "|OO", &pyObjArg_0, &pyObjArg_1)) {
-            goto except;
-        }
+    if (!PyArg_ParseTuple(args, "O|O", &arg_0, &arg_1)) {
+        goto except;
+    }
 
-Now switch our working pointers to the default argument if no argument is given. We also treat these as "borrowed" references regardless of whether they are default or supplied so increment the refcount (we must decrement the refcount when done).
+
+Now switch our working pointers to the default argument if no argument is given.
+We also treat these as "borrowed" references regardless of whether they are default or supplied so increment the
+refcount (we must decrement the refcount when done).
 
 .. code-block:: c
 
-        /* First argument. */
-        if (! pyObjArg_0) {
-            pyObjArg_0 = pyObjDefaultArg_0;
-        }
-        Py_INCREF(pyObjArg_0);
-
-        /* Second argument. */
-        if (! pyObjArg_1) {
-            pyObjArg_1 = pyObjDefaultArg_1;
-        }
-        Py_INCREF(pyObjArg_1);
+    /* If optional argument absent then switch to defaults. */
+    if (!arg_1) {
+        arg_1 = arg_1_default;
+    }
 
 Now write the main body of your function and that must be followed by this clean up code:
 
 .. code-block:: c
 
-        /* Your code here using pyObjArg_0 and pyObjArg_1 ...*/
+    /* Your code here...*/
 
-        Py_INCREF(Py_None);
-        ret = Py_None;
-        assert(! PyErr_Occurred());
-        assert(ret);
-        goto finally;
+    /* Append the first argument to the second.
+     * PyList_Append increments the reference count of arg_0. */
+    if (PyList_Append(arg_1, arg_0)) {
+        PyErr_SetString(PyExc_RuntimeError, "Can not append to list!");
+        goto except;
+    }
+    /* Success. */
+    assert(!PyErr_Occurred());
+    /* Increments the default or the given argument. */
+    Py_INCREF(arg_1);
+    ret = arg_1;
+    goto finally;
 
 Now the two blocks ``except`` and ``finally``.
 
@@ -825,72 +823,77 @@ Now the two blocks ``except`` and ``finally``.
         Py_XDECREF(ret);
         ret = NULL;
     finally:
-        /* Decrement refcount to match the borrowed reference
-         * increment above. */
-        Py_XDECREF(pyObjArg_0);
-        Py_XDECREF(pyObjArg_1);
         return ret;
     }
-
-An important point here is the use of ``Py_XDECREF`` in the ``finally:`` block, we can get here through a number of
-paths, including through the ``except:`` block and in some cases the ``pyObjArg_...`` will be ``NULL``
-(for example if ``PyArg_ParseTuple`` fails). So  ``Py_XDECREF`` it must be.
 
 Here is the complete C code:
 
 .. code-block:: c
     :linenos:
 
-    static PyObject *_parse_args_with_python_defaults(PyObject *module, PyObject *args) {
+    /** Parse the args where we are simulating mutable default of an empty list.
+     *
+     * This is equivalent to:
+     *
+     *  def parse_args_with_mutable_defaults_macro_helper(obj, default_list=[]):
+     *      default_list.append(obj)
+     *      return default_list
+     *
+     * See also parse_args_with_mutable_defaults_macro_helper() in cParseArgsHelper.cpp
+     * This adds the object to the list and returns None.
+     *
+     * This imitates the Python way of handling defaults.
+     */
+    static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
+                                                      PyObject *args) {
         PyObject *ret = NULL;
-        static PyObject *pyObjDefaultArg_0;
-        static PyObject *pyObjDefaultArg_1;
-        PyObject *pyObjArg_0 = NULL;
-        PyObject *pyObjArg_1 = NULL;
+        /* Pointers to the non-default argument, initialised by PyArg_ParseTuple below. */
+        PyObject *arg_0 = NULL;
+        /* Pointers to the default argument, initialised below. */
+        static PyObject *arg_1_default = NULL;
+        /* Set defaults for argument 1. */
+        if (!arg_1_default) {
+            arg_1_default = PyList_New(0);
+        }
+        /* This pointer is the one we use in the body of the function, it
+         * either points at the supplied argument or the default (static) argument.
+         */
+        PyObject *arg_1 = NULL;
 
-        pyObjDefaultArg_0 = Py_BuildValue("OO", PyLong_FromLong(42),
-                                          PyUnicode_FromString("This"));
-        if (! pyObjDefaultArg_0) {
-            PyErr_SetString(PyExc_RuntimeError, "Can not create tuple!");
+        if (!PyArg_ParseTuple(args, "O|O", &arg_0, &arg_1)) {
             goto except;
         }
-        /* Now the second argument. */
-        if (! pyObjDefaultArg_1) {
-            pyObjDefaultArg_1 = PyDict_New();
+        /* If optional argument absent then switch to defaults. */
+        if (!arg_1) {
+            arg_1 = arg_1_default;
         }
-        if (! pyObjDefaultArg_1) {
-            PyErr_SetString(PyExc_RuntimeError, "Can not create dict!");
-            goto except;
-        }
-
-        if (! PyArg_ParseTuple(args, "|OO", &pyObjArg_0, &pyObjArg_1)) {
-            goto except;
-        }
-        if (! pyObjArg_0) {
-            pyObjArg_0 = pyObjDefaultArg_0;
-        }
-        Py_INCREF(pyObjArg_0);
-        if (! pyObjArg_1) {
-            pyObjArg_1 = pyObjDefaultArg_1;
-        }
-        Py_INCREF(pyObjArg_1);
 
         /* Your code here...*/
 
-        Py_INCREF(Py_None);
-        ret = Py_None;
-        assert(! PyErr_Occurred());
-        assert(ret);
+        /* Append the first argument to the second.
+         * PyList_Append increments the reference count of arg_0. */
+        if (PyList_Append(arg_1, arg_0)) {
+            PyErr_SetString(PyExc_RuntimeError, "Can not append to list!");
+            goto except;
+        }
+
+        /* Success. */
+        assert(!PyErr_Occurred());
+        /* Increments the default or the given argument. */
+        Py_INCREF(arg_1);
+        ret = arg_1;
         goto finally;
     except:
         assert(PyErr_Occurred());
         Py_XDECREF(ret);
         ret = NULL;
     finally:
-        Py_XDECREF(pyObjArg_0);
-        Py_XDECREF(pyObjArg_1);
         return ret;
     }
+
+The code can be found in ``src/cpy/ParseArgs/cParseArgs.c``.
+
+Tests are in ``test_parse_args_with_mutable_defaults()`` in ``tests/unit/test_c_parse_args.py``
 
 .. index::
     single: Parsing Arguments Example; Helper Macros
@@ -899,6 +902,7 @@ Helper Macros
 -------------
 
 Some macros can make this easier.
+These are in ``src/cpy/ParseArgs/cParseArgsHelper.cpp``.
 Firstly a macro to declare the static default object:
 
 .. code-block:: c
@@ -917,6 +921,10 @@ Firstly a macro to declare the static default object:
             }                                                   \
         }
 
+.. warning::
+
+    When  using this macro in a source file then make sure each given "name" argument is unique.
+
 And a macro to set it:
 
 .. code-block:: c
@@ -924,45 +932,71 @@ And a macro to set it:
     #define PY_DEFAULT_ARGUMENT_SET(name) \
         if (! name) {                     \
             name = default_##name;        \
-        }                                 \
-        Py_INCREF(name)
+        }
 
-These can be used thus:
+And a macro to chek the type of the argument:
 
 .. code-block:: c
 
-    static PyObject*
+    #define PY_DEFAULT_CHECK(name, check_function, type)    \
+        if (!check_function(name)) {                        \
+            PyErr_Format(                                   \
+                PyExc_TypeError,                            \
+                #name " must be " #type ", not \"%s\"",     \
+                Py_TYPE(name)->tp_name                      \
+            );                                              \
+            return NULL;                                    \
+        }
+
+These can be used thus.
+This is equivalent to the Python function:
+
+.. code-block:: python
+
+    def parse_defaults_with_helper_macro(
+        encoding_m: str = "utf-8",
+        the_id_m: int = 1024,
+        log_interval_m: float = 8.0):
+        return encoding_m, the_id_m, log_interval_m
+
+Here it is in C:
+
+.. code-block:: c
+
+    static PyObject *
     parse_defaults_with_helper_macro(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
         PyObject *ret = NULL;
         /* Initialise default arguments. Note: these might cause an early return. */
-        PY_DEFAULT_ARGUMENT_INIT(encoding,  PyUnicode_FromString("utf-8"),  NULL);
-        PY_DEFAULT_ARGUMENT_INIT(the_id,    PyLong_FromLong(0L),            NULL);
-        PY_DEFAULT_ARGUMENT_INIT(must_log,  PyBool_FromLong(1L),            NULL);
+        PY_DEFAULT_ARGUMENT_INIT(encoding_m, PyUnicode_FromString("utf-8"), NULL);
+        PY_DEFAULT_ARGUMENT_INIT(the_id_m, PyLong_FromLong(DEFAULT_ID), NULL);
+        PY_DEFAULT_ARGUMENT_INIT(log_interval_m, PyFloat_FromDouble(DEFAULT_FLOAT), NULL);
 
-        static const char *kwlist[] = { "encoding", "the_id", "must_log", NULL };
-        if (! PyArg_ParseTupleAndKeywords(args, kwds, "|OOO",
-                                          const_cast<char**>(kwlist),
-                                          &encoding, &the_id, &must_log)) {
+        static const char *kwlist[] = {"encoding", "the_id", "log_interval", NULL};
+        if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOO",
+                                         const_cast<char **>(kwlist),
+                                         &encoding_m, &the_id_m, &log_interval_m)) {
             goto except;
         }
         /*
          * Assign absent arguments to defaults and increment the reference count.
          * Don't forget to decrement the reference count before returning!
          */
-        PY_DEFAULT_ARGUMENT_SET(encoding);
-        PY_DEFAULT_ARGUMENT_SET(the_id);
-        PY_DEFAULT_ARGUMENT_SET(must_log);
+        PY_DEFAULT_ARGUMENT_SET(encoding_m);
+        PY_DEFAULT_ARGUMENT_SET(the_id_m);
+        PY_DEFAULT_ARGUMENT_SET(log_interval_m);
+
+        /* Check the types of the given or default arguments. */
+        PY_DEFAULT_CHECK(encoding_m, PyUnicode_Check, "str");
+        PY_DEFAULT_CHECK(the_id_m, PyLong_Check, "int");
+        PY_DEFAULT_CHECK(log_interval_m, PyFloat_Check, "float");
 
         /*
          * Use 'encoding': Python str, 'the_id': C long, 'must_log': C long from here on...
          */
 
-        /* Return a new copy of the input. */
-        Py_INCREF(encoding);
-        Py_INCREF(the_id);
-        Py_INCREF(must_log);
-        ret = Py_BuildValue("OOO", encoding, the_id, must_log);
-        assert(! PyErr_Occurred());
+        /* Py_BuildValue("O") increments the reference count. */
+        ret = Py_BuildValue("OOO", encoding_m, the_id_m, log_interval_m);
+        assert(!PyErr_Occurred());
         assert(ret);
         goto finally;
     except:
@@ -970,10 +1004,14 @@ These can be used thus:
         Py_XDECREF(ret);
         ret = NULL;
     finally:
-        Py_DECREF(encoding);
-        Py_DECREF(the_id);
-        Py_DECREF(must_log);
         return ret;
     }
+
+The code is:
+
+- Function: ``parse_defaults_with_helper_macro()``
+- Location: ``src/cpy/ParseArgs/cParseArgsHelper.cpp``
+
+The tests are in ``tests/unit/test_c_parse_args_helper.py``.
 
 If you are in a C++ environment then the section on :ref:`cpp_and_cpython.handling_default_arguments` can help.

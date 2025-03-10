@@ -81,6 +81,7 @@ parse_defaults_with_helper_macro(PyObject *Py_UNUSED(module), PyObject *args, Py
     PY_DEFAULT_ARGUMENT_SET(the_id_m);
     PY_DEFAULT_ARGUMENT_SET(log_interval_m);
 
+    /* Check the types of the given or default arguments. */
     PY_DEFAULT_CHECK(encoding_m, PyUnicode_Check, "str");
     PY_DEFAULT_CHECK(the_id_m, PyLong_Check, "int");
     PY_DEFAULT_CHECK(log_interval_m, PyFloat_Check, "float");
@@ -102,6 +103,58 @@ finally:
 //    Py_DECREF(encoding_m);
 //    Py_DECREF(the_id_m);
 //    Py_DECREF(log_interval_m);
+    return ret;
+}
+
+/** Parse the args where we are simulating mutable default of an empty list.
+ * This uses the helper macros.
+ *
+ * This is equivalent to:
+ *
+ *  def parse_mutable_defaults_with_helper_macro(obj, default_list=[]):
+ *      default_list.append(obj)
+ *      return default_list
+ *
+ * This adds the object to the list and returns None.
+ *
+ * This imitates the Python way of handling defaults.
+ */
+static PyObject *parse_mutable_defaults_with_helper_macro(PyObject *Py_UNUSED(module),
+                                                          PyObject *args) {
+    PyObject *ret = NULL;
+    /* Pointers to the non-default argument, initialised by PyArg_ParseTuple below. */
+    PyObject *arg_0 = NULL;
+    /* Pointers to the default argument, initialised below. */
+    /* Initialise default arguments. Note: these might cause an early return. */
+    PY_DEFAULT_ARGUMENT_INIT(list_argument_m, PyList_New(0), NULL);
+
+    if (!PyArg_ParseTuple(args, "O|O", &arg_0, &list_argument_m)) {
+        goto except;
+    }
+    /* If optional argument absent then switch to defaults. */
+    PY_DEFAULT_ARGUMENT_SET(list_argument_m);
+    PY_DEFAULT_CHECK(list_argument_m, PyList_Check, "list");
+
+    /* Your code here...*/
+
+    /* Append the first argument to the second.
+     * PyList_Append() increments the refcount of arg_0. */
+    if (PyList_Append(list_argument_m, arg_0)) {
+        PyErr_SetString(PyExc_RuntimeError, "Can not append to list!");
+        goto except;
+    }
+
+    /* Success. */
+    assert(!PyErr_Occurred());
+    /* This increments the default or the given argument. */
+    Py_INCREF(list_argument_m);
+    ret = list_argument_m;
+    goto finally;
+except:
+    assert(PyErr_Occurred());
+    Py_XDECREF(ret);
+    ret = NULL;
+finally:
     return ret;
 }
 
@@ -199,15 +252,60 @@ parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, Py
      */
 //    set_encoding(encoding);
     /* ... */
-//    Py_INCREF(encoding.obj());
-//    Py_INCREF(the_id.obj());
-//    Py_INCREF(must_log.obj());
 
     /* Py_BuildValue("O") increments the reference count. */
     ret = Py_BuildValue("OOO", encoding_c.obj(), the_id_c.obj(), log_interval_c.obj());
     return ret;
 }
 
+
+/** Parse the args where we are simulating mutable default of an empty list.
+ * This uses the helper class.
+ *
+ * This is equivalent to:
+ *
+ *  def parse_mutable_defaults_with_helper_macro(obj, default_list=[]):
+ *      default_list.append(obj)
+ *      return default_list
+ *
+ * This adds the object to the list and returns None.
+ *
+ * This imitates the Python way of handling defaults.
+ */
+static PyObject *parse_mutable_defaults_with_helper_class(PyObject *Py_UNUSED(module),
+                                                          PyObject *args) {
+    PyObject *ret = NULL;
+    /* Pointers to the non-default argument, initialised by PyArg_ParseTuple below. */
+    PyObject *arg_0 = NULL;
+    static DefaultArg list_argument_c(PyList_New(0));
+
+    if (!PyArg_ParseTuple(args, "O|O", &arg_0, &list_argument_c)) {
+        goto except;
+    }
+    PY_DEFAULT_CHECK(list_argument_c, PyList_Check, "list");
+
+    /* Your code here...*/
+
+    /* Append the first argument to the second.
+     * PyList_Append() increments the refcount of arg_0. */
+    if (PyList_Append(list_argument_c, arg_0)) {
+        PyErr_SetString(PyExc_RuntimeError, "Can not append to list!");
+        goto except;
+    }
+
+    /* Success. */
+    assert(!PyErr_Occurred());
+    /* This increments the default or the given argument. */
+    Py_INCREF(list_argument_c);
+    ret = list_argument_c;
+    goto finally;
+    except:
+    assert(PyErr_Occurred());
+    Py_XDECREF(ret);
+    ret = NULL;
+    finally:
+    return ret;
+}
 
 static PyMethodDef cParseArgsHelper_methods[] = {
         {
@@ -217,10 +315,22 @@ static PyMethodDef cParseArgsHelper_methods[] = {
                 "A function with immutable defaults."
         },
         {
+                "parse_mutable_defaults_with_helper_macro",
+                (PyCFunction) parse_mutable_defaults_with_helper_macro,
+                METH_VARARGS,
+                "A function with a mutable argument."
+        },
+        {
                 "parse_defaults_with_helper_class",
                 (PyCFunction) parse_defaults_with_helper_class,
                 METH_VARARGS,
-                "A function with mutable defaults."
+                "A function with immutable defaults."
+        },
+        {
+                "parse_mutable_defaults_with_helper_class",
+                (PyCFunction) parse_mutable_defaults_with_helper_class,
+                METH_VARARGS,
+                "A function with a mutable argument."
         },
         {NULL, NULL, 0, NULL} /* Sentinel */
 };
