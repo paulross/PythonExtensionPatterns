@@ -17,7 +17,7 @@ PYTHON_VERSIONS=('3.9' '3.10' '3.11' '3.12' '3.13')
 # Used for venvs
 PYTHON_VENV_ROOT="${HOME}/pyenvs"
 PROJECT_NAME="PyExtPatt"
-#CPP_EXECUTABLE="PyExtPatt"
+CPP_EXECUTABLE="PythonExtensionPatterns"
 
 usage()
 {
@@ -53,20 +53,23 @@ fi
 
 #printf "%-8s %8s %10s %10s %12s\n" "Ext" "Files" "Lines" "Words" "Bytes"
 
-#build_cpp() {
-#  echo "---> C++ clean debug"
-#  cmake --build cmake-build-debug --target clean -- -j 6
-#  echo "---> C++ build debug"
-#  cmake --build cmake-build-debug --target ${CPP_EXECUTABLE} -- -j 6
+build_cpp() {
+  echo "---> C++ clean debug"
+  cmake --build cmake-build-debug --target clean -- -j 6
+  echo "---> C++ build debug"
+  cmake --build cmake-build-debug --target ${CPP_EXECUTABLE} -- -j 6
 #  echo "---> C++ clean release"
 #  cmake --build cmake-build-release --target clean -- -j 6
 #  echo "---> C++ build release"
 #  cmake --build cmake-build-release --target ${CPP_EXECUTABLE} -- -j 6
-#}
-#
-#run_cpp_tests() {
+}
+
+run_cpp_tests() {
+  echo "---> C++ debug tests"
+  cmake-build-debug/${CPP_EXECUTABLE}
+#  echo "---> C++ release tests"
 #  cmake-build-release/${CPP_EXECUTABLE}
-#}
+}
 
 deactivate_virtual_environment() {
   # https://stackoverflow.com/questions/42997258/virtualenv-activate-script-wont-run-in-bash-script-with-set-euo
@@ -230,10 +233,10 @@ echo "===>  OPT_BUILD_DOCUMENTATION: $OPT_BUILD_DOCUMENTATION"
 IFS=","
 echo "===>          PYTHON_VERSIONS: ${PYTHON_VERSIONS[*]}"
 
-#echo "===> Clean and build C++ code"
-#build_cpp
-#echo "===> Running C++ tests"
-#run_cpp_tests
+echo "===> Clean and build C++ code"
+build_cpp
+echo "===> Running C++ tests"
+run_cpp_tests
 echo "===> Removing build/ and dist/"
 #rm --recursive --force -- "build" "dist"
 rm -rf -- "build" "dist" "cPyExtPatt"

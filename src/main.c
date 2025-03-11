@@ -236,7 +236,7 @@ int main(int argc, const char * argv[]) {
     int failure = 0;
 
     int32_t py_version_hex = PY_VERSION_HEX;
-    printf("Python version %d.%d.%d Release level: 0x%x Serial: %d Numeric: %12d 0x%08x",
+    printf("Python version %d.%d.%d Release level: 0x%x Serial: %d Numeric: %12d 0x%08x\n",
            PY_MAJOR_VERSION, PY_MINOR_VERSION, PY_MICRO_VERSION,
            PY_RELEASE_LEVEL, PY_RELEASE_SERIAL,
            py_version_hex, py_version_hex
@@ -266,7 +266,9 @@ int main(int argc, const char * argv[]) {
     dbg_PySet();
     dbg_PyStructSequence();
 
+    printf("Ran all tests, failure=%d\n", failure);
     printf("Bye, bye!\n");
+    printf("\n");
     return failure;
 }
 

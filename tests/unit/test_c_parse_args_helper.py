@@ -33,6 +33,7 @@ def test_module_dir():
     ),
 )
 def test_parse_defaults_with_helper_macro(args, expected):
+    print()
     assert cParseArgsHelper.parse_defaults_with_helper_macro(*args) == expected
 
 
@@ -161,6 +162,7 @@ def test_parse_mutable_defaults_with_helper_macro_c():
     ),
 )
 def test_parse_defaults_with_helper_class(args, expected):
+    print()
     assert cParseArgsHelper.parse_defaults_with_helper_class(*args) == expected
 
 

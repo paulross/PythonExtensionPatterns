@@ -67,6 +67,17 @@ parse_defaults_with_helper_macro(PyObject *Py_UNUSED(module), PyObject *args, Py
     PY_DEFAULT_ARGUMENT_INIT(the_id_m, PyLong_FromLong(DEFAULT_ID), NULL);
     PY_DEFAULT_ARGUMENT_INIT(log_interval_m, PyFloat_FromDouble(DEFAULT_FLOAT), NULL);
 
+    fprintf(stdout, "%s(): %s#%d", __FUNCTION__, __FILE_NAME__, __LINE__);
+    fprintf(stdout, " default_encoding_m %p", (void *)default_encoding_m);
+    if (default_encoding_m) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(default_encoding_m));
+    }
+    fprintf(stdout, " encoding_m %p", (void *)encoding_m);
+    if (encoding_m) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_m));
+    }
+    fprintf(stdout, "\n");
+
     static const char *kwlist[] = {"encoding", "the_id", "log_interval", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOO",
                                      const_cast<char **>(kwlist),
@@ -81,6 +92,17 @@ parse_defaults_with_helper_macro(PyObject *Py_UNUSED(module), PyObject *args, Py
     PY_DEFAULT_ARGUMENT_SET(the_id_m);
     PY_DEFAULT_ARGUMENT_SET(log_interval_m);
 
+    fprintf(stdout, "%s(): %s#%d", __FUNCTION__, __FILE_NAME__, __LINE__);
+    fprintf(stdout, " default_encoding_m %p", (void *)default_encoding_m);
+    if (default_encoding_m) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(default_encoding_m));
+    }
+    fprintf(stdout, " encoding_m %p", (void *)encoding_m);
+    if (encoding_m) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_m));
+    }
+    fprintf(stdout, "\n");
+
     /* Check the types of the given or default arguments. */
     PY_DEFAULT_CHECK(encoding_m, PyUnicode_Check, "str");
     PY_DEFAULT_CHECK(the_id_m, PyLong_Check, "int");
@@ -92,6 +114,18 @@ parse_defaults_with_helper_macro(PyObject *Py_UNUSED(module), PyObject *args, Py
 
     /* Py_BuildValue("O") increments the reference count. */
     ret = Py_BuildValue("OOO", encoding_m, the_id_m, log_interval_m);
+
+    fprintf(stdout, "%s(): %s#%d", __FUNCTION__, __FILE_NAME__, __LINE__);
+    fprintf(stdout, " default_encoding_m %p", (void *)default_encoding_m);
+    if (default_encoding_m) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(default_encoding_m));
+    }
+    fprintf(stdout, " encoding_m %p", (void *)encoding_m);
+    if (encoding_m) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_m));
+    }
+    fprintf(stdout, "\n");
+
     assert(!PyErr_Occurred());
     assert(ret);
     goto finally;
@@ -213,6 +247,13 @@ public:
     /// Test if constructed successfully from the new reference.
     explicit operator bool() { return m_default != NULL; }
 
+    PyObject *arg() const {
+        return m_arg;
+    }
+
+    PyObject *default_arg() const {
+        return m_default;
+    }
 protected:
     PyObject *m_arg;
     PyObject *m_default;
@@ -226,6 +267,17 @@ parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, Py
     static DefaultArg the_id_c(PyLong_FromLong(DEFAULT_ID));
     static DefaultArg log_interval_c(PyFloat_FromDouble(DEFAULT_FLOAT));
 
+    fprintf(stdout, "%s(): %s#%d", __FUNCTION__, __FILE_NAME__, __LINE__);
+    fprintf(stdout, " default_encoding_c %p", (void *)encoding_c.default_arg());
+    if (encoding_c.default_arg()) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_c.default_arg()));
+    }
+    fprintf(stdout, " encoding_c %p", (void *)encoding_c.arg());
+    if (encoding_c.arg()) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_c.arg()));
+    }
+    fprintf(stdout, "\n");
+
     /* Check that the defaults are non-NULL i.e. succesful. */
     if (!encoding_c || !the_id_c || !log_interval_c) {
         return NULL;
@@ -238,6 +290,17 @@ parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, Py
                                      &encoding_c, &the_id_c, &log_interval_c)) {
         return NULL;
     }
+
+    fprintf(stdout, "%s(): %s#%d", __FUNCTION__, __FILE_NAME__, __LINE__);
+    fprintf(stdout, " default_encoding_c %p", (void *)encoding_c.default_arg());
+    if (encoding_c.default_arg()) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_c.default_arg()));
+    }
+    fprintf(stdout, " encoding_c %p", (void *)encoding_c.arg());
+    if (encoding_c.arg()) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_c.arg()));
+    }
+    fprintf(stdout, "\n");
 
     PY_DEFAULT_CHECK(encoding_c, PyUnicode_Check, "str");
     PY_DEFAULT_CHECK(the_id_c, PyLong_Check, "int");
@@ -255,6 +318,18 @@ parse_defaults_with_helper_class(PyObject *Py_UNUSED(module), PyObject *args, Py
 
     /* Py_BuildValue("O") increments the reference count. */
     ret = Py_BuildValue("OOO", encoding_c.obj(), the_id_c.obj(), log_interval_c.obj());
+
+    fprintf(stdout, "%s(): %s#%d", __FUNCTION__, __FILE_NAME__, __LINE__);
+    fprintf(stdout, " default_encoding_c %p", (void *)encoding_c.default_arg());
+    if (encoding_c.default_arg()) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_c.default_arg()));
+    }
+    fprintf(stdout, " encoding_c %p", (void *)encoding_c.arg());
+    if (encoding_c.arg()) {
+        fprintf(stdout, " refcount: %zd", Py_REFCNT(encoding_c.arg()));
+    }
+    fprintf(stdout, "\n");
+
     return ret;
 }
 
