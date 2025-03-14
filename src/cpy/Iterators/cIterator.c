@@ -193,6 +193,35 @@ static PyMethodDef SequenceOfLong_methods[] = {
         {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
+/* Sequence methods. */
+static Py_ssize_t
+SequenceOfLong_len(PyObject *self) {
+    return ((SequenceOfLong *)self)->size;
+}
+
+static PyObject *
+SequenceOfLong_getitem(PyObject *self, Py_ssize_t index) {
+    Py_ssize_t my_index = index;
+    if (my_index < 0) {
+        my_index += SequenceOfLong_len(self);
+    }
+    if (my_index > SequenceOfLong_len(self)) {
+        PyErr_Format(
+            PyExc_IndexError,
+            "Index %ld is out of range for length %ld",
+            index,
+            SequenceOfLong_len(self)
+        );
+        return NULL;
+    }
+    return PyLong_FromLong(((SequenceOfLong *)self)->array_long[my_index]);
+}
+
+PySequenceMethods SequenceOfLong_sequence_methods = {
+        .sq_length = &SequenceOfLong_len,
+        .sq_item = &SequenceOfLong_getitem,
+};
+
 static PyObject *
 SequenceOfLong___str__(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
     assert(!PyErr_Occurred());
@@ -205,6 +234,7 @@ static PyTypeObject SequenceOfLongType = {
         .tp_basicsize = sizeof(SequenceOfLong),
         .tp_itemsize = 0,
         .tp_dealloc = (destructor) SequenceOfLong_dealloc,
+        .tp_as_sequence = &SequenceOfLong_sequence_methods,
         .tp_str = (reprfunc) SequenceOfLong___str__,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = "Sequence of long integers.",

@@ -656,6 +656,80 @@ Result in the stdout:
             assert captured.out == expected
 
 
+.. _PySequenceMethods: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods
+
+-----------------------------------------
+Reverse Iterators
+-----------------------------------------
+
+Reverse iterators are slightly unusual, the ``reversed()`` function calls the object ``__reversed__`` method and that
+in turn uses ``__len__`` and ``__getitem__``.
+
+To support this in C we need to implement these last two methods using the `PySequenceMethods`_ method table.
+
+First the implementation of ``__len__`` in C:
+
+.. code-block:: c
+
+    static Py_ssize_t
+    SequenceOfLong_len(PyObject *self) {
+        return ((SequenceOfLong *)self)->size;
+    }
+
+Then the implementation of ``__getitem__``, not here that we support negative indexes and set and exception if the
+index is out of range:
+
+.. code-block:: c
+
+    static PyObject *
+    SequenceOfLong_getitem(PyObject *self, Py_ssize_t index) {
+        Py_ssize_t my_index = index;
+        if (my_index < 0) {
+            my_index += SequenceOfLong_len(self);
+        }
+        if (my_index > SequenceOfLong_len(self)) {
+            PyErr_Format(
+                PyExc_IndexError,
+                "Index %ld is out of range for length %ld",
+                index,
+                SequenceOfLong_len(self)
+            );
+            return NULL;
+        }
+        return PyLong_FromLong(((SequenceOfLong *)self)->array_long[my_index]);
+    }
+
+Create `PySequenceMethods`_ method table:
+
+.. code-block:: c
+
+    PySequenceMethods SequenceOfLong_sequence_methods = {
+        .sq_length = &SequenceOfLong_len,
+        .sq_item = &SequenceOfLong_getitem,
+    };
+
+Add this method table into the type specification:
+
+.. code-block:: c
+
+    static PyTypeObject SequenceOfLongType = {
+        PyVarObject_HEAD_INIT(NULL, 0)
+        /* Other stuff. */
+        .tp_dealloc = (destructor) SequenceOfLong_dealloc,
+        .tp_as_sequence = &SequenceOfLong_sequence_methods,
+        /* Other stuff. */
+    };
+
+And we can test it thus:
+
+.. code-block:: python
+
+    def test_c_iterator_reversed():
+        sequence = cIterator.SequenceOfLong([1, 7, 4])
+        result = reversed(sequence)
+        assert list(result) == [4, 7, 1,]
+
+
 .. index::
     single: Generators
 

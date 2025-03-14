@@ -29,12 +29,14 @@ def test_c_iterator_sequence_of_long_dir_pre_311():
                       '__format__',
                       '__ge__',
                       '__getattribute__',
+                      '__getitem__',
                       '__gt__',
                       '__hash__',
                       '__init__',
                       '__init_subclass__',
                       '__iter__',
                       '__le__',
+                      '__len__',
                       '__lt__',
                       '__ne__',
                       '__new__',
@@ -59,6 +61,7 @@ def test_c_iterator_sequence_of_long_dir_311_plus():
                       '__format__',
                       '__ge__',
                       '__getattribute__',
+                      '__getitem__',
                       '__getstate__',
                       '__gt__',
                       '__hash__',
@@ -66,6 +69,7 @@ def test_c_iterator_sequence_of_long_dir_311_plus():
                       '__init_subclass__',
                       '__iter__',
                       '__le__',
+                      '__len__',
                       '__lt__',
                       '__ne__',
                       '__new__',
@@ -208,6 +212,14 @@ def test_c_iterator_sorted():
     assert result == [1, 4, 7, ]
     original = [v for v in sequence]
     assert original == [1, 7, 4, ]
+
+
+def test_c_iterator_reversed():
+    sequence = cIterator.SequenceOfLong([1, 7, 4])
+    result = reversed(sequence)
+    print()
+    print(result)
+    assert list(result) == [4, 7, 1,]
 
 
 def test_c_iterator_generator_expression_sum():
