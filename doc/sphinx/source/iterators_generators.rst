@@ -657,17 +657,51 @@ Result in the stdout:
 
 
 .. _PySequenceMethods: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods
+.. _reversed(): https://docs.python.org/3/library/functions.html#reversed
+.. _\__reversed__(): https://docs.python.org/3/reference/datamodel.html#object.__reversed__
+.. _\__len__(): https://docs.python.org/3/reference/datamodel.html#object.__len__
+.. _\__getitem__(): https://docs.python.org/3/reference/datamodel.html#object.__getitem__
+
+.. index::
+    single: Reverse Iterators
+    single: Iterators; Reverse
+    single: PySequenceMethods
+    single: __reversed__()
+    single: __len__()
+    single: __getitem__()
 
 -----------------------------------------
 Reverse Iterators
 -----------------------------------------
 
-Reverse iterators are slightly unusual, the ``reversed()`` function calls the object ``__reversed__`` method and that
-in turn uses ``__len__`` and ``__getitem__``.
+If we try and use the `reversed()`_ function on our current ``SequenceOfLong`` we will get an error:
 
-To support this in C we need to implement these last two methods using the `PySequenceMethods`_ method table.
+.. code-block:: text
 
-First the implementation of ``__len__`` in C:
+    TypeError: 'SequenceOfLong' object is not reversible
+
+Reverse iterators are slightly unusual, the `reversed()`_ function calls the object `__reversed__()`_ method if
+available or falls back on using `__len__()`_ and `__getitem__()`_.
+
+`reversed()`_ acts like this python code:
+
+.. code-block:: python
+
+    def reversed(obj: object):
+        if hasattr(obj, '__reversed__'):
+            yield from obj.__reversed__()
+        elif hasattr(obj, '__len__') and hasattr(obj, '__getitem__'):
+            i = len(obj) - 1
+            while i >= 0:
+                yield obj[i]
+                i -= 1
+        else:
+            raise TypeError(f'{type(object)} is not reversible')
+
+
+To support this in C we can implement `__len__()`_ and `__getitem__()`_ using the `PySequenceMethods`_ method table.
+
+First the implementation of `__len__()`_ in C:
 
 .. code-block:: c
 
@@ -676,7 +710,7 @@ First the implementation of ``__len__`` in C:
         return ((SequenceOfLong *)self)->size;
     }
 
-Then the implementation of ``__getitem__``, not here that we support negative indexes and set and exception if the
+Then the implementation of `__getitem__()`_, note here that we support negative indexes and set and exception if the
 index is out of range:
 
 .. code-block:: c
