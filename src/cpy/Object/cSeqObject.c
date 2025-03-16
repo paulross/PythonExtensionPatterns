@@ -13,15 +13,17 @@ typedef struct {
     PyObject_HEAD
     long *array_long;
     ssize_t size;
-} SequenceOfLong;
+} SequenceLongObject;
 
-// Forward reference
+// Forward references
+static PyTypeObject SequenceLongObjectType;
+
 static int is_sequence_of_long_type(PyObject *op);
 
 static PyObject *
-SequenceOfLong_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
-    SequenceOfLong *self;
-    self = (SequenceOfLong *) type->tp_alloc(type, 0);
+SequenceLongObject_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
+    SequenceLongObject *self;
+    self = (SequenceLongObject *) type->tp_alloc(type, 0);
     if (self != NULL) {
         assert(!PyErr_Occurred());
         self->size = 0;
@@ -31,7 +33,7 @@ SequenceOfLong_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_U
 }
 
 static int
-SequenceOfLong_init(SequenceOfLong *self, PyObject *args, PyObject *kwds) {
+SequenceLongObject_init(SequenceLongObject *self, PyObject *args, PyObject *kwds) {
     static char *kwlist[] = {"sequence", NULL};
     PyObject *sequence = NULL;
 
@@ -46,7 +48,7 @@ SequenceOfLong_init(SequenceOfLong *self, PyObject *args, PyObject *kwds) {
     if (!self->array_long) {
         return -3;
     }
-    for (Py_ssize_t i = 0; i < PySequence_Length(sequence); ++i) {
+    for (Py_ssize_t i = 0; i < self->size; ++i) {
         // New reference.
         PyObject *py_value = PySequence_GetItem(sequence, i);
         if (PyLong_Check(py_value)) {
@@ -70,20 +72,15 @@ SequenceOfLong_init(SequenceOfLong *self, PyObject *args, PyObject *kwds) {
 }
 
 static void
-SequenceOfLong_dealloc(SequenceOfLong *self) {
+SequenceLongObject_dealloc(SequenceLongObject *self) {
     free(self->array_long);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-//static PyObject *
-//SequenceOfLong_size(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
-//    return Py_BuildValue("n", self->size);
-//}
-
-static PyMethodDef SequenceOfLong_methods[] = {
+static PyMethodDef SequenceLongObject_methods[] = {
 //        {
 //                "size",
-//                (PyCFunction) SequenceOfLong_size,
+//                (PyCFunction) SequenceLongObject_size,
 //                METH_NOARGS,
 //                "Return the size of the sequence."
 //        },
@@ -92,33 +89,73 @@ static PyMethodDef SequenceOfLong_methods[] = {
 
 /* Sequence methods. */
 static Py_ssize_t
-SequenceOfLong_len(PyObject *self) {
-    return ((SequenceOfLong *)self)->size;
+SequenceLongObject_sq_length(PyObject *self) {
+    return ((SequenceLongObject *) self)->size;
 }
 
+/**
+ * Returns a new SequenceLongObject composed of self + other.
+ * @param self
+ * @param other
+ * @return
+ */
 static PyObject *
-SequenceOfLong_getitem(PyObject *self, Py_ssize_t index) {
+SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
+    if (!is_sequence_of_long_type(other)) {
+        PyErr_Format(
+                PyExc_TypeError,
+                "%s(): argument 1 must have type \"SequenceLongObject\" not %s",
+                Py_TYPE(other)->tp_name
+        );
+        return NULL;
+    }
+    PyObject *ret = SequenceLongObject_new(&SequenceLongObjectType, NULL, NULL);
+    /* For convenience. */
+    SequenceLongObject *sol = (SequenceLongObject *) ret;
+    sol->size = ((SequenceLongObject *) self)->size + ((SequenceLongObject *) other)->size;
+    sol->array_long = malloc(sol->size * sizeof(long));
+    if (!sol->array_long) {
+        PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
+    }
+
+    ssize_t i = 0;
+    ssize_t ub = ((SequenceLongObject *) self)->size;
+    while (i < ub) {
+        sol->array_long[i] = ((SequenceLongObject *) self)->array_long[i];
+        i++;
+    }
+    ub += ((SequenceLongObject *) other)->size;
+    while (i < ub) {
+        sol->array_long[i] = ((SequenceLongObject *) other)->array_long[i];
+        i++;
+    }
+    return ret;
+}
+
+
+static PyObject *
+SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
     Py_ssize_t my_index = index;
     if (my_index < 0) {
-        my_index += SequenceOfLong_len(self);
+        my_index += SequenceLongObject_sq_length(self);
     }
-    if (my_index > SequenceOfLong_len(self)) {
+    if (my_index > SequenceLongObject_sq_length(self)) {
         PyErr_Format(
                 PyExc_IndexError,
                 "Index %ld is out of range for length %ld",
                 index,
-                SequenceOfLong_len(self)
+                SequenceLongObject_sq_length(self)
         );
         return NULL;
     }
-    return PyLong_FromLong(((SequenceOfLong *)self)->array_long[my_index]);
+    return PyLong_FromLong(((SequenceLongObject *) self)->array_long[my_index]);
 }
 
-PySequenceMethods SequenceOfLong_sequence_methods = {
-        .sq_length = &SequenceOfLong_len,
-        .sq_concat = NULL,
+PySequenceMethods SequenceLongObject_sequence_methods = {
+        .sq_length = &SequenceLongObject_sq_length,
+        .sq_concat = &SequenceLongObject_sq_concat,
         .sq_repeat = NULL,
-        .sq_item = &SequenceOfLong_getitem,
+        .sq_item = &SequenceLongObject_sq_item,
         .sq_ass_item = NULL,
         .sq_contains = NULL,
         .sq_inplace_concat = NULL,
@@ -126,31 +163,30 @@ PySequenceMethods SequenceOfLong_sequence_methods = {
 };
 
 static PyObject *
-SequenceOfLong___str__(SequenceOfLong *self, PyObject *Py_UNUSED(ignored)) {
+SequenceLongObject___str__(SequenceLongObject *self, PyObject *Py_UNUSED(ignored)) {
     assert(!PyErr_Occurred());
-    return PyUnicode_FromFormat("<SequenceOfLong sequence size: %ld>", self->size);
+    return PyUnicode_FromFormat("<SequenceLongObject sequence size: %ld>", self->size);
 }
 
-static PyTypeObject SequenceOfLongType = {
+static PyTypeObject SequenceLongObjectType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        .tp_name = "SequenceOfLong",
-        .tp_basicsize = sizeof(SequenceOfLong),
+        .tp_name = "SequenceLongObject",
+        .tp_basicsize = sizeof(SequenceLongObject),
         .tp_itemsize = 0,
-        .tp_dealloc = (destructor) SequenceOfLong_dealloc,
-        .tp_as_sequence = &SequenceOfLong_sequence_methods,
-        .tp_str = (reprfunc) SequenceOfLong___str__,
+        .tp_dealloc = (destructor) SequenceLongObject_dealloc,
+        .tp_as_sequence = &SequenceLongObject_sequence_methods,
+        .tp_str = (reprfunc) SequenceLongObject___str__,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = "Sequence of long integers.",
-        .tp_methods = SequenceOfLong_methods,
-        .tp_init = (initproc) SequenceOfLong_init,
-        .tp_new = SequenceOfLong_new,
+        .tp_methods = SequenceLongObject_methods,
+        .tp_init = (initproc) SequenceLongObject_init,
+        .tp_new = SequenceLongObject_new,
 };
 
 static int
 is_sequence_of_long_type(PyObject *op) {
-    return Py_TYPE(op) == &SequenceOfLongType;
+    return Py_TYPE(op) == &SequenceLongObjectType;
 }
-
 
 static PyMethodDef cIterator_methods[] = {
 //        {"iterate_and_print", (PyCFunction) iterate_and_print, METH_VARARGS,
@@ -162,7 +198,7 @@ static PyModuleDef sequence_object_cmodule = {
         PyModuleDef_HEAD_INIT,
         .m_name = "cSeqObject",
         .m_doc = (
-            "Example module that creates an extension type with sequence methods"
+                "Example module that creates an extension type with sequence methods"
         ),
         .m_size = -1,
         .m_methods = cIterator_methods,
@@ -176,17 +212,17 @@ PyInit_cSeqObject(void) {
         return NULL;
     }
 
-    if (PyType_Ready(&SequenceOfLongType) < 0) {
+    if (PyType_Ready(&SequenceLongObjectType) < 0) {
         Py_DECREF(m);
         return NULL;
     }
-    Py_INCREF(&SequenceOfLongType);
+    Py_INCREF(&SequenceLongObjectType);
     if (PyModule_AddObject(
             m,
-            "SequenceOfLong",
-            (PyObject *) &SequenceOfLongType) < 0
+            "SequenceLongObject",
+            (PyObject *) &SequenceLongObjectType) < 0
             ) {
-        Py_DECREF(&SequenceOfLongType);
+        Py_DECREF(&SequenceLongObjectType);
         Py_DECREF(m);
         return NULL;
     }

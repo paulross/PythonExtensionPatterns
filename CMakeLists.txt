@@ -126,7 +126,10 @@ add_executable(PythonExtensionPatterns
         src/cpy/Watchers/DictWatcher.c
         src/cpy/Watchers/DictWatcher.h
         src/cpy/pyextpatt_util.c
-        src/cpy/pyextpatt_util.h src/cpy/Watchers/cWatchers.c)
+        src/cpy/pyextpatt_util.h
+        src/cpy/Watchers/cWatchers.c
+        src/cpy/Object/cSeqObject.c
+)
 
 #link_directories(${PYTHON_LINK_LIBRARY})
 

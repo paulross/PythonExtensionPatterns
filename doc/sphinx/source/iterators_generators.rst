@@ -706,7 +706,7 @@ First the implementation of `__len__()`_ in C:
 .. code-block:: c
 
     static Py_ssize_t
-    SequenceOfLong_len(PyObject *self) {
+    SequenceOfLong_sq_length(PyObject *self) {
         return ((SequenceOfLong *)self)->size;
     }
 
@@ -716,17 +716,17 @@ index is out of range:
 .. code-block:: c
 
     static PyObject *
-    SequenceOfLong_getitem(PyObject *self, Py_ssize_t index) {
+    SequenceOfLong_sq_item(PyObject *self, Py_ssize_t index) {
         Py_ssize_t my_index = index;
         if (my_index < 0) {
-            my_index += SequenceOfLong_len(self);
+            my_index += SequenceOfLong_sq_length(self);
         }
-        if (my_index > SequenceOfLong_len(self)) {
+        if (my_index > SequenceOfLong_sq_length(self)) {
             PyErr_Format(
                 PyExc_IndexError,
                 "Index %ld is out of range for length %ld",
                 index,
-                SequenceOfLong_len(self)
+                SequenceOfLong_sq_length(self)
             );
             return NULL;
         }
@@ -738,8 +738,8 @@ Create `PySequenceMethods`_ method table:
 .. code-block:: c
 
     PySequenceMethods SequenceOfLong_sequence_methods = {
-        .sq_length = &SequenceOfLong_len,
-        .sq_item = &SequenceOfLong_getitem,
+        .sq_length = &SequenceOfLong_sq_length,
+        .sq_item = &SequenceOfLong_sq_item,
     };
 
 Add this method table into the type specification:
