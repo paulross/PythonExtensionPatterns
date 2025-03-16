@@ -394,8 +394,32 @@ This can be tested thus, in ``tests/unit/test_c_object.py``:
         assert err.value.args[0] == "'cObject.ObjectWithAttributes' object has no attribute 'some_attr'"
 
 
+.. _PySequence_Check(): https://docs.python.org/3/c-api/sequence.html#c.PySequence_Check
+.. _PySequence_GetItem(): https://docs.python.org/3/c-api/sequence.html#c.PySequence_GetItem
+.. _PySequence_SetItem(): https://docs.python.org/3/c-api/sequence.html#c.PySequence_SetItem
+.. _PySequence_Contains(): https://docs.python.org/3/c-api/sequence.html#c.PySequence_Contains
+.. _PySequence_Concat(): https://docs.python.org/3/c-api/sequence.html#c.PySequence_Concat
+.. _PySequence_InPlaceConcat(): https://docs.python.org/3/c-api/sequence.html#c.PySequence_InPlaceConcat
+.. _PySequence_Repeat(): https://docs.python.org/3/c-api/sequence.html#c.PySequence_Repeat
+.. _PySequence_InPlaceRepeat(): https://docs.python.org/3/c-api/sequence.html#c.PySequence_InPlaceRepeat
+
+.. _PyObject_SetItem(): https://docs.python.org/3/c-api/object.html#c.PyObject_SetItem
+.. _PyObject_DelItem(): https://docs.python.org/3/c-api/object.html#c.PyObject_DelItem
+
 .. _sq_length: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
+.. _sq_concat: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_concat
+.. _sq_repeat: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_repeat
+.. _sq_item: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_item
+.. _sq_ass_item: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_ass_item
+.. _sq_ass_contains: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_ass_contains
+.. _sq_inplace_concat: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_concat
+.. _sq_inplace_repeat: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_repeat
+
 .. _lenfunc: https://docs.python.org/3/c-api/typeobj.html#c.lenfunc
+.. _binaryfunc: https://docs.python.org/3/c-api/typeobj.html#c.binaryfunc
+.. _ssizeargfunc: https://docs.python.org/3/c-api/typeobj.html#c.ssizeargfunc
+.. _ssizeobjargproc: https://docs.python.org/3/c-api/typeobj.html#c.ssizeobjargproc
+.. _objobjproc: https://docs.python.org/3/c-api/typeobj.html#c.objobjproc
 
 ---------------
 Sequence Types
@@ -409,18 +433,59 @@ Sequence Types
 
 
 .. list-table:: Sequence Methods
-   :widths: 20 70 10
+   :widths: 30 25 50 70
    :header-rows: 1
 
    * - Member
      - Function Type
-     - Function Signatures
+     - Function Signature
      - Description
    * - `sq_length`_
      - `lenfunc`_
-     - ``typedef Py_ssize_t (*lenfunc)(PyObject*)``
+     - ``Py_ssize_t (*lenfunc)(PyObject*)``
      - Returns the length of the sequence.
+   * - `sq_concat`_
+     - `binaryfunc`_
+     - ``PyObject *(*binaryfunc)(PyObject*, PyObject*)``
+     - Takes two sequences and returns a new third one with the first and second concatenated.
+   * - `sq_repeat`_
+     - `ssizeargfunc`_
+     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
+     - Returns a new sequence with the old one repeated n times.
+   * - `sq_item`_
+     - `ssizeargfunc`_
+     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
+     - Returns a *new* reference to the n'th item in the sequence.
+       Negative indexes are handled appropriately.
+       Used by `PySequence_GetItem()`_.
+       This is a fairly crucial implementation for a sequence as `PySequence_Check()`_ detects this to decide if the
+       object is a sequence.
+   * - `sq_ass_item`_
+     - `ssizeobjargproc`_
+     - ``int (*ssizeobjargproc)(PyObject*, Py_ssize_t, PyObject*)``
+     - Sets the the n'th item in the sequence.
+       If the value is NULL the item is deleted and the sequence concatenated (thus called by `PyObject_DelItem()`_).
+       Negative indexes are handled appropriately.
+       Used by `PyObject_SetItem()`_.
+   * - `sq_ass_contains`_
+     - `objobjproc`_
+     - ``int (*objobjproc)(PyObject*, PyObject*)``
+     - Returns non-zero if the sequence contains the given object.
+       Used by `PySequence_Contains()`_.
+       This slot may be left to NULL, in this case PySequence_Contains() simply traverses the sequence until it finds a match.
+   * - `sq_inplace_concat`_
+     - `binaryfunc`_
+     - ``PyObject *(*binaryfunc)(PyObject*, PyObject*)``
+     - Provides in-place concatenation, for example ``+=``.
+       If this slot is ``NULL`` then `PySequence_Concat()`_ will be used returning a new object.
+   * - `sq_inplace_repeat`_
+     - `ssizeargfunc`_
+     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
+     - Provides in-place concatenation, for example ``+=``.
+       Returns the existing sequence repeated n times.
+       If this slot is ``NULL`` then `PySequence_Repeat()`_ will be used returning a new object.
 
+TOOD:
 
 ---------------
 TODOs:
