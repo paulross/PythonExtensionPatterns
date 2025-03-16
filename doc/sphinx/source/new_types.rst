@@ -393,6 +393,35 @@ This can be tested thus, in ``tests/unit/test_c_object.py``:
             obj.some_attr
         assert err.value.args[0] == "'cObject.ObjectWithAttributes' object has no attribute 'some_attr'"
 
+
+.. _sq_length: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
+.. _lenfunc: https://docs.python.org/3/c-api/typeobj.html#c.lenfunc
+
+---------------
+Sequence Types
+---------------
+
+.. todo::
+
+    "Creating New Types": Add a section on making an object act like a sequence using
+    `tp_as_sequence <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_sequence>`_.
+    See also `Sequence Object Structures <https://docs.python.org/3/c-api/typeobj.html#sequence-structs>`_
+
+
+.. list-table:: Sequence Methods
+   :widths: 20 70 10
+   :header-rows: 1
+
+   * - Member
+     - Function Type
+     - Function Signatures
+     - Description
+   * - `sq_length`_
+     - `lenfunc`_
+     - ``typedef Py_ssize_t (*lenfunc)(PyObject*)``
+     - Returns the length of the sequence.
+
+
 ---------------
 TODOs:
 ---------------
@@ -402,12 +431,6 @@ TODOs:
     "Creating New Types": Add a section on making an object act like a number using
     `tp_as_number <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_number>`_.
     See also `Number Object Structures <https://docs.python.org/3/c-api/typeobj.html#number-structs>`_
-
-.. todo::
-
-    "Creating New Types": Add a section on making an object act like a sequence using
-    `tp_as_sequence <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_sequence>`_.
-    See also `Sequence Object Structures <https://docs.python.org/3/c-api/typeobj.html#sequence-structs>`_
 
 .. todo::
 
