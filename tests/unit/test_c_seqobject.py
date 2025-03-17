@@ -16,6 +16,7 @@ def test_SequenceLongObject_dir():
         '__add__',
         '__class__',
         '__delattr__',
+        '__delitem__',
         '__dir__',
         '__doc__',
         '__eq__',
@@ -39,6 +40,7 @@ def test_SequenceLongObject_dir():
         '__repr__',
         '__rmul__',
         '__setattr__',
+        '__setitem__',
         '__sizeof__',
         '__str__',
         '__subclasshook__',
@@ -143,6 +145,36 @@ def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
     with pytest.raises(IndexError) as err:
         obj[index]
     assert err.value.args[0] == expected
+
+
+@pytest.mark.parametrize(
+    'initial_sequence, index, value, expected',
+    (
+            (
+                    [7, 4, 1, ], 0, 14, [14, 4, 1, ],
+            ),
+            (
+                    [7, 4, 1, ], -1, 14, [7, 4, 14, ],
+            ),
+            (
+                    [7,], 0, None, [],
+            ),
+            (
+                    [7,], -1, None, [],
+            ),
+            (
+                    [7, 4, 1, ], 0, None, [4, 14, ],
+            ),
+    )
+)
+def test_SequenceLongObject_setitem(initial_sequence, index, value, expected):
+    obj = cSeqObject.SequenceLongObject(initial_sequence)
+    if value is not None:
+        obj[index] = value
+    else:
+        del obj[index]
+    assert list(obj) == expected
+
 
 # @pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
 # def test_str_dir_pre_37():

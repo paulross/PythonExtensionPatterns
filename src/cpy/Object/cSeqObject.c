@@ -215,13 +215,96 @@ SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
     }
     return PyLong_FromLong(((SequenceLongObject *) self)->array_long[my_index]);
 }
+static int
+SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value) {
+    Py_ssize_t my_index = index;
+    if (my_index < 0) {
+        my_index += SequenceLongObject_sq_length(self);
+    }
+    // Corner case example: len(self) == 0 and index < 0
+    if (my_index < 0 || my_index >= SequenceLongObject_sq_length(self)) {
+        PyErr_Format(
+                PyExc_IndexError,
+                "Index %ld is out of range for length %ld",
+                index,
+                SequenceLongObject_sq_length(self)
+        );
+        return -1;
+    }
+    if (value != NULL) {
+        /* Just set the value. */
+        if (!PyLong_Check(value)) {
+            PyErr_Format(
+                PyExc_TypeError,
+                "sq_ass_item value needs to be an int, not type %s",
+                Py_TYPE(value)->tp_name
+            );
+            return -1;
+        }
+        ((SequenceLongObject *) self)->array_long[my_index] = PyLong_AsLong(value);
+    } else {
+        /* Delete the value. */
+        /* For convenience. */
+        SequenceLongObject *self_as_slo = (SequenceLongObject *) self;
+        /* Special case: deleting the only item in the array. */
+        if (self_as_slo->size == 1) {
+            free(self_as_slo->array_long);
+            self_as_slo->array_long = NULL;
+            self_as_slo->size = 0;
+        } else {
+            /* Delete the value and re-compose the array. */
+            long *new_array = malloc((self_as_slo->size - 1) * sizeof(long));
+            if (!new_array) {
+                PyErr_Format(
+                    PyExc_MemoryError,
+                    "sq_ass_item can not allocate new array. %s#%d",
+                    __FILE__, __LINE__
+                );
+                return -1;
+            }
+            /* memcpy across to the new array, firstly up to the index. */
+            void *dest = NULL;
+            void *src = NULL;
+            size_t count = 0;
+
+            dest = new_array;
+            src = self_as_slo->array_long;
+            count = my_index * sizeof(long);
+            if (memcpy(dest, src, count) != dest) {
+                PyErr_Format(
+                    PyExc_MemoryError,
+                    "sq_ass_item can not memcpy into new array. %s#%d",
+                    __FILE__, __LINE__
+                );
+                return -1;
+            }
+            /* memcpy across to the new array, from the index to the end. */
+            dest = new_array + count;
+            src = self_as_slo->array_long + (count - sizeof(long));
+            /* Example size=4, index=2 copy one value */
+            count = (self_as_slo->size - my_index - 1) * sizeof(long);
+            if (memcpy(dest, src, count) != dest) {
+                PyErr_Format(
+                    PyExc_MemoryError,
+                    "sq_ass_item can not memcpy into new array. %s#%d",
+                    __FILE__, __LINE__
+                );
+                return -1;
+            }
+            free(self_as_slo->array_long);
+            self_as_slo->array_long = new_array;
+            --self_as_slo->size;
+        }
+    }
+    return 0;
+}
 
 PySequenceMethods SequenceLongObject_sequence_methods = {
         .sq_length = &SequenceLongObject_sq_length,
         .sq_concat = &SequenceLongObject_sq_concat,
         .sq_repeat = &SequenceLongObject_sq_repeat,
         .sq_item = &SequenceLongObject_sq_item,
-        .sq_ass_item = NULL,
+        .sq_ass_item = &SequenceLongObject_sq_ass_item,
         .sq_contains = NULL,
         .sq_inplace_concat = NULL,
         .sq_inplace_repeat = NULL,
