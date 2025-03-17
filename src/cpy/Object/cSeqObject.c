@@ -145,6 +145,50 @@ SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
     return ret;
 }
 
+/**
+ * Return a new sequence which contains the old one repeated count times.
+ * @param self
+ * @param count
+ * @return
+ */
+static PyObject *
+SequenceLongObject_sq_repeat(PyObject *self, Py_ssize_t count) {
+    PyObject *ret = SequenceLongObject_new(&SequenceLongObjectType, NULL, NULL);
+    if (!ret) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+    assert(ret != self);
+    if (((SequenceLongObject *) self)->size > 0 && count > 0) {
+        /* For convenience. */
+        SequenceLongObject *self_as_slo = (SequenceLongObject *) self;
+        SequenceLongObject *ret_as_slo = (SequenceLongObject *) ret;
+        ret_as_slo->size = self_as_slo->size * count;
+        assert(ret_as_slo->size > 0);
+        ret_as_slo->array_long = malloc(ret_as_slo->size * sizeof(long));
+        if (!ret_as_slo->array_long) {
+            PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
+            Py_DECREF(ret);
+            return NULL;
+        }
+        Py_ssize_t ret_index = 0;
+        for (Py_ssize_t i = 0; i < count; ++i) {
+//            fprintf(stdout, "%s(): Setting %p Count %zd\n", __FUNCTION__, (void *) ret, i);
+            for (Py_ssize_t j = 0; j < self_as_slo->size; ++j) {
+//                fprintf(
+//                    stdout, "%s(): Setting %p [%zd] to %zd\n",
+//                    __FUNCTION__, (void *) ret, ret_index, self_as_slo->array_long[j]
+//                );
+                ret_as_slo->array_long[ret_index] = self_as_slo->array_long[j];
+                ++ret_index;
+            }
+        }
+    } else {
+        /* Empty sequence. */
+    }
+    return ret;
+}
+
 static PyObject *
 SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
 //    fprintf(stdout, "%s(): index=%zd\n", __FUNCTION__, index);
@@ -168,7 +212,7 @@ SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
 PySequenceMethods SequenceLongObject_sequence_methods = {
         .sq_length = &SequenceLongObject_sq_length,
         .sq_concat = &SequenceLongObject_sq_concat,
-        .sq_repeat = NULL,
+        .sq_repeat = &SequenceLongObject_sq_repeat,
         .sq_item = &SequenceLongObject_sq_item,
         .sq_ass_item = NULL,
         .sq_contains = NULL,

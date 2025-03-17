@@ -633,7 +633,7 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
      - ``PyObject *(*binaryfunc)(PyObject*, PyObject*)``
    * - Description
      - Takes two sequences and returns a new third one with the first and second concatenated.
-       This is used by the ``+`` operator.
+       This is used by the ``+`` Python operator and the `PySequence_Concat()`_ C API.
 
 Implementation
 --------------
@@ -690,7 +690,6 @@ In ``src/cpy/Object/cSeqObject.c``:
         return ret;
     }
 
-
 Tests
 --------------
 
@@ -708,9 +707,126 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
         assert len(obj) == 6
         assert list(obj) == [7, 4, 1, ] + [70, 40, 100, ]
 
+---------------
+``sq_repeat``
+---------------
+
+.. list-table:: Sequence Methods: ``sq_concat``
+   :widths: 20 80
+   :header-rows: 0
+
+   * - Member
+     - `sq_repeat`_
+   * - Function type
+     - `ssizeargfunc`_
+   * - Function signature
+     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
+   * - Description
+     - Returns a new sequence with the old one repeated the given number of times times.
+       This is used by the ``*`` Python operator and the `PySequence_Repeat()`_ C API.
+
+Implementation
+--------------
+
+The implementation is fairly straightforward in ``src/cpy/Object/cSeqObject.c``.
+Note that ``count`` can be zero or negative:
+
+.. code-block:: c
+
+    /** Return a new sequence which contains the old one repeated count times. */
+    static PyObject *
+    SequenceLongObject_sq_repeat(PyObject *self, Py_ssize_t count) {
+        PyObject *ret = SequenceLongObject_new(&SequenceLongObjectType, NULL, NULL);
+        if (!ret) {
+            assert(PyErr_Occurred());
+            return NULL;
+        }
+        assert(ret != self);
+        if (((SequenceLongObject *) self)->size > 0 && count > 0) {
+            /* For convenience. */
+            SequenceLongObject *self_as_slo = (SequenceLongObject *) self;
+            SequenceLongObject *ret_as_slo = (SequenceLongObject *) ret;
+            ret_as_slo->size = self_as_slo->size * count;
+            assert(ret_as_slo->size > 0);
+            ret_as_slo->array_long = malloc(ret_as_slo->size * sizeof(long));
+            if (!ret_as_slo->array_long) {
+                PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
+                Py_DECREF(ret);
+                return NULL;
+            }
+            Py_ssize_t ret_index = 0;
+            for (Py_ssize_t i = 0; i < count; ++i) {
+                for (Py_ssize_t j = 0; j < self_as_slo->size; ++j) {
+                    ret_as_slo->array_long[ret_index] = self_as_slo->array_long[j];
+                    ++ret_index;
+                }
+            }
+        } else {
+            /* Empty sequence. */
+        }
+        return ret;
+    }
+
+Tests
+--------------
+
+Tests are in ``tests/unit/test_c_seqobject.py``:
+
+.. code-block:: python
+
+    @pytest.mark.parametrize(
+        'initial_sequence, count, expected',
+        (
+            (
+                [], 1, [],
+            ),
+            (
+                [7, 4, 1, ], 0, [],
+            ),
+            (
+                [7, 4, 1, ], -1, [],
+            ),
+            (
+                [7, 4, 1, ], 1, [7, 4, 1, ],
+            ),
+            (
+                [7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],
+            ),
+            (
+                [7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],
+            ),
+        )
+    )
+    def test_SequenceLongObject_repeat(initial_sequence, count, expected):
+        obj_a = cSeqObject.SequenceLongObject(initial_sequence)
+        obj = obj_a * count
+        print()
+        assert id(obj_a) != id(obj)
+        assert list(obj) == expected
+        assert list(obj) == (list(obj_a) * count)
 
 
-TOOD:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TODO:
 
 ====================================
 TODOs:

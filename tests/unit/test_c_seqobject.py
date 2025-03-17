@@ -31,11 +31,13 @@ def test_SequenceLongObject_dir():
         '__le__',
         '__len__',
         '__lt__',
+        '__mul__',
         '__ne__',
         '__new__',
         '__reduce__',
         '__reduce_ex__',
         '__repr__',
+        '__rmul__',
         '__setattr__',
         '__sizeof__',
         '__str__',
@@ -60,6 +62,38 @@ def test_SequenceLongObject_concat():
     assert id(obj) != id(obj_b)
     assert len(obj) == 6
     assert list(obj) == [7, 4, 1, ] + [70, 40, 100, ]
+
+
+@pytest.mark.parametrize(
+    'initial_sequence, count, expected',
+    (
+        (
+            [], 1, [],
+        ),
+        (
+            [7, 4, 1, ], 0, [],
+        ),
+        (
+            [7, 4, 1, ], -1, [],
+        ),
+        (
+            [7, 4, 1, ], 1, [7, 4, 1, ],
+        ),
+        (
+            [7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],
+        ),
+        (
+            [7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],
+        ),
+    )
+)
+def test_SequenceLongObject_repeat(initial_sequence, count, expected):
+    obj_a = cSeqObject.SequenceLongObject(initial_sequence)
+    obj = obj_a * count
+    print()
+    assert id(obj_a) != id(obj)
+    assert list(obj) == expected
+    assert list(obj) == (list(obj_a) * count)
 
 # @pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
 # def test_str_dir_pre_37():
