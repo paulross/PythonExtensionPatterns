@@ -13,7 +13,6 @@ Added Chapters
 - "Context Managers" with practical C code examples.
 - "Watchers" with practical examples for dictionary watchers (Python 3.12+).
 - "Installation" for the project.
-- "Debugging Python with CLion".
 - "Source Code Layout" for the project.
 
 Changed Chapters
@@ -22,7 +21,8 @@ Changed Chapters
 - Update the "Homogeneous Python Containers and C++" chapter.
 - Expand the "Memory Leaks" chapter.
 - Extended the "Logging" chapter to show how to access the CPython Frame from C.
-- The Index.
+- Add a section "Emulating Sequence Types" to the "Creating New Types" chapter.
+- Expand the Index.
 
 Other
 ------
@@ -30,6 +30,11 @@ Other
 - Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13.
 - Development Status :: 5 - Production/Stable
 - Documentation word count has gone up 50%+ from 41,000 to 66,000.
+
+TODO
+----
+
+- Add "Debugging Python with CLion".
 
 ..
     .. todo::

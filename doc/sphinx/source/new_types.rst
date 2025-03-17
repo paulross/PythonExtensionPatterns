@@ -422,7 +422,7 @@ This can be tested thus, in ``tests/unit/test_c_object.py``:
 .. _objobjproc: https://docs.python.org/3/c-api/typeobj.html#c.objobjproc
 
 =========================
-Sequence Types
+Emulating Sequence Types
 =========================
 
 This section describes how to make an object act like a sequence using
