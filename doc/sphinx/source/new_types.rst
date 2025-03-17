@@ -617,8 +617,6 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
         obj = cSeqObject.SequenceLongObject([7, 4, 1, ])
         assert len(obj) == 3
 
-
-
 ---------------
 ``sq_concat``
 ---------------
@@ -650,12 +648,7 @@ In ``src/cpy/Object/cSeqObject.c``:
     static PyTypeObject SequenceLongObjectType;
     static int is_sequence_of_long_type(PyObject *op);
 
-    /**
-     * Returns a new SequenceLongObject composed of self + other.
-     * @param self
-     * @param other
-     * @return
-     */
+    /** Returns a new SequenceLongObject composed of self + other. */
     static PyObject *
     SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
         if (!is_sequence_of_long_type(other)) {
@@ -667,24 +660,32 @@ In ``src/cpy/Object/cSeqObject.c``:
             return NULL;
         }
         PyObject *ret = SequenceLongObject_new(&SequenceLongObjectType, NULL, NULL);
+        if (!ret) {
+            assert(PyErr_Occurred());
+            return NULL;
+        }
         /* For convenience. */
-        SequenceLongObject *sol = (SequenceLongObject *) ret;
-        sol->size = ((SequenceLongObject *) self)->size + ((SequenceLongObject *) other)->size;
-        sol->array_long = malloc(sol->size * sizeof(long));
-        if (!sol->array_long) {
+        SequenceLongObject *ret_as_slo = (SequenceLongObject *) ret;
+        ret_as_slo->size = ((SequenceLongObject *) self)->size + ((SequenceLongObject *) other)->size;
+        ret_as_slo->array_long = malloc(ret_as_slo->size * sizeof(long));
+        if (!ret_as_slo->array_long) {
             PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
+            Py_DECREF(ret);
+            return NULL;
         }
 
         ssize_t i = 0;
         ssize_t ub = ((SequenceLongObject *) self)->size;
         while (i < ub) {
-            sol->array_long[i] = ((SequenceLongObject *) self)->array_long[i];
+            ret_as_slo->array_long[i] = ((SequenceLongObject *) self)->array_long[i];
             i++;
         }
-        ub += ((SequenceLongObject *) other)->size;
-        while (i < ub) {
-            sol->array_long[i] = ((SequenceLongObject *) other)->array_long[i];
+        ssize_t j = 0;
+        ub = ((SequenceLongObject *) other)->size;
+        while (j < ub) {
+            ret_as_slo->array_long[i] = ((SequenceLongObject *) other)->array_long[j];
             i++;
+            j++;
         }
         return ret;
     }
@@ -696,6 +697,17 @@ Tests
 Tests are in ``tests/unit/test_c_seqobject.py``:
 
 .. code-block:: python
+
+    def test_SequenceLongObject_concat():
+        obj_a = cSeqObject.SequenceLongObject([7, 4, 1, ])
+        obj_b = cSeqObject.SequenceLongObject([70, 40, 100, ])
+        assert id(obj_a) != id(obj_b)
+        obj = obj_a + obj_b
+        assert id(obj) != id(obj_a)
+        assert id(obj) != id(obj_b)
+        assert len(obj) == 6
+        assert list(obj) == [7, 4, 1, ] + [70, 40, 100, ]
+
 
 
 TOOD:

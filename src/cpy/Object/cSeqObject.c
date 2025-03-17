@@ -145,7 +145,6 @@ SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
     return ret;
 }
 
-
 static PyObject *
 SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
 //    fprintf(stdout, "%s(): index=%zd\n", __FUNCTION__, index);
