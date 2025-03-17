@@ -215,8 +215,13 @@ SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
     }
     return PyLong_FromLong(((SequenceLongObject *) self)->array_long[my_index]);
 }
+
 static int
 SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value) {
+    fprintf(
+        stdout, "%s()#%d: self=%p index=%zd value=%p\n",
+        __FUNCTION__, __LINE__, (void *) self, index, (void *) value
+    );
     Py_ssize_t my_index = index;
     if (my_index < 0) {
         my_index += SequenceLongObject_sq_length(self);
@@ -235,9 +240,9 @@ SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value
         /* Just set the value. */
         if (!PyLong_Check(value)) {
             PyErr_Format(
-                PyExc_TypeError,
-                "sq_ass_item value needs to be an int, not type %s",
-                Py_TYPE(value)->tp_name
+                    PyExc_TypeError,
+                    "sq_ass_item value needs to be an int, not type %s",
+                    Py_TYPE(value)->tp_name
             );
             return -1;
         }
@@ -248,46 +253,51 @@ SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value
         SequenceLongObject *self_as_slo = (SequenceLongObject *) self;
         /* Special case: deleting the only item in the array. */
         if (self_as_slo->size == 1) {
+            fprintf(stdout, "%s()#%d: deleting empty index\n", __FUNCTION__, __LINE__);
             free(self_as_slo->array_long);
             self_as_slo->array_long = NULL;
             self_as_slo->size = 0;
         } else {
             /* Delete the value and re-compose the array. */
+            fprintf(stdout, "%s()#%d: deleting index=%zd\n", __FUNCTION__, __LINE__, index);
             long *new_array = malloc((self_as_slo->size - 1) * sizeof(long));
             if (!new_array) {
                 PyErr_Format(
-                    PyExc_MemoryError,
-                    "sq_ass_item can not allocate new array. %s#%d",
-                    __FILE__, __LINE__
+                        PyExc_MemoryError,
+                        "sq_ass_item can not allocate new array. %s#%d",
+                        __FILE__, __LINE__
                 );
                 return -1;
             }
-            /* memcpy across to the new array, firstly up to the index. */
+            /* memcpy parameters. */
             void *dest = NULL;
             void *src = NULL;
             size_t count = 0;
 
+            /* memcpy across to the new array, firstly up to the index. */
             dest = new_array;
             src = self_as_slo->array_long;
             count = my_index * sizeof(long);
+            fprintf(stdout, "%s()#%d: First: dest=%p src=%p count=%zu\n", __FUNCTION__, __LINE__, dest, src, count);
             if (memcpy(dest, src, count) != dest) {
                 PyErr_Format(
-                    PyExc_MemoryError,
-                    "sq_ass_item can not memcpy into new array. %s#%d",
-                    __FILE__, __LINE__
+                        PyExc_MemoryError,
+                        "sq_ass_item can not memcpy into new array. %s#%d",
+                        __FILE__, __LINE__
                 );
                 return -1;
             }
-            /* memcpy across to the new array, from the index to the end. */
+            /* memcpy from the index to the end. */
             dest = new_array + count;
-            src = self_as_slo->array_long + (count - sizeof(long));
+            src = self_as_slo->array_long + count;
             /* Example size=4, index=2 copy one value */
             count = (self_as_slo->size - my_index - 1) * sizeof(long);
+            fprintf(stdout, "%s()#%d:  Next: dest=%p src=%p count=%zu\n", __FUNCTION__, __LINE__, dest, src, count);
             if (memcpy(dest, src, count) != dest) {
                 PyErr_Format(
-                    PyExc_MemoryError,
-                    "sq_ass_item can not memcpy into new array. %s#%d",
-                    __FILE__, __LINE__
+                        PyExc_MemoryError,
+                        "sq_ass_item can not memcpy into new array. %s#%d",
+                        __FILE__, __LINE__
                 );
                 return -1;
             }

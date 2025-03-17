@@ -156,6 +156,9 @@ def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
             (
                     [7, 4, 1, ], -1, 14, [7, 4, 14, ],
             ),
+            # (
+            #         [], 0, None, [],
+            # ),
             (
                     [7,], 0, None, [],
             ),
@@ -163,11 +166,31 @@ def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
                     [7,], -1, None, [],
             ),
             (
-                    [7, 4, 1, ], 0, None, [4, 14, ],
+                    [7, 4, 1, ], 1, None, [7, 1, ],
+            ),
+            (
+                    [7, 4, ], 0, None, [4, ],
             ),
     )
 )
 def test_SequenceLongObject_setitem(initial_sequence, index, value, expected):
+    obj = cSeqObject.SequenceLongObject(initial_sequence)
+    if value is not None:
+        obj[index] = value
+    else:
+        del obj[index]
+    assert list(obj) == expected
+
+
+@pytest.mark.parametrize(
+    'initial_sequence, index, value, expected',
+    (
+            (
+                    [7, 4, 1, ], 1, None, [7, 1, ],
+            ),
+    )
+)
+def test_SequenceLongObject_setitem_debug(initial_sequence, index, value, expected):
     obj = cSeqObject.SequenceLongObject(initial_sequence)
     if value is not None:
         obj[index] = value
