@@ -7,26 +7,26 @@
 .. index::
     single: New Types; Creating
 
-====================================
+************************************
 Creating New Types
-====================================
+************************************
 
 The creation of new extension types (AKA 'classes') is pretty well described in the Python documentation
 `tutorial <https://docs.python.org/extending/newtypes_tutorial.html>`_ and
 `reference <https://docs.python.org/extending/newtypes.html>`_.
 This section is a cookbook of tricks and examples.
 
-------------------------------------
+====================================
 Properties
-------------------------------------
+====================================
 
 .. index::
     single: New Types; Existing Python Properties
     single: New Types; Existing C Properties
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 Referencing Existing Properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
 If the property is part of the extension type then it is fairly easy to make it directly accessible as 
 `described here <https://docs.python.org/extending/newtypes.html#adding-data-and-methods-to-the-basic-example>`_
@@ -75,9 +75,9 @@ And the type struct must reference this array of ``PyMemberDef`` thus:
     single: New Types; Dynamic Python Properties
     single: New Types; Created Python Properties
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 Created Properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 If the properties are not directly accessible, for example they might need to be created, then an array of ``PyGetSetDef`` structures is used in the `PyTypeObject.tp_getset <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_getset>`_ slot.
 
@@ -113,9 +113,9 @@ And the type struct must reference this array of ``PyMemberDef`` thus:
 
 `Reference to PyGetSetDef. <https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef>`_
 
----------------
+====================================
 Subclassing
----------------
+====================================
 
 This large subject gets it own chapter: :ref:`chapter_subclassing_and_using_super`.
 
@@ -123,9 +123,9 @@ This large subject gets it own chapter: :ref:`chapter_subclassing_and_using_supe
 .. index::
     single: New Types; Examples
 
----------------
+====================================
 Examples
----------------
+====================================
 
 See ``src/cpy/cObject.c`` for some examples, the tests for these are in ``tests/unit/test_c_object.py``:
 
@@ -138,9 +138,9 @@ See ``src/cpy/cObject.c`` for some examples, the tests for these are in ``tests/
     single: New Types; Get Attributes Dynamically
     single: New Types; Delete Attributes Dynamically
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------------
 Setting, Getting and Deleting Attributes Dynamically
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------------
 
 In ``src/cpy/cObject.c`` there is an example, ``ObjectWithAttributes``, which is a class that can set, get, delete
 attributes dynamically.
@@ -421,15 +421,105 @@ This can be tested thus, in ``tests/unit/test_c_object.py``:
 .. _ssizeobjargproc: https://docs.python.org/3/c-api/typeobj.html#c.ssizeobjargproc
 .. _objobjproc: https://docs.python.org/3/c-api/typeobj.html#c.objobjproc
 
----------------
+=========================
 Sequence Types
----------------
+=========================
 
-.. todo::
+This section describes how to make an object act like a sequence using
+`tp_as_sequence <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_sequence>`_.
+See also `Sequence Object Structures <https://docs.python.org/3/c-api/typeobj.html#sequence-structs>`_
 
-    "Creating New Types": Add a section on making an object act like a sequence using
-    `tp_as_sequence <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_sequence>`_.
-    See also `Sequence Object Structures <https://docs.python.org/3/c-api/typeobj.html#sequence-structs>`_
+As an example here is an extension that can represent a sequence of longs in C with a CPython sequence interface.
+The code is in ``src/cpy/Object/cSeqObject.c``.
+
+First the class declaration:
+
+.. code-block:: c
+
+    #define PY_SSIZE_T_CLEAN
+    #include <Python.h>
+    #include "structmember.h"
+
+    typedef struct {
+        PyObject_HEAD
+        long *array_long;
+        ssize_t size;
+    } SequenceLongObject;
+
+
+Then the equivalent of ``__new__``:
+
+.. code-block:: c
+
+    static PyObject *
+    SequenceLongObject_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
+        SequenceLongObject *self;
+        self = (SequenceLongObject *) type->tp_alloc(type, 0);
+        if (self != NULL) {
+            assert(!PyErr_Occurred());
+            self->size = 0;
+            self->array_long = NULL;
+        }
+        return (PyObject *) self;
+    }
+
+And the equivalent of ``__init__`` that takes a Python sequence of ints:
+
+.. code-block:: c
+
+    static int
+    SequenceLongObject_init(SequenceLongObject *self, PyObject *args, PyObject *kwds) {
+        static char *kwlist[] = {"sequence", NULL};
+        PyObject *sequence = NULL;
+
+        if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &sequence)) {
+            return -1;
+        }
+        if (!PySequence_Check(sequence)) {
+            return -2;
+        }
+        self->size = PySequence_Length(sequence);
+        self->array_long = malloc(self->size * sizeof(long));
+        if (!self->array_long) {
+            return -3;
+        }
+        for (Py_ssize_t i = 0; i < self->size; ++i) {
+            // New reference.
+            PyObject *py_value = PySequence_GetItem(sequence, i);
+            if (PyLong_Check(py_value)) {
+                self->array_long[i] = PyLong_AsLong(py_value);
+                Py_DECREF(py_value);
+            } else {
+                PyErr_Format(
+                        PyExc_TypeError,
+                        "Argument [%zd] must be a int, not type %s",
+                        i,
+                        Py_TYPE(sequence)->tp_name
+                );
+                // Clean up on error.
+                free(self->array_long);
+                self->array_long = NULL;
+                Py_DECREF(py_value);
+                return -4;
+            }
+        }
+        return 0;
+    }
+
+And de-allocation:
+
+.. code-block:: c
+
+    static void
+    SequenceLongObject_dealloc(SequenceLongObject *self) {
+        free(self->array_long);
+        Py_TYPE(self)->tp_free((PyObject *) self);
+    }
+
+---------------------------
+The Sequence Function Table
+---------------------------
+
 
 
 .. list-table:: Sequence Methods
@@ -485,11 +575,134 @@ Sequence Types
        Returns the existing sequence repeated n times.
        If this slot is ``NULL`` then `PySequence_Repeat()`_ will be used returning a new object.
 
-TOOD:
+---------------
+``sq_length``
+---------------
+
+.. list-table:: Sequence Methods: ``sq_length``
+   :widths: 20 80
+   :header-rows: 0
+
+   * - Member
+     - `sq_length`_
+   * - Function type
+     - `lenfunc`_
+   * - Function signature
+     - ``Py_ssize_t (*lenfunc)(PyObject*)``
+   * - Description
+     - Returns the length of the sequence.
+
+Implementation
+--------------
+
+In ``src/cpy/Object/cSeqObject.c``:
+
+.. code-block:: c
+
+    static Py_ssize_t
+    SequenceLongObject_sq_length(PyObject *self) {
+        return ((SequenceLongObject *) self)->size;
+    }
+
+Tests
+--------------
+
+Tests are in ``tests/unit/test_c_seqobject.py``:
+
+.. code-block:: python
+
+    from cPyExtPatt import cSeqObject
+
+    def test_SequenceLongObject_len():
+        obj = cSeqObject.SequenceLongObject([7, 4, 1, ])
+        assert len(obj) == 3
+
+
 
 ---------------
-TODOs:
+``sq_concat``
 ---------------
+
+.. list-table:: Sequence Methods: ``sq_concat``
+   :widths: 20 80
+   :header-rows: 0
+
+   * - Member
+     - `sq_concat`_
+   * - Function type
+     - `binaryfunc`_
+   * - Function signature
+     - ``PyObject *(*binaryfunc)(PyObject*, PyObject*)``
+   * - Description
+     - Takes two sequences and returns a new third one with the first and second concatenated.
+       This is used by the ``+`` operator.
+
+Implementation
+--------------
+
+Note the use of forward references for the type checker as we need to check of the second argument is of the
+correct type.
+In ``src/cpy/Object/cSeqObject.c``:
+
+.. code-block:: c
+
+    // Forward references
+    static PyTypeObject SequenceLongObjectType;
+    static int is_sequence_of_long_type(PyObject *op);
+
+    /**
+     * Returns a new SequenceLongObject composed of self + other.
+     * @param self
+     * @param other
+     * @return
+     */
+    static PyObject *
+    SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
+        if (!is_sequence_of_long_type(other)) {
+            PyErr_Format(
+                    PyExc_TypeError,
+                    "%s(): argument 1 must have type \"SequenceLongObject\" not %s",
+                    Py_TYPE(other)->tp_name
+            );
+            return NULL;
+        }
+        PyObject *ret = SequenceLongObject_new(&SequenceLongObjectType, NULL, NULL);
+        /* For convenience. */
+        SequenceLongObject *sol = (SequenceLongObject *) ret;
+        sol->size = ((SequenceLongObject *) self)->size + ((SequenceLongObject *) other)->size;
+        sol->array_long = malloc(sol->size * sizeof(long));
+        if (!sol->array_long) {
+            PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
+        }
+
+        ssize_t i = 0;
+        ssize_t ub = ((SequenceLongObject *) self)->size;
+        while (i < ub) {
+            sol->array_long[i] = ((SequenceLongObject *) self)->array_long[i];
+            i++;
+        }
+        ub += ((SequenceLongObject *) other)->size;
+        while (i < ub) {
+            sol->array_long[i] = ((SequenceLongObject *) other)->array_long[i];
+            i++;
+        }
+        return ret;
+    }
+
+
+Tests
+--------------
+
+Tests are in ``tests/unit/test_c_seqobject.py``:
+
+.. code-block:: python
+
+
+TOOD:
+
+====================================
+TODOs:
+====================================
 
 .. todo::
 

@@ -15,11 +15,6 @@ typedef struct {
     ssize_t size;
 } SequenceLongObject;
 
-// Forward references
-static PyTypeObject SequenceLongObjectType;
-
-static int is_sequence_of_long_type(PyObject *op);
-
 static PyObject *
 SequenceLongObject_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
     SequenceLongObject *self;
@@ -90,8 +85,13 @@ static PyMethodDef SequenceLongObject_methods[] = {
 /* Sequence methods. */
 static Py_ssize_t
 SequenceLongObject_sq_length(PyObject *self) {
+    fprintf(stdout, "%s(): returns=%zd\n", __FUNCTION__, ((SequenceLongObject *) self)->size);
     return ((SequenceLongObject *) self)->size;
 }
+
+// Forward references
+static PyTypeObject SequenceLongObjectType;
+static int is_sequence_of_long_type(PyObject *op);
 
 /**
  * Returns a new SequenceLongObject composed of self + other.
@@ -111,22 +111,22 @@ SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
     }
     PyObject *ret = SequenceLongObject_new(&SequenceLongObjectType, NULL, NULL);
     /* For convenience. */
-    SequenceLongObject *sol = (SequenceLongObject *) ret;
-    sol->size = ((SequenceLongObject *) self)->size + ((SequenceLongObject *) other)->size;
-    sol->array_long = malloc(sol->size * sizeof(long));
-    if (!sol->array_long) {
+    SequenceLongObject *ret_as_slo = (SequenceLongObject *) ret;
+    ret_as_slo->size = ((SequenceLongObject *) self)->size + ((SequenceLongObject *) other)->size;
+    ret_as_slo->array_long = malloc(ret_as_slo->size * sizeof(long));
+    if (!ret_as_slo->array_long) {
         PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
     }
 
     ssize_t i = 0;
     ssize_t ub = ((SequenceLongObject *) self)->size;
     while (i < ub) {
-        sol->array_long[i] = ((SequenceLongObject *) self)->array_long[i];
+        ret_as_slo->array_long[i] = ((SequenceLongObject *) self)->array_long[i];
         i++;
     }
     ub += ((SequenceLongObject *) other)->size;
     while (i < ub) {
-        sol->array_long[i] = ((SequenceLongObject *) other)->array_long[i];
+        ret_as_slo->array_long[i] = ((SequenceLongObject *) other)->array_long[i];
         i++;
     }
     return ret;
@@ -135,11 +135,13 @@ SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
 
 static PyObject *
 SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
+//    fprintf(stdout, "%s(): index=%zd\n", __FUNCTION__, index);
     Py_ssize_t my_index = index;
     if (my_index < 0) {
         my_index += SequenceLongObject_sq_length(self);
     }
-    if (my_index > SequenceLongObject_sq_length(self)) {
+    if (my_index >= SequenceLongObject_sq_length(self)) {
+//        fprintf(stdout, "%s(): index=%zd\n", __FUNCTION__, index);
         PyErr_Format(
                 PyExc_IndexError,
                 "Index %ld is out of range for length %ld",
@@ -178,6 +180,8 @@ static PyTypeObject SequenceLongObjectType = {
         .tp_str = (reprfunc) SequenceLongObject___str__,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = "Sequence of long integers.",
+//        .tp_iter = NULL,
+//        .tp_iternext = NULL,
         .tp_methods = SequenceLongObject_methods,
         .tp_init = (initproc) SequenceLongObject_init,
         .tp_new = SequenceLongObject_new,
