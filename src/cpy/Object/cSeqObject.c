@@ -85,12 +85,13 @@ static PyMethodDef SequenceLongObject_methods[] = {
 /* Sequence methods. */
 static Py_ssize_t
 SequenceLongObject_sq_length(PyObject *self) {
-    fprintf(stdout, "%s(): returns=%zd\n", __FUNCTION__, ((SequenceLongObject *) self)->size);
+//    fprintf(stdout, "%s(%p): returns=%zd\n", __FUNCTION__, (void *) self, ((SequenceLongObject *) self)->size);
     return ((SequenceLongObject *) self)->size;
 }
 
 // Forward references
 static PyTypeObject SequenceLongObjectType;
+
 static int is_sequence_of_long_type(PyObject *op);
 
 /**
@@ -101,6 +102,7 @@ static int is_sequence_of_long_type(PyObject *op);
  */
 static PyObject *
 SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
+//    fprintf(stdout, "%s(%p):\n", __FUNCTION__, (void *) self);
     if (!is_sequence_of_long_type(other)) {
         PyErr_Format(
                 PyExc_TypeError,
@@ -110,24 +112,35 @@ SequenceLongObject_sq_concat(PyObject *self, PyObject *other) {
         return NULL;
     }
     PyObject *ret = SequenceLongObject_new(&SequenceLongObjectType, NULL, NULL);
+    if (!ret) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
     /* For convenience. */
     SequenceLongObject *ret_as_slo = (SequenceLongObject *) ret;
     ret_as_slo->size = ((SequenceLongObject *) self)->size + ((SequenceLongObject *) other)->size;
     ret_as_slo->array_long = malloc(ret_as_slo->size * sizeof(long));
     if (!ret_as_slo->array_long) {
         PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
+        Py_DECREF(ret);
+        return NULL;
     }
+//    fprintf(stdout, "%s(): New %p size=%zd\n", __FUNCTION__, (void *) ret_as_slo, ret_as_slo->size);
 
     ssize_t i = 0;
     ssize_t ub = ((SequenceLongObject *) self)->size;
     while (i < ub) {
+//        fprintf(stdout, "%s(): Setting from %p [%zd] to [%zd]\n", __FUNCTION__, (void *) self, i, i);
         ret_as_slo->array_long[i] = ((SequenceLongObject *) self)->array_long[i];
         i++;
     }
-    ub += ((SequenceLongObject *) other)->size;
-    while (i < ub) {
-        ret_as_slo->array_long[i] = ((SequenceLongObject *) other)->array_long[i];
+    ssize_t j = 0;
+    ub = ((SequenceLongObject *) other)->size;
+    while (j < ub) {
+//        fprintf(stdout, "%s(): Setting %p [%zd] to [%zd]\n", __FUNCTION__, (void *) other, j, i);
+        ret_as_slo->array_long[i] = ((SequenceLongObject *) other)->array_long[j];
         i++;
+        j++;
     }
     return ret;
 }

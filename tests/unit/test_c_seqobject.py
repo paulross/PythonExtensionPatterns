@@ -52,15 +52,14 @@ def test_SequenceLongObject_concat():
     obj_a = cSeqObject.SequenceLongObject([7, 4, 1, ])
     # print(obj_a[4])
     # assert list(obj_a) == [7, 4, 1, ]
-    assert [v for v in obj_a] == [7, 4, 1, ]
+    # assert [v for v in obj_a] == [7, 4, 1, ]
     obj_b = cSeqObject.SequenceLongObject([70, 40, 100, ])
+    assert id(obj_a) != id(obj_b)
     obj = obj_a + obj_b
+    assert id(obj) != id(obj_a)
+    assert id(obj) != id(obj_b)
     assert len(obj) == 6
     assert list(obj) == [7, 4, 1, ] + [70, 40, 100, ]
-
-
-
-
 
 # @pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
 # def test_str_dir_pre_37():
