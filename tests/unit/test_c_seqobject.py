@@ -67,24 +67,24 @@ def test_SequenceLongObject_concat():
 @pytest.mark.parametrize(
     'initial_sequence, count, expected',
     (
-        (
-            [], 1, [],
-        ),
-        (
-            [7, 4, 1, ], 0, [],
-        ),
-        (
-            [7, 4, 1, ], -1, [],
-        ),
-        (
-            [7, 4, 1, ], 1, [7, 4, 1, ],
-        ),
-        (
-            [7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],
-        ),
-        (
-            [7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],
-        ),
+            (
+                    [], 1, [],
+            ),
+            (
+                    [7, 4, 1, ], 0, [],
+            ),
+            (
+                    [7, 4, 1, ], -1, [],
+            ),
+            (
+                    [7, 4, 1, ], 1, [7, 4, 1, ],
+            ),
+            (
+                    [7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],
+            ),
+            (
+                    [7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],
+            ),
     )
 )
 def test_SequenceLongObject_repeat(initial_sequence, count, expected):
@@ -94,6 +94,55 @@ def test_SequenceLongObject_repeat(initial_sequence, count, expected):
     assert id(obj_a) != id(obj)
     assert list(obj) == expected
     assert list(obj) == (list(obj_a) * count)
+
+
+@pytest.mark.parametrize(
+    'initial_sequence, index, expected',
+    (
+            (
+                    [7, 4, 1, ], 0, 7,
+            ),
+            (
+                    [7, 4, 1, ], 1, 4,
+            ),
+            (
+                    [7, 4, 1, ], 2, 1,
+            ),
+            (
+                    [7, 4, 1, ], -1, 1,
+            ),
+            (
+                    [7, 4, 1, ], -2, 4,
+            ),
+            (
+                    [7, 4, 1, ], -3, 7,
+            ),
+    )
+)
+def test_SequenceLongObject_item(initial_sequence, index, expected):
+    obj = cSeqObject.SequenceLongObject(initial_sequence)
+    assert obj[index] == expected
+
+
+@pytest.mark.parametrize(
+    'initial_sequence, index, expected',
+    (
+            (
+                    [], 0, 'Index 0 is out of range for length 0',
+            ),
+            (
+                    [], -1, 'Index -1 is out of range for length 0',
+            ),
+            (
+                    [1, ], 2, 'Index 2 is out of range for length 1',
+            ),
+    )
+)
+def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
+    obj = cSeqObject.SequenceLongObject(initial_sequence)
+    with pytest.raises(IndexError) as err:
+        obj[index]
+    assert err.value.args[0] == expected
 
 # @pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
 # def test_str_dir_pre_37():

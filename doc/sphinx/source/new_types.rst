@@ -806,21 +806,111 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
         assert list(obj) == (list(obj_a) * count)
 
 
+---------------
+``sq_item``
+---------------
 
+`sq_item`_ gives read access to an indexed member.
 
+.. list-table:: Sequence Methods: ``sq_item``
+   :widths: 20 80
+   :header-rows: 0
 
+   * - Member
+     - `sq_item`_
+   * - Function type
+     - `ssizeargfunc`_
+   * - Function signature
+     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
+   * - Description
+     - Returns a *new* reference to the n'th item in the sequence.
+       Negative indexes are handled appropriately.
+       Used by `PySequence_GetItem()`_.
+       This is a fairly crucial implementation for a sequence as `PySequence_Check()`_ detects this to decide if the
+       object is a sequence.
 
+Implementation
+--------------
 
+In ``src/cpy/Object/cSeqObject.c``:
 
+.. code-block:: c
 
+    /** Returns a new reference to an indexed item in a sequence. */
+    static PyObject *
+    SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
+        Py_ssize_t my_index = index;
+        if (my_index < 0) {
+            my_index += SequenceLongObject_sq_length(self);
+        }
+        // Corner case example: len(self) == 0 and index < 0
+        if (my_index < 0 || my_index >= SequenceLongObject_sq_length(self)) {
+            PyErr_Format(
+                    PyExc_IndexError,
+                    "Index %ld is out of range for length %ld",
+                    index,
+                    SequenceLongObject_sq_length(self)
+            );
+            return NULL;
+        }
+        return PyLong_FromLong(((SequenceLongObject *) self)->array_long[my_index]);
+    }
 
+Tests
+--------------
 
+Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes:
 
+.. code-block:: python
 
+    from cPyExtPatt import cSeqObject
 
+    @pytest.mark.parametrize(
+        'initial_sequence, index, expected',
+        (
+                (
+                        [7, 4, 1, ], 0, 7,
+                ),
+                (
+                        [7, 4, 1, ], 1, 4,
+                ),
+                (
+                        [7, 4, 1, ], 2, 1,
+                ),
+                (
+                        [7, 4, 1, ], -1, 1,
+                ),
+                (
+                        [7, 4, 1, ], -2, 4,
+                ),
+                (
+                        [7, 4, 1, ], -3, 7,
+                ),
+        )
+    )
+    def test_SequenceLongObject_item(initial_sequence, index, expected):
+        obj = cSeqObject.SequenceLongObject(initial_sequence)
+        assert obj[index] == expected
 
-
-
+    @pytest.mark.parametrize(
+        'initial_sequence, index, expected',
+        (
+                (
+                        [], 0, 'Index 0 is out of range for length 0',
+                ),
+                (
+                        [], -1, 'Index -1 is out of range for length 0',
+                ),
+                (
+                        [1, ], 2, 'Index 2 is out of range for length 1',
+                ),
+        )
+    )
+    def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
+        obj = cSeqObject.SequenceLongObject(initial_sequence)
+        with pytest.raises(IndexError) as err:
+            obj[index]
+        assert err.value.args[0] == expected
 
 
 

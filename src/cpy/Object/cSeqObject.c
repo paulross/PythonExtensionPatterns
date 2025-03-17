@@ -189,6 +189,12 @@ SequenceLongObject_sq_repeat(PyObject *self, Py_ssize_t count) {
     return ret;
 }
 
+/**
+ * Returns a new reference to an indexed item in a sequence.
+ * @param self
+ * @param index
+ * @return
+ */
 static PyObject *
 SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
 //    fprintf(stdout, "%s(): index=%zd\n", __FUNCTION__, index);
@@ -196,7 +202,8 @@ SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
     if (my_index < 0) {
         my_index += SequenceLongObject_sq_length(self);
     }
-    if (my_index >= SequenceLongObject_sq_length(self)) {
+    // Corner case example: len(self) == 0 and index < 0
+    if (my_index < 0 || my_index >= SequenceLongObject_sq_length(self)) {
 //        fprintf(stdout, "%s(): index=%zd\n", __FUNCTION__, index);
         PyErr_Format(
                 PyExc_IndexError,
