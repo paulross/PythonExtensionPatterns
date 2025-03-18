@@ -434,7 +434,8 @@ Emulating Sequence Types
 
 This section describes how to make an object act like a sequence using
 `tp_as_sequence <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_sequence>`_.
-See also `Sequence Object Structures <https://docs.python.org/3/c-api/typeobj.html#sequence-structs>`_
+See also `Sequence Object Structures <https://docs.python.org/3/c-api/typeobj.html#sequence-structs>`_.
+This allows your objects to have set and get methods like a list.
 
 As an example here is an extension that can represent a sequence of longs in C with a CPython sequence interface.
 The code is in ``src/cpy/Object/cSeqObject.c``.
@@ -674,10 +675,13 @@ In ``src/cpy/Object/cSeqObject.c``:
         }
         /* For convenience. */
         SequenceLongObject *ret_as_slo = (SequenceLongObject *) ret;
-        ret_as_slo->size = ((SequenceLongObject *) self)->size + ((SequenceLongObject *) other)->size;
+        ret_as_slo->size = ((SequenceLongObject *) self)->size \
+            + ((SequenceLongObject *) other)->size;
         ret_as_slo->array_long = malloc(ret_as_slo->size * sizeof(long));
         if (!ret_as_slo->array_long) {
-            PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
+            PyErr_Format(
+                PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__
+            );
             Py_DECREF(ret);
             return NULL;
         }
@@ -763,7 +767,9 @@ Note that ``count`` can be zero or negative:
             assert(ret_as_slo->size > 0);
             ret_as_slo->array_long = malloc(ret_as_slo->size * sizeof(long));
             if (!ret_as_slo->array_long) {
-                PyErr_Format(PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__);
+                PyErr_Format(
+                    PyExc_MemoryError, "%s(): Can not create new object.", __FUNCTION__
+                );
                 Py_DECREF(ret);
                 return NULL;
             }
@@ -790,24 +796,12 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
     @pytest.mark.parametrize(
         'initial_sequence, count, expected',
         (
-            (
-                [], 1, [],
-            ),
-            (
-                [7, 4, 1, ], 0, [],
-            ),
-            (
-                [7, 4, 1, ], -1, [],
-            ),
-            (
-                [7, 4, 1, ], 1, [7, 4, 1, ],
-            ),
-            (
-                [7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],
-            ),
-            (
-                [7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],
-            ),
+            ([], 1, [],),
+            ([7, 4, 1, ], 0, [],),
+            ([7, 4, 1, ], -1, [],),
+            ([7, 4, 1, ], 1, [7, 4, 1, ],),
+            ([7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],),
+            ([7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],),
         )
     )
     def test_SequenceLongObject_repeat(initial_sequence, count, expected):
@@ -877,7 +871,7 @@ In ``src/cpy/Object/cSeqObject.c``:
 Tests
 --------------
 
-Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes:
+Tests are in ``tests/unit/test_c_seqobject.py``:
 
 .. code-block:: python
 
@@ -886,42 +880,30 @@ Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes:
     @pytest.mark.parametrize(
         'initial_sequence, index, expected',
         (
-                (
-                        [7, 4, 1, ], 0, 7,
-                ),
-                (
-                        [7, 4, 1, ], 1, 4,
-                ),
-                (
-                        [7, 4, 1, ], 2, 1,
-                ),
-                (
-                        [7, 4, 1, ], -1, 1,
-                ),
-                (
-                        [7, 4, 1, ], -2, 4,
-                ),
-                (
-                        [7, 4, 1, ], -3, 7,
-                ),
+                ([7, 4, 1, ], 0, 7,),
+                ([7, 4, 1, ], 1, 4,),
+                ([7, 4, 1, ], 2, 1,),
+                ([7, 4, 1, ], -1, 1,),
+                ([7, 4, 1, ], -2, 4,),
+                ([7, 4, 1, ], -3, 7,),
         )
     )
     def test_SequenceLongObject_item(initial_sequence, index, expected):
         obj = cSeqObject.SequenceLongObject(initial_sequence)
         assert obj[index] == expected
 
+And failure modes:
+
+.. code-block:: python
+
+    from cPyExtPatt import cSeqObject
+
     @pytest.mark.parametrize(
         'initial_sequence, index, expected',
         (
-                (
-                        [], 0, 'Index 0 is out of range for length 0',
-                ),
-                (
-                        [], -1, 'Index -1 is out of range for length 0',
-                ),
-                (
-                        [1, ], 2, 'Index 2 is out of range for length 1',
-                ),
+                ([], 0, 'Index 0 is out of range for length 0',),
+                ([], -1, 'Index -1 is out of range for length 0',),
+                ([1, ], 2, 'Index 2 is out of range for length 1',),
         )
     )
     def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
@@ -954,6 +936,7 @@ Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes:
      - ``int (*ssizeobjargproc)(PyObject*, Py_ssize_t, PyObject*)``
    * - Description
      - Sets the the n'th item in the sequence.
+       Returns 0 on success, -1 on failure.
        If the value is NULL the item is deleted and the sequence concatenated (thus called by `PyObject_DelItem()`_).
        Negative indexes are handled appropriately.
        Used by `PyObject_SetItem()`_.
@@ -964,7 +947,7 @@ Implementation
 .. warning::
 
     There is an undocumented feature when using `sq_ass_item`_ from `PyObject_SetItem()`_ and `PyObject_DelItem()`_
-    when using negative indexes when the negative index is *out of range*.
+    when using negative indexes and when the index is *out of range*.
 
     In that case, before the `sq_ass_item`_ function is called the index will have had the sequence length added to it.
 
@@ -973,7 +956,8 @@ Implementation
     If the given index is -5 then the index that the `sq_ass_item`_ function receives is -2.
 
     Thus the slightly odd code below to fix this problem.
-    Failing to do this will mean out of range errors will not be detected by the `sq_ass_item`_ function.
+    Failing to do this will mean out of range errors will not be detected by the `sq_ass_item`_ function and any
+    error message will be wrong.
 
 
 In ``src/cpy/Object/cSeqObject.c``:
@@ -1038,7 +1022,10 @@ In ``src/cpy/Object/cSeqObject.c``:
                     new_array[index_new_array] = self_as_slo->array_long[i];
                 }
                 /* Copy past the index. */
-                for (Py_ssize_t i = my_index + 1; i < self_as_slo->size; ++i, ++index_new_array) {
+                for (
+                    Py_ssize_t i = my_index + 1;
+                    i < self_as_slo->size;
+                    ++i, ++index_new_array) {
                     new_array[index_new_array] = self_as_slo->array_long[i];
                 }
 
@@ -1063,18 +1050,10 @@ First setting a value:
     @pytest.mark.parametrize(
         'initial_sequence, index, value, expected',
         (
-                (
-                        [7, 4, 1, ], 0, 14, [14, 4, 1, ],
-                ),
-                (
-                        [7, 4, 1, ], -1, 14, [7, 4, 14, ],
-                ),
-                (
-                        [7, 4, 1, ], -2, 14, [7, 14, 1, ],
-                ),
-                (
-                        [7, 4, 1, ], -3, 14, [14, 4, 1, ],
-                ),
+            ([7, 4, 1, ], 0, 14, [14, 4, 1, ],),
+            ([7, 4, 1, ], -1, 14, [7, 4, 14, ],),
+            ([7, 4, 1, ], -2, 14, [7, 14, 1, ],),
+            ([7, 4, 1, ], -3, 14, [14, 4, 1, ],),
         )
     )
     def test_SequenceLongObject_setitem(initial_sequence, index, value, expected):
@@ -1092,21 +1071,14 @@ Setting a value with an out of range index:
     @pytest.mark.parametrize(
         'initial_sequence, index, expected',
         (
-                (
-                        [7, 4, 1, ], 3, 'Index 3 is out of range for length 3',
-                ),
-                (
-                        [7, 4, 1, ], -4, 'Index -4 is out of range for length 3',
-                ),
+            ([7, 4, 1, ], 3, 'Index 3 is out of range for length 3',),
+            ([7, 4, 1, ], -4, 'Index -4 is out of range for length 3',),
         )
     )
     def test_SequenceLongObject_setitem_raises(initial_sequence, index, expected):
-        print()
-        print(initial_sequence, index, expected)
         obj = cSeqObject.SequenceLongObject(initial_sequence)
         with pytest.raises(IndexError) as err:
             obj[index] = 100
-            print(list(obj))
         assert err.value.args[0] == expected
 
 
@@ -1119,27 +1091,13 @@ Deleting a value:
     @pytest.mark.parametrize(
         'initial_sequence, index, expected',
         (
-                (
-                        [7, ], 0, [],
-                ),
-                (
-                        [7, ], -1, [],
-                ),
-                (
-                        [7, 4, 1, ], 1, [7, 1, ],
-                ),
-                (
-                        [7, 4, ], 0, [4, ],
-                ),
-                (
-                        [7, 4, 1, ], -1, [7, 4, ],
-                ),
-                (
-                        [7, 4, 1, ], -2, [7, 1, ],
-                ),
-                (
-                        [7, 4, 1, ], -3, [4, 1, ],
-                ),
+            ([7, ], 0, [],),
+            ([7, ], -1, [],),
+            ([7, 4, 1, ], 1, [7, 1, ],),
+            ([7, 4, ], 0, [4, ],),
+            ([7, 4, 1, ], -1, [7, 4, ],),
+            ([7, 4, 1, ], -2, [7, 1, ],),
+            ([7, 4, 1, ], -3, [4, 1, ],),
         )
     )
     def test_SequenceLongObject_delitem(initial_sequence, index, expected):
@@ -1157,25 +1115,14 @@ Deleting a value with an out of range index:
     @pytest.mark.parametrize(
         'initial_sequence, index, expected',
         (
-                (
-                        [], 0, 'Index 0 is out of range for length 0',
-                ),
-                (
-                        [], -1, 'Index -1 is out of range for length 0',
-                ),
-                (
-                        [7, ], 1, 'Index 1 is out of range for length 1',
-                ),
-                (
-                        [7, ], -3, 'Index -3 is out of range for length 1',
-                ),
+            ([], 0, 'Index 0 is out of range for length 0',),
+            ([], -1, 'Index -1 is out of range for length 0',),
+            ([7, ], 1, 'Index 1 is out of range for length 1',),
+            ([7, ], -3, 'Index -3 is out of range for length 1',),
         )
     )
     def test_SequenceLongObject_delitem_raises(initial_sequence, index, expected):
-        print()
-        print(initial_sequence, index, expected)
         obj = cSeqObject.SequenceLongObject(initial_sequence)
-        print(list(obj))
         with pytest.raises(IndexError) as err:
             del obj[index]
         assert err.value.args[0] == expected
@@ -1256,15 +1203,9 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
     @pytest.mark.parametrize(
         'initial_sequence, value, expected',
         (
-                (
-                        [7, ], 0, False,
-                ),
-                (
-                        [7, ], 7, True,
-                ),
-                (
-                        [1, 4, 7, ], 7, True,
-                ),
+            ([7, ], 0, False,),
+            ([7, ], 7, True,),
+            ([1, 4, 7, ], 7, True,),
         )
     )
     def test_SequenceLongObject_contains(initial_sequence, value, expected):
@@ -1361,24 +1302,12 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
     @pytest.mark.parametrize(
         'initial_sequence, count, expected',
         (
-                (
-                        [], 1, [],
-                ),
-                (
-                        [7, 4, 1, ], 0, [],
-                ),
-                (
-                        [7, 4, 1, ], -1, [],
-                ),
-                (
-                        [7, 4, 1, ], 1, [7, 4, 1, ],
-                ),
-                (
-                        [7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],
-                ),
-                (
-                        [7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],
-                ),
+            ([], 1, [],),
+            ([7, 4, 1, ], 0, [],),
+            ([7, 4, 1, ], -1, [],),
+            ([7, 4, 1, ], 1, [7, 4, 1, ],),
+            ([7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],),
+            ([7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],),
         )
     )
     def test_SequenceLongObject_repeat_inplace(initial_sequence, count, expected):
@@ -1407,8 +1336,8 @@ All these functions are gathered together in a `PySequenceMethods`_ table:
             .sq_item = (ssizeargfunc)SequenceLongObject_sq_item,
             .sq_ass_item = (ssizeobjargproc)SequenceLongObject_sq_ass_item,
             .sq_contains = (objobjproc)SequenceLongObject_sq_contains,
-            .sq_inplace_concat = (binaryfunc)NULL,
-            .sq_inplace_repeat = (ssizeargfunc)NULL,
+            .sq_inplace_concat = (binaryfunc)NULL,      // Not implemented. See above.
+            .sq_inplace_repeat = (ssizeargfunc)NULL,    // Not implemented. See above.
     };
 
 And the ``SequenceLongObjectType`` type is declared with the ``tp_as_sequence`` field referring to this table:
