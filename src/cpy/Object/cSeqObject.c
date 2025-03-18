@@ -222,11 +222,24 @@ SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value
         stdout, "%s()#%d: self=%p index=%zd value=%p\n",
         __FUNCTION__, __LINE__, (void *) self, index, (void *) value
     );
+    /* This is very weird. */
+    if (index < 0) {
+        fprintf(
+            stdout, "%s()#%d: Fixing index index=%zd to %zd\n", __FUNCTION__, __LINE__,
+            index, index - SequenceLongObject_sq_length(self)
+        );
+        index -= SequenceLongObject_sq_length(self);
+    }
+    /* Isn't it? */
     Py_ssize_t my_index = index;
     if (my_index < 0) {
         my_index += SequenceLongObject_sq_length(self);
     }
     // Corner case example: len(self) == 0 and index < 0
+    fprintf(
+        stdout, "%s()#%d: len=%zd index=%zd my_index=%zd\n", __FUNCTION__, __LINE__,
+        SequenceLongObject_sq_length(self), index, my_index
+    );
     if (my_index < 0 || my_index >= SequenceLongObject_sq_length(self)) {
         PyErr_Format(
                 PyExc_IndexError,
@@ -269,38 +282,16 @@ SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value
                 );
                 return -1;
             }
-            /* memcpy parameters. */
-            void *dest = NULL;
-            void *src = NULL;
-            size_t count = 0;
+            /* Copy up to the index. */
+            Py_ssize_t index_new_array = 0;
+            for (Py_ssize_t i = 0; i < my_index; ++i, ++index_new_array) {
+                new_array[index_new_array] = self_as_slo->array_long[i];
+            }
+            /* Copy past the index. */
+            for (Py_ssize_t i = my_index + 1; i < self_as_slo->size; ++i, ++index_new_array) {
+                new_array[index_new_array] = self_as_slo->array_long[i];
+            }
 
-            /* memcpy across to the new array, firstly up to the index. */
-            dest = new_array;
-            src = self_as_slo->array_long;
-            count = my_index * sizeof(long);
-            fprintf(stdout, "%s()#%d: First: dest=%p src=%p count=%zu\n", __FUNCTION__, __LINE__, dest, src, count);
-            if (memcpy(dest, src, count) != dest) {
-                PyErr_Format(
-                        PyExc_MemoryError,
-                        "sq_ass_item can not memcpy into new array. %s#%d",
-                        __FILE__, __LINE__
-                );
-                return -1;
-            }
-            /* memcpy from the index to the end. */
-            dest = new_array + count;
-            src = self_as_slo->array_long + count;
-            /* Example size=4, index=2 copy one value */
-            count = (self_as_slo->size - my_index - 1) * sizeof(long);
-            fprintf(stdout, "%s()#%d:  Next: dest=%p src=%p count=%zu\n", __FUNCTION__, __LINE__, dest, src, count);
-            if (memcpy(dest, src, count) != dest) {
-                PyErr_Format(
-                        PyExc_MemoryError,
-                        "sq_ass_item can not memcpy into new array. %s#%d",
-                        __FILE__, __LINE__
-                );
-                return -1;
-            }
             free(self_as_slo->array_long);
             self_as_slo->array_long = new_array;
             --self_as_slo->size;
@@ -309,15 +300,15 @@ SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value
     return 0;
 }
 
-PySequenceMethods SequenceLongObject_sequence_methods = {
-        .sq_length = &SequenceLongObject_sq_length,
-        .sq_concat = &SequenceLongObject_sq_concat,
-        .sq_repeat = &SequenceLongObject_sq_repeat,
-        .sq_item = &SequenceLongObject_sq_item,
-        .sq_ass_item = &SequenceLongObject_sq_ass_item,
-        .sq_contains = NULL,
-        .sq_inplace_concat = NULL,
-        .sq_inplace_repeat = NULL,
+static PySequenceMethods SequenceLongObject_sequence_methods = {
+        .sq_length = (lenfunc)SequenceLongObject_sq_length,
+        .sq_concat = (binaryfunc)SequenceLongObject_sq_concat,
+        .sq_repeat = (ssizeargfunc)SequenceLongObject_sq_repeat,
+        .sq_item = (ssizeargfunc)SequenceLongObject_sq_item,
+        .sq_ass_item = (ssizeobjargproc)SequenceLongObject_sq_ass_item,
+        .sq_contains = (objobjproc)NULL,
+        .sq_inplace_concat = (binaryfunc)NULL,
+        .sq_inplace_repeat = (ssizeargfunc)NULL,
 };
 
 static PyObject *

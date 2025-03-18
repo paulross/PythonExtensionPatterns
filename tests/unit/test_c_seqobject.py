@@ -156,47 +156,100 @@ def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
             (
                     [7, 4, 1, ], -1, 14, [7, 4, 14, ],
             ),
-            # (
-            #         [], 0, None, [],
-            # ),
-            (
-                    [7,], 0, None, [],
-            ),
-            (
-                    [7,], -1, None, [],
-            ),
-            (
-                    [7, 4, 1, ], 1, None, [7, 1, ],
-            ),
-            (
-                    [7, 4, ], 0, None, [4, ],
-            ),
     )
 )
 def test_SequenceLongObject_setitem(initial_sequence, index, value, expected):
     obj = cSeqObject.SequenceLongObject(initial_sequence)
-    if value is not None:
-        obj[index] = value
-    else:
-        del obj[index]
+    obj[index] = value
     assert list(obj) == expected
 
 
 @pytest.mark.parametrize(
-    'initial_sequence, index, value, expected',
+    'initial_sequence, index, expected',
     (
             (
-                    [7, 4, 1, ], 1, None, [7, 1, ],
+                    [7, 4, 1, ], 3, 'Index 3 is out of range for length 3',
+            ),
+            (
+                    [7, 4, 1, ], -4, 'Index -4 is out of range for length 3',
             ),
     )
 )
-def test_SequenceLongObject_setitem_debug(initial_sequence, index, value, expected):
+def test_SequenceLongObject_setitem_raises(initial_sequence, index, expected):
+    print()
+    print(initial_sequence, index, expected)
     obj = cSeqObject.SequenceLongObject(initial_sequence)
-    if value is not None:
-        obj[index] = value
-    else:
-        del obj[index]
+    with pytest.raises(IndexError) as err:
+        obj[index] = 100
+        print(list(obj))
+    assert err.value.args[0] == expected
+
+
+@pytest.mark.parametrize(
+    'initial_sequence, index, expected',
+    (
+            (
+                    [7,], 0, [],
+            ),
+            (
+                    [7,], -1, [],
+            ),
+            (
+                    [7, 4, 1, ], 1, [7, 1, ],
+            ),
+            (
+                    [7, 4, ], 0, [4, ],
+            ),
+    )
+)
+def test_SequenceLongObject_delitem(initial_sequence, index, expected):
+    obj = cSeqObject.SequenceLongObject(initial_sequence)
+    del obj[index]
     assert list(obj) == expected
+
+
+@pytest.mark.parametrize(
+    'initial_sequence, index, expected',
+    (
+            (
+                    [], 0, 'Index 0 is out of range for length 0',
+            ),
+            (
+                    [], -1, 'Index -1 is out of range for length 0',
+            ),
+            (
+                    [7,], 1, 'Index 1 is out of range for length 1',
+            ),
+            (
+                    [7,], -3, 'Index -3 is out of range for length 1',
+            ),
+    )
+)
+def test_SequenceLongObject_delitem_raises(initial_sequence, index, expected):
+    print()
+    print(initial_sequence, index, expected)
+    obj = cSeqObject.SequenceLongObject(initial_sequence)
+    print(list(obj))
+    with pytest.raises(IndexError) as err:
+        del obj[index]
+    assert err.value.args[0] == expected
+
+
+# @pytest.mark.parametrize(
+#     'initial_sequence, index, value, expected',
+#     (
+#             (
+#                     [7, 4, 1, ], 1, None, [7, 1, ],
+#             ),
+#     )
+# )
+# def test_SequenceLongObject_setitem_debug(initial_sequence, index, value, expected):
+#     obj = cSeqObject.SequenceLongObject(initial_sequence)
+#     if value is not None:
+#         obj[index] = value
+#     else:
+#         del obj[index]
+#     assert list(obj) == expected
 
 
 # @pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')

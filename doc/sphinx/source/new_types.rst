@@ -942,14 +942,21 @@ In ``src/cpy/Object/cSeqObject.c``:
 
 .. code-block:: c
 
-    /** Returns a new reference to an indexed item in a sequence. */
-    static PyObject *
-    SequenceLongObject_sq_item(PyObject *self, Py_ssize_t index) {
+    static int
+    SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value) {
+        fprintf(
+            stdout, "%s()#%d: self=%p index=%zd value=%p\n",
+            __FUNCTION__, __LINE__, (void *) self, index, (void *) value
+        );
         Py_ssize_t my_index = index;
         if (my_index < 0) {
             my_index += SequenceLongObject_sq_length(self);
         }
         // Corner case example: len(self) == 0 and index < 0
+        fprintf(
+            stdout, "%s()#%d: len=%zd index=%zd my_index=%zd\n", __FUNCTION__, __LINE__,
+            SequenceLongObject_sq_length(self), index, my_index
+        );
         if (my_index < 0 || my_index >= SequenceLongObject_sq_length(self)) {
             PyErr_Format(
                     PyExc_IndexError,
@@ -957,9 +964,57 @@ In ``src/cpy/Object/cSeqObject.c``:
                     index,
                     SequenceLongObject_sq_length(self)
             );
-            return NULL;
+            return -1;
         }
-        return PyLong_FromLong(((SequenceLongObject *) self)->array_long[my_index]);
+        if (value != NULL) {
+            /* Just set the value. */
+            if (!PyLong_Check(value)) {
+                PyErr_Format(
+                        PyExc_TypeError,
+                        "sq_ass_item value needs to be an int, not type %s",
+                        Py_TYPE(value)->tp_name
+                );
+                return -1;
+            }
+            ((SequenceLongObject *) self)->array_long[my_index] = PyLong_AsLong(value);
+        } else {
+            /* Delete the value. */
+            /* For convenience. */
+            SequenceLongObject *self_as_slo = (SequenceLongObject *) self;
+            /* Special case: deleting the only item in the array. */
+            if (self_as_slo->size == 1) {
+                fprintf(stdout, "%s()#%d: deleting empty index\n", __FUNCTION__, __LINE__);
+                free(self_as_slo->array_long);
+                self_as_slo->array_long = NULL;
+                self_as_slo->size = 0;
+            } else {
+                /* Delete the value and re-compose the array. */
+                fprintf(stdout, "%s()#%d: deleting index=%zd\n", __FUNCTION__, __LINE__, index);
+                long *new_array = malloc((self_as_slo->size - 1) * sizeof(long));
+                if (!new_array) {
+                    PyErr_Format(
+                            PyExc_MemoryError,
+                            "sq_ass_item can not allocate new array. %s#%d",
+                            __FILE__, __LINE__
+                    );
+                    return -1;
+                }
+                /* Copy up to the index. */
+                Py_ssize_t index_new_array = 0;
+                for (Py_ssize_t i = 0; i < my_index; ++i, ++index_new_array) {
+                    new_array[index_new_array] = self_as_slo->array_long[i];
+                }
+                /* Copy past the index. */
+                for (Py_ssize_t i = my_index + 1; i < self_as_slo->size; ++i, ++index_new_array) {
+                    new_array[index_new_array] = self_as_slo->array_long[i];
+                }
+
+                free(self_as_slo->array_long);
+                self_as_slo->array_long = new_array;
+                --self_as_slo->size;
+            }
+        }
+        return 0;
     }
 
 Tests
@@ -971,52 +1026,7 @@ Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes:
 
     from cPyExtPatt import cSeqObject
 
-    @pytest.mark.parametrize(
-        'initial_sequence, index, expected',
-        (
-                (
-                        [7, 4, 1, ], 0, 7,
-                ),
-                (
-                        [7, 4, 1, ], 1, 4,
-                ),
-                (
-                        [7, 4, 1, ], 2, 1,
-                ),
-                (
-                        [7, 4, 1, ], -1, 1,
-                ),
-                (
-                        [7, 4, 1, ], -2, 4,
-                ),
-                (
-                        [7, 4, 1, ], -3, 7,
-                ),
-        )
-    )
-    def test_SequenceLongObject_item(initial_sequence, index, expected):
-        obj = cSeqObject.SequenceLongObject(initial_sequence)
-        assert obj[index] == expected
-
-    @pytest.mark.parametrize(
-        'initial_sequence, index, expected',
-        (
-                (
-                        [], 0, 'Index 0 is out of range for length 0',
-                ),
-                (
-                        [], -1, 'Index -1 is out of range for length 0',
-                ),
-                (
-                        [1, ], 2, 'Index 2 is out of range for length 1',
-                ),
-        )
-    )
-    def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
-        obj = cSeqObject.SequenceLongObject(initial_sequence)
-        with pytest.raises(IndexError) as err:
-            obj[index]
-        assert err.value.args[0] == expected
+    pass
 
 
 
