@@ -6,6 +6,15 @@
 
 .. _chapter_refcount:
 
+..
+    .. _Reference Counting: https://docs.python.org/3.9/c-api/refcounting.html
+
+.. _Py_REFCNT(): https://docs.python.org/3.9/c-api/structures.html#c.Py_REFCNT
+.. _Py_INCREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_INCREF
+.. _Py_XINCREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_XINCREF
+.. _Py_DECREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_DECREF
+.. _Py_XDECREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_XDECREF
+
 .. index::
     single: Reference Counts
     single: Reference Counts; New
@@ -36,6 +45,37 @@ pointer to the object type [#]_:
 In Python C extensions you always create and deallocate these ``PyObjects`` *indirectly*.
 Creation is via Python's C API and destruction is done by decrementing the reference count.
 If this count hits zero then CPython will free all the resources used by the object.
+
+The macros to manipulate reference counts are:
+
+.. list-table:: Reference Count Macros
+   :widths: 20 85
+   :header-rows: 1
+
+   * - Macro
+     - Description
+   * - `Py_REFCNT()`_
+     - Get the reference count of an object.
+       This expands to ``(((PyObject*)(o))->ob_refcnt)``.
+       This will segfault if passed ``NULL``.
+   * - `Py_INCREF()`_
+     - Increments the reference count of the given ``PyObject *``.
+       This will segfault if passed ``NULL``.
+   * - `Py_XINCREF()`_
+     - As `Py_INCREF()`_ but does nothing if passed ``NULL``.
+   * - `Py_DECREF()`_
+     - Decrements the reference count of the given ``PyObject *``.
+       This will segfault if passed ``NULL``.
+       If the reference count reaches zero then the object will be deallocated and the memory *may* be reused.
+
+       **Warning:** De-allocation might cause the execution of arbitrary Python code has free access to all Python
+       global variables.
+
+       **Warning:** Calling this when the reference count is 1 might reuse the memory so on exit the object reference
+       count could be anything.
+   * - `Py_XDECREF()`_
+     - As `Py_DECREF()`_ but does nothing if passed ``NULL``.
+
 
 Here is an example of a normal ``PyObject`` creation, print and de-allocation:
 
@@ -151,7 +191,7 @@ And here is what happens to the memory if we use this function from Python (``cP
     >>> s = ' ' * 100 * 1024**2 # Process uses about 101Mb
     >>> del s                   # Process uses about 1Mb
     >>> s = ' ' * 100 * 1024**2 # Process uses about 101Mb
-    >>> cPyRefs.incref(s)       # Now do an increment without decrement
+    >>> cPyRefs.bad_incref(s)       # Now do an increment without decrement
     >>> del s                   # Process still uses about 101Mb - leaked
     >>> s                       # Officially 's' does not exist
     Traceback (most recent call last):
@@ -715,7 +755,7 @@ In other words is ``value`` or ``container[0]`` *strong* or *weak*?
 
 This model determines that ``container`` holds the *strong* reference since on destruction of that container
 ``Py_DECREF()`` will be called on that reference reducing the strong reference count to zero.
-Therefor ``value``, once a *strong* reference is now a *weak* reference.
+Therefore ``value``, once a *strong* reference is now a *weak* reference.
 This expresses the concept of *stealing* a reference.
 So we end up with:
 
