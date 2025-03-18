@@ -948,6 +948,15 @@ In ``src/cpy/Object/cSeqObject.c``:
             stdout, "%s()#%d: self=%p index=%zd value=%p\n",
             __FUNCTION__, __LINE__, (void *) self, index, (void *) value
         );
+        /* This is very weird. */
+        if (index < 0) {
+            fprintf(
+                stdout, "%s()#%d: Fixing index index=%zd to %zd\n", __FUNCTION__, __LINE__,
+                index, index - SequenceLongObject_sq_length(self)
+            );
+            index -= SequenceLongObject_sq_length(self);
+        }
+        /* Isn't it? */
         Py_ssize_t my_index = index;
         if (my_index < 0) {
             my_index += SequenceLongObject_sq_length(self);
