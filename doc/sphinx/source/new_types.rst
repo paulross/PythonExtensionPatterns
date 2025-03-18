@@ -406,6 +406,8 @@ This can be tested thus, in ``tests/unit/test_c_object.py``:
 .. _PyObject_SetItem(): https://docs.python.org/3/c-api/object.html#c.PyObject_SetItem
 .. _PyObject_DelItem(): https://docs.python.org/3/c-api/object.html#c.PyObject_DelItem
 
+.. _PySequenceMethods: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods
+
 .. _sq_length: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
 .. _sq_concat: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_concat
 .. _sq_repeat: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_repeat
@@ -420,6 +422,11 @@ This can be tested thus, in ``tests/unit/test_c_object.py``:
 .. _ssizeargfunc: https://docs.python.org/3/c-api/typeobj.html#c.ssizeargfunc
 .. _ssizeobjargproc: https://docs.python.org/3/c-api/typeobj.html#c.ssizeobjargproc
 .. _objobjproc: https://docs.python.org/3/c-api/typeobj.html#c.objobjproc
+
+
+.. index::
+    single: Sequence Types
+    single: New Types; Sequence Types
 
 =========================
 Emulating Sequence Types
@@ -452,7 +459,8 @@ Then the equivalent of ``__new__``:
 .. code-block:: c
 
     static PyObject *
-    SequenceLongObject_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
+    SequenceLongObject_new(PyTypeObject *type, PyObject *Py_UNUSED(args),
+            PyObject *Py_UNUSED(kwds)) {
         SequenceLongObject *self;
         self = (SequenceLongObject *) type->tp_alloc(type, 0);
         if (self != NULL) {
@@ -516,65 +524,59 @@ And de-allocation:
         Py_TYPE(self)->tp_free((PyObject *) self);
     }
 
+.. index::
+    single: Sequence Types; Function Table
+
 ---------------------------
 The Sequence Function Table
 ---------------------------
 
-
+The sequence functions are a table of function pointers in the `PySequenceMethods`_ table.
+Here is a summary of the fields, each is described in more detail below:
 
 .. list-table:: Sequence Methods
-   :widths: 30 25 50 70
+   :widths: 20 80
    :header-rows: 1
 
    * - Member
-     - Function Type
-     - Function Signature
      - Description
    * - `sq_length`_
-     - `lenfunc`_
-     - ``Py_ssize_t (*lenfunc)(PyObject*)``
      - Returns the length of the sequence.
    * - `sq_concat`_
-     - `binaryfunc`_
-     - ``PyObject *(*binaryfunc)(PyObject*, PyObject*)``
      - Takes two sequences and returns a new third one with the first and second concatenated.
    * - `sq_repeat`_
-     - `ssizeargfunc`_
-     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
      - Returns a new sequence with the old one repeated n times.
    * - `sq_item`_
-     - `ssizeargfunc`_
-     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
      - Returns a *new* reference to the n'th item in the sequence.
        Negative indexes are handled appropriately.
        Used by `PySequence_GetItem()`_.
        This is a fairly crucial implementation for a sequence as `PySequence_Check()`_ detects this to decide if the
        object is a sequence.
    * - `sq_ass_item`_
-     - `ssizeobjargproc`_
-     - ``int (*ssizeobjargproc)(PyObject*, Py_ssize_t, PyObject*)``
      - Sets the the n'th item in the sequence.
        If the value is NULL the item is deleted and the sequence concatenated (thus called by `PyObject_DelItem()`_).
        Negative indexes are handled appropriately.
        Used by `PyObject_SetItem()`_.
    * - `sq_ass_contains`_
-     - `objobjproc`_
-     - ``int (*objobjproc)(PyObject*, PyObject*)``
      - Returns non-zero if the sequence contains the given object.
        Used by `PySequence_Contains()`_.
        This slot may be left to NULL, in this case PySequence_Contains() simply traverses the sequence until it
        finds a match.
    * - `sq_inplace_concat`_
-     - `binaryfunc`_
-     - ``PyObject *(*binaryfunc)(PyObject*, PyObject*)``
      - Provides in-place concatenation, for example ``+=``.
        If this slot is ``NULL`` then `PySequence_Concat()`_ will be used returning a new object.
    * - `sq_inplace_repeat`_
-     - `ssizeargfunc`_
-     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
      - Provides in-place concatenation, for example ``+=``.
        Returns the existing sequence repeated n times.
        If this slot is ``NULL`` then `PySequence_Repeat()`_ will be used returning a new object.
+
+Here are the individual functions, their implementation and the test code.
+
+
+.. index::
+    single: sq_length
+    single: New Types; sq_length
+    single: Sequence Types; sq_length
 
 ---------------
 ``sq_length``
@@ -617,6 +619,11 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
     def test_SequenceLongObject_len():
         obj = cSeqObject.SequenceLongObject([7, 4, 1, ])
         assert len(obj) == 3
+
+.. index::
+    single: sq_concat
+    single: New Types; sq_concat
+    single: Sequence Types; sq_concat
 
 ---------------
 ``sq_concat``
@@ -708,11 +715,16 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
         assert len(obj) == 6
         assert list(obj) == [7, 4, 1, ] + [70, 40, 100, ]
 
+.. index::
+    single: sq_repeat
+    single: New Types; sq_repeat
+    single: Sequence Types; sq_repeat
+
 ---------------
 ``sq_repeat``
 ---------------
 
-.. list-table:: Sequence Methods: ``sq_concat``
+.. list-table:: Sequence Methods: ``sq_repeat``
    :widths: 20 80
    :header-rows: 0
 
@@ -806,6 +818,11 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
         assert list(obj) == expected
         assert list(obj) == (list(obj_a) * count)
 
+
+.. index::
+    single: sq_item
+    single: New Types; sq_item
+    single: Sequence Types; sq_item
 
 ---------------
 ``sq_item``
@@ -914,6 +931,11 @@ Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes:
         assert err.value.args[0] == expected
 
 
+.. index::
+    single: sq_ass_item
+    single: New Types; sq_ass_item
+    single: Sequence Types; sq_ass_item
+
 ---------------
 ``sq_ass_item``
 ---------------
@@ -941,16 +963,17 @@ Implementation
 
 .. warning::
 
-    There is an undocumented feature when using `sq_ass_item` from `PyObject_SetItem()`_ and `PyObject_DelItem()`_
+    There is an undocumented feature when using `sq_ass_item`_ from `PyObject_SetItem()`_ and `PyObject_DelItem()`_
     when using negative indexes when the negative index is *out of range*.
-    In  this case, before the `sq_ass_item` function is called the index will have had the sequence length added to it.
+
+    In that case, before the `sq_ass_item`_ function is called the index will have had the sequence length added to it.
 
     For example if the sequence length is 3 and the given index is -4 then the index that the `sq_ass_item` function
     receives is -1.
-    If the given index is -5 then the index that the `sq_ass_item` function receives is -2.
+    If the given index is -5 then the index that the `sq_ass_item`_ function receives is -2.
 
     Thus the slightly odd code below to fix this problem.
-    Failing to do this will mean out of range errors will not be detected by the `sq_ass_item` function.
+    Failing to do this will mean out of range errors will not be detected by the `sq_ass_item`_ function.
 
 
 In ``src/cpy/Object/cSeqObject.c``:
@@ -1158,6 +1181,11 @@ Deleting a value with an out of range index:
         assert err.value.args[0] == expected
 
 
+.. index::
+    single: sq_ass_contains
+    single: New Types; sq_ass_contains
+    single: Sequence Types; sq_ass_contains
+
 -------------------
 ``sq_ass_contains``
 -------------------
@@ -1213,8 +1241,8 @@ In ``src/cpy/Object/cSeqObject.c``:
 
 .. note::
 
-    Whilst ``SequenceLongObject_sq_contains()`` returns 0 or 1 Python code such as ``value in obj`` converts this to
-    ``False`` and ``True`` respectively
+    Whilst ``SequenceLongObject_sq_contains()`` returns 0 or 1 however Python code such as ``value in obj`` converts
+    this to ``False`` and ``True`` respectively
 
 Tests
 --------------
@@ -1244,9 +1272,206 @@ Tests are in ``tests/unit/test_c_seqobject.py``:
         result = value in obj
         assert result == expected
 
+.. index::
+    single: sq_inplace_concat
+    single: New Types; sq_inplace_concat
+    single: Sequence Types; sq_inplace_concat
+
+---------------------
+``sq_inplace_concat``
+---------------------
+
+.. list-table:: Sequence Methods: ``sq_inplace_concat``
+   :widths: 20 80
+   :header-rows: 0
+
+   * - Member
+     - `sq_inplace_concat`_
+   * - Function type
+     - `binaryfunc`_
+   * - Function signature
+     - ``PyObject *(*binaryfunc)(PyObject*, PyObject*)``
+   * - Description
+     - Provides in-place concatenation, for example ``+=``.
+       If this slot is ``NULL`` then `PySequence_InPlaceConcat()`_ will use `PySequence_Concat()`_.
+
+Implementation
+--------------
+
+If `sq_concat`_ is implemented then this need not be implemented
+In ``src/cpy/Object/cSeqObject.c`` this is not implemented to show this mechanism at work.
+
+Tests
+--------------
+
+Tests are in ``tests/unit/test_c_seqobject.py``:
+
+.. code-block:: python
+
+    from cPyExtPatt import cSeqObject
+
+    def test_SequenceLongObject_concat_inplace():
+        obj_a = cSeqObject.SequenceLongObject([7, 4, 1, ])
+        obj_b = cSeqObject.SequenceLongObject([70, 40, 100, ])
+        assert id(obj_a) != id(obj_b)
+        obj_a += obj_b
+        assert len(obj_a) == 6
+        assert list(obj_a) == [7, 4, 1, ] + [70, 40, 100, ]
 
 
-TODO:
+.. index::
+    single: sq_inplace_repeat
+    single: New Types; sq_inplace_repeat
+    single: Sequence Types; sq_inplace_repeat
+
+---------------------
+``sq_inplace_repeat``
+---------------------
+
+.. list-table:: Sequence Methods: ``sq_inplace_repeat``
+   :widths: 20 80
+   :header-rows: 0
+
+   * - Member
+     - `sq_inplace_repeat`_
+   * - Function type
+     - `ssizeargfunc`_
+   * - Function signature
+     - ``PyObject *(*ssizeargfunc)(PyObject*, Py_ssize_t)``
+   * - Description
+     - Provides in-place concatenation, for example ``+=``.
+       Returns the existing sequence repeated n times.
+       If this slot is ``NULL`` then `PySequence_Repeat()`_ will be used returning a new object.
+
+Implementation
+--------------
+
+If `sq_repeat`_ is implemented then this need not be implemented
+In ``src/cpy/Object/cSeqObject.c`` this is not implemented to show this mechanism at work.
+
+Tests
+--------------
+
+Tests are in ``tests/unit/test_c_seqobject.py``:
+
+.. code-block:: python
+
+    from cPyExtPatt import cSeqObject
+
+    @pytest.mark.parametrize(
+        'initial_sequence, count, expected',
+        (
+                (
+                        [], 1, [],
+                ),
+                (
+                        [7, 4, 1, ], 0, [],
+                ),
+                (
+                        [7, 4, 1, ], -1, [],
+                ),
+                (
+                        [7, 4, 1, ], 1, [7, 4, 1, ],
+                ),
+                (
+                        [7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],
+                ),
+                (
+                        [7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],
+                ),
+        )
+    )
+    def test_SequenceLongObject_repeat_inplace(initial_sequence, count, expected):
+        obj = cSeqObject.SequenceLongObject(initial_sequence)
+        obj *= count
+        assert list(obj) == expected
+        assert list(obj) == (initial_sequence * count)
+
+.. index::
+    single: PySequenceMethods
+    single: New Types; PySequenceMethods
+    single: Sequence Types; Function Table
+
+---------------------
+The Function Table
+---------------------
+
+All these functions are gathered together in a `PySequenceMethods`_ table:
+
+.. code-block:: c
+
+    static PySequenceMethods SequenceLongObject_sequence_methods = {
+            .sq_length = (lenfunc)SequenceLongObject_sq_length,
+            .sq_concat = (binaryfunc)SequenceLongObject_sq_concat,
+            .sq_repeat = (ssizeargfunc)SequenceLongObject_sq_repeat,
+            .sq_item = (ssizeargfunc)SequenceLongObject_sq_item,
+            .sq_ass_item = (ssizeobjargproc)SequenceLongObject_sq_ass_item,
+            .sq_contains = (objobjproc)SequenceLongObject_sq_contains,
+            .sq_inplace_concat = (binaryfunc)NULL,
+            .sq_inplace_repeat = (ssizeargfunc)NULL,
+    };
+
+And the ``SequenceLongObjectType`` type is declared with the ``tp_as_sequence`` field referring to this table:
+
+.. code-block:: c
+
+    static PyTypeObject SequenceLongObjectType = {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            .tp_name = "SequenceLongObject",
+            .tp_basicsize = sizeof(SequenceLongObject),
+            .tp_itemsize = 0,
+            .tp_dealloc = (destructor) SequenceLongObject_dealloc,
+            .tp_as_sequence = &SequenceLongObject_sequence_methods,
+            .tp_str = (reprfunc) SequenceLongObject___str__,
+            .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+            .tp_doc = "Sequence of long integers.",
+            .tp_methods = SequenceLongObject_methods,
+            .tp_init = (initproc) SequenceLongObject_init,
+            .tp_new = SequenceLongObject_new,
+    };
+
+---------------------------
+Module Initialisation
+---------------------------
+
+This is as usual:
+
+.. code-block:: c
+
+    static PyModuleDef sequence_object_cmodule = {
+        PyModuleDef_HEAD_INIT,
+        .m_name = "cSeqObject",
+        .m_doc = (
+            "Example module that creates an extension type with sequence methods"
+        ),
+        .m_size = -1,
+        .m_methods = cIterator_methods,
+    };
+
+    PyMODINIT_FUNC
+    PyInit_cSeqObject(void) {
+        PyObject *m;
+        m = PyModule_Create(&sequence_object_cmodule);
+        if (m == NULL) {
+            return NULL;
+        }
+
+        if (PyType_Ready(&SequenceLongObjectType) < 0) {
+            Py_DECREF(m);
+            return NULL;
+        }
+        Py_INCREF(&SequenceLongObjectType);
+        if (PyModule_AddObject(
+                m,
+                "SequenceLongObject",
+                (PyObject *) &SequenceLongObjectType) < 0
+                ) {
+            Py_DECREF(&SequenceLongObjectType);
+            Py_DECREF(m);
+            return NULL;
+        }
+        return m;
+    }
 
 ====================================
 TODOs:
@@ -1260,6 +1485,6 @@ TODOs:
 
 .. todo::
 
-    "Creating New Types": Add a section on making an object act like a mapping object (like a ``dict``) using
+    "Creating New Types": Add a section on making an object act like a mapping object using
     `tp_as_mapping <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_mapping>`_.
     See also `Mapping Object Structures <https://docs.python.org/3/c-api/typeobj.html#mapping-structs>`_

@@ -309,34 +309,41 @@ def test_SequenceLongObject_contains(initial_sequence, value, expected):
     result = value in obj
     assert result == expected
 
-# @pytest.mark.parametrize(
-#     'initial_sequence, index, value, expected',
-#     (
-#             (
-#                     [7, 4, 1, ], 1, None, [7, 1, ],
-#             ),
-#     )
-# )
-# def test_SequenceLongObject_setitem_debug(initial_sequence, index, value, expected):
-#     obj = cSeqObject.SequenceLongObject(initial_sequence)
-#     if value is not None:
-#         obj[index] = value
-#     else:
-#         del obj[index]
-#     assert list(obj) == expected
+
+def test_SequenceLongObject_concat_inplace():
+    obj_a = cSeqObject.SequenceLongObject([7, 4, 1, ])
+    obj_b = cSeqObject.SequenceLongObject([70, 40, 100, ])
+    assert id(obj_a) != id(obj_b)
+    obj_a += obj_b
+    assert len(obj_a) == 6
+    assert list(obj_a) == [7, 4, 1, ] + [70, 40, 100, ]
 
 
-# @pytest.mark.skipif(not (sys.version_info.minor < 7), reason='Python < 3.7')
-# def test_str_dir_pre_37():
-#     s = cObject.Str()
-#     assert dir(s) == ['__add__', '__class__', '__contains__', '__delattr__', '__dir__', '__doc__', '__eq__',
-#                       '__format__', '__ge__', '__getattribute__', '__getitem__', '__getnewargs__',
-#                       '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__',
-#                       '__mod__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmod__',
-#                       '__rmul__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'capitalize', 'casefold',
-#                       'center', 'count', 'encode', 'endswith', 'expandtabs', 'find', 'format', 'format_map', 'index',
-#                       'isalnum', 'isalpha', 'isdecimal', 'isdigit', 'isidentifier', 'islower', 'isnumeric',
-#                       'isprintable', 'isspace', 'istitle', 'isupper', 'join', 'ljust', 'lower', 'lstrip', 'maketrans',
-#                       'partition', 'replace', 'rfind', 'rindex', 'rjust', 'rpartition',
-#                       'rsplit', 'rstrip', 'split', 'splitlines', 'startswith', 'strip', 'swapcase', 'title',
-#                       'translate', 'upper', 'zfill']
+@pytest.mark.parametrize(
+    'initial_sequence, count, expected',
+    (
+            (
+                    [], 1, [],
+            ),
+            (
+                    [7, 4, 1, ], 0, [],
+            ),
+            (
+                    [7, 4, 1, ], -1, [],
+            ),
+            (
+                    [7, 4, 1, ], 1, [7, 4, 1, ],
+            ),
+            (
+                    [7, 4, 1, ], 2, [7, 4, 1, 7, 4, 1, ],
+            ),
+            (
+                    [7, 4, 1, ], 3, [7, 4, 1, 7, 4, 1, 7, 4, 1, ],
+            ),
+    )
+)
+def test_SequenceLongObject_repeat_inplace(initial_sequence, count, expected):
+    obj = cSeqObject.SequenceLongObject(initial_sequence)
+    obj *= count
+    assert list(obj) == expected
+    assert list(obj) == (initial_sequence * count)

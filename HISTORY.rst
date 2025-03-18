@@ -8,8 +8,8 @@ History
 Added Chapters
 --------------
 
-- "Containers and Reference Counts" that corrects and clarifies the Python documentation where that is wrong, absent or misleading.
-- "Struct Sequences (namedtuple in C)" that corrects and clarifies the Python documentation where that is wrong, absent or misleading.
+- "Containers and Reference Counts" which corrects the Python documentation where that is wrong, misleading or missing.
+- "Struct Sequences (namedtuple in C)" which corrects the Python documentation where that is wrong, misleading or missing.
 - "Context Managers" with practical C code examples.
 - "Watchers" with practical examples for dictionary watchers (Python 3.12+).
 - "Installation" for the project.
@@ -21,7 +21,7 @@ Changed Chapters
 - Update the "Homogeneous Python Containers and C++" chapter.
 - Expand the "Memory Leaks" chapter.
 - Extended the "Logging" chapter to show how to access the CPython Frame from C.
-- Add a section "Emulating Sequence Types" to the "Creating New Types" chapter.
+- Add "Emulating Sequence Types" to the "Creating New Types" chapter.
 - Expand the Index.
 
 Other
@@ -29,7 +29,7 @@ Other
 
 - Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13.
 - Development Status :: 5 - Production/Stable
-- Documentation word count has gone up 50%+ from 41,000 to 66,000.
+- TODO: Documentation word count has gone up 50%+ from 41,000 to 66,000.
 
 TODO
 ----
