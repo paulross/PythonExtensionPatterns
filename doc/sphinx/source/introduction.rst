@@ -194,6 +194,14 @@ My advice if you are thinking about extensions:
 - Keep the CPython layer as thin as possible
 - Testing, testing testing!
 
+---------------------------------
+Project Links
+---------------------------------
+
+- Source is `on GitHub <https://github.com/paulross/PythonExtensionPatterns>`_.
+- Documentation `Read the Docs <http://pythonextensionpatterns.readthedocs.org/en/latest/index.html>`_.
+- Project is `on PyPi <https://pypi.org/project/cPyExtPatt/>`_.
+
 Next up: a simple example showing the effect on code performance.
 
 .. rubric:: Footnotes
