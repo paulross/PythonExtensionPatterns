@@ -222,7 +222,12 @@ SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value
         stdout, "%s()#%d: self=%p index=%zd value=%p\n",
         __FUNCTION__, __LINE__, (void *) self, index, (void *) value
     );
-    /* This is very weird. */
+    /* This is very weird.
+     * When the given index is negative and out of range PyObject_SetItem()
+     * and PyObject_DelItem() will have *already* added the sequence length
+     * before calling this function.
+     * So to get the original out of range negative index we have to *subtract*
+     * the sequence length. */
     if (index < 0) {
         fprintf(
             stdout, "%s()#%d: Fixing index index=%zd to %zd\n", __FUNCTION__, __LINE__,

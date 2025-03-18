@@ -938,34 +938,36 @@ Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes:
 Implementation
 --------------
 
+.. warning::
+
+    There is an undocumented feature when using `sq_ass_item` from `PyObject_SetItem()`_ and `PyObject_DelItem()`_
+    when using negative indexes when the negative index is *out of range*.
+    In  this case, before the `sq_ass_item` function is called the index will have had the sequence length added to it.
+
+    For example if the sequence length is 3 and the given index is -4 then the index that the `sq_ass_item` function
+    receives is -1.
+    If the given index is -5 then the index that the `sq_ass_item` function receives is -2.
+
+    Thus the slightly odd code below to fix this problem.
+    Failing to do this will mean out of range errors will not be detected by the `sq_ass_item` function.
+
+
 In ``src/cpy/Object/cSeqObject.c``:
 
 .. code-block:: c
 
     static int
     SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value) {
-        fprintf(
-            stdout, "%s()#%d: self=%p index=%zd value=%p\n",
-            __FUNCTION__, __LINE__, (void *) self, index, (void *) value
-        );
-        /* This is very weird. */
+        /* See warning above. */
         if (index < 0) {
-            fprintf(
-                stdout, "%s()#%d: Fixing index index=%zd to %zd\n", __FUNCTION__, __LINE__,
-                index, index - SequenceLongObject_sq_length(self)
-            );
             index -= SequenceLongObject_sq_length(self);
         }
-        /* Isn't it? */
+
         Py_ssize_t my_index = index;
         if (my_index < 0) {
             my_index += SequenceLongObject_sq_length(self);
         }
         // Corner case example: len(self) == 0 and index < 0
-        fprintf(
-            stdout, "%s()#%d: len=%zd index=%zd my_index=%zd\n", __FUNCTION__, __LINE__,
-            SequenceLongObject_sq_length(self), index, my_index
-        );
         if (my_index < 0 || my_index >= SequenceLongObject_sq_length(self)) {
             PyErr_Format(
                     PyExc_IndexError,
@@ -992,13 +994,11 @@ In ``src/cpy/Object/cSeqObject.c``:
             SequenceLongObject *self_as_slo = (SequenceLongObject *) self;
             /* Special case: deleting the only item in the array. */
             if (self_as_slo->size == 1) {
-                fprintf(stdout, "%s()#%d: deleting empty index\n", __FUNCTION__, __LINE__);
                 free(self_as_slo->array_long);
                 self_as_slo->array_long = NULL;
                 self_as_slo->size = 0;
             } else {
                 /* Delete the value and re-compose the array. */
-                fprintf(stdout, "%s()#%d: deleting index=%zd\n", __FUNCTION__, __LINE__, index);
                 long *new_array = malloc((self_as_slo->size - 1) * sizeof(long));
                 if (!new_array) {
                     PyErr_Format(
