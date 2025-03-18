@@ -10,9 +10,10 @@ def test_module_dir():
                                '__package__', '__spec__', ]
 
 
-def test_SequenceLongObject_dir():
-    obj = cSeqObject.SequenceLongObject([7, 4, 1, ])
-    assert dir(obj) == [
+@pytest.mark.skipif(not (sys.version_info.minor < 11), reason='Python < 3.11')
+def test_SequenceLongObject_dir_pre_311():
+    result = dir(cSeqObject.SequenceLongObject)
+    assert result == [
         '__add__',
         '__class__',
         '__delattr__',
@@ -24,7 +25,44 @@ def test_SequenceLongObject_dir():
         '__ge__',
         '__getattribute__',
         '__getitem__',
-        '__getstate__',
+        '__gt__',
+        '__hash__',
+        '__init__',
+        '__init_subclass__',
+        '__le__',
+        '__len__',
+        '__lt__',
+        '__mul__',
+        '__ne__',
+        '__new__',
+        '__reduce__',
+        '__reduce_ex__',
+        '__repr__',
+        '__rmul__',
+        '__setattr__',
+        '__setitem__',
+        '__sizeof__',
+        '__str__',
+        '__subclasshook__',
+    ]
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 11), reason='Python >= 3.11')
+def test_SequenceLongObject_dir_311_plus():
+    result = dir(cSeqObject.SequenceLongObject)
+    assert result == [
+        '__add__',
+        '__class__',
+        '__delattr__',
+        '__delitem__',
+        '__dir__',
+        '__doc__',
+        '__eq__',
+        '__format__',
+        '__ge__',
+        '__getattribute__',
+        '__getitem__',
+        '__getstate__',  # New
         '__gt__',
         '__hash__',
         '__init__',
@@ -189,10 +227,10 @@ def test_SequenceLongObject_setitem_raises(initial_sequence, index, expected):
     'initial_sequence, index, expected',
     (
             (
-                    [7,], 0, [],
+                    [7, ], 0, [],
             ),
             (
-                    [7,], -1, [],
+                    [7, ], -1, [],
             ),
             (
                     [7, 4, 1, ], 1, [7, 1, ],
@@ -218,10 +256,10 @@ def test_SequenceLongObject_delitem(initial_sequence, index, expected):
                     [], -1, 'Index -1 is out of range for length 0',
             ),
             (
-                    [7,], 1, 'Index 1 is out of range for length 1',
+                    [7, ], 1, 'Index 1 is out of range for length 1',
             ),
             (
-                    [7,], -3, 'Index -3 is out of range for length 1',
+                    [7, ], -3, 'Index -3 is out of range for length 1',
             ),
     )
 )
@@ -233,7 +271,6 @@ def test_SequenceLongObject_delitem_raises(initial_sequence, index, expected):
     with pytest.raises(IndexError) as err:
         del obj[index]
     assert err.value.args[0] == expected
-
 
 # @pytest.mark.parametrize(
 #     'initial_sequence, index, value, expected',
