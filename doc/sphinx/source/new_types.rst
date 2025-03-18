@@ -1029,13 +1029,132 @@ In ``src/cpy/Object/cSeqObject.c``:
 Tests
 --------------
 
-Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes:
+Tests are in ``tests/unit/test_c_seqobject.py`` which includes failure modes.
+First setting a value:
 
 .. code-block:: python
 
     from cPyExtPatt import cSeqObject
 
-    pass
+    @pytest.mark.parametrize(
+        'initial_sequence, index, value, expected',
+        (
+                (
+                        [7, 4, 1, ], 0, 14, [14, 4, 1, ],
+                ),
+                (
+                        [7, 4, 1, ], -1, 14, [7, 4, 14, ],
+                ),
+                (
+                        [7, 4, 1, ], -2, 14, [7, 14, 1, ],
+                ),
+                (
+                        [7, 4, 1, ], -3, 14, [14, 4, 1, ],
+                ),
+        )
+    )
+    def test_SequenceLongObject_setitem(initial_sequence, index, value, expected):
+        obj = cSeqObject.SequenceLongObject(initial_sequence)
+        obj[index] = value
+        assert list(obj) == expected
+
+
+Setting a value with an out of range index:
+
+.. code-block:: python
+
+    from cPyExtPatt import cSeqObject
+
+    @pytest.mark.parametrize(
+        'initial_sequence, index, expected',
+        (
+                (
+                        [7, 4, 1, ], 3, 'Index 3 is out of range for length 3',
+                ),
+                (
+                        [7, 4, 1, ], -4, 'Index -4 is out of range for length 3',
+                ),
+        )
+    )
+    def test_SequenceLongObject_setitem_raises(initial_sequence, index, expected):
+        print()
+        print(initial_sequence, index, expected)
+        obj = cSeqObject.SequenceLongObject(initial_sequence)
+        with pytest.raises(IndexError) as err:
+            obj[index] = 100
+            print(list(obj))
+        assert err.value.args[0] == expected
+
+
+Deleting a value:
+
+.. code-block:: python
+
+    from cPyExtPatt import cSeqObject
+
+    @pytest.mark.parametrize(
+        'initial_sequence, index, expected',
+        (
+                (
+                        [7, ], 0, [],
+                ),
+                (
+                        [7, ], -1, [],
+                ),
+                (
+                        [7, 4, 1, ], 1, [7, 1, ],
+                ),
+                (
+                        [7, 4, ], 0, [4, ],
+                ),
+                (
+                        [7, 4, 1, ], -1, [7, 4, ],
+                ),
+                (
+                        [7, 4, 1, ], -2, [7, 1, ],
+                ),
+                (
+                        [7, 4, 1, ], -3, [4, 1, ],
+                ),
+        )
+    )
+    def test_SequenceLongObject_delitem(initial_sequence, index, expected):
+        obj = cSeqObject.SequenceLongObject(initial_sequence)
+        del obj[index]
+        assert list(obj) == expected
+
+
+Deleting a value with an out of range index:
+
+.. code-block:: python
+
+    from cPyExtPatt import cSeqObject
+
+    @pytest.mark.parametrize(
+        'initial_sequence, index, expected',
+        (
+                (
+                        [], 0, 'Index 0 is out of range for length 0',
+                ),
+                (
+                        [], -1, 'Index -1 is out of range for length 0',
+                ),
+                (
+                        [7, ], 1, 'Index 1 is out of range for length 1',
+                ),
+                (
+                        [7, ], -3, 'Index -3 is out of range for length 1',
+                ),
+        )
+    )
+    def test_SequenceLongObject_delitem_raises(initial_sequence, index, expected):
+        print()
+        print(initial_sequence, index, expected)
+        obj = cSeqObject.SequenceLongObject(initial_sequence)
+        print(list(obj))
+        with pytest.raises(IndexError) as err:
+            del obj[index]
+        assert err.value.args[0] == expected
 
 
 

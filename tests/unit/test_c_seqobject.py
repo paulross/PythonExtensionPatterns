@@ -194,6 +194,12 @@ def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
             (
                     [7, 4, 1, ], -1, 14, [7, 4, 14, ],
             ),
+            (
+                    [7, 4, 1, ], -2, 14, [7, 14, 1, ],
+            ),
+            (
+                    [7, 4, 1, ], -3, 14, [14, 4, 1, ],
+            ),
     )
 )
 def test_SequenceLongObject_setitem(initial_sequence, index, value, expected):
@@ -237,6 +243,15 @@ def test_SequenceLongObject_setitem_raises(initial_sequence, index, expected):
             ),
             (
                     [7, 4, ], 0, [4, ],
+            ),
+            (
+                    [7, 4, 1, ], -1, [7, 4, ],
+            ),
+            (
+                    [7, 4, 1, ], -2, [7, 1, ],
+            ),
+            (
+                    [7, 4, 1, ], -3, [4, 1, ],
             ),
     )
 )
