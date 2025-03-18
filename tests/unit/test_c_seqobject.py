@@ -16,6 +16,7 @@ def test_SequenceLongObject_dir_pre_311():
     assert result == [
         '__add__',
         '__class__',
+        '__contains__',
         '__delattr__',
         '__delitem__',
         '__dir__',
@@ -53,6 +54,7 @@ def test_SequenceLongObject_dir_311_plus():
     assert result == [
         '__add__',
         '__class__',
+        '__contains__',
         '__delattr__',
         '__delitem__',
         '__dir__',
@@ -286,6 +288,26 @@ def test_SequenceLongObject_delitem_raises(initial_sequence, index, expected):
     with pytest.raises(IndexError) as err:
         del obj[index]
     assert err.value.args[0] == expected
+
+
+@pytest.mark.parametrize(
+    'initial_sequence, value, expected',
+    (
+            (
+                    [7, ], 0, False,
+            ),
+            (
+                    [7, ], 7, True,
+            ),
+            (
+                    [1, 4, 7, ], 7, True,
+            ),
+    )
+)
+def test_SequenceLongObject_contains(initial_sequence, value, expected):
+    obj = cSeqObject.SequenceLongObject(initial_sequence)
+    result = value in obj
+    assert result == expected
 
 # @pytest.mark.parametrize(
 #     'initial_sequence, index, value, expected',

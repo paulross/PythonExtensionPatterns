@@ -562,7 +562,8 @@ The Sequence Function Table
      - ``int (*objobjproc)(PyObject*, PyObject*)``
      - Returns non-zero if the sequence contains the given object.
        Used by `PySequence_Contains()`_.
-       This slot may be left to NULL, in this case PySequence_Contains() simply traverses the sequence until it finds a match.
+       This slot may be left to NULL, in this case PySequence_Contains() simply traverses the sequence until it
+       finds a match.
    * - `sq_inplace_concat`_
      - `binaryfunc`_
      - ``PyObject *(*binaryfunc)(PyObject*, PyObject*)``
@@ -1157,6 +1158,91 @@ Deleting a value with an out of range index:
         assert err.value.args[0] == expected
 
 
+-------------------
+``sq_ass_contains``
+-------------------
+
+.. list-table:: Sequence Methods: ``sq_ass_contains``
+   :widths: 20 80
+   :header-rows: 0
+
+   * - Member
+     - `sq_ass_contains`_
+   * - Function type
+     - `objobjproc`_
+   * - Function signature
+     - ``int (*objobjproc)(PyObject*, PyObject*)``
+   * - Description
+     - Returns non-zero if the sequence contains the given object.
+       If an item in o is equal to value, return 1, otherwise return 0. On error, return -1.
+       This is equivalent to the Python expression ``value in o``.
+       Used by `PySequence_Contains()`_.
+       This slot may be left to NULL, in this case `PySequence_Contains()`_ simply traverses the sequence until it
+       finds a match.
+
+Implementation
+--------------
+
+In ``src/cpy/Object/cSeqObject.c``:
+
+.. code-block:: c
+
+    /** If an item in self is equal to value, return 1, otherwise return 0.
+     * On error, return -1. */
+    static int
+    SequenceLongObject_sq_contains(PyObject *self, PyObject *value) {
+        fprintf(
+                stdout, "%s()#%d: self=%p value=%p\n",
+                __FUNCTION__, __LINE__, (void *) self, (void *) value
+        );
+        if (!PyLong_Check(value)) {
+            /* Alternates: Could raise TypeError or return -1.
+             * Here we act benignly! */
+            return 0;
+        }
+        long c_value = PyLong_AsLong(value);
+        /* For convenience. */
+        SequenceLongObject *self_as_slo = (SequenceLongObject *) self;
+        for (Py_ssize_t i = 0; i < SequenceLongObject_sq_length(self); ++i) {
+            if (self_as_slo->array_long[i] == c_value) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+.. note::
+
+    Whilst ``SequenceLongObject_sq_contains()`` returns 0 or 1 Python code such as ``value in obj`` converts this to
+    ``False`` and ``True`` respectively
+
+Tests
+--------------
+
+Tests are in ``tests/unit/test_c_seqobject.py``:
+
+.. code-block:: python
+
+    from cPyExtPatt import cSeqObject
+
+    @pytest.mark.parametrize(
+        'initial_sequence, value, expected',
+        (
+                (
+                        [7, ], 0, False,
+                ),
+                (
+                        [7, ], 7, True,
+                ),
+                (
+                        [1, 4, 7, ], 7, True,
+                ),
+        )
+    )
+    def test_SequenceLongObject_contains(initial_sequence, value, expected):
+        obj = cSeqObject.SequenceLongObject(initial_sequence)
+        result = value in obj
+        assert result == expected
 
 
 

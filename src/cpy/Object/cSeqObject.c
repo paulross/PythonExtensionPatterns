@@ -305,13 +305,41 @@ SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value
     return 0;
 }
 
+/**
+ * If an item in self is equal to value, return 1, otherwise return 0. On error, return -1.
+ * @param self
+ * @param value
+ * @return
+ */
+static int
+SequenceLongObject_sq_contains(PyObject *self, PyObject *value) {
+    fprintf(
+            stdout, "%s()#%d: self=%p value=%p\n",
+            __FUNCTION__, __LINE__, (void *) self, (void *) value
+    );
+    if (!PyLong_Check(value)) {
+        /* Alternates: Could raise TypeError or return -1.
+         * Here we act benignly! */
+        return 0;
+    }
+    long c_value = PyLong_AsLong(value);
+    /* For convenience. */
+    SequenceLongObject *self_as_slo = (SequenceLongObject *) self;
+    for (Py_ssize_t i = 0; i < SequenceLongObject_sq_length(self); ++i) {
+        if (self_as_slo->array_long[i] == c_value) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static PySequenceMethods SequenceLongObject_sequence_methods = {
         .sq_length = (lenfunc)SequenceLongObject_sq_length,
         .sq_concat = (binaryfunc)SequenceLongObject_sq_concat,
         .sq_repeat = (ssizeargfunc)SequenceLongObject_sq_repeat,
         .sq_item = (ssizeargfunc)SequenceLongObject_sq_item,
         .sq_ass_item = (ssizeobjargproc)SequenceLongObject_sq_ass_item,
-        .sq_contains = (objobjproc)NULL,
+        .sq_contains = (objobjproc)SequenceLongObject_sq_contains,
         .sq_inplace_concat = (binaryfunc)NULL,
         .sq_inplace_repeat = (ssizeargfunc)NULL,
 };
