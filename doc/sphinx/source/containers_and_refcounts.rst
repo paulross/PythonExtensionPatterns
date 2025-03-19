@@ -1534,7 +1534,6 @@ This section describes other dictionary APIs that are simple to describe and hav
 
 .. index::
     single: Dictionary; PyDict_GetItemWithError()
-    pair: Documentation Lacunae; PyDict_GetItemWithError()
 
 .. _chapter_containers_and_refcounts.dictionaries.pydict_getitemwitherror:
 
@@ -1550,34 +1549,12 @@ The C signature is:
 
     PyObject *PyDict_GetItemWithError(PyObject *p, PyObject *key);
 
-.. warning::
+Currently, the only failure mode is if the first argument is not a dictionary.
 
-    This function is incorrectly documented as it fails to set an exception with a missing key as this code
-    demonstrates:
+For code and tests see:
 
-    .. code-block:: c
-
-        assert(!PyErr_Occurred());
-        PyObject *container = PyDict_New();
-        assert(container && Py_REFCNT(container) == 1);
-
-        PyObject *key = new_unique_string(__FUNCTION__, NULL);
-
-        assert(!PyErr_Occurred());
-        PyObject *get_item = PyDict_GetItemWithError(container, key);
-        /* This is the failure point. An exception should have been set with
-         * an absent key but it isn't.  */
-        assert(!PyErr_Occurred());
-
-        assert(get_item == NULL);
-
-        Py_DECREF(container);
-        Py_DECREF(key);
-
-    For code and tests see:
-
-    * C, in ``src/cpy/Containers/DebugContainers.c``:
-        * ``dbg_PyDict_GetItemWithError_fails()``
+* C, in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_GetItemWithError_fails()``
 
 .. index::
     single: Dictionary; PyDict_DelItem()

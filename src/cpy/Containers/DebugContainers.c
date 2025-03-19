@@ -2220,8 +2220,25 @@ void dbg_PyDict_GetItemWithError_fails(void) {
     assert(!PyErr_Occurred());
     get_item = PyDict_GetItemWithError(container, key);
     assert(get_item == NULL);
-    /* This is the failure point. An exception should have been set with an absent key but it isn't.  */
+    /* This is correct, the key is absent. */
     assert(!PyErr_Occurred());
+
+    /* So what error conditinos are handled?
+     * Firstly this will segfault. */
+#if 0
+    assert(!PyErr_Occurred());
+    get_item = PyDict_GetItemWithError(container, NULL);
+    assert(get_item == NULL);
+    assert(PyErr_Occurred());
+#endif
+
+    PyObject *new_container = PyList_New(0);
+    assert(!PyErr_Occurred());
+    get_item = PyDict_GetItemWithError(new_container, key);
+    assert(get_item == NULL);
+    assert(PyErr_Occurred());
+    PyErr_Print(); /* Clears exception. */
+    Py_DECREF(new_container);
 
     Py_DECREF(container);
     ref_count = Py_REFCNT(key);
