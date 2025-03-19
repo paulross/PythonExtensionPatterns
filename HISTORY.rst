@@ -2,7 +2,7 @@
 History
 =====================
 
-0.3.0 (TODO)
+0.3.0 (2025-03-21)
 =====================
 
 Added Chapters
@@ -29,7 +29,7 @@ Other
 
 - Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13.
 - Development Status :: 5 - Production/Stable
-- TODO: Documentation word count has gone up 50%+ from 41,000 to 66,000.
+- The documentation content, example and test code has roughly doubled since version 0.2.2.
 
 TODO
 ----
