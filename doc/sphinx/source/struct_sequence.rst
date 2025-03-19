@@ -10,6 +10,8 @@
 
 .. _namedtuple: https://docs.python.org/3/library/collections.html#collections.namedtuple
 .. _namedtuples: https://docs.python.org/3/library/collections.html#collections.namedtuple
+.. _dataclass: https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass
+.. _dataclasses: https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass
 
 .. _Struct Sequence API: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
 .. _Struct Sequence Object: https://docs.python.org/3/c-api/tuple.html#struct-sequence-objects
@@ -37,7 +39,7 @@
 Struct Sequence (a ``namedtuple`` in C)
 ==================================================
 
-A `Struct Sequence Object`_ object is, more or less, the C equivalent of Python's `namedtuple`_ type.
+A `Struct Sequence Object`_ object is, more or less, the C equivalent of Python's `namedtuple`_ type [#]_.
 
 As a reminder here is how named tuples work in Python:
 
@@ -62,6 +64,7 @@ These are very useful in creating the equivalent of a C ``struct`` in Python.
 
 .. index::
     single: Struct Sequence; Differences from namedtuple
+    pair: Documentation Lacunae; Struct Sequence vs namedtuple
 
 -------------------------------------------------------------------
 Differences Between a C Struct Sequence and a Python `namedtuple`_
@@ -861,3 +864,9 @@ Once built this can be accessed from Python (see ``tests/unit/test_c_struct_sequ
     assert err.value.args[0] == 'tuple index out of range'
     assert repr(ntuf) == "cStructSequence.NTWithUnnamedField(field_one='foo')"
     assert str(ntuf) == "cStructSequence.NTWithUnnamedField(field_one='foo')"
+
+.. Example footnote [#]_.
+
+.. rubric:: Footnotes
+
+.. [#] `namedtuples`_ have been largely superseded by `dataclasses`_ and the is no direct C equivalent for them.
