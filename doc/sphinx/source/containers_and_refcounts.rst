@@ -14,7 +14,8 @@
 .. _Py_BuildValue(): https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue
 
 
-.. index:: single: Containers
+.. index::
+    pair: Documentation Lacunae; Containers
 
 .. _chapter_containers_and_refcounts:
 
@@ -24,8 +25,9 @@ Containers and Reference Counts
 
 This chapter looks in more detail of how the Python C API works with different containers,
 such as ``tuple``, ``list``, ``set`` and ``dict`` [#]_.
-It also clarifies the Python documentation where that is inaccurate, incomplete or misleading and shows where the
-Python C API has some undocumented failure modes, some of which can lead to undefined behaviour.
+It also clarifies and correct the Python documentation where that is inaccurate, incomplete or misleading.
+This also shows where the Python C API has some undocumented failure modes, some of which can lead to undefined
+behaviour.
 
 This chapter includes examples and tests that you can step through to better understand the interplay
 between the container and the objects in that container.
@@ -93,8 +95,9 @@ The code in this chapter explores the CPython C API in several ways:
 
 * C code that can be stepped through in the debugger.
   This code is in ``src/cpy/Containers/DebugContainers.c``.
-  ``asserts`` are used to check the results, particularly reference counts.
-  It is exercised by ``src/main.c``.
+  This uses ``asserts`` to check the results, particularly reference counts, so should always be compiled with
+  ``-DDEBUG``.
+  The tests are exercised by ``src/main.c``.
 * Test code is in ``src/cpy/RefCount/cRefCount.c`` which is built into the Python module
   ``cPyExtPatt.cRefCount``.
   This can be run under ``pytest`` for multiple Python versions by ``build_all.sh``.
@@ -105,7 +108,7 @@ The code in this chapter explores the CPython C API in several ways:
 
     The examples below use code that calls a function ``new_unique_string()``.
     This function is designed to create a new, unique,  ``PyObject`` (a string)
-    that is never cached so always has a reference count of unity.
+    that is never cached so always starts with a reference count of unity.
     The implementation is in ``src/cpy/Containers/DebugContainers.c`` and looks something like this:
 
     .. code-block:: c
@@ -121,6 +124,50 @@ The code in this chapter explores the CPython C API in several ways:
             }
             return PyUnicode_FromFormat("%s-%ld", function, debug_test_count++);
         }
+
+Here is an example test function that checks that `PyTuple_SetItem()`_ *steals* a reference:
+
+.. code-block:: c
+
+    /**
+     * A function that checks whether a tuple steals a reference when using PyTuple_SetItem.
+     * This can be stepped through in the debugger.
+     * asserts are use for the test so this is expected to be run in DEBUG mode.
+     */
+    void dbg_PyTuple_SetItem_steals(void) {
+        printf("%s():\n", __FUNCTION__);
+        if (PyErr_Occurred()) {
+            fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+            PyErr_Print();
+            return;
+        }
+        assert(!PyErr_Occurred());
+        Py_ssize_t ref_count;
+
+        PyObject *container = PyTuple_New(1);
+        assert(container);
+        ref_count = Py_REFCNT(container);
+        assert(ref_count == 1);
+
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        ref_count = Py_REFCNT(value);
+        assert(ref_count == 1);
+
+        if (PyTuple_SetItem(container, 0, value)) {
+            assert(0);
+        }
+        ref_count = Py_REFCNT(value);
+        assert(ref_count == 1);
+
+        PyObject *get_item = PyTuple_GET_ITEM(container, 0);
+        ref_count = Py_REFCNT(get_item);
+        assert(ref_count == 1);
+
+        Py_DECREF(container);
+        /* NO as container deals with this. */
+        /* Py_DECREF(value); */
+        assert(!PyErr_Occurred());
+    }
 
 Firstly Tuples, I'll go into quite a lot of detail here because it is very similar to the
 C API for lists which I'll cover with more brevity in a later section.
@@ -164,8 +211,8 @@ This function returns non-zero on error, these are described below in
 The failure of `PyTuple_SetItem()`_ has serious consequences for the value
 that is intended to be inserted.
 
-Basic Usage
-^^^^^^^^^^^
+``PyTuple_SetItem()`` Basic Usage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `PyTuple_SetItem()`_ *steals* a reference, that is, the container assumes responsibility
 for freeing that value when the container is free'd ('freeing' meaning decrementing the reference count).
@@ -228,11 +275,12 @@ For example:
 
 .. index::
     single: PyTuple_SetItem(); Replacement
+    single: Documentation Lacunae; PyTuple_SetItem() Replacement
 
 .. _chapter_containers_and_refcounts.tuples.PyTuple_SetItem.replacement:
 
-Replacement
-^^^^^^^^^^^
+``PyTuple_SetItem()`` Replacement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 What happens when you use `PyTuple_SetItem()`_ to replace an existing element in a tuple?
 `PyTuple_SetItem()`_ still *steals* a reference, but what happens to the original reference?
@@ -264,6 +312,10 @@ Lets see:
         PyTuple_SetItem(container, 0, value);
         /* value ref count is still 1 as it has been *stolen*. */
 
+    Now repeat the replacement:
+
+    .. code-block:: c
+
         /* Repeating the same call will only lead to trouble later on (maybe). */
         PyTuple_SetItem(container, 0, value);
         /* And this will segfault as, during execution, it will
@@ -273,9 +325,11 @@ Lets see:
 
     What is happening is that the second time `PyTuple_SetItem()`_ is called it decrements the reference count of the
     existing member that happens to be ``value``.
-    In this case thsi brings ``value``'s reference count from one down to zero
+    In this case this brings ``value``'s reference count from one down to zero
     At that point ``value`` is free'd.
     Then `PyTuple_SetItem()`_ blithely sets ``value`` which is now, likely, garbage.
+
+    This is not described in the Python documentation.
 
     A simple change to `PyTuple_SetItem()`_ would prevent this from producing undefined behaviour by checking if the
     replacement is the same as the existing value.
@@ -294,7 +348,9 @@ For code and tests see:
     * ``test_PyTuple_SetItem_steals_replace()``
     * ``test_PyTuple_SetItem_replace_same()``
 
-.. index:: single: PyTuple_SetItem(); Failures
+.. index::
+    single: PyTuple_SetItem(); Failures
+    pair: Documentation Lacunae; PyTuple_SetItem() Failures
 
 .. _chapter_containers_and_refcounts.tuples.PyTuple_SetItem.failures:
 
@@ -317,6 +373,8 @@ For code and tests see:
         PyObject *value = new_unique_string(__FUNCTION__, NULL); /* Ref count will be 1. */
         PyTuple_SetItem(container, 1, value); /* Index out of range. */
         Py_DECREF(value); /* value has already been decref'd and free'd so this will SIGSEGV */
+
+    This is not described in the Python documentation.
 
 For code tests see, when the container is not a tuple:
 
@@ -341,23 +399,24 @@ And, when the index out of range:
 .. index::
     single: PyTuple_SET_ITEM()
     single: Tuple; PyTuple_SET_ITEM();
+    pair: Documentation Lacunae; PyTuple_SET_ITEM() Replacement
 
 ``PyTuple_SET_ITEM()``
 ----------------------
 
 `PyTuple_SET_ITEM()`_ is a function like macro that inserts an object into a tuple without any error checking
-(see :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.failures` below) although the type
-checking is performed as an assertion if Python is built in
+(see :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.failures` below).
+However type checking is performed as an assertion if Python is built in
 `debug mode <https://docs.python.org/3/using/configure.html#debug-build>`_ or
 `with assertions <https://docs.python.org/3/using/configure.html#cmdoption-with-assertions>`_.
-Because of that, it is slightly faster than `PyTuple_SetItem()`_ .
+Because of the absence of checks, it is slightly faster than `PyTuple_SetItem()`_ .
 This is usually used on newly created tuples.
 
 Importantly `PyTuple_SET_ITEM()`_ behaves **differently** to `PyTuple_SetItem()`_
 when replacing another object.
 
-Basic Usage
-^^^^^^^^^^^
+``PyTuple_SET_ITEM()`` Basic Usage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `PyTuple_SET_ITEM()`_ *steals* a reference just like `PyTuple_SetItem()`_.
 
@@ -387,8 +446,8 @@ For code and tests see:
 
 .. _chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.replacement:
 
-Replacement
-^^^^^^^^^^^
+``PyTuple_SET_ITEM()`` Replacement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `PyTuple_SET_ITEM()`_ **differs** from `PyTuple_SetItem()`_ when replacing an existing
 element in a tuple as the original reference will be leaked.
@@ -425,9 +484,13 @@ For code and tests see:
     * ``test_PyTuple_SetItem_steals_replace``
     * ``test_PyTuple_SET_ITEM_replace_same``.
 
-.. index:: single: PyTuple_SET_ITEM(); Failures
+.. index::
+    single: PyTuple_SET_ITEM(); Failures
 
 .. _chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM.failures:
+
+.. index::
+    pair: Documentation Lacunae; PyTuple_SET_ITEM() Failures
 
 ``PyTuple_SET_ITEM()`` Failures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -439,7 +502,7 @@ For code and tests see:
 
 If either of those is wrong then `PyTuple_SET_ITEM()`_ is capable of writing to arbitrary
 memory locations, and the result is likely to be tragic, mostly undefined behaviour
-and/or memory corruption:
+and/or memory corruption.
 
 Setting and Replacing ``NULL``
 ------------------------------
@@ -450,6 +513,7 @@ Both `PyTuple_SetItem()`_ and `PyTuple_SET_ITEM()`_ behave the same way.
 .. index::
     single: PyTuple_SetItem(); Setting NULL
     single: PyTuple_SET_ITEM(); Setting NULL
+    pair: Documentation Lacunae; PyTuple Setting NULL
 
 Setting ``NULL``
 ^^^^^^^^^^^^^^^^
@@ -493,11 +557,14 @@ For code and tests see:
 .. index::
     single: PyTuple_SetItem(); Replacing NULL
     single: PyTuple_SET_ITEM(); Replacing NULL
+    pair: Documentation Lacunae; PyTuple Replacing NULL
 
 Replacing ``NULL``
 ^^^^^^^^^^^^^^^^^^
 
-Replacing a ``NULL`` will not cause an error, the replaced value reference is *stolen*:
+Replacing a ``NULL`` will not cause an error, the original value is *abandoned*
+(see :ref:`chapter_containers_and_refcounts.abandoned`) and the replaced value reference is *stolen*
+(see :ref:`chapter_refcount.stolen`):
 
 .. code-block:: c
 
@@ -632,7 +699,7 @@ For code and tests see:
 Tuple Getters
 ---------------------
 
-There are these APIS for getting an item from a tuple:
+There are these APIs for getting an item from a tuple:
 
 * `PyTuple_GetItem()`_, it returns a borrowed reference and will error
   if the supplied container is not tuple or the index is negative or out of range.
@@ -669,6 +736,7 @@ Summary
 
 .. index::
     single: List
+    pair: Documentation Lacunae; Lists
 
 .. _chapter_containers_and_refcounts.lists:
 
@@ -687,6 +755,10 @@ Lists
 .. _chapter_containers_and_refcounts.lists.PyList_SET_ITEM:
 
 .. _chapter_containers_and_refcounts.lists.PyList_SET_ITEM.failures:
+
+.. index::
+    pair: Documentation Lacunae; PyList_SetItem()
+    pair: Documentation Lacunae; PyList_SET_ITEM()
 
 ``PyList_SetItem()`` and ``PyList_SET_ITEM()``
 ----------------------------------------------
@@ -748,6 +820,7 @@ For code and tests, including failure modes, see:
 .. index::
     single: PyList_Insert()
     single: List;  PyList_Insert()
+    pair: Documentation Lacunae; PyList_Insert()
 
 .. _chapter_containers_and_refcounts.lists.PyList_Insert:
 
@@ -774,10 +847,11 @@ This increments the reference count of the given value which will be decremented
 
 .. note::
 
-    `PyList_Insert()`_ does not fail because of any value of the index, either positive or negative.
+    `PyList_Insert()`_ does not fail because of any value of the index, either positive or negative (this is not
+    identified in the Python documentation).
 
-On failure the reference count of value is unchanged, returns -1, and a ``SystemError`` is set with the text
-"bad argument to internal function".
+On failure the reference count of value is unchanged, `PyList_Insert()`_ returns -1, and a ``SystemError`` is set with
+the text "bad argument to internal function".
 
 For code and tests, including failure modes, see:
 
@@ -840,12 +914,25 @@ For code and tests, including failure modes, see:
         assert(get_item == value);
 
 .. index::
+    single: List; Py_BuildValue()
+
+.. _chapter_containers_and_refcounts.lists.Py_BuildValue:
+
+``Py_BuildValue()``
+-------------------
+
+As with tuples :ref:`chapter_containers_and_refcounts.tuples.Py_BuildValue` is a very convenient way to
+create lists.
+``Py_BuildValue("[O]", value);`` will increment the refcount of value and this can, potentially, leak.
+
+.. index::
     single: PyList_GetItem()
     single: List; PyList_GetItem()
     single: PyList_GET_ITEM()
     single: List; PyList_GET_ITEM()
     single: PyList_GetItemRef()
     single: List; PyList_GetItemRef()
+    pair: Getters; List
     pair: Getters; List
 
 .. _chapter_containers_and_refcounts.lists.Getters:
@@ -915,6 +1002,8 @@ Summary
 
 .. index::
     single: Dictionary
+    pair: Documentation Lacunae; Dictionaries
+
 
 .. _chapter_containers_and_refcounts.dictionaries:
 
@@ -941,6 +1030,7 @@ The Python documentation for `PyDict_SetItem()`_ is incomplete.
 * The value's reference count will always be incremented.
 * If the key exists in the dictionary then the previous value reference count will be decremented before the value
   is replaced by the new value (and the new value reference count is incremented).
+  See :ref:`chapter_containers_and_refcounts.discarded`.
   If the key exists in the dictionary and the value is the same then this means, effectively, that reference counts of
   both key and value remain unchanged.
 
@@ -1023,6 +1113,9 @@ For code and tests see:
     is non zero.
     ``ACCEPT_SIGSEGV`` is defined in ``src/cpy/Containers/DebugContainers.h``.
 
+.. index::
+    pair: Documentation Lacunae; PyDict_SetDefault()
+
 .. _chapter_containers_and_refcounts.dictionaries.setdefault:
 
 ``PyDict_SetDefault()``
@@ -1050,6 +1143,7 @@ If the Default Value is Used
 
 If the key does *not* exist in the dictionary the reference counts of the key and default value are incremented.
 
+These reference count changes are not particularly clear from the official Python documentation.
 
 For code and tests see:
 
@@ -1067,7 +1161,7 @@ For code and tests see:
 .. index::
     single: PyDict_SetDefaultRef()
     single: Dictionary; PyDict_SetDefaultRef()
-
+    pair: Documentation Lacunae; PyDict_SetDefaultRef()
 
 ``PyDict_SetDefaultRef()`` [Python 3.13+]
 -----------------------------------------
@@ -1085,8 +1179,8 @@ The C function signature is:
 ``*result``
 ^^^^^^^^^^^
 
-Any previous ``*result`` is always *abandoned* (:ref:`chapter_containers_and_refcounts.abandoned`).
-To emphasise, there is no decrementing the reference count of the existing value  (if any).
+Any previous ``*result`` is always *abandoned* (see :ref:`chapter_containers_and_refcounts.abandoned`).
+To emphasise, there is no decrementing the reference count of the existing value (if any).
 This is important as the following code snippet shows:
 
 .. code-block:: c
@@ -1203,6 +1297,8 @@ For example:
      * result: 2 as it equals default_value.
      */
 
+These reference count changes are not particularly clear from the official Python documentation.
+
 For code and tests see:
 
 * C, in ``src/cpy/Containers/DebugContainers.c``:
@@ -1217,6 +1313,11 @@ For code and tests see:
 
 Failure
 ^^^^^^^
+
+.. todo::
+
+    PyDict_SetDefaultRef() failure modes.
+
 
 .. index::
     single: Dictionary; PyDict_GetItem()
@@ -1289,7 +1390,7 @@ The C function signature is:
 ``*result``
 ^^^^^^^^^^^
 
-Any previous ``*result`` is always *abandoned* (:ref:`chapter_containers_and_refcounts.abandoned`).
+Any previous ``*result`` is always *abandoned* (see :ref:`chapter_containers_and_refcounts.abandoned`).
 To emphasise, there is no decrementing the reference count of the existing value  (if any).
 This is important as the following code snippet shows:
 
@@ -1361,7 +1462,8 @@ The reference counts are changed as follows:
 
 - key: unchanged.
 
-``*result`` is set to ``NULL``, any previous value is *abandoned* (:ref:`chapter_containers_and_refcounts.abandoned`).
+``*result`` is set to ``NULL``, any previous value is *abandoned*
+(see :ref:`chapter_containers_and_refcounts.abandoned`).
 
 For example:
 
@@ -1805,7 +1907,7 @@ In summary:
   It is up to the caller to decrement the reference count of the returned value.
   See :ref:`chapter_containers_and_refcounts.sets.pyset_discard`.
 - `PySet_Pop()`_ does not decrement the reference count of the returned value, it is
-  *abandoned* (:ref:`chapter_containers_and_refcounts.abandoned`).
+  *abandoned* (see :ref:`chapter_containers_and_refcounts.abandoned`).
   It is up to the caller to decrement the reference count of the returned value.
   See :ref:`chapter_containers_and_refcounts.sets.pyset_pop`.
 

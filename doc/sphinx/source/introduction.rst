@@ -194,6 +194,20 @@ My advice if you are thinking about extensions:
 - Keep the CPython layer as thin as possible
 - Testing, testing testing!
 
+.. index::
+    single: Documentation Lacunae; General
+
+---------------------------------
+Python Documentation
+---------------------------------
+
+Some of the official Python documentation is wrong, misleading or missing and this project goes some way to correcting
+that.
+For example see the chapters :ref:`chapter_containers_and_refcounts`, :ref:`chapter_struct_sequence`
+and :ref:`chapter_creating_new_types`.
+There is an index entry "Documentation Lacunae" that identifies sections that improve or correct the official
+Python documentation.
+
 ---------------------------------
 Project Links
 ---------------------------------
@@ -207,8 +221,4 @@ Next up: a simple example showing the effect on code performance.
 .. rubric:: Footnotes
 
 .. [#] Huge, but pretty consistent once mastered.
-       However there are some deficiencies in the official Python documentation and some of
-       these are described in this project. For example in the chapters
-       :ref:`chapter_containers_and_refcounts`
-       and :ref:`chapter_struct_sequence`.
 .. [#] Version 0.3 of this project supports Python versions: 3.9, 3.10, 3.11, 3.12, 3.13.

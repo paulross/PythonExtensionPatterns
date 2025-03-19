@@ -4,6 +4,8 @@
 .. toctree::
     :maxdepth: 2
 
+.. _chapter_creating_new_types:
+
 .. index::
     single: New Types; Creating
 
@@ -940,6 +942,9 @@ And failure modes:
        If the value is NULL the item is deleted and the sequence concatenated (thus called by `PyObject_DelItem()`_).
        Negative indexes are handled appropriately.
        Used by `PyObject_SetItem()`_.
+
+.. index::
+    single: Documentation Lacunae; sq_ass_item
 
 Implementation
 --------------
