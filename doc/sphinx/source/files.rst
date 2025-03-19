@@ -22,7 +22,7 @@
 File Paths and Files
 **********************
 
-This chapter describes reading and writing files from CPython extensions.
+This chapter describes reading and writing files from CPython C extensions.
 
 .. index::
     single: File Paths
@@ -57,6 +57,7 @@ In summary:
 - `PyUnicode_EncodeFSDefault()`_ Takes a Python ``str`` and return a Python ``bytes`` object.
 
 The example code is in:
+
 - ``src/cpy/cFile.cpp``
 - ``src/cpy/PythonFileWrapper.h``
 - ``src/cpy/PythonFileWrapper.cpp``
@@ -308,8 +309,7 @@ A C++ Python File Wrapper
 
 In ``src/cpy/PythonFileWrapper.h`` and ``src/cpy/PythonFileWrapper.cpp`` there is a C++ class that takes a Python file
 and extracts the ``read()``, ``write()``, ``seek()`` and ``tell()`` methods that can then be used to read and write to
-the Python file from C++. Some example code is in ``src/cpy/cFile.cpp`` and some tests are in
-``tests/unit/test_c_file.py``.
+the Python file from C++.
 
 Here is the class:
 
@@ -363,4 +363,43 @@ Here is the class:
         PyObject *m_python_tell_method = NULL;
     };
 
+Some example code is in ``src/cpy/cFile.cpp``:
 
+.. code-block:: cpp
+
+    /**
+     * Wraps a Python file object.
+     */
+    static PyObject *
+    wrap_python_file(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwds) {
+        assert(!PyErr_Occurred());
+        static const char *kwlist[] = {"file_object", NULL};
+        PyObject *py_file_object = NULL;
+
+        if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", (char **) (kwlist),
+                                         &py_file_object)) {
+            return NULL;
+        }
+        PythonFileObjectWrapper py_file_wrapper(py_file_object);
+
+        /* Exercise ths wrapper by writing, reading etc. */
+        py_file_wrapper.write("Test write to python file", 25);
+        return py_file_wrapper.py_str_pointers();
+    }
+
+And some tests are in ``tests/unit/test_c_file.py``:
+
+.. code-block:: python
+
+    def test_wrap_python_file():
+        file = io.BytesIO()
+        result = cFile.wrap_python_file(file)
+        print()
+        print(' Result '.center(75, '-'))
+        print(result.decode('ascii'))
+        print(' Result DONE '.center(75, '-'))
+        print(' file.getvalue() '.center(75, '-'))
+        get_value = file.getvalue()
+        print(get_value)
+        print(' file.getvalue() DONE '.center(75, '-'))
+        assert get_value == b'Test write to python file'
