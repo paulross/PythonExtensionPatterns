@@ -23,7 +23,7 @@ Logging From C
 
 This presents a recipe for using the Python logging module in C.
 
-Many thanks to `nnathan <https://github.com/nnathan>`_ for this.
+Many thanks to `nnathan <https://github.com/nnathan>`_ for starting this.
 
 We import the module and define C equivalent logging functions that are
 compatible with the `*printf` family.
@@ -220,7 +220,8 @@ The module initialisation, this is where the logging module is imported with ``P
             goto except;
         }
         /* Adding module globals */
-        /* logging levels defined by logging module Note: In Python logging FATAL = CRITICAL */
+        /* logging levels defined by logging module.
+         * Note: In Python logging FATAL = CRITICAL */
         if (PyModule_AddIntConstant(m, "INFO", LOGGING_INFO)) {
             goto except;
         }
@@ -346,7 +347,7 @@ Here is an example output:
 Frames
 ----------------------
 
-This describes how to extract the currently executing *frame* (or call stack if you wish).
+This describes how to extract the currently executing Python *frame* (or call stack if you wish).
 
 .. index::
     single: Frames; Python
