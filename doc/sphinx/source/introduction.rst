@@ -162,8 +162,6 @@ There are common drawbacks of code generators:
 
 There are many other alternatives such as ``pypy``, ``numba`` that are worth knowing about.
 
-.. _introduction_summary_advice:
-
 ------------------------------------
 A Faustian Bargain
 ------------------------------------
@@ -179,6 +177,8 @@ quirks, to have any chance of being compatible with existing code.
 
 Python C extensions will be around for a long time.
 It is a skill worth learning.
+
+.. _introduction_summary_advice:
 
 ------------------------------------
 Summary Advice

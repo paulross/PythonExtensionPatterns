@@ -24,6 +24,13 @@ This project is primarily
 `a documentation project <http://pythonextensionpatterns.readthedocs.org/en/latest/index.html>`_
 however it does contain a lot of code examples and tests.
 
+Project Links
+=============
+
+- Source is `on GitHub <https://github.com/paulross/PythonExtensionPatterns>`_.
+- Documentation `Read the Docs <http://pythonextensionpatterns.readthedocs.org/en/latest/index.html>`_.
+- Project is `on PyPi <https://pypi.org/project/cPyExtPatt/>`_.
+
 This code can be installed as follows.
 
 Setup
@@ -197,13 +204,14 @@ Building Everything
 
 At the project root there is a script ``build_all.sh`` which, for every supported version of Python:
 
-- Creates a Python virtual environment (deleting any existing one).
-- Run ``pip install -r requirements.txt`` onn the virtual environment.
+- Builds and tests the C/C++ code.
+- Creates a Python virtual environment (optionally deleting any existing one).
+- Run ``pip install -r requirements.txt`` on the virtual environment.
 - Run ``python setup.py develop`` in that virtual environment.
 - Run ``pytest tests/``.
 - Run ``python setup.py bdist_wheel``.
 - Run ``python setup.py sdist``.
-- Create the documentation.
+- Optionally, create the documentation.
 - Report the results.
 
 The script will halt on the first error returning the error code.
