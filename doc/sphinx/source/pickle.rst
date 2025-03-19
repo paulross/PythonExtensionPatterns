@@ -17,8 +17,8 @@ some special functions.
 This example shows you how to provided pickle support for for the ``custom2.Custom`` type described in the C extension
 tutorial in the
 `Python documentation <https://docs.python.org/3/extending/newtypes_tutorial.html#adding-data-and-methods-to-the-basic-example>`_.
-This defines an ``CustomObject`` object that haas three fields; a first name, a last name  and a number.
-The ``CustomObject`` definition that needs to be pickled and un-pickled looks like this in C.
+This defines an ``CustomObject`` object that has three fields; a first name, a last name  and a number.
+The ``CustomObject`` definition that needs to be pickled and un-pickled looks like this in C:
 
 .. code-block:: c
 
@@ -28,6 +28,9 @@ The ``CustomObject`` definition that needs to be pickled and un-pickled looks li
         PyObject *last;  /* last name */
         int number;
     } CustomObject;
+
+- The example C code is in ``src/cpy/Pickle/cCustomPickle.c``.
+- The test code is in ``tests/unit/test_c_custom_pickle.py``.
 
 .. index::
     single: Pickling; Version Control
@@ -185,9 +188,10 @@ Set the ``first`` Member
 Set the ``last`` Member
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+This code is very similar to the code for the first member above.
+
 .. code-block:: c
 
-    /* Similar to self->first above. */
     temp = PyDict_GetItemString(state, "last"); /* Borrowed reference. */
     if (temp == NULL) {
         /* PyDict_GetItemString does not set any error state so we have to. */
@@ -268,8 +272,11 @@ And we are done.
         }
         int pickle_version = (int) PyLong_AsLong(temp);
         if (pickle_version != PICKLE_VERSION) {
-            PyErr_Format(PyExc_ValueError, "Pickle version mismatch. Got version %d but expected version %d.",
-                         pickle_version, PICKLE_VERSION);
+            PyErr_Format(
+                PyExc_ValueError,
+                "Pickle version mismatch. Got version %d but expected version %d.",
+                pickle_version, PICKLE_VERSION
+                );
             return NULL;
         }
 
@@ -369,16 +376,18 @@ Here is some Python code that exercises our module (tests are in ``tests/unit/te
 
     def test_module_dir():
         assert dir(cPickle) == [
-            'Custom', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__'
+            'Custom', '__doc__', '__file__', '__loader__',
+            '__name__', '__package__', '__spec__',
         ]
 
 
     ARGS_FOR_CUSTOM_CLASS = ('FIRST', 'LAST', 11)
-    PICKLE_BYTES_FOR_CUSTOM_CLASS = (b'\x80\x04\x95f\x00\x00\x00\x00\x00\x00\x00\x8c\x12cPyExtPatt.cPickle\x94'
-                                     b'\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST'
-                                     b'\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_'
-                                     b'version\x94K\x01ub.')
-
+    PICKLE_BYTES_FOR_CUSTOM_CLASS = (
+        b'\x80\x04\x95f\x00\x00\x00\x00\x00\x00\x00\x8c\x12cPyExtPatt.cPickle\x94'
+        b'\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST'
+        b'\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_'
+        b'version\x94K\x01ub.'
+    )
 
     def test_pickle_getstate():
         custom = cPickle.Custom(*ARGS_FOR_CUSTOM_CLASS)
@@ -435,6 +444,10 @@ Here is a test for that:
 
 The expected output will be something like this:
 
+.. raw:: latex
+
+    \begin{landscape}
+
 .. code-block:: text
 
     Pickled original is b'\x80\x04\x95[\x00\x00\x00\x00\x00\x00\x00\x8c\x07custom2\x94\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_version\x94K\x01ub.'
@@ -470,6 +483,10 @@ The expected output will be something like this:
       100: b    BUILD                                  Finish building an object, via __setstate__ or dict update.
       101: .    STOP                                   Stop the unpickling machine.
     highest protocol among opcodes = 4
+
+.. raw:: latex
+
+    \end{landscape}
 
 .. index::
     single: Pickling; External State
