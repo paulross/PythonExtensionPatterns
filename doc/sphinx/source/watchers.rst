@@ -20,7 +20,7 @@
     single: Watchers
 
 ======================================
-Watchers
+Watchers [Python 3.12+]
 ======================================
 
 From Python 3.12 onwards *watchers* have been added [#]_.
@@ -594,11 +594,12 @@ And it can be used like this:
     with cWatchers.PyDictWatcher(d):
         d['age'] = 42
 
-.. raw:: latex
+..
+    .. raw:: latex
 
-    [Continued on the next page]
+        [Continued on the next page]
 
-    \pagebreak
+        \pagebreak
 
 And the result on ``stdout`` is something like:
 
