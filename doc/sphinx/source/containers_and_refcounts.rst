@@ -1373,6 +1373,10 @@ For code and tests see:
 Failure
 ^^^^^^^
 
+.. todo::
+
+    PyDict_GetItemRef() failure modes.
+
 .. index::
     single: Dictionary; PyDict_Pop()
 
