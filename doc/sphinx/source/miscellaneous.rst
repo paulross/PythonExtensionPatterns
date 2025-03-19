@@ -60,7 +60,7 @@ You might not want to do this all at once so here is a technique that allows you
 over a number of releases, without you users having to change *their* code.
 
 Suppose you have a bunch of functions and classes in a Python module ``spam.py``.
-Then take all that code an put it in a file, say, ``py_spam.py``.
+Then take all that Python code an put it in a file, say, ``py_spam.py``.
 Now create an empty C Extension calling it, say, ``c_spam``.
 
 Change ``spam.py`` to be merely:
