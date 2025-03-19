@@ -154,7 +154,7 @@ Firstly the object declaration:
     typedef struct {
         PyObject_HEAD
         /* Attributes dictionary, NULL on construction,
-         8 will be populated by MyObj_getattro. */
+         * will be populated by MyObj_getattro. */
         PyObject *x_attr;
     } ObjectWithAttributes;
 
