@@ -20,6 +20,7 @@ This section describes how you write functions that accept Python ``*args`` and 
 arguments and how to extract ``PyObject`` or C fundamental types from them.
 
 
+====================================
 Specifying the Function Arguments
 ====================================
 
@@ -31,6 +32,7 @@ Two important features of CPython C functions are:
 
 These are described below.
 
+-------------------------------
 C Function Declaration
 -------------------------------
 
@@ -53,7 +55,17 @@ supress a compiler warning or error thus:
     parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs);
 
 .. index::
+    single: Parsing Arguments; ml_flags
+
+Setting the ``ml_flags`` Field
+------------------------------
+
+The `ml_flags <https://docs.python.org/3.13/c-api/structures.html#c.PyMethodDef.ml_flags>`_ field in
+`PyMethodDef <https://docs.python.org/3.13/c-api/structures.html#c.PyMethodDef>`_ specifies the form of the arguments.
+
+.. index::
     single: Parsing Arguments; No Arguments
+    single: Parsing Arguments; METH_NOARGS
 
 No Arguments
 ^^^^^^^^^^^^^^^^^^
@@ -64,6 +76,7 @@ No Arguments
 
 .. index::
     single: Parsing Arguments; One Argument
+    single: Parsing Arguments; METH_O
 
 One Argument
 ^^^^^^^^^^^^^^^^^^
@@ -74,16 +87,19 @@ One Argument
 
 .. index::
     single: Parsing Arguments; Multiple Arguments
+    single: Parsing Arguments; METH_VARARGS
 
 Multiple Positional Arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - The flags will be `METH_VARARGS <https://docs.python.org/3/c-api/structures.html#c.METH_VARARGS>`_
 - The C Function Signature will be ``PyObject *PyCFunction(PyObject *self, PyObject *args);``
-- Second value will be a sequence of arguments.
+- Second value will be a tuple of arguments.
+- `PyArg_ParseTuple()`_ is used to unpack the arguments.
 
 .. index::
     single: Parsing Arguments; Positional and Keyword Arguments
+    single: Parsing Arguments; METH_KEYWORDS
 
 Positional and Keyword Arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -91,6 +107,7 @@ Positional and Keyword Arguments
 - The flags will be `METH_NOARGS | METH_KEYWORDS <https://docs.python.org/3/c-api/structures.html#c.METH_KEYWORDS>`_
 - The C Function Signature will be ``PyObject *PyCFunctionWithKeywords(PyObject *self, PyObject *args, PyObject *kwargs);``
 - Second value will be a sequence of arguments, the third the dictionary of arguments.
+- `PyArg_ParseTupleAndKeywords()`_ is used to unpack the arguments.
 
 Documentation:
 
@@ -137,7 +154,8 @@ And this would be added to the module, say, by using:
 Parsing the Arguments
 ------------------------------
 
-Once whe have the C function correctly declared then the arguments have to parsed according to their types.
+Once we have the C function correctly declared then the arguments have to parsed according to their types and,
+if required, converted to C types (so-called "unboxing").
 This is done using the `PyArg_ParseTuple()`_ and `PyArg_ParseTupleAndKeywords()`_
 (ignoring “old-style” functions which use `PyArg_Parse <https://docs.python.org/3/c-api/arg.html#c.PyArg_Parse>`_).
 
@@ -153,7 +171,7 @@ The reference documentation is excellent: `argument parsing and building values 
 
     ``static PyObject *parse_args(PyObject *module, PyObject *args);``
 
-    Which expects the Python argument[0] to be a bytes object and the Python argument[1]
+    Which expects the Python args[0] to be a bytes object and the Python args[1]
     to be an integer by using:
 
     ``PyArg_ParseTuple(args, "Si", &arg0, &arg1)``
@@ -185,6 +203,7 @@ These examples are in ``src/cpy/cParseArgs.c`` and their tests are in ``tests/un
 
 .. index::
     single: Parsing Arguments Example; No Arguments
+    single: Parsing Arguments; METH_NOARGS
 
 No Arguments
 ------------------------------------
@@ -219,6 +238,7 @@ The Python interpreter will raise a ``TypeError`` on any arguments are offered t
 
 .. index::
     single: Parsing Arguments Example; One Argument
+    single: Parsing Arguments; METH_O
 
 One Argument
 ------------------------------------
@@ -304,6 +324,7 @@ Side note: Of course this does not protect you from malicious/badly written code
 
 .. index::
     single: Parsing Arguments Example; Variable Number of Arguments
+    single: Parsing Arguments; METH_VARARGS
 
 Variable Number of Arguments
 ----------------------------------------------------
@@ -316,7 +337,8 @@ In the following code we are expecting a bytes object, an integer and an optiona
 For demonstration purposes, this returns the same three arguments.
 In Python the equivalent function signature would be::
 
-    def parse_args(a: bytes, b: int, c: str = 'default_string') -> typing.Tuple[bytes, int, str]:
+    def parse_args(a: bytes, b: int, c: str = 'default_string') \
+        -> typing.Tuple[bytes, int, str]:
 
 Here is the C code, note the string that describes the argument types passed to ``PyArg_ParseTuple``, if these types
 are not present a ``ValueError`` will be set.
@@ -361,6 +383,7 @@ Note the wide variety of error messages that are obtained.
 .. index::
     single: Parsing Arguments Example; Variable Number of Arguments
     single: Parsing Arguments Example; Keyword Arguments
+    single: Parsing Arguments; METH_KEYWORDS
 
 Variable Number of Arguments and Keyword Arguments
 --------------------------------------------------------------------------
@@ -374,7 +397,8 @@ In the following code we are expecting a sequence and an optional integer count 
 It returns the `sequence` repeated `count` times.
 In Python the equivalent function declaration would be::
 
-    def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: = 1) -> typing.Sequence[typing.Any]:
+    def parse_args_kwargs(sequence=typing.Sequence[typing.Any], count: = 1) \
+        -> typing.Sequence[typing.Any]:
         return sequence * count
 
 Here is the C code, note the string ``"O|i"`` that describes the argument types passed to
@@ -393,7 +417,9 @@ Here is the C code, note the string ``"O|i"`` that describes the argument types 
                 NULL,
         };
 
-        if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|i", kwlist, &py_sequence, &count)) {
+        if (!PyArg_ParseTupleAndKeywords(
+                args, kwargs, "O|i", kwlist, &py_sequence, &count
+            )) {
             goto except;
         }
 
@@ -470,6 +496,7 @@ The solution is to cast away const in the call:
     single: Parsing Arguments Example; Default String Arguments
     single: Parsing Arguments Example; Default Bytes Arguments
     single: Default Arguments; C
+    single: Py_buffer
 
 Default String and Bytes Arguments
 ------------------------------------------
@@ -559,8 +586,8 @@ Suppose we want the functional equivalent of the Python function signature
 
 .. code-block:: python
 
-    def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *, kwd1: float,
-                                kwd2: int):
+    def parse_pos_only_kwd_only(pos1: str, pos2: int, /, pos_or_kwd: bytes, *,
+                                kwd1: float = 256.0, kwd2: int = -421):
         return None
 
 This is achieved by combining two techniques:
@@ -696,7 +723,7 @@ Being Pythonic with Default Mutable Arguments
 =============================================
 
 If the arguments default to some C fundamental type the code above is fine.
-However if the arguments default to Python objects then a little more work is needed.
+However if the mutable arguments default to Python objects then a little more work is needed.
 
 .. note::
 
@@ -926,7 +953,8 @@ Firstly a macro to declare the static default object:
 
 .. warning::
 
-    When  using this macro in a source file then make sure each given "name" argument is unique.
+    When  using this macro in a source file then make sure each given "name" argument is unique within the
+    translation unit.
 
 And a macro to set it:
 
@@ -937,7 +965,7 @@ And a macro to set it:
             name = default_##name;        \
         }
 
-And a macro to chek the type of the argument:
+And a macro to check the type of the argument:
 
 .. code-block:: c
 
