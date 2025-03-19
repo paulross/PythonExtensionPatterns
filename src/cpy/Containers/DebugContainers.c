@@ -2190,6 +2190,48 @@ void dbg_PyDict_GetItemRef(void) {
 
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
+/**
+ * This tests PyDict_GetItemWithError which contrary to the Python documentation
+ * does *not* set an exception if the key exists.
+ */
+void dbg_PyDict_GetItemWithError_fails(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+    PyObject *get_item;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+
+    // No Key in the dictionary, exception set.
+    assert(!PyErr_Occurred());
+    get_item = PyDict_GetItemWithError(container, key);
+    assert(get_item == NULL);
+    /* This is the failure point. An exception should have been set with an absent key but it isn't.  */
+    assert(!PyErr_Occurred());
+
+    Py_DECREF(container);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+
+    Py_DECREF(key);
+
+    assert(!PyErr_Occurred());
+}
+
 #pragma mark - Dictionaries - deleters
 
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13

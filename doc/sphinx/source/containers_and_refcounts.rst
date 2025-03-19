@@ -1416,8 +1416,8 @@ Key Exists
 If the key already exists in the dictionary `PyDict_Pop()`_ returns 1.
 The reference counts are changed as follows:
 
-- key: unchanged.
-- value: incremented by one
+- key: decremented by one
+- value: unchanged.
 
 ``*result`` is equal to the stored value.
 
@@ -1445,6 +1445,8 @@ For example:
      * val: 2
      * result: 2 as it equals val.
      */
+
+.. code-block:: c
 
 For code and tests see:
 
@@ -1508,6 +1510,11 @@ For code and tests see:
 Failure
 ^^^^^^^
 
+.. todo::
+
+    Finish Dictionary ``PyDict_Pop()`` Failure
+
+
 .. index::
     single: Dictionary; Other APIs
 
@@ -1520,9 +1527,16 @@ This section describes other dictionary APIs that are simple to describe and hav
 
     There are no tests for many of these APIs in the current version of this project.
 
+.. todo::
+
+    Finish Dictionary "Other APIs"
+
 
 .. index::
     single: Dictionary; PyDict_GetItemWithError()
+    pair: Documentation Lacunae; PyDict_GetItemWithError()
+
+.. _chapter_containers_and_refcounts.dictionaries.pydict_getitemwitherror:
 
 ``PyDict_GetItemWithError()``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1536,6 +1550,34 @@ The C signature is:
 
     PyObject *PyDict_GetItemWithError(PyObject *p, PyObject *key);
 
+.. warning::
+
+    This function is incorrectly documented as it fails to set an exception with a missing key as this code
+    demonstrates:
+
+    .. code-block:: c
+
+        assert(!PyErr_Occurred());
+        PyObject *container = PyDict_New();
+        assert(container && Py_REFCNT(container) == 1);
+
+        PyObject *key = new_unique_string(__FUNCTION__, NULL);
+
+        assert(!PyErr_Occurred());
+        PyObject *get_item = PyDict_GetItemWithError(container, key);
+        /* This is the failure point. An exception should have been set with
+         * an absent key but it isn't.  */
+        assert(!PyErr_Occurred());
+
+        assert(get_item == NULL);
+
+        Py_DECREF(container);
+        Py_DECREF(key);
+
+    For code and tests see:
+
+    * C, in ``src/cpy/Containers/DebugContainers.c``:
+        * ``dbg_PyDict_GetItemWithError_fails()``
 
 .. index::
     single: Dictionary; PyDict_DelItem()
@@ -1554,6 +1596,9 @@ The C function signature is:
 
     int PyDict_DelItem(PyObject *p, PyObject *key);
 
+.. todo::
+
+    Complete ``PyDict_DelItem()`` with code examples.
 
 .. index::
     single: Dictionary; PyDict_Items()
@@ -1572,6 +1617,9 @@ The C function signature is:
 
     Pyobject *PyDict_Items(PyObject *p);
 
+.. todo::
+
+    Complete ``PyDict_Items()`` with code examples.
 
 .. index::
     single: Dictionary; PyDict_Keys()
@@ -1590,6 +1638,9 @@ The C function signature is:
 
     Pyobject *PyDict_Keys(PyObject *p);
 
+.. todo::
+
+    Complete ``PyDict_Keys()`` with code examples.
 
 .. index::
     single: Dictionary; PyDict_Values()
@@ -1608,6 +1659,9 @@ The C function signature is:
 
     Pyobject *PyDict_Values(PyObject *p);
 
+.. todo::
+
+    Complete ``PyDict_Values()`` with code examples.
 
 .. index::
     single: Dictionary; PyDict_Next()
@@ -1623,6 +1677,10 @@ The C function signature is:
 
     int PyDict_Next(PyObject *p, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue);
 
+.. todo::
+
+    Complete ``PyDict_Next()`` with code examples.
+
 .. index::
     single: Dictionary; Py_BuildValue()
 
@@ -1632,7 +1690,6 @@ The C function signature is:
 `Py_BuildValue()`_ is a very convenient way to create dictionaries.
 ``Py_BuildValue("{OO}", key, value);`` will increment the refcount of the key and value and this can,
 potentially, leak.
-
 
 .. Links, mostly to the Python documentation:
 
@@ -1898,6 +1955,12 @@ Dictionaries
   See :ref:`chapter_containers_and_refcounts.dictionaries.setitem.failure`.
 - `PyDict_SetDefault()`_ has generally graceful behaviour on failure.
   See :ref:`chapter_containers_and_refcounts.dictionaries.setdefault`.
+- `PyDict_GetItemWithError()`_ is incorrectly implemented or documented.
+  See :ref:`chapter_containers_and_refcounts.dictionaries.pydict_getitemwitherror`.
+
+.. todo::
+
+    Complete the summary of dictionary APIs and their documentation lacunae.
 
 Sets
 --------------

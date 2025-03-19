@@ -70,6 +70,7 @@ void dbg_PyDict_GetItem(void);
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 void dbg_PyDict_GetItemRef(void);
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+void dbg_PyDict_GetItemWithError_fails(void);
 
 #pragma mark - Dictionaries - deleters
 
