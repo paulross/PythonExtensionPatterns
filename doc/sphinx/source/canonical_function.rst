@@ -4,6 +4,8 @@
 .. index::
     single: C Functions; Coding Pattern
 
+.. _chapter_function_pattern:
+
 ===========================================
 A Pythonic Coding Pattern for C Functions
 ===========================================
@@ -11,11 +13,12 @@ A Pythonic Coding Pattern for C Functions
 Principle
 ===============
 
-To avoid all the errors we have seen it is useful to have a C coding pattern for handling ``PyObjects`` that does the following:
+To avoid all the errors we have seen, particularly in :ref:`chapter_refcount` it is useful to have a C coding pattern
+for handling ``PyObjects`` that does the following:
 
 * No early returns and a single place for clean up code.
 * Borrowed references incref'd and decref'd correctly.
-* No stale Exception from previous execution path.
+* No stale Exception from a previous execution path.
 * Exceptions set and tested.
 * NULL is returned when an exception is set.
 * Non-NULL is returned when no exception is set.
@@ -56,15 +59,17 @@ Check that there are no lingering Exceptions:
 
         assert(! PyErr_Occurred());
 
-An alternative check for no lingering Exceptions:
+An alternative check for no lingering Exceptions with non-debug builds:
 
 .. code-block:: c
 
         if(PyErr_Occurred()) {
+            PyObject_Print(PyErr_Occurred(), stdout, Py_PRINT_RAW);
             goto except;
         }
 
-Now we assume that any argument is a "Borrowed" reference so we increment it (we need a matching ``Py_DECREF`` before function exit, see below). The first pattern assumes a non-NULL argument.
+Now we assume that any argument is a "Borrowed" reference so we increment it (we need a matching ``Py_DECREF`` before
+function exit, see below). The first pattern assumes a non-NULL argument.
 
 .. code-block:: c
 
@@ -79,9 +84,10 @@ If you are willing to accept NULL arguments then this pattern would be more suit
         Py_INCREF(arg_1);
     }
     
-Of course the same test must be used when calling ``Py_DECREF``, or just use ``Py_XDECREF``.
+Or just use ``Py_XINCREF``.
 
-Now we create any local objects, if they are "Borrowed" references we need to incref them. With any abnormal behaviour we do a local jump straight to the cleanup code.
+Now we create any local objects, if they are "Borrowed" references we need to incref them.
+With any abnormal behaviour we do a local jump straight to the cleanup code.
 
 .. code-block:: c
 
@@ -173,7 +179,8 @@ Here is the complete code with minimal comments:
         assert(arg_1);
         Py_INCREF(arg_1);
     
-        /* obj_a = ...; */
+        /* Create obj_a = ...; */
+
         if (! obj_a) {
             PyErr_SetString(PyExc_ValueError, "Ooops.");
             goto except;

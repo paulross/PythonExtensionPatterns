@@ -22,6 +22,7 @@ These CPython calls are the most useful:
 * ``PyErr_Format(...)`` - To set an exception type with a formatted string.
   `PyErr_Format() documentation <https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Format>`_
 * ``PyErr_Occurred()`` - To check if an exception has already been set in the flow of control.
+  This returns the current exception or NULL if nothing set.
   `PyErr_Occurred() documentation <https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred>`_
 * ``PyErr_Clear()`` - Clearing any set exceptions, have good reason to do this!
   `PyErr_Clear() documentation <https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Clear>`_
