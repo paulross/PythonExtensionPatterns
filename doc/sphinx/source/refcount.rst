@@ -4,8 +4,6 @@
 .. toctree::
     :maxdepth: 3
 
-.. _chapter_refcount:
-
 ..
     .. _Reference Counting: https://docs.python.org/3.9/c-api/refcounting.html
 
@@ -14,6 +12,8 @@
 .. _Py_XINCREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_XINCREF
 .. _Py_DECREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_DECREF
 .. _Py_XDECREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_XDECREF
+
+.. _chapter_refcount:
 
 .. index::
     single: Reference Counts

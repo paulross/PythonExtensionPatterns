@@ -713,11 +713,11 @@ Here is the C code.
         return ret;
     }
 
-.. _cpython_default_mutable_arguments:
-
 .. index::
     single: Parsing Arguments Example; Default Mutable Arguments
     single: Default Arguments, Mutable; C
+
+.. _cpython_default_mutable_arguments:
 
 Being Pythonic with Default Mutable Arguments
 =============================================

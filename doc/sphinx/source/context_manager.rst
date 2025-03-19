@@ -4,6 +4,10 @@
 .. toctree::
     :maxdepth: 3
 
+.. _context manger: https://docs.python.org/3/glossary.html#term-context-manager>
+.. _\__enter__(): https://docs.python.org/3/library/stdtypes.html#contextmanager.__enter__
+.. _\__exit__(): https://docs.python.org/3/library/stdtypes.html#contextmanager.__exit__
+
 .. _chapter_context_manager:
 
 .. index::
@@ -14,7 +18,6 @@ Context Managers
 ***************************
 
 This chapter describes how to write
-`context mangers <https://docs.python.org/3/glossary.html#term-context-manager>`_
 for your C objects.
 
 .. index::
@@ -24,8 +27,7 @@ for your C objects.
 C Functions
 ===========================
 
-This is a summary of what is required for the C functions implementing a context
-manager.
+This is a summary of what is required for the C functions implementing a `context manger`_.
 The is no specific ``tp_...`` slot for the context manager functions ``__enter__`` and ``__exit__``, instead they are added
 to the object as named, looked up, Python methods.
 
@@ -35,19 +37,6 @@ to the object as named, looked up, Python methods.
 --------------------------------------
 ``__enter__``
 --------------------------------------
-
-Note that ``__enter__`` is declared with ``METH_NOARGS``.
-Link to the Python documentation for
-`__enter__ <https://docs.python.org/3/library/stdtypes.html#contextmanager.__enter__>`_.
-
-.. code-block:: c
-
-    static PyMethodDef ContextManager_methods[] = {
-        {"__enter__", (PyCFunction) ContextManager_enter, METH_NOARGS,
-                        PyDoc_STR("__enter__() -> ContextManager")},
-        /* ... */
-        {NULL, NULL, 0, NULL} /* sentinel */
-    };
 
 The C function must, at least, increment the reference count of ``self`` and
 return ``self``:
@@ -68,20 +57,8 @@ return ``self``:
 ``__exit__``
 --------------------------------------
 
-The ``__exit__`` function is declared thus.
+The `__exit__()`_ function is declared thus.
 It takes three arguments so ``METH_VARARGS`` is used.
-Link to the Python documentation for
-`__exit__ <https://docs.python.org/3/library/stdtypes.html#contextmanager.__exit__>`_.
-
-.. code-block:: c
-
-    static PyMethodDef ContextManager_methods[] = {
-        {"__exit__", (PyCFunction) ContextManager_exit, METH_VARARGS,
-                        PyDoc_STR("__exit__(exc_type, exc_value, exc_tb) -> bool")},
-        /* ... */
-        {NULL, NULL, 0, NULL} /* sentinel */
-    };
-
 The three arguments are each ``None`` if no exception has been raised within
 the ``with`` block.
 If an exception *has* been raised within the ``with`` block then the
@@ -108,6 +85,24 @@ CPython interpreter:
         /* Stuff. */
         Py_RETURN_FALSE;
     }
+
+--------------------------------------
+Method declarations
+--------------------------------------
+
+Note that `__enter__()`_ is declared with ``METH_NOARGS`` and `__exit__()`_  is declared with ``METH_VARARGS``:
+
+.. code-block:: c
+
+    static PyMethodDef ContextManager_methods[] = {
+        /* ... */
+        {"__enter__", (PyCFunction) ContextManager_enter, METH_NOARGS,
+                        PyDoc_STR("__enter__() -> ContextManager")},
+        {"__exit__", (PyCFunction) ContextManager_exit, METH_VARARGS,
+                        PyDoc_STR("__exit__(exc_type, exc_value, exc_tb) -> bool")},
+        /* ... */
+        {NULL, NULL, 0, NULL} /* sentinel */
+    };
 
 =================================
 Understanding the Context Manager
@@ -153,14 +148,14 @@ The sequence of reference count changes are as follows:
    (to 2) and then call ``__enter__`` that is implemented in our C function
    ``ContextManager_enter``.
 #. Our ``ContextManager_enter`` function increments the reference count, so it is now 3.
-#. As the context manager exists the scope of the ``with`` statement the CPython interpreter
+#. As the context manager ends the ``with`` statement the CPython interpreter
    decrements the reference count *twice* to the value 1.
    The logic is:
 
     #. Decrement the reference count once as we are exiting the ``with`` statement. The reference count is now 2.
     #. Did the ``with`` statement have a target? If not, as in this case, then decrement the reference count once more. The reference count is now 1.
 
-#. The CPython interpreter then calls ``__exit__`` which is implemented in our function
+#. after the ``pass`` statement the CPython interpreter then calls ``__exit__`` which is implemented in our function
    ``ContextManager_exit``.
    This does not change the reference count which remains at 1.
 #. As the context manager goes out of scope the CPython interpreter decrements the reference
@@ -211,9 +206,9 @@ The sequence of reference count changes are now as follows:
 #. As above, the reference count becomes 1.
 #. As above, the reference count becomes 2.
 #. As above, the reference count becomes 3.
-#. As the context manager exists the scope of the ``with`` statement the CPython interpreter
-   decrements the reference count just *once* to the value 2 as there *is* a target.
-#. The CPython interpreter then calls ``__exit__`` which is implemented in our function
+#. As the context manager ends the ``with`` statement the CPython interpreter
+   decrements the reference count just *once* to the value 2 as there *is* a target, called ``context`` in this case.
+#. After the ``pass`` statement the CPython interpreter then calls ``__exit__`` which is implemented in our function
    ``ContextManager_exit``.
    This does not change the reference count which remains at 2.
 #. As the context manager goes out of scope the CPython interpreter decrements the reference
@@ -256,6 +251,10 @@ First the object declaration, allocation and de-allocation functions:
         PyObject_Del(self);
     }
 
+-----------------------------------------
+``__enter__`` and ``__exit__`` Methods
+-----------------------------------------
+
 The ``__enter__`` and ``__exit__`` methods:
 
 .. code-block:: c
@@ -279,6 +278,11 @@ The ``__enter__`` and ``__exit__`` methods:
             {NULL, NULL, 0, NULL} /* sentinel */
     };
 
+
+-----------------------------------------
+Type Declaration
+-----------------------------------------
+
 The type declaration:
 
 .. code-block:: c
@@ -293,6 +297,9 @@ The type declaration:
             .tp_new = (newfunc) ContextManager_new,
     };
 
+-----------------------------------------
+Module
+-----------------------------------------
 
 Finally the module:
 
@@ -326,11 +333,9 @@ Finally the module:
         return NULL;
     }
 
-.. note::
-
-    The actual code in ``src/cpy/CtxMgr/cCtxMgr.c`` contains extra trace
-    reporting that confirms the reference counts and (no) memory leakage.
-
+-----------------------------------------
+Setup
+-----------------------------------------
 
 This code is added to the ``setup.py`` file:
 
@@ -351,3 +356,188 @@ And can be used thus:
 
     with cCtxMgr.ContextManager():
         pass
+
+-----------------------------------------
+Testing
+-----------------------------------------
+
+The actual code in ``src/cpy/CtxMgr/cCtxMgr.c`` contains extra trace reporting that confirms the reference counts and
+(no) memory leakage.
+
+This can be run with:
+
+.. code-block:: bash
+
+    $ pytest tests/unit/test_c_ctxmgr.py -vs
+
+This test:
+
+.. code-block:: python
+
+    def test_very_simple():
+        print()
+        with cCtxMgr.ContextManager():
+            pass
+
+Gives this output:
+
+.. code-block:: text
+
+    tests/unit/test_c_ctxmgr.py::test_very_simple
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+         ContextManager_exit STRT REFCNT = 1
+         ContextManager_exit DONE REFCNT = 1
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546088432
+
+This test:
+
+.. code-block:: python
+
+    def test_simple():
+        print()
+        with cCtxMgr.ContextManager() as context:
+            assert sys.getrefcount(context) == 3
+            assert context.len_buffer_lifetime() == cCtxMgr.BUFFER_LENGTH
+            assert context.len_buffer_context() == cCtxMgr.BUFFER_LENGTH
+        assert sys.getrefcount(context) == 2
+        assert context.len_buffer_lifetime() == cCtxMgr.BUFFER_LENGTH
+        assert context.len_buffer_context() == 0
+        del context
+
+Gives this output:
+
+.. code-block:: text
+
+    tests/unit/test_c_ctxmgr.py::test_simple
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+
+
+This test:
+
+.. code-block:: python
+
+    def test_memory():
+        proc = psutil.Process()
+        print()
+        print(f'RSS START: {proc.memory_info().rss:12,d}')
+        for i in range(8):
+            print(f'RSS START {i:5d}: {proc.memory_info().rss:12,d}')
+            with cCtxMgr.ContextManager() as context:
+                print(f'RSS START CTX: {proc.memory_info().rss:12,d}')
+                # Does not work in the debugger due to introspection.
+                # assert sys.getrefcount(context) == 3
+                assert context.len_buffer_lifetime() == cCtxMgr.BUFFER_LENGTH
+                assert context.len_buffer_context() == cCtxMgr.BUFFER_LENGTH
+                print(f'RSS   END CTX: {proc.memory_info().rss:12,d}')
+            # Does not work in the debugger due to introspection.
+            # assert sys.getrefcount(context) == 2
+            assert context.len_buffer_lifetime() == cCtxMgr.BUFFER_LENGTH
+            assert context.len_buffer_context() == 0
+            del context
+            print(f'RSS   END {i:5d}: {proc.memory_info().rss:12,d}')
+        print(f'RSS  END: {proc.memory_info().rss:12,d}')
+
+Gives this output:
+
+.. code-block:: text
+
+    tests/unit/test_c_ctxmgr.py::test_memory
+    RSS START:  300,032,000
+    RSS START     0:  300,048,384
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+    RSS START CTX:  300,048,384
+    RSS   END CTX:  300,048,384
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+    RSS   END     0:  300,048,384
+    RSS START     1:  300,048,384
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+    RSS START CTX:  300,048,384
+    RSS   END CTX:  300,048,384
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+    RSS   END     1:  300,048,384
+    RSS START     2:  300,048,384
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+    RSS START CTX:  300,048,384
+    RSS   END CTX:  300,048,384
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+    RSS   END     2:  300,048,384
+    RSS START     3:  300,048,384
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+    RSS START CTX:  300,048,384
+    RSS   END CTX:  300,048,384
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+    RSS   END     3:  300,048,384
+    RSS START     4:  300,048,384
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+    RSS START CTX:  300,048,384
+    RSS   END CTX:  300,048,384
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+    RSS   END     4:  300,048,384
+    RSS START     5:  300,048,384
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+    RSS START CTX:  300,048,384
+    RSS   END CTX:  300,048,384
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+    RSS   END     5:  300,048,384
+    RSS START     6:  300,048,384
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+    RSS START CTX:  300,048,384
+    RSS   END CTX:  300,048,384
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+    RSS   END     6:  300,048,384
+    RSS START     7:  300,048,384
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+    RSS START CTX:  300,048,384
+    RSS   END CTX:  300,048,384
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4546096048
+    RSS   END     7:  300,048,384
+    RSS  END:  300,048,384
