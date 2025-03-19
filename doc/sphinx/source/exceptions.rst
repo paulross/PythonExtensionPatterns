@@ -25,6 +25,8 @@ These CPython calls are the most useful:
   `PyErr_Occurred() documentation <https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred>`_
 * ``PyErr_Clear()`` - Clearing any set exceptions, have good reason to do this!
   `PyErr_Clear() documentation <https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Clear>`_
+* ``PyErr_Print()`` - Print a representation of the current exception then clear any set exceptions.
+  `PyErr_Print() documentation <https://docs.python.org/3.13/c-api/exceptions.html#c.PyErr_Print>`_
 
 Indicating an error condition is a two stage process; your code must register an exception and then indicate failure
 by returning ``NULL``. Here is a C function doing just that:
@@ -169,9 +171,10 @@ The following C code is equivalent to the Python code:
     class SpecialisedError(ExceptionBase):
         pass
 
-This can be done quite easily using either the ``PyErr_NewException`` or the ``PyErr_NewExceptionWithDoc`` functions.
-These create new exception classes that can be added to a module.
-For example:
+Declaring Specialised Exceptions
+---------------------------------
+
+Firstly declare the ``PyObject *`` exception:
 
 .. code-block:: c
 
@@ -181,6 +184,11 @@ For example:
     static PyObject *SpecialisedError = NULL;
 
     /* NOTE: Functions that might raise one of these exceptions will go here. See below. */
+
+
+
+Example Module
+-----------------------------------
 
 Now define the module, ``cExceptions_methods`` is explained later:
 
@@ -195,7 +203,12 @@ Now define the module, ``cExceptions_methods`` is explained later:
             NULL, NULL, NULL, NULL,
     };
 
-Initialise the module, this registers the exception types and the class hierarchy:
+Initialising Specialised Exceptions
+-----------------------------------
+
+This can be done quite easily using either the ``PyErr_NewException`` or the ``PyErr_NewExceptionWithDoc`` functions.
+These create new exception classes that can be added to a module.
+For example, initialise the module, this registers the exception types and the class hierarchy:
 
 .. code-block:: c
 
@@ -245,6 +258,9 @@ Initialise the module, this registers the exception types and the class hierarch
         /* END: Initialise exceptions here. */
         return m;
     }
+
+Raising Specialise Exceptions
+-----------------------------
 
 To illustrate how you raise one of these exceptions suppose we have a function to test raising one of these exceptions:
 
