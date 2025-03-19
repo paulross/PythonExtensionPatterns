@@ -47,13 +47,6 @@ Programmatically from Within a Python Process
 
 The ``sysconfig`` module contains information about the build environment for the particular version of Python:
 
-.. code-block:: bash
-
-    $ python3
-    Python 3.13.0b3 (v3.13.0b3:7b413952e8, Jun 27 2024, 09:57:31) [Clang 15.0.0 (clang-1500.3.9.4)] on darwin
-    Type "help", "copyright", "credits" or "license" for more information.
-    >>>
-
 .. code-block:: python
 
     >>> import sysconfig
@@ -244,3 +237,5 @@ This looks something like this (wrapped for clarity and replaced user with <USER
         -Wno-unused-variable -Wno-unused-parameter -fexceptions \
         -Wno-c99-extensions -Wno-c++11-extensions -O0 -g3 -ggdb \
         -Wno-unused-function
+
+This would be fairly easy to parse, perhaps by ``setup.py``.
