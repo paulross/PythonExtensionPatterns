@@ -501,7 +501,7 @@ Suppose that we have a simple struct representing a transaction.
         double amount;      /* The transaction amount. */
     };
 
-An we have a C function that can recover a transaction given its ID:
+And we have a C function that can recover a transaction given its ID:
 
 .. code-block:: c
 
@@ -659,6 +659,7 @@ There some illustrative tests ``test_excess_nt_*`` in ``tests/unit/test_c_struct
 .. index::
     single: Struct Sequence; Unnamed Fields
     single: Struct Sequence; PyStructSequence_UnnamedField
+    pair: Documentation Lacunae; Struct Sequence Unnamed Fields
 
 ---------------------------------------------
 Unnamed Fields
@@ -671,7 +672,7 @@ here.
 
 .. note::
 
-    Unnamed fields doe not appear to work in Python versions prior to 3.11 with the following compile time error:
+    Unnamed fields does not appear to work in Python versions prior to 3.11 with the following compile time error:
 
     ``E   ImportError: dlopen(... cStructSequence.cpython-310-darwin.so, 0x0002): symbol not found in flat namespace '_PyStructSequence_UnnamedField'``
 
@@ -859,9 +860,9 @@ Once built this can be accessed from Python (see ``tests/unit/test_c_struct_sequ
     assert ntuf.n_unnamed_fields == 1
     assert tuple(ntuf) == ('foo',)
     assert ntuf[0] == 'foo'
-    # Will raise an IndexError
-    # assert ntuf[1] == 'bar'
-    assert err.value.args[0] == 'tuple index out of range'
+    # Will raise an IndexError: 'tuple index out of range'
+    with pytest.raises(IndexError) as err:
+        assert ntuf[1] == 'bar'
     assert repr(ntuf) == "cStructSequence.NTWithUnnamedField(field_one='foo')"
     assert str(ntuf) == "cStructSequence.NTWithUnnamedField(field_one='foo')"
 
