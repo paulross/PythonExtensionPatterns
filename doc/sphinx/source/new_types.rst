@@ -1417,3 +1417,5 @@ TODOs:
     "Creating New Types": Add a section on making an object act like a mapping object using
     `tp_as_mapping <https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_mapping>`_.
     See also `Mapping Object Structures <https://docs.python.org/3/c-api/typeobj.html#mapping-structs>`_
+
+    NOTE: This is rarely used in the Python stdlib, really only for dictionaries.
