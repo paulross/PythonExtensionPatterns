@@ -547,7 +547,7 @@ This function is added to the cIterator module thus:
 
     static PyMethodDef cIterator_methods[] = {
             {"iterate_and_print", (PyCFunction) iterate_and_print, METH_VARARGS,
-             "Iteratee through the argument printing the values."},
+             "Iterate through the argument printing the values."},
             {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
