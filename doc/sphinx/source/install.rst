@@ -29,7 +29,7 @@ Project Links
 
 - Source is `on GitHub <https://github.com/paulross/PythonExtensionPatterns>`_.
 - Documentation `Read the Docs <http://pythonextensionpatterns.readthedocs.org/en/latest/index.html>`_.
-- Project is `on PyPi <https://pypi.org/project/cPyExtPatt/>`_.
+- Project is `on PyPi <https://pypi.org/project/cPyExtPatt>`_.
 
 This code can be installed as follows.
 
