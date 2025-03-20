@@ -30,7 +30,7 @@ Other
 - Python versions supported: 3.9, 3.10, 3.11, 3.12, 3.13.
 - Development Status :: 5 - Production/Stable
 - The documentation content, example and test code has roughly doubled since version 0.2.2.
-- PDF Documentation is 329 pages.
+- PDF Documentation is 339 pages.
 
 TODO
 ----
