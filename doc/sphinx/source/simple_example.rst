@@ -49,7 +49,7 @@ which will give us access to the whole Python C API (we will use that later on):
 
 .. code-block:: c
 
-    #define PPY_SSIZE_T_CLEAN
+    #define PY_SSIZE_T_CLEAN
     #include "Python.h"
 
     long fibonacci(long index) {
