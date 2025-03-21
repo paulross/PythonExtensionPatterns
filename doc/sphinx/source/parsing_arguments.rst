@@ -62,8 +62,8 @@ supress a compiler warning or error thus:
 Setting the ``ml_flags`` Field
 ------------------------------
 
-The `ml_flags <https://docs.python.org/3.13/c-api/structures.html#c.PyMethodDef.ml_flags>`_ field in
-`PyMethodDef <https://docs.python.org/3.13/c-api/structures.html#c.PyMethodDef>`_ specifies the form of the arguments.
+The `ml_flags <https://docs.python.org/3/c-api/structures.html#c.PyMethodDef.ml_flags>`_ field in
+`PyMethodDef <https://docs.python.org/3/c-api/structures.html#c.PyMethodDef>`_ specifies the form of the arguments.
 
 .. index::
     single: METH_NOARGS

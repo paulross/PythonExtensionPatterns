@@ -27,7 +27,7 @@ These CPython calls are the most useful:
 * ``PyErr_Clear()`` - Clearing any set exceptions, have good reason to do this!
   `PyErr_Clear() documentation <https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Clear>`_
 * ``PyErr_Print()`` - Print a representation of the current exception then clear any set exceptions.
-  `PyErr_Print() documentation <https://docs.python.org/3.13/c-api/exceptions.html#c.PyErr_Print>`_
+  `PyErr_Print() documentation <https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Print>`_
 
 Indicating an error condition is a two stage process; your code must register an exception and then indicate failure
 by returning ``NULL``. Here is a C function doing just that:

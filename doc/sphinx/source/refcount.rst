@@ -5,13 +5,16 @@
     :maxdepth: 3
 
 ..
-    .. _Reference Counting: https://docs.python.org/3.9/c-api/refcounting.html
+    .. _Reference Counting: https://docs.python.org/3/c-api/refcounting.html
 
-.. _Py_REFCNT(): https://docs.python.org/3.9/c-api/structures.html#c.Py_REFCNT
-.. _Py_INCREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_INCREF
-.. _Py_XINCREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_XINCREF
-.. _Py_DECREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_DECREF
-.. _Py_XDECREF(): https://docs.python.org/3.9/c-api/refcounting.html#c.Py_XDECREF
+.. _Py_REFCNT(): https://docs.python.org/3/c-api/structures.html#c.Py_REFCNT
+.. _Py_INCREF(): https://docs.python.org/3/c-api/refcounting.html#c.Py_INCREF
+.. _Py_XINCREF(): https://docs.python.org/3/c-api/refcounting.html#c.Py_XINCREF
+.. _Py_DECREF(): https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
+.. _Py_XDECREF(): https://docs.python.org/3/c-api/refcounting.html#c.Py_XDECREF
+.. _Py_SETREF(): https://docs.python.org/3/c-api/refcounting.html#c.Py_SETREF
+.. _Py_XSETREF(): https://docs.python.org/3/c-api/refcounting.html#c.Py_XSETREF
+
 
 .. _chapter_refcount:
 
@@ -75,6 +78,17 @@ The macros to manipulate reference counts are:
        count could be anything.
    * - `Py_XDECREF()`_
      - As `Py_DECREF()`_ but does nothing if passed ``NULL``.
+   * - `Py_SETREF()`_
+     - This decrements the first arguments reference count then replaces it with the second argument.
+       Thus it gracefully replaces one ``PyObject *`` with another.
+
+       .. warning::
+            See :ref:`chapter_refcount.warning_Py_SETREF()_Py_XSETREF`.
+   * - `Py_XSETREF()`_
+     - As `Py_SETREF()`_ but if passed ``NULL`` as the first argument replaces the first argument with the second.
+
+       .. warning::
+            See :ref:`chapter_refcount.warning_Py_SETREF()_Py_XSETREF`.
 
 
 Here is an example of a normal ``PyObject`` creation, print and de-allocation:
@@ -200,6 +214,57 @@ And here is what happens to the memory if we use this function from Python (``cP
     >>>                         # But process still uses about 101Mb - 's' is leaked
 
 
+
+.. index::
+    single: Py_SETREF()
+    pair: Documentation Lacunae; Py_SETREF()
+    single: Py_XSETREF()
+    pair: Documentation Lacunae; Py_XSETREF()
+
+.. _chapter_refcount.warning_Py_SETREF()_Py_XSETREF:
+
+-------------------------------------------------------
+Warning About ``Py_SETREF()`` and ``Py_XSETREF()``
+-------------------------------------------------------
+
+.. warning::
+
+    `Py_SETREF()`_ and `Py_XSETREF()`_ contain a flaw.
+    The idea behind them is to 'swap' the arguments, decrementing the first argument's reference count.
+
+    The implementation (for `Py_SETREF()`_) looks like this:
+
+    .. code-block:: c
+
+        #define Py_SETREF(op, op2)                      \
+            do {                                        \
+                PyObject *_py_tmp = _PyObject_CAST(op); \
+                (op) = (op2);                           \
+                Py_DECREF(_py_tmp);                     \
+            } while (0)
+
+    However if called with both arguments pointing to the same ``PyObject *`` *and* that has a reference count of unity
+    this will deallocate the object whilst maintaining a reference to it.
+    Then a segfault is certain to happen later on as soon the de-referenced ``PyObject *`` is accessed.
+
+    The greater the first argument's reference count is, then the further away from the call to `Py_SETREF()`_ the
+    segfault will happen.
+
+    For example, in the simple case:
+
+    .. code-block:: c
+
+        PyObject *op = PyUnicode_FromString("My test string.");
+        assert(Py_REFCNT(op) == 1);
+        Py_SETREF(op, op);
+        /* This is now undefined as it is access after free
+         * and will most likely a segfault. */
+        Py_DECREF(op);
+
+    This issue is at the heart of the problem described in
+    :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem.replacement`.
+
+    A simple change to these macros would eliminate this problem.
 
 .. _chapter_refcount.warning_ref_count_unity:
 
@@ -451,7 +516,7 @@ Warning on "Stolen" References With Containers
     will increment them correctly.
 
     Unfortunately this was only made clear in the Python documentation for ``PyDict_SetItem`` in Python version 3.8+:
-    https://docs.python.org/3.8/c-api/dict.html
+    https://docs.python.org/3/c-api/dict.html
 
     This also happens with `Py_BuildValue <https://docs.python.org/3/c-api/arg.html#c.Py_BuildValue>`_ when building
     with newly created Python objects (using ``Py_BuildValue("{OO}", ...``).
@@ -557,7 +622,7 @@ At least this will get your attention!
 .. note::
 
     Incidentally from Python 3.3 onwards there is a module
-    `faulthandler <https://docs.python.org/3.3/library/faulthandler.html#module-faulthandler>`_
+    `faulthandler <https://docs.python.org/3/library/faulthandler.html#module-faulthandler>`_
     that can give useful debugging information (file ``FaultHandlerExample.py``):
 
     .. code-block:: python
