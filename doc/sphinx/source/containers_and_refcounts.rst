@@ -298,6 +298,8 @@ Lets see:
     /* Now value_b ref count will remain 1 and value_a ref count will have been decremented
      * In this case value_a will have been free'd. */
 
+So `PyTuple_SetItem()`_ *discards* (see :ref:`chapter_containers_and_refcounts.discarded`) the original reference.
+
 .. warning::
 
     What happens if you use `PyTuple_SetItem()`_ to replace a value with the *same* value?
@@ -334,7 +336,9 @@ Lets see:
     A simple change to `PyTuple_SetItem()`_ would prevent this from producing undefined behaviour by checking if the
     replacement is the same as the existing value.
 
-    `PyTuple_SET_ITEM()`_ does not exhibit this problem as it *abandons* values rather than *discarding* them.
+    `PyTuple_SET_ITEM()`_ does not exhibit this problem as it *abandons*
+    (see :ref:`chapter_containers_and_refcounts.abandoned`) values rather than *discarding*
+    (see :ref:`chapter_containers_and_refcounts.discarded`) them.
 
 For code and tests see:
 
@@ -1865,7 +1869,7 @@ Tuples
 - On failure `PyTuple_SetItem()`_ will decrement the reference count of the given value and this might well lead to a
   SIGSEGV.
   See :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem.failures`.
-- `PyTuple_SET_ITEM()`_ will lead to a memory leak when replacing an existing value as it abandons the previous
+- `PyTuple_SET_ITEM()`_ will lead to a memory leak when replacing an existing value as it *abandons* the previous
   reference.
   See :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SET_ITEM`.
 - `PyTuple_SET_ITEM()`_ does no error checking so is capable of writing to arbitrary memory locations on error.
@@ -1896,7 +1900,7 @@ Lists
 - On failure `PyList_SetItem()`_ will decrement the reference count of the given value and this might well lead to a
   SIGSEGV.
   See :ref:`chapter_containers_and_refcounts.lists.PyList_SET_ITEM.failures`.
-- `PyList_SET_ITEM()`_ will lead to a memory leak when replacing an existing value as it abandons the previous
+- `PyList_SET_ITEM()`_ will lead to a memory leak when replacing an existing value as it *abandons* the previous
   reference.
   See :ref:`chapter_containers_and_refcounts.lists.PyList_SET_ITEM`.
 - `PyList_SET_ITEM()`_ does no error checking so is capable of writing to arbitrary memory locations on error.
