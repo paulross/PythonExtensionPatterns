@@ -319,7 +319,7 @@ if sys.version_info.major >= 3 and sys.version_info.minor >= 12:
 # For keywords see: https://setuptools.pypa.io/en/latest/references/keywords.html
 setup(
     name=PACKAGE_NAME,
-    version='0.3.0',
+    version='0.3.1rc0',
     author='Paul Ross',
     author_email='apaulross@gmail.com',
     maintainer='Paul Ross',

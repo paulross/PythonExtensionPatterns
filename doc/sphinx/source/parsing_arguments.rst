@@ -55,8 +55,10 @@ supress a compiler warning or error thus:
     parse_args_kwargs(PyObject *Py_UNUSED(module), PyObject *args, PyObject *kwargs);
 
 .. index::
+    single: ml_flags
     single: Parsing Arguments; ml_flags
 
+------------------------------
 Setting the ``ml_flags`` Field
 ------------------------------
 
@@ -64,6 +66,7 @@ The `ml_flags <https://docs.python.org/3.13/c-api/structures.html#c.PyMethodDef.
 `PyMethodDef <https://docs.python.org/3.13/c-api/structures.html#c.PyMethodDef>`_ specifies the form of the arguments.
 
 .. index::
+    single: METH_NOARGS
     single: Parsing Arguments; No Arguments
     single: Parsing Arguments; METH_NOARGS
 
@@ -75,6 +78,7 @@ No Arguments
 - The second argument will be ``NULL``.
 
 .. index::
+    single: METH_O
     single: Parsing Arguments; One Argument
     single: Parsing Arguments; METH_O
 
@@ -86,6 +90,7 @@ One Argument
 - The second argument will be the single argument.
 
 .. index::
+    single: METH_VARARGS
     single: Parsing Arguments; Multiple Arguments
     single: Parsing Arguments; METH_VARARGS
 
@@ -98,6 +103,7 @@ Multiple Positional Arguments
 - `PyArg_ParseTuple()`_ is used to unpack the arguments.
 
 .. index::
+    single: METH_KEYWORDS
     single: Parsing Arguments; Positional and Keyword Arguments
     single: Parsing Arguments; METH_KEYWORDS
 
@@ -151,8 +157,9 @@ And this would be added to the module, say, by using:
             {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
+=====================
 Parsing the Arguments
-------------------------------
+=====================
 
 Once we have the C function correctly declared then the arguments have to parsed according to their types and,
 if required, converted to C types (so-called "unboxing").
@@ -196,15 +203,18 @@ The reference documentation is excellent: `argument parsing and building values 
     without specifying which argument it is referring to.
 
 
+====================================
 Examples
 ====================================
 
 These examples are in ``src/cpy/cParseArgs.c`` and their tests are in ``tests/unit/test_c_parse_args.py``.
 
 .. index::
+    single: METH_NOARGS
     single: Parsing Arguments Example; No Arguments
     single: Parsing Arguments; METH_NOARGS
 
+------------------------------------
 No Arguments
 ------------------------------------
 
@@ -237,9 +247,11 @@ The Python interpreter will raise a ``TypeError`` on any arguments are offered t
     };
 
 .. index::
+    single: METH_O
     single: Parsing Arguments Example; One Argument
     single: Parsing Arguments; METH_O
 
+------------------------------------
 One Argument
 ------------------------------------
 
@@ -323,9 +335,11 @@ So it is best to fail fast, an near the error site, that dastardly
 Side note: Of course this does not protect you from malicious/badly written code that decrements by more than one :-)
 
 .. index::
+    single: METH_VARARGS
     single: Parsing Arguments Example; Variable Number of Arguments
     single: Parsing Arguments; METH_VARARGS
 
+------------------------------------
 Variable Number of Arguments
 ----------------------------------------------------
 
@@ -381,10 +395,12 @@ Failure modes, when the wrong arguments are passed are tested in ``tests.unit.te
 Note the wide variety of error messages that are obtained.
 
 .. index::
+    single: METH_VARARGS
+    single: METH_KEYWORDS
     single: Parsing Arguments Example; Variable Number of Arguments
     single: Parsing Arguments Example; Keyword Arguments
-    single: Parsing Arguments; METH_KEYWORDS
 
+--------------------------------------------------------------------------
 Variable Number of Arguments and Keyword Arguments
 --------------------------------------------------------------------------
 
@@ -439,7 +455,7 @@ Here is the C code, note the string ``"O|i"`` that describes the argument types 
         return ret;
     }
 
-This function can be added to the module with both the ``METH_VARARGS`` and ``METH_KEYWORDS`` flags set:
+This function must be added to the module with both the ``METH_VARARGS`` and ``METH_KEYWORDS`` flags set:
 
 .. code-block:: c
 
@@ -498,6 +514,7 @@ The solution is to cast away const in the call:
     single: Default Arguments; C
     single: Py_buffer
 
+------------------------------------------
 Default String and Bytes Arguments
 ------------------------------------------
 
@@ -570,6 +587,7 @@ See ``tests/unit/test_c_parse_args.py`` for some Python uses of this code.
     single: Parsing Arguments Example; Positional Only Arguments
     single: Parsing Arguments Example; Keyword Only Arguments
 
+-----------------------------------------------
 Positional Only and Keyword Only Arguments
 -----------------------------------------------
 
@@ -637,6 +655,7 @@ Here is the C code:
 .. index::
     single: Parsing Arguments Example; Functional Conversion to C
 
+---------------------------------------------------------
 Parsing Arguments With Functional Conversion to C
 ---------------------------------------------------------
 
@@ -719,6 +738,7 @@ Here is the C code.
 
 .. _cpython_default_mutable_arguments:
 
+=============================================
 Being Pythonic with Default Mutable Arguments
 =============================================
 
@@ -928,6 +948,7 @@ Tests are in ``test_parse_args_with_mutable_defaults()`` in ``tests/unit/test_c_
 .. index::
     single: Parsing Arguments Example; Helper Macros
 
+=============
 Helper Macros
 =============
 
@@ -982,6 +1003,7 @@ And a macro to check the type of the argument:
 .. index::
     single: Default Arguments, Immutable; C
 
+-------------------
 Immutable Arguments
 -------------------
 
@@ -1056,6 +1078,7 @@ If you are in a C++ environment then the section on :ref:`cpp_and_cpython.handli
 .. index::
     single: Default Arguments, Mutable; C
 
+-------------------
 Mutable Arguments
 -------------------
 
