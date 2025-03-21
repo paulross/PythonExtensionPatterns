@@ -2,6 +2,11 @@
 History
 =====================
 
+0.3.1rc0 (TODO)
+=====================
+
+- Fix issue #33: Sections in the "Parsing Python Arguments" chapter are of the wrong deepth.
+
 0.3.0 (2025-03-20)
 =====================
 

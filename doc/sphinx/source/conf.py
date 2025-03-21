@@ -57,7 +57,7 @@ author = 'Paul Ross <apaulross@gmail.com>'
 # The short X.Y version.
 version = '0.3'
 # The full version, including alpha/beta/rc tags.
-release = '0.3.0'
+release = '0.3.1rc0'
 
 todo_include_todos = True
 todo_link_only = True
