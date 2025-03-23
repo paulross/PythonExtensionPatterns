@@ -264,7 +264,18 @@ Warning About ``Py_SETREF()`` and ``Py_XSETREF()``
     This issue is at the heart of the problem described in
     :ref:`chapter_containers_and_refcounts.tuples.PyTuple_SetItem.replacement`.
 
-    A simple change to these macros would eliminate this problem.
+    A simple change to these macros would eliminate this problem:
+
+    .. code-block:: c
+
+        #define Py_SETREF(op, op2)                          \
+            do {                                            \
+                if (op != op2) {                            \
+                    PyObject *_py_tmp = _PyObject_CAST(op); \
+                    (op) = (op2);                           \
+                    Py_DECREF(_py_tmp);                     \
+                }                                           \
+            } while (0)
 
 .. _chapter_refcount.warning_ref_count_unity:
 
