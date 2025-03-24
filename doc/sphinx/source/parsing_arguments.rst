@@ -157,6 +157,38 @@ And this would be added to the module, say, by using:
             {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
+Failure
+^^^^^^^^
+
+If the ml_flags are in conflict then a ``SystemError`` will be raised on import.
+
+For example, the conflict with ``METH_NOARGS | METH_KEYWORDS``:
+
+.. code-block:: c
+
+    static PyMethodDef cParseArgs_methods[] = {
+            /* ... */
+            {
+                "clear",
+                (PyCFunction) clear,
+                METH_NOARGS | METH_KEYWORDS,
+                "Documentation for clear()."
+            },
+            /* ... */
+            {NULL, NULL, 0, NULL} /* Sentinel */
+    };
+
+On import this gives:
+
+.. code-block:: python
+
+    >>> import cParseArgs
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    SystemError: clear() method: bad call flags
+
+Which identifies the problematic function but not the actual problem.
+
 =====================
 Parsing the Arguments
 =====================
