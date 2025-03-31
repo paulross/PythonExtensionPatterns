@@ -239,3 +239,11 @@ This looks something like this (wrapped for clarity and replaced user with <USER
         -Wno-unused-function
 
 This would be fairly easy to parse, perhaps by ``setup.py``.
+
+-----------------
+Other Resources
+-----------------
+
+- Advice from
+  `openssf.org <https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html>`_
+
