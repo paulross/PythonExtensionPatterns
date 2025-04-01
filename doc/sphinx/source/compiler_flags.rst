@@ -240,6 +240,9 @@ This looks something like this (wrapped for clarity and replaced user with <USER
 
 This would be fairly easy to parse, perhaps by ``setup.py``.
 
+.. index::
+    single: Compiler Flags; Resources
+
 -----------------
 Other Resources
 -----------------
