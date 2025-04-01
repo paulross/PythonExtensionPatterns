@@ -2,10 +2,16 @@
 History
 =====================
 
-0.3.1rc0 (TODO)
+0.3.1rc0 (2025-04-01)
 =====================
 
-- Fix issue #33: Sections in the "Parsing Python Arguments" chapter are of the wrong deepth.
+- Add a single index entry. This is documentation for 0.3.1rc0, 341 pages.
+- Add link to compiler flags resources.
+- Add explicit #include that was failing on some platforms.
+- Include note on ml_flags failure on import.
+- Suggest change for Py_SETREF().
+- Add warning on Py_SETREF and Py_XSETREF. Fixes to Python 3 links.
+- Fix issue #33: Sections in the "Parsing Python Arguments" chapter are of the wrong depth.
 
 0.3.0 (2025-03-20)
 =====================
