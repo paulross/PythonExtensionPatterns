@@ -22,6 +22,10 @@
 
 #include "Python.h"
 
+#ifndef __FILE_NAME__
+#define __FILE_NAME__ "cParseArgsHelper.cpp"
+#endif
+
 const long DEFAULT_ID = 1024L;
 const double DEFAULT_FLOAT = 8.0;
 
