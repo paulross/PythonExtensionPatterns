@@ -581,7 +581,7 @@ dict_buildvalue_no_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_
             fprintf(                                                                                    \
                 stderr,                                                                                 \
                 "Py_REFCNT(%s) != %ld but %ld. Test: %d Commentary: %s File: %s Line: %d\n",            \
-                #variable, expected, _ref_count, error_flag_position, commentary, __FILE__, __LINE__    \
+                #variable, expected, (long)_ref_count, error_flag_position, commentary, __FILE__, __LINE__    \
             );                                                                                          \
             return_value |= 1 << error_flag_position;                                                   \
         }                                                                                               \
