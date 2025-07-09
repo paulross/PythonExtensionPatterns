@@ -6,6 +6,10 @@
 
 #include "Python.h"
 
+#ifndef __FILE_NAME__
+#define __FILE_NAME__ "cRefCount.c"
+#endif
+
 /* For access to new_unique_string().*/
 #include "pyextpatt_util.h"
 
