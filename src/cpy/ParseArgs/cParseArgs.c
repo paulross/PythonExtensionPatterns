@@ -15,7 +15,7 @@
 #define FPRINTF_DEBUG 0
 
 /****************** Parsing arguments. ****************/
-static PyObject *parse_no_args(PyObject *Py_UNUSED(module)) {
+static PyObject *parse_no_args(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
 #if FPRINTF_DEBUG
     PyObject_Print(module, stdout, 0);
     fprintf(stdout, "\nparse_no_args()\n");

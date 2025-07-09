@@ -9,14 +9,14 @@
 #include "Python.h"
 
 /** Raise a simple exception. */
-static PyObject *raise_error(PyObject *Py_UNUSED(module)) {
+static PyObject *raise_error(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
     PyErr_SetString(PyExc_ValueError, "Ooops.");
     assert(PyErr_Occurred());
     return NULL;
 }
 
 /** Raise an exception with a formatted message. */
-static PyObject *raise_error_formatted(PyObject *Py_UNUSED(module)) {
+static PyObject *raise_error_formatted(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
     PyErr_Format(PyExc_ValueError,
                  "Can not read %d bytes when offset %d in byte length %d.", \
                  12, 25, 32
@@ -26,21 +26,21 @@ static PyObject *raise_error_formatted(PyObject *Py_UNUSED(module)) {
 }
 
 /** This illustrates the consequences of returning NULL but not setting an exception. */
-static PyObject *raise_error_bad(PyObject *Py_UNUSED(module)) {
+static PyObject *raise_error_bad(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
     PyErr_Clear();
     assert(!PyErr_Occurred());
     return NULL;
 }
 
 /** Set an exception but fail to signal by returning non-NULL. */
-static PyObject *raise_error_silent(PyObject *Py_UNUSED(module)) {
+static PyObject *raise_error_silent(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
     PyErr_SetString(PyExc_ValueError, "ERROR: raise_error_silent()");
     assert(PyErr_Occurred());
     Py_RETURN_NONE;
 }
 
 /** Test for an exception, possibly set by another function. */
-static PyObject *raise_error_silent_test(PyObject *Py_UNUSED(module)) {
+static PyObject *raise_error_silent_test(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
     if (PyErr_Occurred()) {
         return NULL;
     }
@@ -48,7 +48,7 @@ static PyObject *raise_error_silent_test(PyObject *Py_UNUSED(module)) {
 }
 
 /** Shows that second PyErr_SetString() is ignored. */
-static PyObject *raise_error_overwrite(PyObject *Py_UNUSED(module)) {
+static PyObject *raise_error_overwrite(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
     PyErr_SetString(PyExc_RuntimeError, "FORGOTTEN.");
     PyErr_SetString(PyExc_ValueError, "ERROR: raise_error_overwrite()");
     assert(PyErr_Occurred());
@@ -62,7 +62,7 @@ static PyObject *SpecialisedError = NULL;
 
 
 /** Raises a ExceptionBase. */
-static PyObject *raise_exception_base(PyObject *Py_UNUSED(module)) {
+static PyObject *raise_exception_base(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
     if (ExceptionBase) {
         PyErr_Format(ExceptionBase, "One %d two %d three %d.", 1, 2, 3);
     } else {
@@ -72,7 +72,7 @@ static PyObject *raise_exception_base(PyObject *Py_UNUSED(module)) {
 }
 
 /** Raises a SpecialisedError. */
-static PyObject *raise_specialised_error(PyObject *Py_UNUSED(module)) {
+static PyObject *raise_specialised_error(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg_is_null)) {
     if (SpecialisedError) {
         PyErr_Format(SpecialisedError, "One %d two %d three %d.", 1, 2, 3);
     } else {

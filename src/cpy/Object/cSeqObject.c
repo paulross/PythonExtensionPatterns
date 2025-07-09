@@ -345,9 +345,9 @@ static PySequenceMethods SequenceLongObject_sequence_methods = {
 };
 
 static PyObject *
-SequenceLongObject___str__(SequenceLongObject *self, PyObject *Py_UNUSED(ignored)) {
+SequenceLongObject___str__(PyObject *self, PyObject *Py_UNUSED(ignored)) {
     assert(!PyErr_Occurred());
-    return PyUnicode_FromFormat("<SequenceLongObject sequence size: %ld>", self->size);
+    return PyUnicode_FromFormat("<SequenceLongObject sequence size: %ld>", ((SequenceLongObject*)self)->size);
 }
 
 static PyTypeObject SequenceLongObjectType = {

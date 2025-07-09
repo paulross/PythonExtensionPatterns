@@ -27,7 +27,7 @@ static PyTypeObject ObjectWithAttributes_Type;
 
 #define ObjectWithAttributes_Check(v)      (Py_TYPE(v) == &ObjectWithAttributes_Type)
 
-static ObjectWithAttributes *
+static PyObject *
 ObjectWithAttributes_new(PyObject *Py_UNUSED(arg)) {
     ObjectWithAttributes *self;
     self = PyObject_New(ObjectWithAttributes, &ObjectWithAttributes_Type);
@@ -35,7 +35,7 @@ ObjectWithAttributes_new(PyObject *Py_UNUSED(arg)) {
         return NULL;
     }
     self->x_attr = NULL;
-    return self;
+    return (PyObject *)self;
 }
 
 /* ObjectWithAttributes methods */
