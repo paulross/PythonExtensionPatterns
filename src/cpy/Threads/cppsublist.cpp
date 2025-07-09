@@ -130,12 +130,21 @@ static PyTypeObject cppSubListType = {
         .tp_name = "cppsublist.cppSubList",
         .tp_basicsize = sizeof(SubListObject),
         .tp_itemsize = 0,
+        .tp_dealloc = (destructor) SubList_dealloc,
+#if PY_MINOR_VERSION > 7
+        .tp_vectorcall_offset = 0,                   /* tp_vectorcall */
+#endif
+        .tp_getattr = NULL,
+        .tp_setattr = NULL,
+        .tp_as_async = NULL,
+        .tp_repr = NULL,
+        .tp_as_number = NULL,
+        .tp_as_sequence = NULL,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = PyDoc_STR("C++ SubList object"),
         .tp_methods = SubList_methods,
         .tp_members = SubList_members,
         .tp_init = (initproc) SubList_init,
-        .tp_dealloc = (destructor) SubList_dealloc,
 };
 
 static PyModuleDef cppsublistmodule = {
@@ -143,6 +152,11 @@ static PyModuleDef cppsublistmodule = {
         .m_name = "cppsublist",
         .m_doc = "Example module that creates an extension type.",
         .m_size = -1,
+        .m_methods = NULL,
+        .m_slots = NULL,
+        .m_traverse = NULL,
+        .m_clear = NULL,
+        .m_free = NULL,
 };
 
 PyMODINIT_FUNC
