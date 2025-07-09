@@ -105,7 +105,7 @@ static PyObject *print_global_INT_borrowed_ref(PyObject *pMod) {
     return ret;
 }
 
-static PyObject *print_globals(PyObject *pMod) {
+static PyObject *print_globals(PyObject *pMod, PyObject *Py_UNUSED(arg_is_null)) {
     PyObject *ret = NULL;
     PyObject *pItem = NULL;
 
