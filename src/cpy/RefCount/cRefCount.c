@@ -63,7 +63,7 @@ decref_set_values(PyObject *op) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-tuple_steals(PyObject *Py_UNUSED(module)) {
+tuple_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long result = 0;
@@ -99,7 +99,7 @@ tuple_steals(PyObject *Py_UNUSED(module)) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
+tuple_buildvalue_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     int result = 0;
@@ -144,7 +144,7 @@ tuple_buildvalue_steals(PyObject *Py_UNUSED(module)) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-list_steals(PyObject *Py_UNUSED(module)) {
+list_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long result = 0;
@@ -175,7 +175,7 @@ list_steals(PyObject *Py_UNUSED(module)) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
+list_buildvalue_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     int result = 0;
@@ -221,7 +221,7 @@ list_buildvalue_steals(PyObject *Py_UNUSED(module)) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-set_no_steals(PyObject *Py_UNUSED(module)) {
+set_no_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long result = 0;
@@ -266,7 +266,7 @@ set_no_steals(PyObject *Py_UNUSED(module)) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-set_no_steals_decref(PyObject *Py_UNUSED(module)) {
+set_no_steals_decref(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long result = 0;
@@ -313,7 +313,7 @@ set_no_steals_decref(PyObject *Py_UNUSED(module)) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-dict_no_steals(PyObject *Py_UNUSED(module)) {
+dict_no_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long result = 0;
@@ -382,7 +382,7 @@ dict_no_steals(PyObject *Py_UNUSED(module)) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-dict_no_steals_decref_after_set(PyObject *Py_UNUSED(module)) {
+dict_no_steals_decref_after_set(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long result = 0;
@@ -454,7 +454,7 @@ dict_no_steals_decref_after_set(PyObject *Py_UNUSED(module)) {
  * @return Zero on success, non-zero on error.
  */
 static PyObject *
-dict_buildvalue_no_steals(PyObject *Py_UNUSED(module)) {
+dict_buildvalue_no_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     int result = 0;
@@ -596,7 +596,7 @@ dict_buildvalue_no_steals(PyObject *Py_UNUSED(module)) {
  * @return 0 on success.
  */
 static PyObject *
-test_PyTuple_SetItem_steals(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SetItem_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -654,7 +654,7 @@ test_PyTuple_SetItem_steals(PyObject *Py_UNUSED(module)) {
  * @return 0 on success.
  */
 static PyObject *
-test_PyTuple_SET_ITEM_steals(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SET_ITEM_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -715,7 +715,7 @@ test_PyTuple_SET_ITEM_steals(PyObject *Py_UNUSED(module)) {
  * @return None
  */
 static PyObject *
-test_PyTuple_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SetItem_steals_replace(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -852,7 +852,7 @@ test_PyTuple_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
  * @return None
  */
 static PyObject *
-test_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -934,7 +934,7 @@ test_PyTuple_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
  * @return
  */
 static PyObject *
-test_PyTuple_SetItem_replace_same(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SetItem_replace_same(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -999,7 +999,7 @@ test_PyTuple_SetItem_replace_same(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_SET_ITEM_replace_same(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SET_ITEM_replace_same(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1057,7 +1057,7 @@ test_PyTuple_SET_ITEM_replace_same(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_SetItem_NULL(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SetItem_NULL(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1100,7 +1100,7 @@ test_PyTuple_SetItem_NULL(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_SET_ITEM_NULL(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SET_ITEM_NULL(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1148,7 +1148,7 @@ test_PyTuple_SET_ITEM_NULL(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_SetIem_NULL_SetItem(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SetIem_NULL_SetItem(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1219,7 +1219,7 @@ test_PyTuple_SetIem_NULL_SetItem(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_SET_ITEM_NULL_SET_ITEM(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SET_ITEM_NULL_SET_ITEM(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1284,7 +1284,7 @@ test_PyTuple_SET_ITEM_NULL_SET_ITEM(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_SetItem_fails_not_a_tuple(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SetItem_fails_not_a_tuple(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -1308,7 +1308,7 @@ test_PyTuple_SetItem_fails_not_a_tuple(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module)) {
+test_PyTuple_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -1332,7 +1332,7 @@ test_PyTuple_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_Py_PyTuple_Pack(PyObject *Py_UNUSED(module)) {
+test_PyTuple_Py_PyTuple_Pack(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -1371,7 +1371,7 @@ test_PyTuple_Py_PyTuple_Pack(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyTuple_Py_BuildValue(PyObject *Py_UNUSED(module)) {
+test_PyTuple_Py_BuildValue(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1407,7 +1407,7 @@ test_PyTuple_Py_BuildValue(PyObject *Py_UNUSED(module)) {
  * @return 0 on success.
  */
 static PyObject *
-test_PyList_SetItem_steals(PyObject *Py_UNUSED(module)) {
+test_PyList_SetItem_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1465,7 +1465,7 @@ test_PyList_SetItem_steals(PyObject *Py_UNUSED(module)) {
  * @return 0 on success.
  */
 static PyObject *
-test_PyList_SET_ITEM_steals(PyObject *Py_UNUSED(module)) {
+test_PyList_SET_ITEM_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1526,7 +1526,7 @@ test_PyList_SET_ITEM_steals(PyObject *Py_UNUSED(module)) {
  * @return None
  */
 static PyObject *
-test_PyList_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
+test_PyList_SetItem_steals_replace(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1663,7 +1663,7 @@ test_PyList_SetItem_steals_replace(PyObject *Py_UNUSED(module)) {
  * @return None
  */
 static PyObject *
-test_PyList_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
+test_PyList_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1738,7 +1738,7 @@ test_PyList_SET_ITEM_steals_replace(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_SetItem_replace_same(PyObject *Py_UNUSED(module)) {
+test_PyList_SetItem_replace_same(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1803,7 +1803,7 @@ test_PyList_SetItem_replace_same(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_SET_ITEM_replace_same(PyObject *Py_UNUSED(module)) {
+test_PyList_SET_ITEM_replace_same(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1861,7 +1861,7 @@ test_PyList_SET_ITEM_replace_same(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_SetItem_NULL(PyObject *Py_UNUSED(module)) {
+test_PyList_SetItem_NULL(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1904,7 +1904,7 @@ test_PyList_SetItem_NULL(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_SET_ITEM_NULL(PyObject *Py_UNUSED(module)) {
+test_PyList_SET_ITEM_NULL(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -1952,7 +1952,7 @@ test_PyList_SET_ITEM_NULL(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_SetIem_NULL_SetItem(PyObject *Py_UNUSED(module)) {
+test_PyList_SetIem_NULL_SetItem(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2023,7 +2023,7 @@ test_PyList_SetIem_NULL_SetItem(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_SET_ITEM_NULL_SET_ITEM(PyObject *Py_UNUSED(module)) {
+test_PyList_SET_ITEM_NULL_SET_ITEM(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2088,7 +2088,7 @@ test_PyList_SET_ITEM_NULL_SET_ITEM(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_SetItem_fails_not_a_list(PyObject *Py_UNUSED(module)) {
+test_PyList_SetItem_fails_not_a_list(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -2112,7 +2112,7 @@ test_PyList_SetItem_fails_not_a_list(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module)) {
+test_PyList_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -2136,7 +2136,7 @@ test_PyList_SetItem_fails_out_of_range(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Append(PyObject *Py_UNUSED(module)) {
+test_PyList_Append(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2165,7 +2165,7 @@ test_PyList_Append(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Append_fails_not_a_list(PyObject *Py_UNUSED(module)) {
+test_PyList_Append_fails_not_a_list(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -2184,7 +2184,7 @@ test_PyList_Append_fails_not_a_list(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Append_fails_NULL(PyObject *Py_UNUSED(module)) {
+test_PyList_Append_fails_NULL(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -2201,7 +2201,7 @@ test_PyList_Append_fails_NULL(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Insert(PyObject *Py_UNUSED(module)) {
+test_PyList_Insert(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2236,7 +2236,7 @@ test_PyList_Insert(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Insert_Is_Truncated(PyObject *Py_UNUSED(module)) {
+test_PyList_Insert_Is_Truncated(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2271,7 +2271,7 @@ test_PyList_Insert_Is_Truncated(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Insert_Negative_Index(PyObject *Py_UNUSED(module)) {
+test_PyList_Insert_Negative_Index(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2306,7 +2306,7 @@ test_PyList_Insert_Negative_Index(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Insert_fails_not_a_list(PyObject *Py_UNUSED(module)) {
+test_PyList_Insert_fails_not_a_list(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -2325,7 +2325,7 @@ test_PyList_Insert_fails_not_a_list(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Insert_fails_NULL(PyObject *Py_UNUSED(module)) {
+test_PyList_Insert_fails_NULL(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -2342,7 +2342,7 @@ test_PyList_Insert_fails_NULL(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyList_Py_BuildValue(PyObject *Py_UNUSED(module)) {
+test_PyList_Py_BuildValue(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2370,7 +2370,7 @@ test_PyList_Py_BuildValue(PyObject *Py_UNUSED(module)) {
 #pragma mark - Testing Dictionaries
 
 static PyObject *
-test_PyDict_SetItem_increments(PyObject *Py_UNUSED(module)) {
+test_PyDict_SetItem_increments(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2452,7 +2452,7 @@ test_PyDict_SetItem_increments(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyDict_SetItem_fails_not_a_dict(PyObject *Py_UNUSED(module)) {
+test_PyDict_SetItem_fails_not_a_dict(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -2479,7 +2479,7 @@ test_PyDict_SetItem_fails_not_a_dict(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyDict_SetItem_fails_not_hashable(PyObject *Py_UNUSED(module)) {
+test_PyDict_SetItem_fails_not_hashable(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
 
@@ -2506,7 +2506,7 @@ test_PyDict_SetItem_fails_not_hashable(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyDict_SetDefault_default_unused(PyObject *Py_UNUSED(module)) {
+test_PyDict_SetDefault_default_unused(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2556,7 +2556,7 @@ test_PyDict_SetDefault_default_unused(PyObject *Py_UNUSED(module)) {
 }
 
 PyObject *
-test_PyDict_SetDefault_default_used(void) {
+test_PyDict_SetDefault_default_used(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2606,7 +2606,7 @@ test_PyDict_SetDefault_default_used(void) {
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 static PyObject *
-test_PyDict_SetDefaultRef_default_unused(PyObject *Py_UNUSED(module)) {
+test_PyDict_SetDefaultRef_default_unused(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2667,7 +2667,7 @@ test_PyDict_SetDefaultRef_default_unused(PyObject *Py_UNUSED(module)) {
 }
 
 PyObject *
-test_PyDict_SetDefaultRef_default_used(void) {
+test_PyDict_SetDefaultRef_default_used(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2719,7 +2719,7 @@ test_PyDict_SetDefaultRef_default_used(void) {
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 static PyObject *
-test_PyDict_GetItem(PyObject *Py_UNUSED(module)) {
+test_PyDict_GetItem(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2775,7 +2775,7 @@ test_PyDict_GetItem(PyObject *Py_UNUSED(module)) {
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 static PyObject *
-test_PyDict_Pop_key_present(PyObject *Py_UNUSED(module)) {
+test_PyDict_Pop_key_present(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2830,7 +2830,7 @@ test_PyDict_Pop_key_present(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PyDict_Pop_key_absent(PyObject *Py_UNUSED(module)) {
+test_PyDict_Pop_key_absent(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2872,7 +2872,7 @@ test_PyDict_Pop_key_absent(PyObject *Py_UNUSED(module)) {
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 static PyObject *
-test_PySet_Add(PyObject *Py_UNUSED(module)) {
+test_PySet_Add(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2911,7 +2911,7 @@ test_PySet_Add(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PySet_Discard(PyObject *Py_UNUSED(module)) {
+test_PySet_Discard(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
@@ -2950,7 +2950,7 @@ test_PySet_Discard(PyObject *Py_UNUSED(module)) {
 }
 
 static PyObject *
-test_PySet_Pop(PyObject *Py_UNUSED(module)) {
+test_PySet_Pop(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
     assert(!PyErr_Occurred());
     long return_value = 0L;
