@@ -27,8 +27,10 @@ static PyTypeObject ObjectWithAttributes_Type;
 
 #define ObjectWithAttributes_Check(v)      (Py_TYPE(v) == &ObjectWithAttributes_Type)
 
+// typedef PyObject *(*newfunc)(PyTypeObject *, PyObject *, PyObject *);
+// See: https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_new
 static PyObject *
-ObjectWithAttributes_new(PyObject *Py_UNUSED(arg)) {
+ObjectWithAttributes_new(PyTypeObject *Py_UNUSED(type), PyObject *Py_UNUSED(args), PyObject *Py_UNUSED(kwds)) {
     ObjectWithAttributes *self;
     self = PyObject_New(ObjectWithAttributes, &ObjectWithAttributes_Type);
     if (self == NULL) {
