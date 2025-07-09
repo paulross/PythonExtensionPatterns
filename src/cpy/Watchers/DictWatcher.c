@@ -8,6 +8,11 @@
 #include "DictWatcher.h"
 #include "pyextpatt_util.h"
 
+#ifndef __FILE_NAME__
+#define __FILE_NAME__ "DictWatcher.c"
+#endif
+
+
 /* Version as a single 4-byte hex number, e.g. 0x010502B2 == 1.5.2b2
  * Therefore 0x030C0000 == 3.12.0
  */

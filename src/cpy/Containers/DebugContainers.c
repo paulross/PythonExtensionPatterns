@@ -7,6 +7,10 @@
 
 #include "DebugContainers.h"
 
+#ifndef __FILE_NAME__
+#define __FILE_NAME__ "DebugContainers.c"
+#endif
+
 #pragma mark - Tuples
 
 /**
