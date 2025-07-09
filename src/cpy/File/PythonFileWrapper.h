@@ -13,7 +13,7 @@
 #include <exception>
 #include <string>
 #include <utility>
-//#include <utility>
+#include <vector>
 
 class ExceptionPythonFileObjectWrapper : public std::exception {
 public:
