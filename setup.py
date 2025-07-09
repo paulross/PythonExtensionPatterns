@@ -195,7 +195,7 @@ ext_modules = [
               extra_compile_args=[
                   '-Wall', '-Wextra', '-Werror', '-Wfatal-errors', '-Wpedantic',
                   '-Wno-unused-function', '-Wno-unused-parameter',
-                  '-Wunused-arguments', '-std=c99',
+                  '-std=c99',
                   '-UDEBUG', '-DNDEBUG', '-Ofast', '-g',
               ],
               language='c',
@@ -209,7 +209,7 @@ ext_modules = [
               extra_compile_args=[
                   '-Wall', '-Wextra', '-Werror', '-Wfatal-errors', '-Wpedantic',
                   '-Wno-unused-function', '-Wno-unused-parameter',
-                  '-Wunused-arguments', '-std=c99',
+                  '-std=c99',
                   '-UDEBUG', '-DNDEBUG', '-Ofast', '-g',
               ],
               language='c',
