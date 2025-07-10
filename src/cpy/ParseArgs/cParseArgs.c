@@ -273,11 +273,11 @@ static PyObject *parse_args_with_mutable_defaults(PyObject *Py_UNUSED(module),
     Py_INCREF(arg_1);
     ret = arg_1;
     goto finally;
-except:
+    except:
     assert(PyErr_Occurred());
     Py_XDECREF(ret);
     ret = NULL;
-finally:
+    finally:
     return ret;
 }
 
@@ -416,24 +416,65 @@ parse_args_with_function_conversion_to_c(PyObject *Py_UNUSED(module), PyObject *
 static char parse_args_kwargs_docstring[] =
         "Some documentation for this function.";
 
+// clang-format off
 static PyMethodDef cParseArgs_methods[] = {
-        {"parse_no_args",                            (PyCFunction) parse_no_args,                            METH_NOARGS,  "No arguments."},
-        {"parse_one_arg",                            (PyCFunction) parse_one_arg,                            METH_O,       "One argument."},
-        {"parse_args",                               (PyCFunction) parse_args,                               METH_VARARGS, "Reads args only."},
-        {"parse_args_kwargs",                        (PyCFunction) parse_args_kwargs,                        METH_VARARGS |
-                                                                                                             METH_KEYWORDS, parse_args_kwargs_docstring},
-        {"parse_args_with_immutable_defaults",       (PyCFunction) parse_args_with_immutable_defaults,
-                                                                                                             METH_VARARGS, "A function with mutable defaults."},
-        {"parse_args_with_mutable_defaults",         (PyCFunction) parse_args_with_mutable_defaults,
-                                                                                                             METH_VARARGS, "A function with mutable defaults."},
-        {"parse_default_bytes_object",               (PyCFunction) parse_default_bytes_object,               METH_VARARGS |
-                                                                                                             METH_KEYWORDS, "Example of default bytes object."},
-        {"parse_pos_only_kwd_only",                  (PyCFunction) parse_pos_only_kwd_only,                  METH_VARARGS |
-                                                                                                             METH_KEYWORDS, "Positional and keyword only arguments"},
-        {"parse_args_with_function_conversion_to_c", (PyCFunction) parse_args_with_function_conversion_to_c, METH_VARARGS,
-                                                                                                                           "Parsing an argument that must be a list of numbers."},
-        {NULL, NULL, 0,                                                                                                     NULL} /* Sentinel */
+        {
+                "parse_no_args",
+                (PyCFunction) parse_no_args,
+                METH_NOARGS,
+                "No arguments.",
+        },
+        {
+                "parse_one_arg",
+                (PyCFunction) parse_one_arg,
+                METH_O,
+                "One argument.",
+        },
+        {
+                "parse_args",
+                (PyCFunction) parse_args,
+                METH_VARARGS,
+                "Reads args only.",
+        },
+        {
+                "parse_args_kwargs",
+                (PyCFunction) parse_args_kwargs,
+                METH_VARARGS | METH_KEYWORDS,
+                 parse_args_kwargs_docstring,
+        },
+        {
+                "parse_args_with_immutable_defaults",
+                (PyCFunction) parse_args_with_immutable_defaults,
+                METH_VARARGS,
+                "A function with mutable defaults.",
+        },
+        {
+                "parse_args_with_mutable_defaults",
+                (PyCFunction) parse_args_with_mutable_defaults,
+                METH_VARARGS,
+                "A function with mutable defaults.",
+        },
+        {
+                "parse_default_bytes_object",
+                (PyCFunction) parse_default_bytes_object,
+                METH_VARARGS | METH_KEYWORDS,
+                        "Example of default bytes object.",
+        },
+        {
+                "parse_pos_only_kwd_only",
+                (PyCFunction) parse_pos_only_kwd_only,
+                METH_VARARGS | METH_KEYWORDS,
+                        "Positional and keyword only arguments",
+        },
+        {
+                "parse_args_with_function_conversion_to_c",
+                (PyCFunction) parse_args_with_function_conversion_to_c,
+                METH_VARARGS,
+                "Parsing an argument that must be a list of numbers.",
+        },
+        {NULL, NULL, 0, NULL} /* Sentinel */
 };
+// clang-format on
 
 static PyModuleDef cParseArgs_module = {
         PyModuleDef_HEAD_INIT,
