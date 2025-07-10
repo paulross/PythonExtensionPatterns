@@ -3,8 +3,7 @@ project(PythonExtensionPatterns)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
-
+set(CMAKE_CXX_STANDARD 11)
 
 # /Library/Frameworks/Python.framework/Versions/3.11/include/python3.11/cpython/pymem.h:42:39: fatal error: commas at the end of enumerator lists are a C++11 extension [-Wc++11-extensions]
 #    PYMEM_ALLOCATOR_PYMALLOC_DEBUG = 6,
@@ -16,15 +15,11 @@ add_compile_options(
         "-Wpedantic"
         "-Werror"
         "-Wfatal-errors"
-        "-Wno-unused-variable" # Temporary
-        "-Wno-unused-parameter" # Temporary
         "-fexceptions"
         # To allow designated initialisers.
         "-Wno-c99-extensions"
         "-Wno-c++11-extensions"
         "$<$<CONFIG:DEBUG>:-O0;-g3;-ggdb>"
-        # Temporary
-        -Wno-unused-function
 )
 
 function(dump_cmake_variables)
@@ -43,8 +38,6 @@ function(dump_cmake_variables)
     endforeach()
     message(STATUS "==== dump_cmake_variables() DONE")
 endfunction()
-
-
 
 FIND_PACKAGE (Python3 3.13 EXACT REQUIRED COMPONENTS Interpreter Development)
 #FIND_PACKAGE(PythonLibs 3.11 EXACT REQUIRED)
@@ -91,8 +84,11 @@ add_executable(PythonExtensionPatterns
 #        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/py_import_call_execute.h
 #        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.c
 #        src/debugging/XcodeExample/PythonSubclassList/PythonSubclassList/SubclassList.h
-        src/cCanonical.c
-        src/scratch.c
+
+        # These are illustrative and unused.
+#        src/cCanonical.c
+#        src/scratch.c
+
         # Legacy code. Removed in the documentation for version 0.2.
         src/cpy/ParseArgs/cParseArgsHelper.cpp
         src/cpy/Pickle/cCustomPickle.c

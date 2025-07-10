@@ -47,7 +47,7 @@ public:
         }
     }
 
-    [[nodiscard]] ssize_t buffer_size() const {
+    ssize_t buffer_size() const {
         return sizeof(Verbose) + 2 * sizeof(std::string) + m_str.size() + m_buffer.size();
     }
 

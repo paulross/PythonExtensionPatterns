@@ -39,17 +39,32 @@ LANGUAGE_STANDARD_C = "c99"
 # Our level of C++
 LANGUAGE_STANDARD_CPP = "c++11"
 
+# To align with CMakeLists.txt
+CMAKE_FLAGS = [
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Werror",
+    "-Wfatal-errors",
+    "-fexceptions",
+    # To allow designated initialisers.
+    "-Wno-c99-extensions",
+    "-Wno-c++11-extensions",
+]
+
 # Common flags for both release and debug builds.
+
 # C
 extra_compile_args_c = sysconfig.get_config_var('CFLAGS').split()
-extra_compile_args_c += ["-std=%s" % LANGUAGE_STANDARD_C, "-Wall", "-Wextra"]
+extra_compile_args_c += ["-std=%s" % LANGUAGE_STANDARD_C,] + CMAKE_FLAGS
 if DEBUG:
     extra_compile_args_c += ["-g3", "-O0", "-DDEBUG=%s" % DEBUG_LEVEL, "-UNDEBUG"]
 else:
     extra_compile_args_c += ["-DNDEBUG", "-O3"]
+
 # C++
 extra_compile_args_cpp = sysconfig.get_config_var('CFLAGS').split()
-extra_compile_args_cpp += ["-std=%s" % LANGUAGE_STANDARD_CPP, "-Wall", "-Wextra"]
+extra_compile_args_cpp += ["-std=%s" % LANGUAGE_STANDARD_CPP,] + CMAKE_FLAGS
 if DEBUG:
     extra_compile_args_cpp += ["-g3", "-O0", "-DDEBUG=%s" % DEBUG_LEVEL, "-UNDEBUG"]
 else:
