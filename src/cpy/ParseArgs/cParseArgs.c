@@ -34,7 +34,7 @@ static PyObject *parse_one_arg(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(
     Py_RETURN_NONE;
 }
 
-/** Example of a METH_VARGS function that takes a bytes object and int and an optional string.
+/** Example of a METH_VARARGS function that takes a bytes object and int and an optional string.
  * Returns the number of arguments parsed.
  *
  * Signature is:
