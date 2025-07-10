@@ -16,7 +16,7 @@
 
 void leak(void) {
     char *p;
-    
+
     p = malloc(1024);
     fprintf(stdout, "malloc(1024) returns %s", p);
 }
@@ -24,10 +24,10 @@ void leak(void) {
 
 void access_after_free(void) {
     char *p;
-    
+
     p = malloc(1024);
     free(p);
-    
+
     p[8] = 'A';
     printf("%c", p[8]);
 }
@@ -37,7 +37,7 @@ void access_after_free(void) {
 
 void py_leak(void) {
     PyObject *pObj = NULL;
-    
+
     /* Object creation, ref count = 1. */
     pObj = PyBytes_FromString("Hello world\n");
     PyObject_Print(pObj, stdout, 0);
@@ -48,7 +48,7 @@ void py_leak(void) {
 
 void py_access_after_free(void) {
     PyObject *pObj = NULL;
-    
+
     /* Object creation, ref count = 1. */
     pObj = PyBytes_FromString("Hello world\n");
     PyObject_Print(pObj, stdout, 0);
@@ -63,8 +63,6 @@ void py_caller_access_after_free(PyObject *pObj) {
     Py_DECREF(pObj);
     /* ... more code here ... */
 }
-
-
 
 
 PyObject *bad_incref(PyObject *pObj) {
@@ -82,30 +80,26 @@ PyObject *bad_incref(PyObject *pObj) {
 
 
 void bad_steal(void) {
+    PyObject *v, *r;
 
-PyObject *v, *r;
+    r = PyTuple_New(3);         /* New reference. */
+    v = PyLong_FromLong(1L);    /* New reference. */
+    PyTuple_SetItem(r, 0, v);   /* r takes ownership of the reference. */
+    Py_DECREF(v);               /* Now we are interfering with r's internals. */
 
-r = PyTuple_New(3);         /* New reference. */
-v = PyLong_FromLong(1L);    /* New reference. */
-PyTuple_SetItem(r, 0, v);   /* r takes ownership of the reference. */
-Py_DECREF(v);               /* Now we are interfering with r's internals. */
-    
-    
+
 /* Two common patterns to avoid this, either: */
-v = PyLong_FromLong(1L);    /* New reference. */
-PyTuple_SetItem(r, 0, v);   /* r takes ownership of the reference. */
-v = NULL;
+    v = PyLong_FromLong(1L);    /* New reference. */
+    PyTuple_SetItem(r, 0, v);   /* r takes ownership of the reference. */
+    v = NULL;
 /* Or: */
-PyTuple_SetItem(r, 0, PyLong_FromLong(1L));
+    PyTuple_SetItem(r, 0, PyLong_FromLong(1L));
 
 }
 
-
-
-
 static PyObject *pop_and_print_BAD(PyObject *pList) {
     PyObject *pLast;
-    
+
     pLast = PyList_GetItem(pList, PyList_Size(pList) - 1);
     fprintf(stdout, "Ref count was: %zd\n", pLast->ob_refcnt);
     //do_something(pList);    /* Dragons ahoy me hearties! */
@@ -114,5 +108,3 @@ static PyObject *pop_and_print_BAD(PyObject *pList) {
     fprintf(stdout, "\n");
     Py_RETURN_NONE;
 }
-
-

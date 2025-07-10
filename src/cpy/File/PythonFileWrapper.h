@@ -19,9 +19,9 @@ class ExceptionPythonFileObjectWrapper : public std::exception {
 public:
     explicit ExceptionPythonFileObjectWrapper(std::string in_msg) : m_msg(std::move(in_msg)) {}
 
-    [[nodiscard]] const std::string &message() const { return m_msg; }
+    const std::string &message() const { return m_msg; }
 
-    [[nodiscard]] const char *what() const
+    const char *what() const
 
     noexcept override{return m_msg.c_str();}
 protected:
