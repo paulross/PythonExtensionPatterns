@@ -191,6 +191,9 @@ def test_SequenceLongObject_item_raises(initial_sequence, index, expected):
     'initial_sequence, index, value, expected',
     (
             (
+                    [7, 4, 1, ], 1, 14, [7, 14, 1, ],
+            ),
+            (
                     [7, 4, 1, ], 0, 14, [14, 4, 1, ],
             ),
             (

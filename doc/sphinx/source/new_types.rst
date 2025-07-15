@@ -954,34 +954,88 @@ Implementation
     There is an undocumented feature when using `sq_ass_item`_ from `PyObject_SetItem()`_ and `PyObject_DelItem()`_
     when using negative indexes and when the index is *out of range*.
 
-    In that case, before the `sq_ass_item`_ function is called the index will have had the sequence length added to it.
+    In the case that the requested index (i.e. the value the caller in Python uses) is *negative* then
+    before the `sq_ass_item`_ function is called the index will have had the sequence length added to it.
 
-    For example if the sequence length is 3 and the given index is -4 then the index that the `sq_ass_item` function
-    receives is -1.
-    If the given index is -5 then the index that the `sq_ass_item`_ function receives is -2.
+    For example if the sequence length is 3 and the requested index is -3 then the index that the
+    `sq_ass_item` function receives is 0.
+    If the given index is -4 then the index that the `sq_ass_item`_ function receives is -1.
+    If the given index is -5 then the index that the `sq_ass_item`_ function receives is -2 and so on.
 
     Thus the slightly odd code below to fix this problem.
     Failing to do this will mean out of range errors will not be detected by the `sq_ass_item`_ function and any
     error message will be wrong.
 
+    Lets document the index argument passed to the `sq_ass_item`_ function:
 
-In ``src/cpy/Object/cSeqObject.c``:
+    .. code-block:: c
+
+        static int
+        SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value) {
+            fprintf(stdout, "%s()#%d: index=%zd\n", __FUNCTION__, __LINE__, index);
+            /* ... */
+            return 0;
+        }
+
+    If ``self`` is an array of length 3 then we get these values for the requested index
+    (i.e. the value the caller in Python uses) and the received index (the value seen by
+    ``SequenceLongObject_sq_ass_item()``) we get this:
+
+    .. list-table:: Indexes Given to the ``sq_ass_item`` Function
+       :widths: 20 20 40
+       :header-rows: 1
+
+       * - Requested Index
+         - Received Index
+         - Notes
+       * - 3
+         - 3
+         - Out of range high.
+       * - 2
+         - 2
+         -
+       * - 1
+         - 1
+         -
+       * - 0
+         - 0
+         -
+       * - -1
+         - 2
+         - NOTE: Length added.
+       * - -2
+         - 1
+         - NOTE: Length added.
+       * - -3
+         - 0
+         - NOTE: Length added.
+       * - -4
+         - -1
+         - NOTE: Length added. Out of range low.
+
+    The problem is that we can  not always determine what the *requested* index was from the *received* index.
+    But at least when the received index is out-of-range low we can make a sensible error message.
+
+Here is the function (without logging) from ``src/cpy/Object/cSeqObject.c``:
 
 .. code-block:: c
 
     static int
     SequenceLongObject_sq_ass_item(PyObject *self, Py_ssize_t index, PyObject *value) {
-        /* See warning above. */
         if (index < 0) {
+            /* Fix index to get the requested index in the out-of-range low case.
+             * See warning above. */
             index -= SequenceLongObject_sq_length(self);
         }
 
         Py_ssize_t my_index = index;
         if (my_index < 0) {
+            /* Fix negative indexes. */
             my_index += SequenceLongObject_sq_length(self);
         }
         // Corner case example: len(self) == 0 and index < 0
         if (my_index < 0 || my_index >= SequenceLongObject_sq_length(self)) {
+            /* Raise if index out-of-range low or high reporting the requested index. */
             PyErr_Format(
                     PyExc_IndexError,
                     "Index %ld is out of range for length %ld",
