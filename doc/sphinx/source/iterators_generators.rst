@@ -33,7 +33,7 @@ The iterator concept is actually fairly straight forward:
 
 That iterator:
 
-- Has a strong reference to the originating object, thus its data.
+- Creates a new strong reference (using ``Py_INCREF``) to the originating object, thus its data.
   This strong reference keeps the originating object alive as long as the iterator is alive.
 - It has a notion of *state*, in other words 'where I was before so know where to go next'.
 
@@ -61,6 +61,29 @@ That iterator:
         i=3 value=6
 
     Which may not be what you want.
+
+    Note that if you try the same code with a dictionary you will get an error:
+
+    .. code-block:: python
+
+        d = {k:str(k) for k in range(8)}
+        for k in d:
+            print(f'{k} : {d[k]}')
+            del d[k]
+
+    Gives:
+
+    .. code-block:: python
+
+        0 : 0
+        Traceback (most recent call last):
+          File "<python-input-2>", line 1, in <module>
+            for k in d:
+                     ^
+        RuntimeError: dictionary changed size during iteration
+
+    Similarly for sets.
+
     It is hard to make a 'good' design to cope with this (defer the ``del``? raise?) so the general advice is: do not
     alter the underlying structure whilst iterating.
 
@@ -68,7 +91,8 @@ That iterator:
 Example of a Sequence
 --------------------------------------
 
-In this example we create a module that has an object which holds a sequence of C ``long`` s.
+In this example we create a module that has an object which holds a sequence of C ``long`` which is going
+to be *iterable*.
 The complete code is in ``src/cpy/Iterators/cIterator.c`` here are just the essential parts.
 The test code is in ``tests/unit/test_c_iterators.py``.
 
