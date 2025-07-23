@@ -36,13 +36,10 @@ call_super_pyname(PyObject *self, PyObject *func_name,
                      "super() must be called with unicode attribute not %s",
                      Py_TYPE(func_name)->tp_name);
     }
-    // Will be decremented when super_args is decremented if Py_BuildValue succeeds.
-    Py_INCREF(self->ob_type);
-    Py_INCREF(self);
+    // Py_BuildValue with 'O' will increment the reference counts.
+    // They will get decremented by Py_XDECREF(super_args).
     super_args = Py_BuildValue("OO", (PyObject *) self->ob_type, self);
     if (!super_args) {
-        Py_DECREF(self->ob_type);
-        Py_DECREF(self);
         PyErr_SetString(PyExc_RuntimeError, "Could not create arguments for super().");
         goto except;
     }

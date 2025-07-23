@@ -147,3 +147,12 @@ def test_sublist_sublist_state():
     assert obj.state == 0
     obj.increment()
     assert obj.state == 1
+
+
+def test_sublist_sublist_ctor_append():
+    obj = sublist.SubList(range(4))
+    assert str(obj) == '[0, 1, 2, 3]'
+    assert obj.appends == 0
+    obj.append(42)
+    assert obj.appends == 1
+    assert obj == [0, 1, 2, 3, 42, ]
