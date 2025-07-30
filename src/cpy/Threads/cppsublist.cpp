@@ -91,7 +91,7 @@ SubList_max(PyObject *self, PyObject *Py_UNUSED(unused)) {
         // Return first
         ret = PyList_GetItem(self, 0);
         if (length > 1) {
-            // laborious compare
+            // Laborious compare
             PyObject *item = NULL;
             for(Py_ssize_t i = 1; i <PyList_Size(self); ++i) {
                 item = PyList_GetItem(self, i);
@@ -115,7 +115,7 @@ SubList_max(PyObject *self, PyObject *Py_UNUSED(unused)) {
 
 static PyMethodDef SubList_methods[] = {
         {"append",    (PyCFunction) SubList_append,    METH_VARARGS,
-                        PyDoc_STR("append an item with sleep(1).")},
+                        PyDoc_STR("append an item with sleep(0.25).")},
         {"max",       (PyCFunction) SubList_max,       METH_NOARGS,
                         PyDoc_STR("Return the maximum value with sleep(1).")},
         {NULL, NULL, 0, NULL},
@@ -134,12 +134,6 @@ static PyTypeObject cppSubListType = {
 #if PY_MINOR_VERSION > 7
         .tp_vectorcall_offset = 0,                   /* tp_vectorcall */
 #endif
-        .tp_getattr = NULL,
-        .tp_setattr = NULL,
-        .tp_as_async = NULL,
-        .tp_repr = NULL,
-        .tp_as_number = NULL,
-        .tp_as_sequence = NULL,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = PyDoc_STR("C++ SubList object"),
         .tp_methods = SubList_methods,
@@ -150,7 +144,7 @@ static PyTypeObject cppSubListType = {
 static PyModuleDef cppsublistmodule = {
         PyModuleDef_HEAD_INIT,
         .m_name = "cppsublist",
-        .m_doc = "Example module that creates an extension type.",
+        .m_doc = "A module that provides a thread locked subclass of a list in C++.",
         .m_size = -1,
         .m_methods = NULL,
         .m_slots = NULL,
