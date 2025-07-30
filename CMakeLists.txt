@@ -114,6 +114,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/Threads/csublist.c
         src/cpy/Logging/cLogging.c
         src/cpy/RefCount/cRefCount.c
+        # Builds py_call_super.cpp.o so is distinct from py_call_super.c.o
         src/cpy/Util/py_call_super.cpp
         src/cpy/CtxMgr/cCtxMgr.c
         src/cpy/Containers/DebugContainers.c
