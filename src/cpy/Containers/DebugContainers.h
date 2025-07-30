@@ -67,6 +67,7 @@ void dbg_PyDict_SetDefaultRef_default_unused_result_non_null(void);
 
 #pragma mark - Dictionaries - getters
 void dbg_PyDict_GetItem(void);
+void dbg_PyDict_Next(void);
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 void dbg_PyDict_GetItemRef(void);
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13

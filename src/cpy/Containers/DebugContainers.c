@@ -2119,6 +2119,66 @@ void dbg_PyDict_GetItem(void) {
     assert(!PyErr_Occurred());
 }
 
+/**
+ * See: https://docs.python.org/3/c-api/dict.html#c.PyDict_Next
+ */
+void dbg_PyDict_Next(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+    PyObject *get_item;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    /* Populate the dictionary with four key/values. */
+    for (int i = 0; i < 4; ++i) {
+        PyObject *key = new_unique_string(__FUNCTION__, NULL);
+        ref_count = Py_REFCNT(key);
+        assert(ref_count == 1);
+
+        // No Key in the dictionary, no exception set.
+        assert(!PyErr_Occurred());
+        get_item = PyDict_GetItem(container, key);
+        assert(get_item == NULL);
+        assert(!PyErr_Occurred());
+
+        // Set a key/value
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        ref_count = Py_REFCNT(value);
+        assert(ref_count == 1);
+
+        if (PyDict_SetItem(container, key, value)) {
+            assert(0);
+        }
+        ref_count = Py_REFCNT(key);
+        assert(ref_count == 2);
+        ref_count = Py_REFCNT(value);
+        assert(ref_count == 2);
+        Py_DECREF(key);
+        Py_DECREF(value);
+    }
+
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(container, &pos, &key, &value)) {
+        ref_count = Py_REFCNT(key);
+        assert(ref_count == 1);
+        ref_count = Py_REFCNT(value);
+        assert(ref_count == 1);
+    }
+    assert(!PyErr_Occurred());
+}
+
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 void dbg_PyDict_GetItemRef(void) {

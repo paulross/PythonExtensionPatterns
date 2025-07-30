@@ -188,6 +188,7 @@ void dbg_PyDict(void) {
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
     dbg_PyDict_GetItem();
+    dbg_PyDict_Next();
 
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
     dbg_PyDict_GetItemRef();
