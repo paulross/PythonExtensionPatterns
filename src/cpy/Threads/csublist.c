@@ -124,7 +124,7 @@ SubList_max(PyObject *self, PyObject *Py_UNUSED(unused)) {
 
 static PyMethodDef SubList_methods[] = {
         {"append",    (PyCFunction) SubList_append,    METH_VARARGS,
-                        PyDoc_STR("append an item with sleep().")},
+                        PyDoc_STR("append an item with sleep(0.25).")},
         {"max",       (PyCFunction) SubList_max,       METH_NOARGS,
                         PyDoc_STR("Return the maximum value with sleep(1).")},
         {NULL, NULL, 0, NULL},
@@ -134,40 +134,48 @@ static PyMemberDef SubList_members[] = {
         {NULL, 0, 0, 0, NULL}  /* Sentinel */
 };
 
-static PyTypeObject SubListType = {
+static PyTypeObject cSubListType = {
         PyVarObject_HEAD_INIT(NULL, 0)
         .tp_name = "csublist.cSubList",
         .tp_basicsize = sizeof(SubListObject),
         .tp_itemsize = 0,
+        .tp_dealloc = (destructor) SubList_dealloc,
+#if PY_MINOR_VERSION > 7
+        .tp_vectorcall_offset = 0,                   /* tp_vectorcall */
+#endif
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-        .tp_doc = PyDoc_STR("SubList objects"),
+        .tp_doc = PyDoc_STR("C SubList objects"),
         .tp_methods = SubList_methods,
         .tp_members = SubList_members,
         .tp_init = (initproc) SubList_init,
-        .tp_dealloc = (destructor) SubList_dealloc,
 };
 
 static PyModuleDef csublistmodule = {
         PyModuleDef_HEAD_INIT,
         .m_name = "csublist",
-        .m_doc = "Example module that creates an extension type.",
+        .m_doc = "A module that provides a thread locked subclass of a list in C.",
         .m_size = -1,
+        .m_methods = NULL,
+        .m_slots = NULL,
+        .m_traverse = NULL,
+        .m_clear = NULL,
+        .m_free = NULL,
 };
 
 PyMODINIT_FUNC
 PyInit_csublist(void) {
     PyObject * m;
-    SubListType.tp_base = &PyList_Type;
-    if (PyType_Ready(&SubListType) < 0) {
+    cSubListType.tp_base = &PyList_Type;
+    if (PyType_Ready(&cSubListType) < 0) {
         return NULL;
     }
     m = PyModule_Create(&csublistmodule);
     if (m == NULL) {
         return NULL;
     }
-    Py_INCREF(&SubListType);
-    if (PyModule_AddObject(m, "cSubList", (PyObject *) &SubListType) < 0) {
-        Py_DECREF(&SubListType);
+    Py_INCREF(&cSubListType);
+    if (PyModule_AddObject(m, "cSubList", (PyObject *) &cSubListType) < 0) {
+        Py_DECREF(&cSubListType);
         Py_DECREF(m);
         return NULL;
     }
