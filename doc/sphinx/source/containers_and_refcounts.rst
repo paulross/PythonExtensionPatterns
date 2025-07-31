@@ -1338,6 +1338,14 @@ the key does not exist in the dictionary.
     If the key is ``NULL`` this will segfault.
     See ``dbg_PyDict_GetItem_key_NULL()`` in ``src/cpy/Containers/DebugContainers.c``.
 
+For code and tests see:
+
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_GetItem()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyDict_GetItem()``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyDict_GetItem()``
 
 .. index::
     single: Dictionary; PyDict_GetItemRef()
@@ -1519,6 +1527,32 @@ Failure
     Finish Dictionary ``PyDict_Pop()`` Failure
 
 
+
+.. index::
+    single: Dictionary; PyDict_Next()
+
+``PyDict_Next()``
+--------------------
+
+`PyDict_Next()`_ is the standard way of iterating through all the keys and values.
+Each key and value will is a *borrowed* reference.
+The C function signature is:
+
+.. code-block:: c
+
+    int PyDict_Next(PyObject *p, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue);
+
+The Python documentation is good for this API.
+For code and tests see:
+
+* C: in ``src/cpy/Containers/DebugContainers.c``:
+    * ``dbg_PyDict_Next()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyDict_Next()``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyDict_Next()``
+
+
 .. index::
     single: Dictionary; Other APIs
 
@@ -1643,24 +1677,6 @@ The C function signature is:
 .. todo::
 
     Complete ``PyDict_Values()`` with code examples.
-
-.. index::
-    single: Dictionary; PyDict_Next()
-
-``PyDict_Next()``
-^^^^^^^^^^^^^^^^^^^^
-
-`PyDict_Next()`_ is the standard way of iterating through all the keys and values.
-Each key and value will is a *borrowed* reference.
-The C function signature is:
-
-.. code-block:: c
-
-    int PyDict_Next(PyObject *p, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue);
-
-.. todo::
-
-    Complete ``PyDict_Next()`` with code examples.
 
 .. index::
     single: Dictionary; Py_BuildValue()

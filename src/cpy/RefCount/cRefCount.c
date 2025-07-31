@@ -2776,6 +2776,65 @@ test_PyDict_GetItem(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_arg
     return PyLong_FromLong(return_value);
 }
 
+static PyObject *
+test_PyDict_Next(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    PyObject *container = PyDict_New();
+    if (!container) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    error_flag_position++;
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(container, 1L, "PyDict_New()");
+    /* Load dictionary. */
+    for (int i = 0; i < 2; ++i) {
+        PyObject *key = new_unique_string(__FUNCTION__, NULL);
+        TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key = new_unique_string(__FUNCTION__, NULL)");
+        if (PyDict_GetItem(container, key) != NULL) {
+            return_value |= 1 << error_flag_position;
+        }
+        error_flag_position++;
+
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value = new_unique_string(__FUNCTION__, NULL)");
+
+        if (PyDict_SetItem(container, key, value)) {
+            return_value |= 1 << error_flag_position;
+        }
+        error_flag_position++;
+
+        TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key after PyDict_SetItem()");
+        TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value_a after PyDict_SetItem()");
+
+        Py_DECREF(key);
+        Py_DECREF(value);
+    }
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    long count = 0;
+
+    while (PyDict_Next(container, &pos, &key, &value)) {
+        TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key after PyDict_Next()");
+        TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "key after PyDict_Next()");
+        count++;
+    }
+    assert(!PyErr_Occurred());
+    if (count != 2) {
+        return_value |= 1 << error_flag_position;
+    }
+    error_flag_position++;
+
+    Py_DECREF(container);
+    finally:
+    assert(!PyErr_Occurred());
+    return PyLong_FromLong(return_value);
+}
+
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
 static PyObject *
@@ -3102,6 +3161,8 @@ static PyMethodDef module_methods[] = {
 
         MODULE_NOARGS_ENTRY(test_PyDict_GetItem,
                             "Checks PyDict_GetItem()."),
+        MODULE_NOARGS_ENTRY(test_PyDict_Next,
+                            "Checks PyDict_Next()."),
 
 #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
         MODULE_NOARGS_ENTRY(test_PyDict_Pop_key_present,

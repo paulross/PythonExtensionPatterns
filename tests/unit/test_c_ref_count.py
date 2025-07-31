@@ -22,6 +22,7 @@ def test_module_dir_pre_3_13():
         'set_no_steals',
         'set_no_steals_decref',
         'test_PyDict_GetItem',
+        'test_PyDict_Next',
         'test_PyDict_SetDefault_default_unused',
         'test_PyDict_SetDefault_default_used',
         'test_PyDict_SetItem_fails_not_a_dict',
@@ -87,6 +88,7 @@ def test_module_dir_3_13():
         'set_no_steals',
         'set_no_steals_decref',
         'test_PyDict_GetItem',
+        'test_PyDict_Next',
         'test_PyDict_Pop_key_absent',
         'test_PyDict_Pop_key_present',
         'test_PyDict_SetDefaultRef_default_unused',
@@ -367,6 +369,10 @@ def test_PyDict_SetDefaultRef_default_used():
 
 def test_test_PyDict_GetItem():
     assert cRefCount.test_PyDict_GetItem() == 0
+
+
+def test_test_PyDict_Next():
+    assert cRefCount.test_PyDict_Next() == 0
 
 
 @pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
