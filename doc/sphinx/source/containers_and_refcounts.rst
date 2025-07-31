@@ -1587,6 +1587,7 @@ The C signature is:
 
     PyObject *PyDict_GetItemWithError(PyObject *p, PyObject *key);
 
+This will segfault if either argument is NULL.
 Currently, the only failure mode is if the first argument is not a dictionary.
 
 For code and tests see:
