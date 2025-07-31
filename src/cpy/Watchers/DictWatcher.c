@@ -22,6 +22,8 @@
 
 #else
 
+#pragma mark Debug and Exploration code.
+
 // Event counters for a dictionary
 static long static_dict_added = 0L;
 static long static_dict_modified = 0L;
@@ -241,7 +243,7 @@ void dbg_PyDict_EVENT_MODIFIED_same_value_no_event(void) {
     Py_DECREF(val);
 }
 
-#pragma mark Verbose watcher to report Python file/line
+#pragma mark Production code: Verbose watcher to report Python file/line
 
 /** NOTE: This is based on pymemtrace code. */
 
@@ -302,7 +304,7 @@ write_frame_data_to_outfile(FILE *outfile, PyFrameObject *frame) {
                 get_python_file_name(frame),
                 get_python_line_number(frame),
                 get_python_function_name(frame)
-                );
+        );
     } else {
         fprintf(outfile, "No Python frame available.");
     }
@@ -338,7 +340,11 @@ static const char *watch_event_name(PyDict_WatchEvent event) {
 
 // Verbose dictionary callback function prints out Python file/line, dictionary, key and new value.
 static int dict_watcher_verbose(PyDict_WatchEvent event, PyObject *dict, PyObject *key, PyObject *new_value) {
-    fprintf(stdout, "Dict @ 0x%p: ", (void *)dict);
+    if (dict) {
+        fprintf(stdout, "Dict @ 0x%p RefCnt: %ld ", (void *) dict, Py_REFCNT(dict));
+    } else {
+        fprintf(stdout, "Dict @ NULL ");
+    }
     write_frame_data_to_outfile(stdout, PyEval_GetFrame());
     fprintf(stdout, " Event: %-24s", watch_event_name(event));
     fprintf(stdout, "\n");
@@ -371,20 +377,32 @@ int dict_watcher_verbose_add(PyObject *dict) {
     int watcher_id = PyDict_AddWatcher(&dict_watcher_verbose);
     int api_ret_val = PyDict_Watch(watcher_id, dict);
     assert(api_ret_val == 0);
+    fprintf(
+            stdout,
+            "Watching dict @ 0x%p RefCnt: %ld Watcher ID: %d\n",
+            (void *) dict, Py_REFCNT(dict), watcher_id
+    );
     return watcher_id;
 }
 
 int dict_watcher_verbose_remove(int watcher_id, PyObject *dict) {
     // Clean up.
+    int ret = 0;
     int api_ret_val = PyDict_Unwatch(watcher_id, dict);
     if (api_ret_val) {
-        return -1;
+        ret = -1;
+    } else {
+        api_ret_val = PyDict_ClearWatcher(watcher_id);
+        if (api_ret_val) {
+            ret = -2;
+        }
     }
-    api_ret_val = PyDict_ClearWatcher(watcher_id);
-    if (api_ret_val) {
-        return -2;
-    }
-    return 0;
+    fprintf(
+            stdout,
+            "Un-watching dict @ 0x%p RefCnt: %ld Watcher ID: %d Returns %d\n",
+            (void *) dict, Py_REFCNT(dict), watcher_id, ret
+    );
+    return ret;
 }
 
 #endif // PY_VERSION_HEX >= 0x030C0000

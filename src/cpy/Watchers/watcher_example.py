@@ -1,6 +1,8 @@
 """Example of using watchers."""
 import sys
 
+import pytest
+
 from cPyExtPatt import cWatchers
 
 
@@ -94,27 +96,18 @@ def dict_watcher_add_no_context_manager() -> None:
     cWatchers.py_dict_watcher_verbose_remove(watcher_id, d)
 
 
-# def temp() -> None:
-#     d = {}
-#     cm = cWatchers.PyDictWatcher(d)
-#     cmm = cm.__enter__(d)
-#     d['age'] = 42
-#     d['age'] = 43
-#     cmm.__exit__()
-#
-#
-# def temp_2() -> None:
-#     d = {}
-#     watcher_id = cWatchers.py_dict_watcher_verbose_add(d)
-#     d['age'] = 22
-#     d['age'] = 23
-#     del d['age']
-#     cWatchers.py_dict_watcher_verbose_remove(watcher_id, d)
+def dict_watcher_dealloc_no_context_manager() -> None:
+    print('dict_watcher_dealloc_no_context_manager():')
+    d = {1: "42"}
+    watcher_id = cWatchers.py_dict_watcher_verbose_add(d)
+    del d  # Generates a PyDict_EVENT_DEALLOCATED
+    # cWatchers.py_dict_watcher_verbose_remove(watcher_id, {})
+    with pytest.raises(UnboundLocalError) as err:
+        cWatchers.py_dict_watcher_verbose_remove(watcher_id, d)
+    assert err.value.args[0] == "cannot access local variable 'd' where it is not associated with a value"
 
 
 def main() -> int:
-    # temp()
-    # temp_2()
     dict_watcher_demo()
     dict_watcher_demo_refcount()
     dict_watcher_add()
@@ -125,6 +118,7 @@ def main() -> int:
     dict_watcher_cloned()
     dict_watcher_deallocated()
     dict_watcher_add_no_context_manager()
+    dict_watcher_dealloc_no_context_manager()
     return 0
 
 
