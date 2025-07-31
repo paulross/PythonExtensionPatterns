@@ -2875,6 +2875,8 @@ test_PyDict_Pop_key_absent(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth
 
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
+#pragma mark - Testing Sets
+
 static PyObject *
 test_PySet_Add(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
     CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
