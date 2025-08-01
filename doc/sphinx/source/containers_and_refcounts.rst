@@ -94,7 +94,7 @@ Exploring the CPython C API
 The code in this chapter explores the CPython C API in several ways:
 
 * C code that can be stepped through in the debugger.
-  This code is in ``src/cpy/Containers/DebugContainers.c``.
+  This code is in ``src/cpy/Containers/Debug*.c`` for Tuple, List, Dict, Set, StructSeq.
   This uses ``asserts`` to check the results, particularly reference counts, so should always be compiled with
   ``-DDEBUG``.
   The tests are exercised by ``src/main.c``.
@@ -980,6 +980,7 @@ Summary
 .. _PyDict_SetItem(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetItem
 .. _PyDict_SetDefault(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefault
 .. _PyDict_SetDefaultRef(): https://docs.python.org/3/c-api/dict.html#c.PyDict_SetDefaultRef
+.. _PyDict_Merge(): https://docs.python.org/3/c-api/dict.html#c.PyDict_Merge
 
 .. Getters
 

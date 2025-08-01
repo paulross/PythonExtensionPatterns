@@ -1,0 +1,11 @@
+//
+// Created by Paul Ross on 01/08/2025.
+//
+
+#ifndef PYTHONEXTENSIONPATTERNS_DEBUGSIGSEGV_H
+#define PYTHONEXTENSIONPATTERNS_DEBUGSIGSEGV_H
+
+/** If true then execute code that segfaults. */
+#define ACCEPT_SIGSEGV 0
+
+#endif //PYTHONEXTENSIONPATTERNS_DEBUGSIGSEGV_H

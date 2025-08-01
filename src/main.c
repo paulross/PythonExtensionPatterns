@@ -11,7 +11,11 @@
 
 #include <stdio.h>
 
-#include "DebugContainers.h"
+#include "DebugTuple.h"
+#include "DebugList.h"
+#include "DebugDict.h"
+#include "DebugSet.h"
+#include "DebugStructSeq.h"
 #include "DictWatcher.h"
 
 /**

@@ -117,8 +117,17 @@ add_executable(PythonExtensionPatterns
         # Builds py_call_super.cpp.o so is distinct from py_call_super.c.o
         src/cpy/Util/py_call_super.cpp
         src/cpy/CtxMgr/cCtxMgr.c
-        src/cpy/Containers/DebugContainers.c
-        src/cpy/Containers/DebugContainers.h
+        src/cpy/Containers/DebugTuple.c
+        src/cpy/Containers/DebugTuple.h
+        src/cpy/Containers/DebugSigsegv.h
+        src/cpy/Containers/DebugList.c
+        src/cpy/Containers/DebugList.h
+        src/cpy/Containers/DebugDict.c
+        src/cpy/Containers/DebugDict.h
+        src/cpy/Containers/DebugSet.c
+        src/cpy/Containers/DebugSet.h
+        src/cpy/Containers/DebugStructSeq.c
+        src/cpy/Containers/DebugStructSeq.h
         src/cpy/StructSequence/cStructSequence.c
         src/cpy/Watchers/DictWatcher.c
         src/cpy/Watchers/DictWatcher.h
@@ -126,7 +135,7 @@ add_executable(PythonExtensionPatterns
         src/cpy/pyextpatt_util.h
         src/cpy/Watchers/cWatchers.c
         src/cpy/Object/cSeqObject.c
-)
+    )
 
 #link_directories(${PYTHON_LINK_LIBRARY})
 
