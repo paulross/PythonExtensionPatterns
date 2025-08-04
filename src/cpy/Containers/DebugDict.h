@@ -35,6 +35,16 @@ void dbg_PyDict_Pop_key_present(void);
 void dbg_PyDict_Pop_key_absent(void);
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
+#pragma mark - Dictionaries - other
+void dbg_PyDict_Merge_with_match_no_override(void);
+void dbg_PyDict_Merge_with_match_with_override(void);
+void dbg_PyDict_Merge_no_match_no_override(void);
+void dbg_PyDict_Merge_no_match_with_override(void);
+void dbg_PyDict_Merge_no_match_no_override_same_value(void);
+void dbg_PyDict_Merge_identical_no_override(void);
+void dbg_PyDict_Merge_identical_with_override(void);
+void dbg_PyDict_Merge_same_dict(void);
+
 #if ACCEPT_SIGSEGV
 void dbg_PyDict_SetItem_SIGSEGV_on_key_NULL(void);
 void dbg_PyDict_SetItem_SIGSEGV_on_value_NULL(void);

@@ -953,15 +953,14 @@ void dbg_PyDict_Pop_key_absent(void) {
 
     PyObject *container = PyDict_New();
     assert(container);
-
     ref_count = Py_REFCNT(container);
     assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(container) == 0);
 
     PyObject *key = new_unique_string(__FUNCTION__, NULL);
     ref_count = Py_REFCNT(key);
     assert(ref_count == 1);
 
-    assert(PyDict_GET_SIZE(container) == 0);
 
     /* Not inserted into the dict, just used so that result references it. */
     PyObject *dummy_value = new_unique_string(__FUNCTION__, NULL);
@@ -999,6 +998,762 @@ void dbg_PyDict_Pop_key_absent(void) {
 }
 
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+
+#pragma mark - Dictionaries - other
+/** Checks using PyDict_Merge with two dicts with one item in each.
+ * The keys match, the values do not.
+ * PyDict_Merge is called with override=0.
+ */
+void dbg_PyDict_Merge_with_match_no_override(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    /* Set up dict A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    ref_count = Py_REFCNT(dict_a);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_a) == 0);
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    /* Set up dict B. Same key, different value. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    ref_count = Py_REFCNT(dict_b);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 0);
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_b, key_a, value_b)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    /* Now merge with override=0. */
+    if (PyDict_Merge(dict_a, dict_b, 0)) {
+        assert(0);
+    }
+    assert(!PyErr_Occurred());
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+
+    /* Check reference counts. key_a 3, value_a 2, value_b 2.*/
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    /* Check GetItem is value_a */
+    assert(!PyErr_Occurred());
+    PyObject *get_item = PyDict_GetItem(dict_a, key_a);
+    assert(get_item == value_a);
+    assert(!PyErr_Occurred());
+
+    /* Clean up. */
+    Py_DECREF(dict_a);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    Py_DECREF(dict_b);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+}
+
+/** Checks using PyDict_Merge with two dicts with one item in each.
+ * The keys match, the values do not.
+ * PyDict_Merge is called with override=1.
+ */
+void dbg_PyDict_Merge_with_match_with_override(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    /* Set up dict A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    ref_count = Py_REFCNT(dict_a);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_a) == 0);
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    /* Set up dict B. Same key, different value. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    ref_count = Py_REFCNT(dict_b);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 0);
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_b, key_a, value_b)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    /* Now merge with override=1. */
+    if (PyDict_Merge(dict_a, dict_b, 1)) {
+        assert(0);
+    }
+    assert(!PyErr_Occurred());
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+
+    /* Check reference counts. key_a 3, value_a 1, value_b 3.
+     * value_a has been decref'd as it is replaced.
+     * Compare with dbg_PyDict_Merge_with_match_no_override() above. */
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 3);
+
+    /* Check GetItem is value_b */
+    assert(!PyErr_Occurred());
+    PyObject *get_item = PyDict_GetItem(dict_a, key_a);
+    assert(get_item == value_b);
+    assert(!PyErr_Occurred());
+
+    /* Clean up. */
+    Py_DECREF(dict_a);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    Py_DECREF(dict_b);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+}
+
+/** Checks using PyDict_Merge with two dicts with one item in each.
+ * The keys do not match, the values do not.
+ * PyDict_Merge is called with override=0.
+ */
+void dbg_PyDict_Merge_no_match_no_override(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    /* Set up dict A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    ref_count = Py_REFCNT(dict_a);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_a) == 0);
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    /* Set up dict B. Same key, different value. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    ref_count = Py_REFCNT(dict_b);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 0);
+    PyObject *key_b = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 1);
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_b, key_b, value_b)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    /* Now merge with override=0. */
+    if (PyDict_Merge(dict_a, dict_b, 0)) {
+        assert(0);
+    }
+    assert(!PyErr_Occurred());
+    assert(PyDict_GET_SIZE(dict_a) == 2);
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+
+    /* Check reference counts. */
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 3);
+
+    /* Check GetItem is value_b */
+    assert(!PyErr_Occurred());
+    PyObject *get_item = NULL;
+    get_item = PyDict_GetItem(dict_a, key_a);
+    assert(get_item == value_a);
+    get_item = PyDict_GetItem(dict_a, key_b);
+    assert(get_item == value_b);
+    assert(!PyErr_Occurred());
+
+    /* Clean up. */
+    Py_DECREF(dict_a);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    Py_DECREF(dict_b);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(key_b);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+}
+
+/** Checks using PyDict_Merge with two dicts with one item in each.
+ * The keys do not match, the values do not.
+ * PyDict_Merge is called with override=1.
+ */
+void dbg_PyDict_Merge_no_match_with_override(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    /* Set up dict A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    ref_count = Py_REFCNT(dict_a);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_a) == 0);
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    /* Set up dict B. Different key, different value. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    ref_count = Py_REFCNT(dict_b);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 0);
+    PyObject *key_b = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 1);
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_b, key_b, value_b)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    /* Now merge with override=1. */
+    if (PyDict_Merge(dict_a, dict_b, 1)) {
+        assert(0);
+    }
+    assert(!PyErr_Occurred());
+    assert(PyDict_GET_SIZE(dict_a) == 2);
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+
+    /* Check reference counts. */
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 3);
+
+    /* Check GetItem is value_b */
+    assert(!PyErr_Occurred());
+    PyObject *get_item = NULL;
+    get_item = PyDict_GetItem(dict_a, key_a);
+    assert(get_item == value_a);
+    get_item = PyDict_GetItem(dict_a, key_b);
+    assert(get_item == value_b);
+    assert(!PyErr_Occurred());
+
+    /* Clean up. */
+    Py_DECREF(dict_a);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 2);
+
+    Py_DECREF(dict_b);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_b);
+    assert(ref_count == 1);
+
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(key_b);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+}
+
+/** Checks using PyDict_Merge with two dicts with one item in each.
+ * The keys do not match, the values do match.
+ * PyDict_Merge is called with override=0.
+ */
+void dbg_PyDict_Merge_no_match_no_override_same_value(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    /* Set up dict A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    ref_count = Py_REFCNT(dict_a);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_a) == 0);
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    /* Set up dict B. Different key, same value. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    ref_count = Py_REFCNT(dict_b);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 0);
+    PyObject *key_b = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_b, key_b, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 3);
+
+    /* Now merge with override=0. */
+    if (PyDict_Merge(dict_a, dict_b, 0)) {
+        assert(0);
+    }
+    assert(!PyErr_Occurred());
+    assert(PyDict_GET_SIZE(dict_a) == 2);
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+
+    /* Check reference counts. */
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 4);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 3);
+
+    /* Check GetItem is value_b */
+    assert(!PyErr_Occurred());
+    PyObject *get_item = NULL;
+    get_item = PyDict_GetItem(dict_a, key_a);
+    assert(get_item == value_a);
+    get_item = PyDict_GetItem(dict_a, key_b);
+    assert(get_item == value_a);
+    assert(!PyErr_Occurred());
+
+    /* Clean up. */
+    Py_DECREF(dict_a);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 2);
+
+    Py_DECREF(dict_b);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(key_b);
+    assert(ref_count == 1);
+
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(key_b);
+
+    assert(!PyErr_Occurred());
+}
+
+/** Checks using PyDict_Merge with two dicts with one item in each.
+ * The dictionaries are identical.
+ * PyDict_Merge is called with override=0.
+ */
+void dbg_PyDict_Merge_identical_no_override(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    /* Set up dict A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    ref_count = Py_REFCNT(dict_a);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_a) == 0);
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    /* Set up dict B. Same key, same value. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    ref_count = Py_REFCNT(dict_b);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 0);
+    if (PyDict_SetItem(dict_b, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 3);
+
+    /* Now merge with override=0. */
+    if (PyDict_Merge(dict_a, dict_b, 0)) {
+        assert(0);
+    }
+    assert(!PyErr_Occurred());
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+
+    /* Check reference counts. */
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 3);
+
+    /* Check GetItem is value_a */
+    assert(!PyErr_Occurred());
+    PyObject *get_item = NULL;
+    get_item = PyDict_GetItem(dict_a, key_a);
+    assert(get_item == value_a);
+    assert(!PyErr_Occurred());
+
+    /* Clean up. */
+    Py_DECREF(dict_a);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    Py_DECREF(dict_b);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+
+    assert(!PyErr_Occurred());
+}
+
+/** Checks using PyDict_Merge with two dicts with one item in each.
+ * The dictionaries are identical.
+ * PyDict_Merge is called with override=1.
+ */
+void dbg_PyDict_Merge_identical_with_override(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    /* Set up dict A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    ref_count = Py_REFCNT(dict_a);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_a) == 0);
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    /* Set up dict B. Same key, same value. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    ref_count = Py_REFCNT(dict_b);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 0);
+    if (PyDict_SetItem(dict_b, key_a, value_a)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 3);
+
+    /* Now merge with override=0. */
+    if (PyDict_Merge(dict_a, dict_b, 1)) {
+        assert(0);
+    }
+    assert(!PyErr_Occurred());
+    assert(PyDict_GET_SIZE(dict_a) == 1);
+    assert(PyDict_GET_SIZE(dict_b) == 1);
+
+    /* Check reference counts. */
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 3);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 3);
+
+    /* Check GetItem is value_a */
+    assert(!PyErr_Occurred());
+    PyObject *get_item = NULL;
+    get_item = PyDict_GetItem(dict_a, key_a);
+    assert(get_item == value_a);
+    assert(!PyErr_Occurred());
+
+    /* Clean up. */
+    Py_DECREF(dict_a);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 2);
+
+    Py_DECREF(dict_b);
+    ref_count = Py_REFCNT(key_a);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value_a);
+    assert(ref_count == 1);
+
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+
+    assert(!PyErr_Occurred());
+}
+
+/**
+ * Trys self merge. Nothing happens as dict_merge() tests if the two arguments are
+ * the same and does nothing if they are.
+ * There is a test in dict_merge() in dictobject.c
+ * if (other == mp || other->ma_used == 0) return 0;
+ */
+void dbg_PyDict_Merge_same_dict(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+
+    /* Set up dict A. */
+    PyObject *dict = PyDict_New();
+    assert(dict);
+    ref_count = Py_REFCNT(dict);
+    assert(ref_count == 1);
+    assert(PyDict_GET_SIZE(dict) == 0);
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+    if (PyDict_SetItem(dict, key, value)) {
+        assert(0);
+    }
+    assert(PyDict_GET_SIZE(dict) == 1);
+    Py_DECREF(key);
+    Py_DECREF(value);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyDict_Merge(dict, dict, 0)) {
+        assert(0);
+    }
+    if (PyDict_Merge(dict, dict, 1)) {
+        assert(0);
+    }
+    Py_DECREF(dict);
+    assert(!PyErr_Occurred());
+}
 
 #pragma mark - Code that sefgfaults
 

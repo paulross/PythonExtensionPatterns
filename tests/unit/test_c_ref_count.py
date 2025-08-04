@@ -22,6 +22,14 @@ def test_module_dir_pre_3_13():
         'set_no_steals',
         'set_no_steals_decref',
         'test_PyDict_GetItem',
+        'test_PyDict_Merge_identical_no_override',
+        'test_PyDict_Merge_identical_with_override',
+        'test_PyDict_Merge_no_match_no_override',
+        'test_PyDict_Merge_no_match_no_override_same_value',
+        'test_PyDict_Merge_no_match_with_override',
+        'test_PyDict_Merge_same_dict',
+        'test_PyDict_Merge_with_match_no_override',
+        'test_PyDict_Merge_with_match_with_override',
         'test_PyDict_Next',
         'test_PyDict_SetDefault_default_unused',
         'test_PyDict_SetDefault_default_used',
@@ -88,6 +96,14 @@ def test_module_dir_3_13():
         'set_no_steals',
         'set_no_steals_decref',
         'test_PyDict_GetItem',
+        'test_PyDict_Merge_identical_no_override',
+        'test_PyDict_Merge_identical_with_override',
+        'test_PyDict_Merge_no_match_no_override',
+        'test_PyDict_Merge_no_match_no_override_same_value',
+        'test_PyDict_Merge_no_match_with_override',
+        'test_PyDict_Merge_same_dict',
+        'test_PyDict_Merge_with_match_no_override',
+        'test_PyDict_Merge_with_match_with_override',
         'test_PyDict_Next',
         'test_PyDict_Pop_key_absent',
         'test_PyDict_Pop_key_present',
@@ -367,11 +383,11 @@ def test_PyDict_SetDefaultRef_default_used():
     assert cRefCount.test_PyDict_SetDefaultRef_default_used() == 0
 
 
-def test_test_PyDict_GetItem():
+def test_PyDict_GetItem():
     assert cRefCount.test_PyDict_GetItem() == 0
 
 
-def test_test_PyDict_Next():
+def test_PyDict_Next():
     assert cRefCount.test_PyDict_Next() == 0
 
 
@@ -383,6 +399,38 @@ def test_PyDict_Pop_key_present():
 @pytest.mark.skipif(not (sys.version_info.minor >= 13), reason='Python 3.13+')
 def test_PyDict_Pop_key_absent():
     assert cRefCount.test_PyDict_Pop_key_absent() == 0
+
+
+def test_PyDict_test_PyDict_Merge_with_match_no_override():
+    assert cRefCount.test_PyDict_Merge_with_match_no_override() == 0
+
+
+def test_PyDict_test_PyDict_Merge_with_match_with_override():
+    assert cRefCount.test_PyDict_Merge_with_match_with_override() == 0
+
+
+def test_PyDict_test_PyDict_Merge_no_match_no_override():
+    assert cRefCount.test_PyDict_Merge_no_match_no_override() == 0
+
+
+def test_PyDict_test_PyDict_Merge_no_match_with_override():
+    assert cRefCount.test_PyDict_Merge_no_match_with_override() == 0
+
+
+def test_PyDict_Merge_no_match_no_override_same_value():
+    assert cRefCount.test_PyDict_Merge_no_match_no_override_same_value() == 0
+
+
+def test_PyDict_Merge_identical_no_override():
+    assert cRefCount.test_PyDict_Merge_identical_no_override() == 0
+
+
+def test_PyDict_Merge_identical_with_override():
+    assert cRefCount.test_PyDict_Merge_identical_with_override() == 0
+
+
+def test_PyDict_Merge_same_dict():
+    assert cRefCount.test_PyDict_Merge_same_dict() == 0
 
 
 def test_PySet_Add():

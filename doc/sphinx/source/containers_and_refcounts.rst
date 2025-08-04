@@ -109,7 +109,7 @@ The code in this chapter explores the CPython C API in several ways:
     The examples below use code that calls a function ``new_unique_string()``.
     This function is designed to create a new, unique,  ``PyObject`` (a string)
     that is never cached so always starts with a reference count of unity.
-    The implementation is in ``src/cpy/Containers/DebugContainers.c`` and looks something like this:
+    The implementation is in ``src/cpy/pyextpatt_util.c`` and looks something like this:
 
     .. code-block:: c
 
@@ -233,7 +233,7 @@ For example:
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_SetItem_steals``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyTuple_SetItem_steals()``
@@ -342,7 +342,7 @@ So `PyTuple_SetItem()`_ *discards* (see :ref:`chapter_containers_and_refcounts.d
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_SetItem_steals_replace``
     * ``dbg_PyTuple_SetItem_replace_with_same``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
@@ -382,13 +382,13 @@ For code and tests see:
 
 For code tests see, when the container is not a tuple:
 
-* C: ``dbg_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/Containers/DebugContainers.c``.
+* C: ``dbg_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/Containers/DebugTuple.c``.
 * CPython: ``test_PyTuple_SetItem_fails_not_a_tuple`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_fails_not_a_tuple``.
 
 And, when the index out of range:
 
-* C: ``dbg_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/Containers/DebugContainers.c``.
+* C: ``dbg_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/Containers/DebugTuple.c``.
 * CPython: ``test_PyTuple_SetItem_fails_out_of_range`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyTuple_SetItem_fails_out_of_range``.
 
@@ -438,7 +438,7 @@ when replacing another object.
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_PyTuple_SET_ITEM_steals()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyTuple_PyTuple_SET_ITEM_steals()``
@@ -478,7 +478,7 @@ This is because `PyTuple_SET_ITEM()`_ *abandons* the previous reference
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_SET_ITEM_steals_replace()``
     * ``dbg_PyTuple_SET_ITEM_replace_with_same()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
@@ -533,7 +533,7 @@ Setting a ``NULL`` will not cause an error:
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_SetIem_NULL()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyTuple_SetItem_NULL()``
@@ -551,7 +551,7 @@ And:
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_SET_ITEM_NULL()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyTuple_SET_ITEM_NULL()``
@@ -579,7 +579,7 @@ Replacing a ``NULL`` will not cause an error, the original value is *abandoned*
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_SetIem_NULL_SetIem``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyTuple_SetItem_NULL_SetIem``
@@ -597,7 +597,7 @@ And:
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_SET_ITEM_NULL_SET_ITEM()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyTuple_SET_ITEM_NULL_SET_ITEM()``
@@ -642,7 +642,7 @@ For example:
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_PyTuple_Pack``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyTuple_Py_PyTuple_Pack``
@@ -679,7 +679,7 @@ potentially, leak:
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugTuple.c``:
     * ``dbg_PyTuple_Py_BuildValue()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyTuple_Py_BuildValue``
@@ -817,7 +817,7 @@ On failure the reference count of value is unchanged and a ``SystemError`` is ra
 
 For code and tests, including failure modes, see:
 
-* C: ``dbg_PyList_Append...`` in ``src/cpy/Containers/DebugContainers.c``.
+* C: ``dbg_PyList_Append...`` in ``src/cpy/Containers/DebugList.c``.
 * CPython: ``test_PyList_Append...`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyList_Append`` etc.
 
@@ -859,7 +859,7 @@ the text "bad argument to internal function".
 
 For code and tests, including failure modes, see:
 
-* C: ``dbg_PyList_Insert...`` in ``src/cpy/Containers/DebugContainers.c``.
+* C: ``dbg_PyList_Insert...`` in ``src/cpy/Containers/DebugList.c``.
 * CPython: ``test_PyList_Insert...`` in ``src/cpy/RefCount/cRefCount.c``.
 * Python: ``tests.unit.test_c_ref_count.test_PyList_Insert`` etc.
 
@@ -877,7 +877,7 @@ For code and tests, including failure modes, see:
     The Python documentation does not mention (but implies) that if the index is greater than the list length then the
     value is appended to the list.
 
-    For example (``dbg_PyList_Insert_Is_Truncated()`` in ``src/cpy/Containers/DebugContainers.c``):
+    For example (``dbg_PyList_Insert_Is_Truncated()`` in ``src/cpy/Containers/DebugList.c``):
 
     .. code-block:: c
 
@@ -900,7 +900,7 @@ For code and tests, including failure modes, see:
     can be negative in which case the index is calculated from the end.
     If that index calculation is less than zero it is truncated to zero.
 
-    For example (``dbg_PyList_Insert_Negative_Index()`` in ``src/cpy/Containers/DebugContainers.c``):
+    For example (``dbg_PyList_Insert_Negative_Index()`` in ``src/cpy/Containers/DebugList.c``):
 
     .. code-block:: c
 
@@ -1043,7 +1043,7 @@ The Python documentation for `PyDict_SetItem()`_ is incomplete.
 
     If either the key or the value are NULL this will segfault.
     See ``dbg_PyDict_SetItem_NULL_key()`` and ``dbg_PyDict_SetItem_NULL_value()`` in
-    ``src/cpy/Containers/DebugContainers.c``.
+    ``src/cpy/Containers/DebugDict.c``.
 
 This code illustrates `PyDict_SetItem()`_ with ``assert()`` showing the reference count:
 
@@ -1105,7 +1105,7 @@ Now replace the value with the same value, reference counts remain the same:
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_SetItem_*()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyDict_SetItem_*()``
@@ -1114,7 +1114,7 @@ For code and tests see:
 
 .. note::
 
-    In ``src/cpy/Containers/DebugContainers.c`` there are failure tests that cause a SIGSEGV if ``ACCEPT_SIGSEGV``
+    In ``src/cpy/Containers/DebugDict.c`` there are failure tests that cause a SIGSEGV if ``ACCEPT_SIGSEGV``
     is non zero.
     ``ACCEPT_SIGSEGV`` is defined in ``src/cpy/Containers/DebugContainers.h``.
 
@@ -1152,7 +1152,7 @@ These reference count changes are not particularly clear from the official Pytho
 
 For code and tests see:
 
-* C, in ``src/cpy/Containers/DebugContainers.c``:
+* C, in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_SetDefault_default_unused()``
     * ``dbg_PyDict_SetDefault_default_used()``
 * CPython, in ``src/cpy/RefCount/cRefCount.c``.
@@ -1253,7 +1253,7 @@ For example:
 
 For code and tests see:
 
-* C, in ``src/cpy/Containers/DebugContainers.c``:
+* C, in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_SetDefaultRef_default_unused()``
 * CPython, in ``src/cpy/RefCount/cRefCount.c``.
     ``test_PyDict_SetDefaultRef_default_unused()``
@@ -1306,7 +1306,7 @@ These reference count changes are not particularly clear from the official Pytho
 
 For code and tests see:
 
-* C, in ``src/cpy/Containers/DebugContainers.c``:
+* C, in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_SetDefaultRef_default_used()``
 * CPython, in ``src/cpy/RefCount/cRefCount.c``.
     ``test_PyDict_SetDefaultRef_default_used()``
@@ -1337,11 +1337,11 @@ the key does not exist in the dictionary.
 .. warning::
 
     If the key is ``NULL`` this will segfault.
-    See ``dbg_PyDict_GetItem_key_NULL()`` in ``src/cpy/Containers/DebugContainers.c``.
+    See ``dbg_PyDict_GetItem_key_NULL()`` in ``src/cpy/Containers/DebugDict.c``.
 
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_GetItem()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyDict_GetItem()``
@@ -1372,7 +1372,7 @@ The function returns 1.
 
 For code and tests see:
 
-* C, in ``src/cpy/Containers/DebugContainers.c``:
+* C, in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_GetItemRef()``
 * CPython, in ``src/cpy/RefCount/cRefCount.c``.
     ``test_PyDict_SetDefaultRef_default_used()``
@@ -1463,7 +1463,7 @@ For example:
 
 For code and tests see:
 
-* C, in ``src/cpy/Containers/DebugContainers.c``:
+* C, in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_Pop_key_present()``
 * CPython, in ``src/cpy/RefCount/cRefCount.c``.
     ``test_PyDict_Pop_key_present()``
@@ -1509,7 +1509,7 @@ For example:
 
 For code and tests see:
 
-* C, in ``src/cpy/Containers/DebugContainers.c``:
+* C, in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_Pop_key_absent()``
 * CPython, in ``src/cpy/RefCount/cRefCount.c``.
     ``test_PyDict_Pop_key_absent()``
@@ -1526,7 +1526,6 @@ Failure
 .. todo::
 
     Finish Dictionary ``PyDict_Pop()`` Failure
-
 
 
 .. index::
@@ -1546,12 +1545,66 @@ The C function signature is:
 The Python documentation is good for this API.
 For code and tests see:
 
-* C: in ``src/cpy/Containers/DebugContainers.c``:
+* C: in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_Next()``
 * CPython: in ``src/cpy/RefCount/cRefCount.c``:
     * ``test_PyDict_Next()``
 * Python: in ``tests/unit/test_c_ref_count.py``:
     * ``test_PyDict_Next()``
+
+
+.. index::
+    single: Dictionary; PyDict_Merge()
+
+``PyDict_Merge()``
+--------------------
+
+`PyDict_Merge()`_ takes two dictionaries and updates the first with the key/values of the second.
+The C function signature is:
+
+.. code-block:: c
+
+    int PyDict_Merge(PyObject *a, PyObject *b, int override)
+
+The behaviour with reference counts is:
+
+- Any key in ``b`` that is *not* in ``a`` will have its reference count incremented, and for the corresponding value.
+- If override is 0 then any key in ``b`` that *is* in ``a`` the reference count will remain the same, and for the corresponding value.
+- If override is 1 then any key in ``b`` that *is* in ``a`` the reference count will remain the same.
+  For the corresponding value in ``a`` the reference count will be decremented,
+  the corresponding value in ``b`` will be incremented.
+
+.. note::
+
+    Unlike some CPython APIs `PyDict_Merge()`_ *does* check if the two arguments are the same.
+    There is a test in ``dict_merge()`` in ``dictobject.c``:
+
+    .. code-block::c
+
+        if (other == mp || other->ma_used == 0) return 0;
+
+    So this code is perfectly safe:
+
+    .. code-block::c
+
+        PyObject *dict = PyDict_New();
+        PyObject *key = new_unique_string(__FUNCTION__, NULL);
+        PyObject *value = new_unique_string(__FUNCTION__, NULL);
+        PyDict_SetItem(dict, key, value);
+
+        PyDict_Merge(dict, dict, 0); // Does nothing.
+        PyDict_Merge(dict, dict, 1); // Does nothing.
+
+        Py_DECREF(dict);
+
+For code and tests see:
+
+* C: in ``src/cpy/Containers/DebugDict.c``:
+    * ``dbg_PyDict_Merge_*()``
+* CPython: in ``src/cpy/RefCount/cRefCount.c``:
+    * ``test_PyDict_Merge_*()``
+* Python: in ``tests/unit/test_c_ref_count.py``:
+    * ``test_PyDict_Merge_*()``
 
 
 .. index::
@@ -1593,7 +1646,7 @@ Currently, the only failure mode is if the first argument is not a dictionary.
 
 For code and tests see:
 
-* C, in ``src/cpy/Containers/DebugContainers.c``:
+* C, in ``src/cpy/Containers/DebugDict.c``:
     * ``dbg_PyDict_GetItemWithError_fails()``
 
 .. index::

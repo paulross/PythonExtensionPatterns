@@ -121,6 +121,7 @@ finally:
 #endif
 
 #pragma mark - Tuples
+
 void dbg_PyTuple(void) {
     dbg_PyTuple_SetItem_steals();
     dbg_PyTuple_SET_ITEM_steals();
@@ -143,6 +144,7 @@ void dbg_PyTuple(void) {
 }
 
 #pragma mark - Lists
+
 void dbg_PyList(void) {
     dbg_PyList_SetItem_steals();
     dbg_PyList_SET_ITEM_steals();
@@ -172,6 +174,7 @@ void dbg_PyList(void) {
 }
 
 #pragma mark - Dictionaries
+
 void dbg_PyDict(void) {
     dbg_PyDict_SetItem_increments();
 
@@ -218,9 +221,19 @@ void dbg_PyDict(void) {
     dbg_PyDict_EVENT_MODIFIED();
     dbg_PyDict_EVENT_MODIFIED_same_value_no_event();
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 12
+
+    dbg_PyDict_Merge_with_match_no_override();
+    dbg_PyDict_Merge_with_match_with_override();
+    dbg_PyDict_Merge_no_match_no_override();
+    dbg_PyDict_Merge_no_match_with_override();
+    dbg_PyDict_Merge_no_match_no_override_same_value();
+    dbg_PyDict_Merge_identical_no_override();
+    dbg_PyDict_Merge_identical_with_override();
+    dbg_PyDict_Merge_same_dict();
 }
 
 #pragma mark - Sets
+
 void dbg_PySet(void) {
     dbg_PySet_Add();
     dbg_PySet_Discard();
@@ -228,6 +241,7 @@ void dbg_PySet(void) {
 }
 
 #pragma mark - Struct Sequence
+
 void dbg_PyStructSequence(void) {
     dbg_PyStructSequence_simple_ctor();
     dbg_PyStructSequence_setitem_abandons();
@@ -235,7 +249,7 @@ void dbg_PyStructSequence(void) {
     dbg_PyStructSequence_with_unnamed_field();
 }
 
-int main(int argc, const char * argv[]) {
+int main(int argc, const char *argv[]) {
     // insert code here...
     printf("Hello, World!\n");
 

@@ -581,7 +581,8 @@ dict_buildvalue_no_steals(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_
             fprintf(                                                                                    \
                 stderr,                                                                                 \
                 "Py_REFCNT(%s) != %ld but %ld. Test: %d Commentary: %s File: %s Line: %d\n",            \
-                #variable, expected, (long)_ref_count, error_flag_position, commentary, __FILE__, __LINE__    \
+                #variable, expected, (long)_ref_count, error_flag_position, commentary,                 \
+                __FILE__, __LINE__                                                                      \
             );                                                                                          \
             return_value |= 1 << error_flag_position;                                                   \
         }                                                                                               \
@@ -2934,6 +2935,570 @@ test_PyDict_Pop_key_absent(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth
 
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
 
+/** Merges with a common key, no override.
+ * PyDict_SetItem(dict_a, key_a, value_a)
+ * PyDict_SetItem(dict_b, key_a, value_b)
+ *
+ * Then:
+ * Was: key_a 3, value_a 2, value_b 2.
+ * PyDict_Merge(dict_a, dict_b, 0)
+ * Now: key_a 3, value_a 2, value_b 2.
+ */
+static PyObject *
+test_PyDict_Merge_with_match_no_override(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    /* Dictionary A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_a, 1L, "container after PyObject *dict_a = PyDict_New();");
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "New key");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "New value");
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    /* Dictionary B. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_b, 1L, "container after PyObject *dict_b = PyDict_New();");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "New value");
+    if (PyDict_SetItem(dict_b, key_a, value_b)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 3L, "key_a after PyDict_SetItem(dict_b, key_a, value_b)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after PyDict_SetItem(dict_b, key_a, value_b)");
+
+    /* Now merge the two dictionaries. */
+    if (PyDict_Merge(dict_a, dict_b, 0)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 3L, "key_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after PyDict_Merge()");
+
+    Py_DECREF(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after Py_DECREF(dict_a);");
+
+    Py_DECREF(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "value_b after Py_DECREF(dict_b);");
+
+    /* Clean up. */
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+    finally:
+    return PyLong_FromLong(return_value);
+}
+
+/** Merges with a common key, with override.
+ * PyDict_SetItem(dict_a, key_a, value_a)
+ * PyDict_SetItem(dict_b, key_a, value_b)
+ *
+ * Then:
+ * Was: key_a 3, value_a 2, value_b 2.
+ * PyDict_Merge(dict_a, dict_b, 1)
+ * Now: key_a 3, value_a 1, value_b 3.
+ */
+static PyObject *
+test_PyDict_Merge_with_match_with_override(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    /* Dictionary A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_a, 1L, "container after PyObject *dict_a = PyDict_New();");
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "New key");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "New value");
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    /* Dictionary B. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_b, 1L, "container after PyObject *dict_b = PyDict_New();");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "New value");
+    if (PyDict_SetItem(dict_b, key_a, value_b)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 3L, "key_a after PyDict_SetItem(dict_b, key_a, value_b)");
+
+    /* Now merge the two dictionaries. */
+    if (PyDict_Merge(dict_a, dict_b, 1)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 3L, "key_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 3L, "value_b after PyDict_Merge()");
+
+    Py_DECREF(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after Py_DECREF(dict_a);");
+
+    Py_DECREF(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "value_b after Py_DECREF(dict_b);");
+
+    /* Clean up. */
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+    finally:
+    return PyLong_FromLong(return_value);
+}
+
+/** Merges with a no common key, no override.
+ * PyDict_SetItem(dict_a, key_a, value_a)
+ * PyDict_SetItem(dict_b, key_b, value_b)
+ *
+ * Then:
+ * Was: key_a 2, value_a 2, key_b 2, value_b 2.
+ * PyDict_Merge(dict_a, dict_b, 0)
+ * Now: key_a 2, value_a 2, key_b 3, value_b 3.
+ */
+static PyObject *
+test_PyDict_Merge_no_match_no_override(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    /* Dictionary A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_a, 1L, "container after PyObject *dict_a = PyDict_New();");
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "New key");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "New value");
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    /* Dictionary B. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_b, 1L, "container after PyObject *dict_b = PyDict_New();");
+    PyObject *key_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 1L, "New key");
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "New value");
+    if (PyDict_SetItem(dict_b, key_b, value_b)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 2L, "key_b after PyDict_SetItem(dict_b, key_b, value_b)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after PyDict_SetItem(dict_b, key_b, value_b)");
+
+    /* Now merge the two dictionaries. */
+    if (PyDict_Merge(dict_a, dict_b, 0)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 3L, "key_b after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 3L, "value_b after PyDict_Merge()");
+
+    Py_DECREF(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 2L, "key_b after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after Py_DECREF(dict_a);");
+
+    Py_DECREF(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 1L, "key_b after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "value_b after Py_DECREF(dict_b);");
+
+    /* Clean up. */
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(key_b);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+    finally:
+    return PyLong_FromLong(return_value);
+}
+
+
+/** Merges with a no common key, with override.
+ * PyDict_SetItem(dict_a, key_a, value_a)
+ * PyDict_SetItem(dict_b, key_b, value_b)
+ *
+ * Then:
+ * Was: key_a 2, value_a 2, key_b 2, value_b 2.
+ * PyDict_Merge(dict_a, dict_b, 1)
+ * Now: key_a 2, value_a 2, key_b 3, value_b 3.
+ */
+static PyObject *
+test_PyDict_Merge_no_match_with_override(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    /* Dictionary A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_a, 1L, "container after PyObject *dict_a = PyDict_New();");
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "New key");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "New value");
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    /* Dictionary B. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_b, 1L, "container after PyObject *dict_b = PyDict_New();");
+    PyObject *key_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 1L, "New key");
+    PyObject *value_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "New value");
+    if (PyDict_SetItem(dict_b, key_b, value_b)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 2L, "key_b after PyDict_SetItem(dict_b, key_b, value_b)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after PyDict_SetItem(dict_b, key_b, value_b)");
+
+    /* Now merge the two dictionaries. */
+    if (PyDict_Merge(dict_a, dict_b, 1)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 3L, "key_b after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 3L, "value_b after PyDict_Merge()");
+
+    Py_DECREF(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 2L, "key_b after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 2L, "value_b after Py_DECREF(dict_a);");
+
+    Py_DECREF(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 1L, "key_b after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_b, 1L, "value_b after Py_DECREF(dict_b);");
+
+    /* Clean up. */
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(key_b);
+    Py_DECREF(value_b);
+
+    assert(!PyErr_Occurred());
+    finally:
+    return PyLong_FromLong(return_value);
+}
+
+/** Merges with a no common key but common value, no override.
+ * PyDict_SetItem(dict_a, key_a, value_a)
+ * PyDict_SetItem(dict_b, key_b, value_a)
+ *
+ * Then:
+ * Was: key_a 2, value_a 3, key_b 2.
+ * PyDict_Merge(dict_a, dict_b, 0)
+ * Now: key_a 2, value_a 4, key_b 3.
+ */
+static PyObject *
+test_PyDict_Merge_no_match_no_override_same_value(PyObject *Py_UNUSED(module),
+                                                  PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    /* Dictionary A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_a, 1L, "container after PyObject *dict_a = PyDict_New();");
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "New key");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "New value");
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    /* Dictionary B. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_b, 1L, "container after PyObject *dict_b = PyDict_New();");
+    PyObject *key_b = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 1L, "New key");
+    if (PyDict_SetItem(dict_b, key_b, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 2L, "key_b after PyDict_SetItem(dict_b, key_b, value_b)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 3L, "value_b after PyDict_SetItem(dict_b, key_b, value_a)");
+
+    /* Now merge the two dictionaries. */
+    if (PyDict_Merge(dict_a, dict_b, 0)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 4L, "value_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 3L, "key_b after PyDict_Merge()");
+
+    Py_DECREF(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 2L, "key_b after Py_DECREF(dict_a);");
+
+    Py_DECREF(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_b, 1L, "key_b after Py_DECREF(dict_b);");
+
+    /* Clean up. */
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+    Py_DECREF(key_b);
+
+    assert(!PyErr_Occurred());
+    finally:
+    return PyLong_FromLong(return_value);
+}
+
+/** Merges with a common key and common value, no override.
+ * PyDict_SetItem(dict_a, key_a, value_a)
+ * PyDict_SetItem(dict_b, key_a, value_a)
+ *
+ * Then:
+ * Was: key_a 3, value_a 3.
+ * PyDict_Merge(dict_a, dict_b, 0)
+ * Now: key_a 3, value_a 3.
+ */
+static PyObject *
+test_PyDict_Merge_identical_no_override(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    /* Dictionary A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_a, 1L, "container after PyObject *dict_a = PyDict_New();");
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "New key");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "New value");
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    /* Dictionary B. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_b, 1L, "container after PyObject *dict_b = PyDict_New();");
+    if (PyDict_SetItem(dict_b, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 3L, "key_a after PyDict_SetItem(dict_b, key_a, value_a)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 3L, "value_b after PyDict_SetItem(dict_a, key_a, value_a)");
+
+    /* Now merge the two dictionaries. */
+    if (PyDict_Merge(dict_a, dict_b, 0)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 3L, "key_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 3L, "value_a after PyDict_Merge()");
+
+    Py_DECREF(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after Py_DECREF(dict_a);");
+
+    Py_DECREF(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_b);");
+
+    /* Clean up. */
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+
+    assert(!PyErr_Occurred());
+    finally:
+    return PyLong_FromLong(return_value);
+}
+
+/** Merges with a common key and common value, with override.
+ * PyDict_SetItem(dict_a, key_a, value_a)
+ * PyDict_SetItem(dict_b, key_a, value_a)
+ *
+ * Then:
+ * Was: key_a 3, value_a 3.
+ * PyDict_Merge(dict_a, dict_b, 1)
+ * Now: key_a 3, value_a 3.
+ */
+static PyObject *
+test_PyDict_Merge_identical_with_override(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    /* Dictionary A. */
+    PyObject *dict_a = PyDict_New();
+    assert(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_a, 1L, "container after PyObject *dict_a = PyDict_New();");
+    PyObject *key_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "New key");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "New value");
+    if (PyDict_SetItem(dict_a, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after PyDict_SetItem(dict_a, key_a, value_a)");
+    /* Dictionary B. */
+    PyObject *dict_b = PyDict_New();
+    assert(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict_b, 1L, "container after PyObject *dict_b = PyDict_New();");
+    if (PyDict_SetItem(dict_b, key_a, value_a)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 3L, "key_a after PyDict_SetItem(dict_b, key_a, value_a)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 3L, "value_b after PyDict_SetItem(dict_a, key_a, value_a)");
+
+    /* Now merge the two dictionaries. */
+    if (PyDict_Merge(dict_a, dict_b, 1)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 3L, "key_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 3L, "value_a after PyDict_Merge()");
+
+    Py_DECREF(dict_a);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 2L, "key_a after Py_DECREF(dict_a);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 2L, "value_a after Py_DECREF(dict_a);");
+
+    Py_DECREF(dict_b);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key_a, 1L, "key_a after Py_DECREF(dict_b);");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value_a, 1L, "value_a after Py_DECREF(dict_b);");
+
+    /* Clean up. */
+    Py_DECREF(key_a);
+    Py_DECREF(value_a);
+
+    assert(!PyErr_Occurred());
+    finally:
+    return PyLong_FromLong(return_value);
+}
+
+/** Merges self with self, nothing changes.
+ * There is a test in dict_merge() in dictobject.c
+ * if (other == mp || other->ma_used == 0) return 0;
+ */
+static PyObject *
+test_PyDict_Merge_same_dict(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(meth_no_args_arg_is_null)) {
+    CHECK_FOR_PYERROR_ON_FUNCTION_ENTRY(NULL);
+    assert(!PyErr_Occurred());
+    long return_value = 0L;
+    int error_flag_position = 0;
+
+    PyObject *dict = PyDict_New();
+    assert(dict);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(dict, 1L, "container after PyObject *dict = PyDict_New();");
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "New key");
+    /* Not inserted into the dict, just used so that result references it. */
+    PyObject *value = new_unique_string(__FUNCTION__, NULL);
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "New value");
+    if (PyDict_SetItem(dict, key, value)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 2L, "key_a after PyDict_SetItem(dict, key, value)");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 2L, "value_a after PyDict_SetItem(dict, key, value)");
+    Py_DECREF(key);
+    Py_DECREF(value);
+
+    if (PyDict_Merge(dict, dict, 0)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+    if (PyDict_Merge(dict, dict, 1)) {
+        return_value |= 1 << error_flag_position;
+        goto finally;
+    }
+
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(key, 1L, "key_a after PyDict_Merge()");
+    TEST_REF_COUNT_THEN_OR_RETURN_VALUE(value, 1L, "value_a after PyDict_Merge()");
+
+    Py_DECREF(dict);
+
+    assert(!PyErr_Occurred());
+    finally:
+    return PyLong_FromLong(return_value);
+}
+
 #pragma mark - Testing Sets
 
 static PyObject *
@@ -3170,6 +3735,24 @@ static PyMethodDef module_methods[] = {
         MODULE_NOARGS_ENTRY(test_PyDict_Pop_key_absent,
                             "Check that PyDict_Pop() works when the key is absent."),
 #endif // #if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 13
+        MODULE_NOARGS_ENTRY(test_PyDict_Merge_with_match_no_override,
+                            "Check that PyDict_Merge() works with match and no override=0."),
+        MODULE_NOARGS_ENTRY(test_PyDict_Merge_with_match_with_override,
+                            "Check that PyDict_Merge() works with match and override=1."),
+        MODULE_NOARGS_ENTRY(test_PyDict_Merge_no_match_no_override,
+                            "Check that PyDict_Merge() works with no match and override=0."),
+        MODULE_NOARGS_ENTRY(test_PyDict_Merge_no_match_with_override,
+                            "Check that PyDict_Merge() works with no match and override=1."),
+        MODULE_NOARGS_ENTRY(test_PyDict_Merge_no_match_no_override_same_value,
+                            "Check that PyDict_Merge() works with no match and override=0 with the same value."),
+        MODULE_NOARGS_ENTRY(test_PyDict_Merge_identical_no_override,
+                            "Check that PyDict_Merge() works with merging the same dictionary key/values and override=0."),
+        MODULE_NOARGS_ENTRY(test_PyDict_Merge_identical_with_override,
+                            "Check that PyDict_Merge() works with merging the same dictionary key/values and override=1."),
+        MODULE_NOARGS_ENTRY(
+                test_PyDict_Merge_same_dict,
+                "Check that PyDict_Merge() works with merging the same dictionary into itself with override=0 or override=1."
+        ),
 #pragma mark - Testing Sets
         MODULE_NOARGS_ENTRY(test_PySet_Add, "Check PySet_Add()."),
         MODULE_NOARGS_ENTRY(test_PySet_Discard, "Check test_PySet_Discard()."),
