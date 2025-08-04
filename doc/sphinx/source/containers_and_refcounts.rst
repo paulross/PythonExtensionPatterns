@@ -1529,6 +1529,7 @@ Failure
 
 
 .. index::
+    single: PyDict_Next()
     single: Dictionary; PyDict_Next()
 
 ``PyDict_Next()``
@@ -1554,6 +1555,7 @@ For code and tests see:
 
 
 .. index::
+    single: PyDict_Merge()
     single: Dictionary; PyDict_Merge()
 
 ``PyDict_Merge()``
@@ -1579,21 +1581,24 @@ The behaviour with reference counts is:
     Unlike some CPython APIs `PyDict_Merge()`_ *does* check if the two arguments are the same.
     There is a test in ``dict_merge()`` in ``dictobject.c``:
 
-    .. code-block::c
+    .. code-block:: c
 
         if (other == mp || other->ma_used == 0) return 0;
 
     So this code is perfectly safe:
 
-    .. code-block::c
+    .. code-block:: c
 
         PyObject *dict = PyDict_New();
         PyObject *key = new_unique_string(__FUNCTION__, NULL);
         PyObject *value = new_unique_string(__FUNCTION__, NULL);
         PyDict_SetItem(dict, key, value);
 
-        PyDict_Merge(dict, dict, 0); // Does nothing.
-        PyDict_Merge(dict, dict, 1); // Does nothing.
+        Py_DECREF(key);                 /* Refcount is now 1. */
+        Py_DECREF(value);               /* Refcount is now 1. */
+
+        PyDict_Merge(dict, dict, 0);    /* Does nothing. */
+        PyDict_Merge(dict, dict, 1);    /* Does nothing. */
 
         Py_DECREF(dict);
 
