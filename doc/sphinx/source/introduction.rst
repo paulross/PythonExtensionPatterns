@@ -159,7 +159,7 @@ There are common drawbacks of code generators:
   many small objects, code generators can create a performance overhead compared to C extensions.
 
   An example is here, with my project on `XML creation <https://github.com/paulross/xmlwriter>`_
-  where CPython extensions have a clear performance advantage.
+  where a CPython C extension has a clear performance advantage.
   A similar performance disparity is recorded by
   `Microsoft <https://learn.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022#call-the-dll-from-python>`_
   where pure Python took 0.758 seconds, a CPython C++ extension took 0.076 seconds (a 10x performance improvement)
