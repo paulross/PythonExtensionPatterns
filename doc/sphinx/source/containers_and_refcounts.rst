@@ -652,7 +652,7 @@ For code and tests see:
 .. _chapter_containers_and_refcounts.tuples.Py_BuildValue:
 
 .. index::
-    single: Tuple; Py_BuildValue()
+    pair: Tuple; Py_BuildValue()
 
 ``Py_BuildValue()``
 -------------------
@@ -918,7 +918,7 @@ For code and tests, including failure modes, see:
         assert(get_item == value);
 
 .. index::
-    single: List; Py_BuildValue()
+    pair: List; Py_BuildValue()
 
 .. _chapter_containers_and_refcounts.lists.Py_BuildValue:
 
@@ -936,7 +936,6 @@ create lists.
     single: List; PyList_GET_ITEM()
     single: PyList_GetItemRef()
     single: List; PyList_GetItemRef()
-    pair: Getters; List
     pair: Getters; List
 
 .. _chapter_containers_and_refcounts.lists.Getters:
@@ -1197,6 +1196,7 @@ This is important as the following code snippet shows:
     PyDict_SetDefaultRef(container, key, default_value, &result);
 
 .. index::
+    single: PyDict_SetDefaultRef(); Key Exists
     single: Dictionary; PyDict_SetDefaultRef(); Key Exists
 
 Key Exists
@@ -1261,6 +1261,7 @@ For code and tests see:
     * ``test_PyDict_SetDefaultRef_default_unused()``
 
 .. index::
+    single: PyDict_SetDefaultRef(); Key Does not Exist
     single: Dictionary; PyDict_SetDefaultRef(); Key Does not Exist
 
 Key Does not Exist
@@ -1314,6 +1315,7 @@ For code and tests see:
     * ``test_PyDict_SetDefaultRef_default_used()``
 
 .. index::
+    single: PyDict_SetDefaultRef(); Failure
     single: Dictionary; PyDict_SetDefaultRef(); Failure
 
 Failure
@@ -1325,6 +1327,7 @@ Failure
 
 
 .. index::
+    single: PyDict_GetItem()
     single: Dictionary; PyDict_GetItem()
     pair: Getters; Dictionary
 
@@ -1349,6 +1352,7 @@ For code and tests see:
     * ``test_PyDict_GetItem()``
 
 .. index::
+    single: PyDict_GetItemRef()
     single: Dictionary; PyDict_GetItemRef()
     pair: Getters; Dictionary
 
@@ -1380,6 +1384,7 @@ For code and tests see:
     * ``test_PyDict_SetDefaultRef_default_used()``
 
 .. index::
+    single: PyDict_SetDefaultRef(); Failure
     single: Dictionary; PyDict_SetDefaultRef(); Failure
     pair: Setters; Dictionary
 
@@ -1391,6 +1396,7 @@ Failure
     PyDict_GetItemRef() failure modes.
 
 .. index::
+    single: PyDict_Pop()
     single: Dictionary; PyDict_Pop()
 
 ``PyDict_Pop()`` [Python 3.13+]
@@ -1421,6 +1427,7 @@ This is important as the following code snippet shows:
 
 
 .. index::
+    single: PyDict_Pop(); Key Exists
     single: Dictionary; PyDict_Pop(); Key Exists
 
 Key Exists
@@ -1471,6 +1478,7 @@ For code and tests see:
     * ``test_PyDict_Pop_key_present()``
 
 .. index::
+    single: PyDict_Pop(); Key Does not Exist
     single: Dictionary; PyDict_Pop(); Key Does not Exist
 
 Key Does not Exist
@@ -1518,6 +1526,7 @@ For code and tests see:
 
 
 .. index::
+    single: PyDict_Pop(); Failure
     single: Dictionary; PyDict_Pop(); Failure
 
 Failure
@@ -1655,6 +1664,7 @@ For code and tests see:
     * ``dbg_PyDict_GetItemWithError_fails()``
 
 .. index::
+    single: PyDict_DelItem()
     single: Dictionary; PyDict_DelItem()
 
 ``PyDict_DelItem()``
@@ -1676,6 +1686,7 @@ The C function signature is:
     Complete ``PyDict_DelItem()`` with code examples.
 
 .. index::
+    single: PyDict_Items()
     single: Dictionary; PyDict_Items()
 
 ``PyDict_Items()``
@@ -1697,6 +1708,7 @@ The C function signature is:
     Complete ``PyDict_Items()`` with code examples.
 
 .. index::
+    single: PyDict_Keys()
     single: Dictionary; PyDict_Keys()
 
 ``PyDict_Keys()``
@@ -1718,6 +1730,7 @@ The C function signature is:
     Complete ``PyDict_Keys()`` with code examples.
 
 .. index::
+    single: PyDict_Values()
     single: Dictionary; PyDict_Values()
 
 ``PyDict_Values()``
@@ -1739,6 +1752,7 @@ The C function signature is:
     Complete ``PyDict_Values()`` with code examples.
 
 .. index::
+    single: Py_BuildValue(); Dictionary
     single: Dictionary; Py_BuildValue()
 
 ``Py_BuildValue()``
@@ -1746,7 +1760,36 @@ The C function signature is:
 
 `Py_BuildValue()`_ is a very convenient way to create dictionaries.
 ``Py_BuildValue("{OO}", key, value);`` will increment the refcount of the key and value and this can,
-potentially, leak.
+potentially, leak. For example:
+
+.. code-block:: c
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    assert(Py_REFCNT(key) == 1);
+    assert(Py_REFCNT(value) == 1);
+
+    PyObject *dict = Py_BuildValue("{OO}", key, value);
+
+    assert(Py_REFCNT(key) == 2);
+    assert(Py_REFCNT(value) == 2);
+    /* Should decref key and value here to avoid a leak. */
+
+A solution is, in this case, to change the `Py_BuildValue()`_ string to "NN", this will *not* increment the
+reference counts of the arguments:
+
+.. code-block:: c
+
+    PyObject *key = new_unique_string(__FUNCTION__, NULL);
+    PyObject *value_a = new_unique_string(__FUNCTION__, NULL);
+    assert(Py_REFCNT(key) == 1);
+    assert(Py_REFCNT(value) == 1);
+
+    PyObject *dict = Py_BuildValue("{NN}", key, value);
+
+    assert(Py_REFCNT(key) == 1);
+    assert(Py_REFCNT(value) == 1);
+    /* Do NOT decref key and value here... */
 
 .. Links, mostly to the Python documentation:
 
