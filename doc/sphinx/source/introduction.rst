@@ -157,8 +157,17 @@ There are common drawbacks of code generators:
   degradation.
 - If you are crossing the boundary between the Python interpreter and compiled C/C++ at a high frequency, perhaps with
   many small objects, code generators can create a performance overhead compared to C extensions.
-  An example is shown here with my project on `XML creation <https://github.com/paulross/xmlwriter>`_.
 
+  An example is here, with my project on `XML creation <https://github.com/paulross/xmlwriter>`_
+  where CPython extensions have a clear performance advantage.
+  A similar performance disparity is recorded by
+  `Microsoft <https://learn.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022#call-the-dll-from-python>`_
+  where pure Python took 0.758 seconds, a CPython C++ extension took 0.076 seconds (a 10x performance improvement)
+  and a PyBind11 C++ extension took 0.204 seconds (just a 4x performance improvement).
+
+I have yet to see the code from a code generator out perform a hand written CPython Extension.
+However code generators are much easier (faster, cheaper) to work with so there is a clear tradeoff between
+development time and execution time. Choose wisely.
 
 There are many other alternatives such as ``pypy``, ``numba`` that are worth knowing about.
 
