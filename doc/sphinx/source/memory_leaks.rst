@@ -27,3 +27,4 @@ Much of this is taken from the `pymemtrace project <https://github.com/paulross/
     memory_leaks/tools
     memory_leaks/techniques
     memory_leaks/pymemtrace
+    memory_leaks/trace_allocs
