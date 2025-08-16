@@ -312,6 +312,16 @@ ext_modules = [
               extra_compile_args=extra_compile_args_c,
               language='c',
               ),
+    Extension(name=f"{PACKAGE_NAME}.cTrackAllocs",
+              include_dirs=[
+              ],
+              sources=[
+                  "src/cpy/MemLeaks/cTrackAllocs.cpp",
+                  "src/cpy/MemLeaks/TrackAllocs.cpp",
+              ],
+              extra_compile_args=extra_compile_args_cpp,
+              language='c++',
+              ),
 ]
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 12:

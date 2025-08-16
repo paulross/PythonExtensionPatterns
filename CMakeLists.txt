@@ -135,7 +135,10 @@ add_executable(PythonExtensionPatterns
         src/cpy/pyextpatt_util.h
         src/cpy/Watchers/cWatchers.c
         src/cpy/Object/cSeqObject.c
-    )
+        src/cpy/MemLeaks/TrackAllocs.h
+        src/cpy/MemLeaks/TrackAllocs.cpp
+        src/cpy/MemLeaks/cTrackAllocs.cpp
+)
 
 #link_directories(${PYTHON_LINK_LIBRARY})
 
