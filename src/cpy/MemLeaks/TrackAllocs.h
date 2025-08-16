@@ -27,7 +27,7 @@ public:
     size_t total_dealloc() const { return m_total_dealloc; }
     size_t max_allocs() const { return m_max_allocs; }
 private:
-    std::map<PyObject*, NewAndDeallocTrackedValue> m_tracker_map;
+    std::map<PyObject*, struct NewAndDeallocTrackedValue> m_tracker_map;
     size_t m_total_new = 0;
     size_t m_total_tp_basicsize = 0;
     size_t m_total_dealloc = 0;
