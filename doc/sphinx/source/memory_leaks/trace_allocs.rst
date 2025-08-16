@@ -173,12 +173,16 @@ These are conditionally included in the module method table:
 
     static PyMethodDef cTrackAllocs_functions[] = {
     #if TRACK_ALLOCS_AND_DEALLOCS
-            {"dump_remaining", (PyCFunction) cTrackAllocs_dump_remaining, METH_NOARGS,
-             PyDoc_STR("Returns a string describing the remaining allocations.")},
-            {"statistics", (PyCFunction) cTrackAllocs_statistics, METH_NOARGS,
+        {
+            "dump_remaining", (PyCFunction) cTrackAllocs_dump_remaining, METH_NOARGS,
+             PyDoc_STR("Returns a string describing the remaining allocations.")
+        },
+        {
+            "statistics", (PyCFunction) cTrackAllocs_statistics, METH_NOARGS,
              PyDoc_STR(
                 "A tuple of (total_new, total_tp_basicsize, total_dealloc, max_allocs)."
-             )},
+             )
+        },
     #endif
             /* Other module level functions here... */
             {NULL, NULL, 0, NULL}           /* sentinel */
@@ -188,7 +192,9 @@ Instrumenting the ``__new__`` Method on the Class
 -------------------------------------------------
 
 Here is the code for the ``__new__`` method implementation.
-Conditionally it calls ``s_NewAndDeallocTracker.add_new()`` depending on ``TRACK_ALLOCS_AND_DEALLOCS``:
+Conditionally it calls ``s_NewAndDeallocTracker.add_new()`` depending on ``TRACK_ALLOCS_AND_DEALLOCS``.
+This function is mapped to the ``.tp_new = ObjectWithBytes_new,`` slot.
+Here it is:
 
 .. code-block:: c
 
@@ -212,7 +218,9 @@ Instrumenting the De-allocation Method on the Class
 ---------------------------------------------------
 
 And the de-allocation method when the object is destroyed, conditionally it calls
-``s_NewAndDeallocTracker.add_dealloc()`` depending on ``TRACK_ALLOCS_AND_DEALLOCS``:
+``s_NewAndDeallocTracker.add_dealloc()`` depending on ``TRACK_ALLOCS_AND_DEALLOCS``.
+This function is mapped to the ``.tp_dealloc = (destructor) ObjectWithBytes_dealloc,`` slot.
+Here it is:
 
 .. code-block:: c
 
