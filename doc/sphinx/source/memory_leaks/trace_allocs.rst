@@ -1,6 +1,10 @@
 .. moduleauthor:: Paul Ross <apaulross@gmail.com>
 .. sectionauthor:: Paul Ross <apaulross@gmail.com>
 
+.. raw:: latex
+
+    \pagebreak
+
 .. _memory-leaks.trace_allocs:
 
 .. index::
@@ -11,44 +15,69 @@
 A Simple Way of Tracing Allocations and De-allocations
 ======================================================
 
-Here is a simple way of instrumenting a module to trace the allocations and de-allocations of objects in that module.
+Here is a simple way of instrumenting a CPython module to trace the allocations and de-allocations of
+objects in that module.
 
 A Tracking Class
 ======================================================
 
 First the class declaration, this keeps a record of where each ``PyObject`` was allocated,
 it also hold some allocation summary statistics.
-
 The declaration and definition are in ``src/cpy/MemLeaks/TrackAllocs.h``
-and ``src/cpy/MemLeaks/TrackAllocs.cpp``:
+and ``src/cpy/MemLeaks/TrackAllocs.cpp``.
+
+First we have a simple struct to record the place of allocation:
 
 .. code-block:: c++
 
+    /** POD class that contains the location of the new instance creation. */
     struct NewAndDeallocTrackedValue {
         std::string function;
         std::string file;
         int line;
     };
 
+Then the tracker, essentially this contains a map of ``<PyObject *, struct NewAndDeallocTrackedValue>`` of
+all the currently live objects along with some overall statistics:
+
+.. code-block:: c++
+
     class NewAndDeallocTracker {
     public:
+        /** Add a new instance of an object to the map. */
         int add_new(PyObject *op, const char *function, const char *file, int line);
+
+        /** Remove an instance of an object from the map. */
         int add_dealloc(PyObject *op);
+
+        /** Returns a summary string of all the currently live objects. */
         std::string dump_remaining();
+
+        /** Access methods. */
+        /** Return the total number of currently live objects. */
         size_t len() const { return m_tracker_map.size(); }
+
+        /** Return the total number of new objects ever created. */
         size_t total_new() const { return m_total_new; }
+
+        /** Return the total tp_basicsize of new objects ever created. */
         size_t total_tp_basicsize() const { return m_total_tp_basicsize; }
+
+        /** Return the total number of objects ever de-allocated. */
         size_t total_dealloc() const { return m_total_dealloc; }
+
+        /** Return the maximum number of allocations at any time. */
         size_t max_allocs() const { return m_max_allocs; }
-    private:
-        std::map<PyObject*, struct NewAndDeallocTrackedValue> m_tracker_map;
+
+    protected:
+        std::map<PyObject *, struct NewAndDeallocTrackedValue> m_tracker_map;
         size_t m_total_new = 0;
         size_t m_total_tp_basicsize = 0;
         size_t m_total_dealloc = 0;
         size_t m_max_allocs = 0;
     };
 
-The implementation of ``add_new()`` is as follows:
+The implementation of ``add_new()`` is:
 
 .. code-block:: c++
 
@@ -64,7 +93,9 @@ The implementation of ``add_new()`` is as follows:
         m_tracker_map[op] = {function, file, line};
         m_total_new++;
         m_total_tp_basicsize += op->ob_type->tp_basicsize;
-        m_max_allocs = m_tracker_map.size() > m_max_allocs ? m_tracker_map.size() : m_max_allocs;
+        if (m_max_allocs < m_tracker_map.size()) {
+            m_max_allocs = m_tracker_map.size();
+        }
         return 0;
     }
 
@@ -126,7 +157,7 @@ As an example in ``src/cpy/MemLeaks/cTrackAllocs.cpp`` a module ``cTrackAllocs``
 We want to track all the allocations and de-allocations of this class.
 Only the code essential to this task is shown here, the complete code is in ``src/cpy/MemLeaks/cTrackAllocs.cpp``.
 
-Of course if you have multiple clases in the module the tracker can track all of them.
+Of course, if you have multiple classes in the module the tracker can track all of them.
 
 Adding a Static Allocation Tracker
 ----------------------------------
@@ -136,6 +167,9 @@ If this macro is non-zero then the following code becomes active:
 
 - A statically allocated instance of the ``NewAndDeallocTracker``.
 - A couple of module level methods that allow us to extract the information the allocation tracker holds.
+- Registering a function that is called when the Python interpreter is torn down.
+  This function reports all relevant objects that have not been de-allocated, in other words, leaked.
+  See :ref:`memory-leaks.trace_allocs.Py_AtExit`.
 
 Here is that code:
 
@@ -345,3 +379,74 @@ The main disadvantages are:
 - Code clutter.
 - If there are memory leaks this will identify where allocations were made with out the corresponding de-allocation.
   That helps somewhat but it does not tell you where that pesky ``Py_DECREF`` *actually* should be!
+
+.. _Py_AtExit(): https://docs.python.org/3/c-api/sys.html#c.Py_AtExit
+
+.. _memory-leaks.trace_allocs.Py_AtExit:
+
+.. index::
+    single: Debugging; Py_AtExit
+    single: Memory Leaks; Py_AtExit
+
+Using ``Py_AtExit``
+==========================
+
+This tracing can be of great use when using `Py_AtExit()`_ when it can dump the allocations of objects that have
+not been de-allocated.
+
+If we add the following function to our module code at ``src/cpy/MemLeaks/cTrackAllocs.cpp``:
+
+.. code-block:: c
+
+    #if TRACK_ALLOCS_AND_DEALLOCS
+    /* Other stuff here, see above. */
+
+    /**
+     * A Function that can be registered with Py_AtExit() that will dump the tracker state
+     * when the Python interpreter is torn down.
+     * NOTE: This should not call any CPython APIs as the interpreter is in an uncertain state.
+     */
+    static void cTrackAllocs_dump_remaining_atexit(void) {
+        std::cout << __FUNCTION__ << "() AT EXIT START:" << std::endl;
+        std::cout << "File: " << __FILE__ << " Line: " << __LINE__ << std::endl;
+        std::cout << s_NewAndDeallocTracker.dump_remaining() << std::endl;
+        std::cout << __FUNCTION__ << "() AT EXIT DONE" << std::endl;
+    }
+
+    #endif
+
+Then register this function when creating (importing) the module:
+
+.. code-block:: c
+
+    PyMODINIT_FUNC
+    PyInit_cTrackAllocs(void) {
+        /* Other stuff here, see above. */
+
+        #if TRACK_ALLOCS_AND_DEALLOCS
+            if (Py_AtExit(&cTrackAllocs_dump_remaining_atexit)) {
+                goto fail;
+            }
+        #endif
+
+        /* Other stuff here, see above. */
+    }
+
+.. note::
+
+     `Py_AtExit()`_ can only register 32 functions.
+
+Then when the interpreter exits we will see something like this:
+
+.. code-block:: text
+
+    cTrackAllocs_dump_remaining_atexit() AT EXIT START:
+    File: src/cpy/MemLeaks/cTrackAllocs.cpp Line: 38
+    NewAndDeallocTracker.dump_remaining() [0]
+    Count new: 6 Sum tp_basicsize: 144 Count dealloc: 6 Max: 3
+    Total tp_basicsize remaining: 0
+    NewAndDeallocTracker.dump_remaining(): DONE
+    cTrackAllocs_dump_remaining_atexit() AT EXIT DONE
+
+Any live objects will be listed here, these a re worthy if inspection as the have not been de-allocated
+in the normal way.

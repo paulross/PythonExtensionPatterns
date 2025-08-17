@@ -6,6 +6,8 @@
 #define TRACK_ALLOCS_AND_DEALLOCS 1
 
 #if TRACK_ALLOCS_AND_DEALLOCS
+#include <iostream>
+
 #include "TrackAllocs.h"
 
 static NewAndDeallocTracker s_NewAndDeallocTracker;
@@ -26,6 +28,18 @@ cTrackAllocs_statistics(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args)) 
             s_NewAndDeallocTracker.total_dealloc(),
             s_NewAndDeallocTracker.max_allocs()
             );
+}
+
+/**
+ * A Function that can be registered with Py_AtExit() that will dump the tracker state
+ * when the Python interpreter is torn down.
+ * NOTE: This should not call any CPython APIs as the interpreter is in an uncertain state.
+ */
+static void cTrackAllocs_dump_remaining_atexit(void) {
+    std::cout << __FUNCTION__ << "() AT EXIT START:" << std::endl;
+    std::cout << "File: " << __FILE__ << " Line: " << __LINE__ << std::endl;
+    std::cout << s_NewAndDeallocTracker.dump_remaining() << std::endl;
+    std::cout << __FUNCTION__ << "() AT EXIT DONE" << std::endl;
 }
 #endif
 
@@ -143,6 +157,11 @@ PyInit_cTrackAllocs(void) {
     if (PyModule_AddObject(m, "ObjectWithBytes", (PyObject *) &ObjectWithBytes_Type)) {
         goto fail;
     }
+#if TRACK_ALLOCS_AND_DEALLOCS
+    if (Py_AtExit(&cTrackAllocs_dump_remaining_atexit)) {
+        goto fail;
+    }
+#endif
     return m;
     fail:
     Py_XDECREF(m);

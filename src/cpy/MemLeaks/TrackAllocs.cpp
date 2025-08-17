@@ -17,7 +17,9 @@ int NewAndDeallocTracker::add_new(PyObject *op, const char *function, const char
     m_tracker_map[op] = {function, file, line};
     m_total_new++;
     m_total_tp_basicsize += op->ob_type->tp_basicsize;
-    m_max_allocs = m_tracker_map.size() > m_max_allocs ? m_tracker_map.size() : m_max_allocs;
+    if (m_max_allocs < m_tracker_map.size()) {
+        m_max_allocs = m_tracker_map.size();
+    }
     return 0;
 }
 
