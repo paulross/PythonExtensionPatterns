@@ -734,7 +734,7 @@ First the implementation of `__len__()`_ in C:
         return ((SequenceOfLong *)self)->size;
     }
 
-Then the implementation of `__getitem__()`_, note here that we support negative indexes and set and exception if the
+Then the implementation of `__getitem__()`_, note here that we support negative indexes an set and exception if the
 index is out of range:
 
 .. code-block:: c
