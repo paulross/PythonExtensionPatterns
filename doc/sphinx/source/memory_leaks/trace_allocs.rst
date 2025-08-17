@@ -385,8 +385,9 @@ The main disadvantages are:
 .. _memory-leaks.trace_allocs.Py_AtExit:
 
 .. index::
-    single: Debugging; Py_AtExit
-    single: Memory Leaks; Py_AtExit
+    single: Py_AtExit()
+    single: Debugging; Py_AtExit()
+    single: Memory Leaks; Py_AtExit()
 
 Using ``Py_AtExit``
 ==========================

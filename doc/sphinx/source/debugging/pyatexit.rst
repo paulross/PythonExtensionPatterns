@@ -8,7 +8,8 @@
     :maxdepth: 3
 
 .. index::
-    single: Debugging; Py_AtExit
+    single: Py_AtExit()
+    single: Debugging; Py_AtExit()
 
 =======================================================
 Instrumenting the Python Process for Your Structures
