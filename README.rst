@@ -14,36 +14,38 @@ The example and test code is available `on PyPi <https://pypi.org/project/cPyExt
 Subjects Covered
 ====================================
 
-- Introduction
-- A Simple Example
-- PyObjects and Reference Counting
-- Containers and Reference Counts
-- Struct Sequence Objects (a namedtuple in C)
-- Exception Raising
-- A Pythonic Coding Pattern for C Functions
-- Parsing Python Arguments
-- Creating New Types
-- Setting and Getting Module Globals
-- Logging and Frames
-- File Paths and Files
-- Subclassing and Using super()
-- Capsules
-- Iterators and Generators
-- Context Managers
-- Pickling C Extension Types
-- Watchers [Python 3.12+]
-- Setting Compiler Flags
-- Debugging
-- Memory Leaks
-- Thread Safety
-- Source Code Layout
-- Using C++ With CPython Code
-- Miscellaneous
-- Installation
-- Further Reading
-- TODO
-- History
-- Index
+Links are to `Read the Docs <http://pythonextensionpatterns.readthedocs.org/en/latest/index.html>`_.
+
+- `Introduction <https://pythonextensionpatterns.readthedocs.io/en/latest/introduction.html>`_
+- `A Simple Example <https://pythonextensionpatterns.readthedocs.io/en/latest/simple_example.html>`_
+- `PyObjects and Reference Counting <https://pythonextensionpatterns.readthedocs.io/en/latest/refcount.html>`_
+- `Containers and Reference Counts <https://pythonextensionpatterns.readthedocs.io/en/latest/containers_and_refcounts.html>`_
+- `Struct Sequence Objects (a namedtuple in C) <https://pythonextensionpatterns.readthedocs.io/en/latest/struct_sequence.html>`_
+- `Exception Raising <https://pythonextensionpatterns.readthedocs.io/en/latest/exceptions.html>`_
+- `A Pythonic Coding Pattern for C Functions <https://pythonextensionpatterns.readthedocs.io/en/latest/canonical_function.html>`_
+- `Parsing Python Arguments <https://pythonextensionpatterns.readthedocs.io/en/latest/parsing_arguments.html>`_
+- `Creating New Types <https://pythonextensionpatterns.readthedocs.io/en/latest/new_types.html>`_
+- `Setting and Getting Module Globals <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html>`_
+- `Logging and Frames <https://pythonextensionpatterns.readthedocs.io/en/latest/logging.html>`_
+- `File Paths and Files <https://pythonextensionpatterns.readthedocs.io/en/latest/files.html>`_
+- `Subclassing and Using super() <https://pythonextensionpatterns.readthedocs.io/en/latest/subclassing_and_super_call.html>`_
+- `Capsules <https://pythonextensionpatterns.readthedocs.io/en/latest/capsules.html>`_
+- `Iterators and Generators <https://pythonextensionpatterns.readthedocs.io/en/latest/iterators_generators.html>`_
+- `Context Managers <https://pythonextensionpatterns.readthedocs.io/en/latest/context_manager.html>`_
+- `Pickling C Extension Types <https://pythonextensionpatterns.readthedocs.io/en/latest/pickle.html>`_
+- `Watchers [Python 3.12+] <https://pythonextensionpatterns.readthedocs.io/en/latest/watchers.html>`_
+- `Setting Compiler Flags <https://pythonextensionpatterns.readthedocs.io/en/latest/compiler_flags.html>`_
+- `Debugging <https://pythonextensionpatterns.readthedocs.io/en/latest/debugging/debug.html>`_
+- `Memory Leaks <https://pythonextensionpatterns.readthedocs.io/en/latest/memory_leaks.html>`_
+- `Thread Safety <https://pythonextensionpatterns.readthedocs.io/en/latest/thread_safety.html>`_
+- `Source Code Layout <https://pythonextensionpatterns.readthedocs.io/en/latest/code_layout.html>`_
+- `Using C++ With CPython Code <https://pythonextensionpatterns.readthedocs.io/en/latest/cpp.html>`_
+- `Miscellaneous <https://pythonextensionpatterns.readthedocs.io/en/latest/miscellaneous.html>`_
+- `Installation <https://pythonextensionpatterns.readthedocs.io/en/latest/install.html>`_
+- `Further Reading <https://pythonextensionpatterns.readthedocs.io/en/latest/further_reading.html>`_
+- `TODO <https://pythonextensionpatterns.readthedocs.io/en/latest/todo.html>`_
+- `History <https://pythonextensionpatterns.readthedocs.io/en/latest/HISTORY.html>`_
+- `Index <https://pythonextensionpatterns.readthedocs.io/en/latest/genindex.html>`_
 
 =============
 Project Links
