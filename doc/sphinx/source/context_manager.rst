@@ -17,8 +17,7 @@
 Context Managers
 ***************************
 
-This chapter describes how to write
-for your C objects.
+This chapter describes how to write a Context Manager for your C object.
 
 .. index::
     single: Context Managers; C Functions
