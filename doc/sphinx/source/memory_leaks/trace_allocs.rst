@@ -449,5 +449,5 @@ Then when the interpreter exits we will see something like this:
     NewAndDeallocTracker.dump_remaining(): DONE
     cTrackAllocs_dump_remaining_atexit() AT EXIT DONE
 
-Any live objects will be listed here, these are worthy if inspection as the have not been de-allocated
+Any live objects will be listed here, these are worthy of inspection as the have not been de-allocated
 in the normal way.
