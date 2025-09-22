@@ -5,7 +5,14 @@ History
 0.3.1rc1 (TODO)
 =====================
 
-- TODO.
+- Comprehensive review and copy edit of all chapters.
+- Add support for ``Py_AtExit()`` for allocation tracking.
+- Add allocation tracking example code (``TracAllocs.h/.cpp``, ``cTrackAllocs.cpp``) and documentation.
+- Split the container debugging code to individual files for each container.
+- Add examples and tests for ``PyDict_Next()`` and ``PyDict_Merge()``.
+- Minor fixes to super() code.
+- Minor fixes to setup.py.
+- Several fixes for gcc when building on Linux.
 
 0.3.1rc0 (2025-04-01)
 =====================
