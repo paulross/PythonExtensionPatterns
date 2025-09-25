@@ -8,7 +8,7 @@
 A Simple Example
 =================
 
-This very artificial example illustrates some of the benefits and drawbacks of Python C Extensions.
+This somewhat artificial example illustrates some of the benefits and drawbacks of Python C Extensions.
 
 Suppose you have some Python code such as this that is performing slowly:
 
@@ -33,24 +33,21 @@ In the repl we can measure its performance with ``timeit``:
     Python timeit: 1.459842
     >>>
 
+That is pretty slow.
+
 -----------------------
 Faster Please
 -----------------------
 
 Now we want something faster so we turn to creating a C extension.
 
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The C Equivalent Function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Firstly we can write the C equivalent to ``fibonacci()`` in the file ``cFibA.c``, note the inclusion of ``"Python.h"``
-which will give us access to the whole Python C API (we will use that later on):
+Firstly we can write the C equivalent to ``fibonacci()`` in the file ``cFibA.c``:
 
 .. code-block:: c
-
-    #define PY_SSIZE_T_CLEAN
-    #include "Python.h"
 
     long fibonacci(long index) {
         if (index < 2) {
@@ -63,11 +60,18 @@ which will give us access to the whole Python C API (we will use that later on):
 The Python Interface to C
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-So far we have a pure C function, we now write a C function that takes Python objects as arguments, converts them to C
-objects (so-called 'un-boxing'), calls ``fibonacci()`` then converts the C result to a Python object
-(so-called 'boxing').
+So far we have a pure C function, we now write a C function that:
+
+- Takes Python objects as arguments, converts them to C objects with ``PyArg_ParseTuple()`` (so-called 'un-boxing').
+- Calls our C function ``fibonacci()``
+- Then converts the C result to a Python object with ``Py_BuildValue()`` (so-called 'boxing').
+
+Note the inclusion of ``"Python.h"`` which will give us access to the whole Python C API.
 
 .. code-block:: c
+
+    #define PY_SSIZE_T_CLEAN
+    #include "Python.h"
 
     static PyObject *
     py_fibonacci(PyObject *Py_UNUSED(module), PyObject *args) {
@@ -85,15 +89,20 @@ The Python Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Then we need to write some C code that defines the Python module that contains this function.
-The first is a data structure to define the Python functions in the module:
+The first is a data structure to define the Python functions in the module, the comments explain each field.:
 
 .. code-block:: c
 
     static PyMethodDef module_methods[] = {
         {
+            /* The name of the function as seen by Python */
             "fibonacci",
+            /* The function in the C code. */
             (PyCFunction) py_fibonacci,
+            /* Flag that specifies that the function takes a variable
+             * number of arguments, although only one is parsed. */
             METH_VARARGS,
+            /* The documentation string. */
             "Returns the Fibonacci value."
         },
         {NULL, NULL, 0, NULL} /* Sentinel */
@@ -105,18 +114,25 @@ Note that this references the ``module_methods`` structure above:
 .. code-block:: c
 
     static PyModuleDef cFibA = {
+        /* The module structure. */
         PyModuleDef_HEAD_INIT,
+        /* The name of the modules as seen by Python. */
         .m_name = "cFibA",
+        /* The module documentation. */
         .m_doc = "Fibonacci in C.",
+        /* The module state. -1 means it has global state. */
         .m_size = -1,
+        /* The module method table (above). */
         .m_methods = module_methods,
     };
 
-Lastly a function to to initialise the module:
+Lastly a function to to initialise the module.
+Note that the name must match; when you go ``import cFibA`` Python will want to call a C function ``PyInit_cFibA()``:
 
 .. code-block:: c
 
     PyMODINIT_FUNC PyInit_cFibA(void) {
+        /* Create the module according to the module definition above. */
         PyObject *m = PyModule_Create(&cFibA);
         return m;
     }
@@ -194,14 +210,14 @@ So with a small bit of work we have got a performance improvement of 55x.
 It's Not Over Yet
 ----------------------------
 
-Suppose we change the Python code by adding a couple of lines thus that uses a local cache for the results.
+Suppose we change the Python code by adding a couple of lines that uses a local cache for the results.
 We put this in the file ``pFibB.py``:
 
 .. code-block:: python
 
-    import functools
+    import functools # Added
 
-    @functools.cache
+    @functools.cache # Added
     def fibonacci(index: int) -> int:
         if index < 2:
             return index
@@ -217,6 +233,7 @@ Now what does our timing code say?
     C is 11058.7 times SLOWER.
 
 So our Python code is now vastly faster than our C code.
+
 This emphasises that performance can also come from a good choice of libraries, data structures, algorithms,
 cacheing and other techniques as well as the choice of the language of the implementation.
 
@@ -224,8 +241,8 @@ cacheing and other techniques as well as the choice of the language of the imple
 C Fights Back
 -------------------------------
 
-Whatever we can do in Python we can do in C so what if we write ``cFibB.c`` to change the ``fibonacci()`` function to
-have a cache as well?
+Well whatever we can do in Python we can do in C.
+So what if we write ``cFibB.c`` to change the ``fibonacci()`` function to have a cache as well?
 
 .. code-block:: c
 
@@ -267,7 +284,7 @@ Summary
 - C Extensions can give vastly improved performance.
 - A good choice of Python libraries, algorithms, code architecture and design can improve performance less
   expensively than going to C.
-- All of this exposes the possible tradeoffs between the techniques.
-- It is very useful in software engineering to have tradeoffs such as these that are explicit and visible.
+- This exposes the possible tradeoffs between the techniques.
+- It is very useful in software engineering to have these tradeoffs that are explicit and visible.
 
-Next up: understanding reference counts and Python's terminology.
+Next up, understanding reference counts and Python's terminology.
