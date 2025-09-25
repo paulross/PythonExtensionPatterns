@@ -105,7 +105,7 @@ Like everything, there are disadvantages, here are some:
   Achieving and maintaining that skill has costs.
   Hopefully this project reduces those.
 - Writing C Extensions is more time consuming than pure Python.
-  There is also the intellectual problem that you are dealing with Pure C/CPython/Python code which expects
+  There is also the intellectual problem that you are dealing with Pure C/CPython/Python code which requires
   a lot of context switching.
   This project proposes patterns of code that should reduce the cognitive overhead of all of that.
 - Testing C Extensions, whilst excellent at a high level, can be really tricky at a line-of-code level.
@@ -126,7 +126,7 @@ There are several alternatives to writing an extension directly in C, here are s
 `ctypes <https://docs.python.org/3/library/ctypes.html#module-ctypes>`_ is a well documented foreign function library
 for Python and is part of Python's standard library.
 The module allows direct access to C/C++ libraries (such as ``libc``).
-If you need this functionality, for example you need to access a binary library where you do not have the original
+One use-case for ``ctypes`` is if you need to access a binary library where you do not have the original
 source code so you can not build the library into your own code.
 
 .. index::
@@ -176,12 +176,13 @@ A Faustian Bargain
 ------------------------------------
 
 The ability to write C code and link it to the Python runtime has played a huge part in Python's success story.
-Much of the stdlib, and third party packages like ``numpy`` gives C like performance with Python's simple interface.
+Much of the CPython standard library, and third party packages like ``numpy``, gives C like performance with Python's
+simple interface.
 This gives the reference implementation, CPython, huge power and ease of use.
 
 However the downside is that it becomes very difficult to create *alternative* implementations of the Python language
 and, who knows, these might be faster, use less memory or have better parallelism.
-This is because any alternate implementation must work the thousands of CPython C extensions out there, with all their
+This is because any alternate implementation must work with the thousands of CPython C extensions out there, with all their
 quirks, to have any chance of being compatible with existing code.
 
 Python C extensions will be around for a long time.
@@ -193,15 +194,16 @@ It is a skill worth learning.
 Summary Advice
 ------------------------------------
 
-My advice if you are thinking about extensions:
+This is my advice if you are thinking about Pythion C extensions:
 
-- They can be really powerful, 100x powerful
-- They can be expensive to write and maintain
-- It helps to follow established patterns
-- Write everything in Python, benchmark/profile before deciding what to put into CPython
-- Use them for low level, stable, library code
-- Keep the CPython layer as thin as possible
-- Testing, testing testing!
+- They can be really powerful, 100x powerful.
+- They can be expensive to write and maintain.
+- It helps to follow established patterns.
+- Get familiar with the Python documentation (see below).
+- Write everything in Python, benchmark/profile before deciding what to put into CPython.
+- Use them for low level, stable, library code.
+- Keep the CPython layer as thin as possible.
+- Testing, testing, testing!
 
 .. index::
     single: Documentation Lacunae; General
