@@ -4,6 +4,13 @@
 .. toctree::
     :maxdepth: 3
 
+..
+    Links, mostly to the Python documentation.
+
+.. _PyModuleDef: https://docs.python.org/3/c-api/module.html#c.PyModuleDef
+.. _PyMethodDef: https://docs.python.org/3/c-api/structures.html#c.PyMethodDef
+.. _PyMODINIT_FUNC: https://docs.python.org/3/c-api/intro.html#c.PyMODINIT_FUNC
+
 =================
 A Simple Example
 =================
@@ -84,12 +91,17 @@ Note the inclusion of ``"Python.h"`` which will give us access to the whole Pyth
         return Py_BuildValue("l", result);
     }
 
+.. index::
+    single: PyModuleDef
+    single: PyMethodDef
+    single: PyMODINIT_FUNC
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The Python Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Then we need to write some C code that defines the Python module that contains this function.
-The first is a data structure to define the Python functions in the module, the comments explain each field.:
+The first is a `PyMethodDef`_ structure to define the Python functions in the module, the comments explain each field.:
 
 .. code-block:: c
 
@@ -108,7 +120,7 @@ The first is a data structure to define the Python functions in the module, the 
         {NULL, NULL, 0, NULL} /* Sentinel */
     };
 
-Then we have a structure that defines the module itself, its name and so on.
+Then we create a `PyModuleDef`_ structure that defines the module itself, its name and so on.
 Note that this references the ``module_methods`` structure above:
 
 .. code-block:: c
@@ -126,7 +138,8 @@ Note that this references the ``module_methods`` structure above:
         .m_methods = module_methods,
     };
 
-Lastly a function to to initialise the module.
+Lastly a function to to initialise the module, this uses the `PyMODINIT_FUNC`_ macro.
+This is the only non-static function in the module.
 Note that the name must match; when you go ``import cFibA`` Python will want to call a C function ``PyInit_cFibA()``:
 
 .. code-block:: c
