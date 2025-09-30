@@ -120,6 +120,72 @@ finally:
 
 #endif
 
+#pragma mark - Example of a debugging session
+
+void dbg_example(void) {
+    printf("%s():\n", __FUNCTION__);
+    if (PyErr_Occurred()) {
+        fprintf(stderr, "%s(): On entry PyErr_Print() %s#%d:\n", __FUNCTION__, __FILE_NAME__, __LINE__);
+        PyErr_Print();
+        return;
+    }
+    assert(!PyErr_Occurred());
+    Py_ssize_t ref_count;
+    PyObject *get_item;
+    /* To view a string in the debugger. */
+    Py_UCS1 *buffer;
+
+    PyObject *container = PyDict_New();
+    assert(container);
+
+    ref_count = Py_REFCNT(container);
+    assert(ref_count == 1);
+
+    PyObject *key = PyUnicode_FromFormat("Dictionary key");
+    buffer = PyUnicode_1BYTE_DATA(key);
+    printf("Key: %s\n", buffer);
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 1);
+//    PyObject *value = PyUnicode_FromFormat("Dictionary value");
+    PyObject *value = PyFloat_FromDouble(42.0);
+//    buffer = PyUnicode_1BYTE_DATA(value);
+//    printf("Val: %s\n", buffer);
+    PyFloatObject *as_float = (PyFloatObject *) value;
+    printf("FOO %p\n", (void *) as_float);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 1);
+
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    ref_count = Py_REFCNT(key);
+    assert(ref_count == 2);
+    ref_count = Py_REFCNT(value);
+    assert(ref_count == 2);
+
+    get_item = PyDict_GetItem(container, key);
+    assert(get_item == value);
+    ref_count = Py_REFCNT(get_item);
+    assert(ref_count == 2);
+
+    Py_DECREF(container);
+    Py_DECREF(key);
+    Py_DECREF(value);
+    assert(!PyErr_Occurred());
+}
+
+void dbg_example_minimal(void) {
+    PyObject *container = PyDict_New();
+    PyObject *key = PyUnicode_FromFormat("Dictionary key");
+    PyObject *value = PyUnicode_FromFormat("Dictionary key");
+    if (PyDict_SetItem(container, key, value)) {
+        assert(0);
+    }
+    Py_DECREF(container);
+    Py_DECREF(key);
+    Py_DECREF(value);
+}
+
 #pragma mark - Tuples
 
 void dbg_PyTuple(void) {
@@ -292,6 +358,9 @@ int main(int argc, const char *argv[]) {
     dbg_PyDict();
     dbg_PySet();
     dbg_PyStructSequence();
+
+    dbg_example();
+    dbg_example_minimal();
 
     printf("Ran all tests, failure=%d\n", failure);
     printf("Bye, bye!\n");

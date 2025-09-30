@@ -44,7 +44,7 @@ Writing a C Function to call any Python Unit Test
 
 We create the ``import_call_execute()`` function that takes that same arguments as ``main()`` which can forward its arguments. ``import_call_execute()`` expects 4 arguments:
 
-* ``argc[0]`` - Name of the executable.
+* ``argc[0]`` - Name of the current executable.
 * ``argc[1]`` - Path to the directory that the Python module is in.
 * ``argc[2]`` - Name of the Python module to be imported. This could be a unit test module for example.
 * ``argc[3]`` - Name of the Python function in the Python module (no arguments will be supplied, the return value is ignored). This could be a particular unit test.

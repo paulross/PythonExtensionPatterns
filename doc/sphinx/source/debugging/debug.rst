@@ -23,6 +23,7 @@ This is very much work in progress. I will add to it/correct it as I develop new
    debug_tactics
    gcov
    debug_in_ide
+   cmake
    pyatexit
 
 .. todo::
