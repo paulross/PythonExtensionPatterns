@@ -7,8 +7,6 @@ import pytest
 from cPyExtPatt.SubClass import sublist
 
 
-
-
 def test_sublist_dir():
     result = dir(sublist)
     assert result == ['SubList',
@@ -18,7 +16,6 @@ def test_sublist_dir():
                       '__name__',
                       '__package__',
                       '__spec__']
-
 
 
 @pytest.mark.skipif(not (sys.version_info.minor <= 10), reason='Python 3.9, 3.10')
