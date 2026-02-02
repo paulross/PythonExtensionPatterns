@@ -17,9 +17,13 @@
 #include "DebugSet.h"
 #include "DebugStructSeq.h"
 #include "DictWatcher.h"
+#include "Util/py_import_call_execute.h"
 
+#if 0
 /**
  * Get the current working directory using \c getcwd().
+ *
+ * See: https://pubs.opengroup.org/onlinepubs/9699919799/functions/getcwd.html
  *
  * @return The current working directory or NULL on failure.
  */
@@ -38,7 +42,6 @@ const char *current_working_directory(const char *extend) {
     return cwd;
 }
 
-#if 0
 /** Takes a path and adds it to sys.paths by calling PyRun_SimpleString.
  * This does rather laborious C string concatenation so that it will work in
  * a primitive C environment.
@@ -315,6 +318,32 @@ void dbg_PyStructSequence(void) {
     dbg_PyStructSequence_with_unnamed_field();
 }
 
+
+int test_import_module_and_run_test(void) {
+    printf("%s()\n", __FUNCTION__);
+    int failure = 0;
+    const char *wd = current_working_directory(NULL);
+    printf("Current working directory: %s\n", wd);
+    wd = current_working_directory("..");
+    failure = add_path_to_sys_module(wd);
+    if (failure) {
+        printf("ERROR: add_path_to_sys_module() returned %d\n", failure);
+    } else {
+        wd = current_working_directory("../tests/unit");
+        failure = add_path_to_sys_module(wd);
+        if (failure) {
+            printf("ERROR: add_path_to_sys_module() returned %d\n", failure);
+        } else {
+            failure = import_call_execute("test_sclist", "test");
+            if (failure) {
+                printf("ERROR: add_path_to_sys_module() returned %d\n", failure);
+            }
+        }
+    }
+    printf("%s() DONE with return code of %d\n", __FUNCTION__, failure);
+    return failure;
+}
+
 int main(int argc, const char *argv[]) {
     // insert code here...
     printf("Hello, World!\n");
@@ -324,8 +353,10 @@ int main(int argc, const char *argv[]) {
         printf("[%4d] %s\n", i, argv[i]);
     }
 
-    Py_Initialize();
-    int failure = 0;
+    int failure = initialise_python(argc, (char *const *)argv);
+    if (failure) {
+        return failure;
+    }
 
     int32_t py_version_hex = PY_VERSION_HEX;
     printf("Python version %d.%d.%d Release level: 0x%x Serial: %d Numeric: %12d 0x%08x\n",
@@ -333,6 +364,9 @@ int main(int argc, const char *argv[]) {
            PY_RELEASE_LEVEL, PY_RELEASE_SERIAL,
            py_version_hex, py_version_hex
     );
+
+    test_import_module_and_run_test();
+
 //    const char *cwd = current_working_directory("..");
 //    failure = add_path_to_sys_module(cwd);
 //    if (failure) {

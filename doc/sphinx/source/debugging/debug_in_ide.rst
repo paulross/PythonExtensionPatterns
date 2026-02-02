@@ -1,3 +1,6 @@
+.. moduleauthor:: Paul Ross <apaulross@gmail.com>
+.. sectionauthor:: Paul Ross <apaulross@gmail.com>
+
 .. highlight:: python
     :linenothreshold: 10
 
@@ -13,39 +16,233 @@
     single: Debugging; IDEs
 
 ===============================================
-Debuging Python C Extensions in an IDE
+Debugging Python C Extensions in an IDE
 ===============================================
 
-``gdb`` and ``lldb`` work well with Python extensions but if you want to step through your C extension in an IDE here is one way to do it.
+``gdb`` and ``lldb`` work well with Python extensions but if you want to step through your C extension in an
+IDE here is one way to do it.
 
-The basic idea is to compile/link your C extension in your IDE and get ``main()`` to call a function ``int import_call_execute(int argc, const char *argv[])`` that embeds the Python interpreter which then imports a Python module, say a unit test, that exercises your C extension code.
+The utility code is in ``src/cpy/Util/py_import_call_execute.h`` and ``src/cpy/Util/py_import_call_execute.c``.
 
-This ``import_call_execute()`` entry point is fairly generic and takes the standard arguments to ``main()`` so it can be in its own .h/.c file.
+There are these steps to complete this:
+
+- Initialise the Python interpreter from your C code. This is called *embedding* the interpreter.
+- Add a search path to your Python C Extension to the Python search paths.
+- Import your Python C Extension using Python's import mechanism.
+- Call a function in your Python C Extension.
+
+------------------------------------------------
+Initialising Python From a C Executable
+------------------------------------------------
+
+Firstly we have to initialise the Python interpreter from our C code.
+Typically this would be called from your ``main()`` function.
+Here is the code, the comments help you to walk you through it.
+
+.. code-block:: c
+
+    /**
+     * The Python  initialization has changed since Python 3.8.
+     * See:
+     *
+     *  - https://docs.python.org/3/c-api/init_config.html#init-config
+     *  - https://docs.python.org/3/c-api/init_config.html#c-preinit
+     *
+     * We run Python in isolated mode so this is a Python separate from the system Python.
+     * See: https://docs.python.org/3/c-api/init_config.html#init-isolated-conf
+     */
+    int initialise_python(int argc, char *const *argv) {
+        /* We need at least one argument, the program name. */
+        if (argc < 1) {
+            return -1;
+        }
+        PyStatus status;
+        PyConfig config;
+        PyConfig_InitPythonConfig(&config);
+        config.isolated = 1;
+        /* Decode command line arguments.
+         * Implicitly pre-initialise Python (in isolated mode).
+         * See: https://docs.python.org/3/c-api/init_config.html#c.PyConfig_SetBytesArgv
+         * */
+        status = PyConfig_SetBytesArgv(&config, argc, argv);
+        if (PyStatus_Exception(status)) {
+            goto exception;
+        }
+        /* Set the program name. Firstly this needs to be converted to wchar_t. */
+        wchar_t wchar_buffer[1024];
+        swprintf(wchar_buffer, sizeof wchar_buffer/sizeof *wchar_buffer, L"%hs", argv[0]);
+        status = PyConfig_SetString(&config, &config.program_name, wchar_buffer);
+        if (PyStatus_Exception(status)) {
+            goto exception;
+        }
+        printf("Initialised Python program \"%ls\"\n", config.program_name);
+        /* Now initialise. */
+        status = Py_InitializeFromConfig(&config);
+        if (PyStatus_Exception(status)) {
+            goto exception;
+        }
+        /* Clean up. */
+        PyConfig_Clear(&config);
+        /* The following call would hand over control to the repl.
+         * We don't want to do that here aas we are going to call Python APIs directly. */
+        /* return Py_RunMain(); */
+
+        /* Signal success. */
+        return 0;
+    exception:
+        PyConfig_Clear(&config);
+        if (PyStatus_IsExit(status)) {
+            return status.exitcode;
+        }
+        /* Display the error message and exit the process with
+         * non-zero exit code */
+        Py_ExitStatusException(status);
+    }
+
+------------------------------------------------
+Adding a Search Path for Modules
+------------------------------------------------
+
+TODO:
+
+.. code-block:: c
+
+    /** Takes a path and adds it to sys.paths by calling PyRun_SimpleString.
+     * This does rather laborious C string concatenation so that it will work in
+     * a primitive C environment.
+     *
+     * Returns 0 on success, non-zero on failure.
+     */
+    int add_path_to_sys_module(const char *path) {
+        int ret = 0;
+        const char *prefix = "import sys\nsys.path.append(\"";
+        const char *suffix = "\")\n";
+        char *command = (char*)malloc(strlen(prefix)
+                                      + strlen(path)
+                                      + strlen(suffix)
+                                      + 1);
+        if (! command) {
+            return -1;
+        }
+        strcpy(command, prefix);
+        strcat(command, path);
+        strcat(command, suffix);
+        ret = PyRun_SimpleString(command);
+    #ifdef DEBUG
+        printf("Calling PyRun_SimpleString() with:\n");
+        printf("%s", command);
+        printf("PyRun_SimpleString() returned: %d\n", ret);
+        fflush(stdout);
+    #endif
+        free(command);
+        return ret;
+    }
+
+------------------------------------------------
+Import and Execute a Module Function
+------------------------------------------------
+
+TODO:
+
+.. code-block:: c
+
+    /**
+     * This imports a Python module and calls a specific function in it.
+     *
+     * Arguments:
+     *
+     * - Name of the Python module.
+     * - Name of the function in the module.
+     *
+     * The Python interpreter must have been initialised and the path to the Python module
+     * must have been added to sys.paths so that the module will be imported.
+     * The function will be called with no arguments and its return value will be
+     * ignored.
+     *
+     * This returns 0 on success, non-zero on failure.
+     *
+     */
+    int import_call_execute(const char *python_module_name, const char *python_function_name) {
+        int return_value = 0;
+        PyObject *pModule   = NULL;
+        PyObject *pFunc     = NULL;
+        PyObject *pResult   = NULL;
+
+        pModule = PyImport_ImportModule(python_module_name);
+        if (! pModule) {
+            fprintf(stderr, "Failed to load module \"%s\"\n", python_module_name);
+            return_value = -1;
+            goto except;
+        }
+        pFunc = PyObject_GetAttrString(pModule, python_function_name);
+        if (! pFunc) {
+            fprintf(stderr, "Can not find function \"%s\"\n", python_function_name);
+            return_value = -2;
+            goto except;
+        }
+        if (! PyCallable_Check(pFunc)) {
+            fprintf(stderr, "Function \"%s\" is not callable\n", python_function_name);
+            return_value = -3;
+            goto except;
+        }
+        pResult = PyObject_CallObject(pFunc, NULL);
+        if (! pResult) {
+            fprintf(stderr, "Function call \"%s\"() failed\n", python_function_name);
+            return_value = -4;
+            goto except;
+        }
+    #ifdef DEBUG
+        printf("%s: PyObject_CallObject() \"%s.%s()\" succeeded\n", python_module_name, python_function_name);
+    #endif
+        assert(! PyErr_Occurred());
+        goto finally;
+    except:
+        assert(PyErr_Occurred());
+        PyErr_Print();
+    finally:
+        Py_XDECREF(pFunc);
+        Py_XDECREF(pModule);
+        Py_XDECREF(pResult);
+        return return_value;
+    }
+
+
+
+The basic idea is to compile/link your C extension in your IDE and get ``main()`` to call a function
+``int import_call_execute(int argc, const char *argv[])`` and that embeds the Python interpreter which
+then imports a Python module, say a unit test, which exercises your C extension code.
+
+This ``import_call_execute()`` entry point is fairly generic and takes the standard arguments to
+``main()`` so it can be in its own .h/.c file.
 
 ------------------------------------------------
 Creating a Python Unit Test to Execute
 ------------------------------------------------
 
-Suppose you have a Python extension ``ScList`` that sub-classes a list and counts the number of times ``.append(...)`` was called making this count available as a ``.appends`` property. You have a unit test called ``test_sclist.py`` that looks like this with a single function ``test()``:
+Suppose you have a Python extension ``ScList`` that sub-classes a list and counts the number of times
+``.append(...)`` was called making this count available as a ``.appends`` property.
+You have a unit test called ``test_sclist.py`` that looks like this with a single function ``test()``:
 
 .. code-block:: python
 
-    import ScList
+    import pytest
+
+    from cPyExtPatt.SubClass import sublist
+
 
     def test():
-        s = ScList.ScList()
-        assert s.appends == 0
+        s = sublist.SubList()
         s.append(8)
-        assert s.appends == 1
+        print()
+        print(s.appends)
+        print(s)
 
 -------------------------------------------------------
 Writing a C Function to call any Python Unit Test
 -------------------------------------------------------
 
-We create the ``import_call_execute()`` function that takes that same arguments as ``main()`` which can forward its arguments. ``import_call_execute()`` expects 4 arguments:
+We create the ``import_call_execute()`` function that expects these arguments:
 
-* ``argc[0]`` - Name of the current executable.
-* ``argc[1]`` - Path to the directory that the Python module is in.
 * ``argc[2]`` - Name of the Python module to be imported. This could be a unit test module for example.
 * ``argc[3]`` - Name of the Python function in the Python module (no arguments will be supplied, the return value is ignored). This could be a particular unit test.
 

@@ -30,20 +30,20 @@ Download check and and unpack the Python source into the directory of your choic
 
 .. code-block:: bash
 
-    $ curl -o Python-3.13.2.tgz https://www.python.org/ftp/python/3.13.2/Python-3.13.2.tgz
+    $ curl -o Python-3.13.7.tgz https://www.python.org/ftp/python/3.13.7/Python-3.13.7.tgz
     # Get the Gzipped source tarball md5 from:
-    # https://www.python.org/downloads/release/python-3132/ "6192ce4725d9c9fc0e8a1cd38410b417"
-    $ md5 Python-3.13.2.tgz | grep 6192ce4725d9c9fc0e8a1cd38410b417
-    MD5 (Python-3.13.2.tgz) = 6192ce4725d9c9fc0e8a1cd38410b417
+    # https://www.python.org/downloads/release/python-3137/ "138c2e19c835ead10499571e0d4cf189"
+    $ md5 Python-3.13.7.tgz | grep 138c2e19c835ead10499571e0d4cf189
+    MD5 (Python-3.13.7.tgz) = 138c2e19c835ead10499571e0d4cf189
     # No output would be a md5 missmatch.
-    $ tmp echo $?
+    $ echo $?
     0
     # 1 would be a md5 missmatch.
-    $ tar -xzf Python-3.13.2.tgz
-    $ cd Python-3.13.2
+    $ tar -xzf Python-3.13.7.tgz
+    $ cd Python-3.13.7
 
 
-Then in the source directory create a debug directory for the debug build:
+Then in the source directory create a debug directory for the debug build [#]_:
 
 .. code-block:: bash
 
@@ -390,3 +390,10 @@ For advanced usage you can parse any ``pyconfig.h`` into a dict by opening that 
     >>> with open(sysconfig.get_config_h_filename()) as f:
           cfg = sysconfig.parse_config_h(f)
           
+
+.. Example footnote [#]_.
+
+.. rubric:: Footnotes
+
+.. [#] On Mac OS X use ``./configure --with-openssl="$(brew --prefix openssl)" --with-pydebug`` if you want
+       the OpenSSL libraries included in the build (recommended).
