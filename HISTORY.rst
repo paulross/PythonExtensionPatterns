@@ -2,7 +2,12 @@
 History
 =====================
 
-0.3.1rc1 (TODO)
+0.3.1rc2 (TODO)
+=====================
+
+- Add CMake support and example of debugging.
+
+0.3.1rc1 (2026-02-02)
 =====================
 
 - Comprehensive review and copy edit of all chapters.
