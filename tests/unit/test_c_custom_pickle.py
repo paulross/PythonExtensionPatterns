@@ -13,23 +13,39 @@ def test_module_dir():
 
 
 ARGS_FOR_CUSTOM_CLASS = ('FIRST', 'LAST', 11)
-PICKLE_BYTES_FOR_CUSTOM_CLASS = (b'\x80\x04\x95f\x00\x00\x00\x00\x00\x00\x00\x8c\x12cPyExtPatt.cPickle\x94'
-                                 b'\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST'
-                                 b'\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_'
-                                 b'version\x94K\x01ub.')
+PICKLE_BYTES_FOR_CUSTOM_CLASS_PRE_314 = (b'\x80\x04\x95f\x00\x00\x00\x00\x00\x00\x00\x8c\x12cPyExtPatt.cPickle\x94'
+                                         b'\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST'
+                                         b'\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_'
+                                         b'version\x94K\x01ub.')
+
+PICKLE_BYTES_FOR_CUSTOM_CLASS_POST_314 = (b'\x80\x05\x95f\x00\x00\x00\x00\x00\x00\x00\x8c\x12cPyExtPatt.cPickle\x94'
+                                          b'\x8c\x06Custom\x94\x93\x94)\x81\x94}\x94(\x8c\x05first\x94\x8c\x05FIRST'
+                                          b'\x94\x8c\x04last\x94\x8c\x04LAST\x94\x8c\x06number\x94K\x0b\x8c\x0f_pickle_'
+                                          b'version\x94K\x01ub.')
 
 
-def test_pickle_getstate():
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_pickle_getstate_pre_314():
     custom = cPickle.Custom(*ARGS_FOR_CUSTOM_CLASS)
     pickled_value = pickle.dumps(custom)
     print()
     print(f'Pickled original is {pickled_value}')
-    assert pickled_value == PICKLE_BYTES_FOR_CUSTOM_CLASS
+    assert pickled_value == PICKLE_BYTES_FOR_CUSTOM_CLASS_PRE_314
+    # result = pickle.loads(pickled_value)
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_pickle_getstate_314_onwards():
+    custom = cPickle.Custom(*ARGS_FOR_CUSTOM_CLASS)
+    pickled_value = pickle.dumps(custom)
+    print()
+    print(f'Pickled original is {pickled_value}')
+    assert pickled_value == PICKLE_BYTES_FOR_CUSTOM_CLASS_POST_314
     # result = pickle.loads(pickled_value)
 
 
 def test_pickle_setstate():
-    custom = pickle.loads(PICKLE_BYTES_FOR_CUSTOM_CLASS)
+    custom = pickle.loads(PICKLE_BYTES_FOR_CUSTOM_CLASS_PRE_314)
     assert custom.first == 'FIRST'
     assert custom.last == 'LAST'
     assert custom.number == 11
@@ -44,7 +60,7 @@ def test_pickle_round_trip():
 
 def test_pickletools():
     outfile = io.StringIO()
-    pickletools.dis(PICKLE_BYTES_FOR_CUSTOM_CLASS, out=outfile, annotate=1)
+    pickletools.dis(PICKLE_BYTES_FOR_CUSTOM_CLASS_PRE_314, out=outfile, annotate=1)
     result = outfile.getvalue()
     # print()
     # print(result)

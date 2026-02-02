@@ -359,10 +359,18 @@ def test_PyDict_SetItem_fails_not_a_dict():
     assert err.value.args[0].endswith('bad argument to internal function')
 
 
-def test_PyDict_SetItem_fails_not_hashable():
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_PyDict_SetItem_fails_not_hashable_pre_314():
     with pytest.raises(TypeError) as err:
         cRefCount.test_PyDict_SetItem_fails_not_hashable()
     assert err.value.args[0] == "unhashable type: 'list'"
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_PyDict_SetItem_fails_not_hashable_314_onwards():
+    with pytest.raises(TypeError) as err:
+        cRefCount.test_PyDict_SetItem_fails_not_hashable()
+    assert err.value.args[0] == "cannot use 'list' as a dict key (unhashable type: 'list')"
 
 
 def test_PyDict_SetDefault_default_unused():

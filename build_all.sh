@@ -13,7 +13,8 @@ set -o pipefail # don't hide errors within pipes
 
 # For current versions see https://devguide.python.org/versions/
 # Takes about 70 seconds per version.
-PYTHON_VERSIONS=('3.9' '3.10' '3.11' '3.12' '3.13')
+PYTHON_VERSIONS=('3.10' '3.11' '3.12' '3.13' '3.14')
+# PYTHON_VERSIONS=('3.14')
 # Used for venvs
 PYTHON_VENV_ROOT="${HOME}/pyenvs"
 PROJECT_NAME="PyExtPatt"
@@ -141,7 +142,7 @@ create_and_test_bdist_wheel() {
     python -VV
 #    echo "---> Installing everything via pip:"
 #    pip install -U pip setuptools wheel
-#    pip install -r requirements.txt
+    pip install -r requirements.txt
 #    # Needed for uploading to pypi
 #    pip install twine
 #    echo "---> Result of pip install:"

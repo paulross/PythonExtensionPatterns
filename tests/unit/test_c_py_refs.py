@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from cPyExtPatt import cPyRefs
@@ -22,15 +24,34 @@ def test_module_dir():
                             ]
 
 
-def test_ref_count():
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_ref_count_pre_314():
     s = ''.join(dir(cPyRefs))
     assert cPyRefs.ref_count(s) == 2
 
 
-def test_ref_count_inc():
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_ref_count_314_onwards():
+    s = ''.join(dir(cPyRefs))
+    assert cPyRefs.ref_count(s) == 1
+
+
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_ref_count_inc_pre_314():
     s = ''.join(dir(cPyRefs))
     original_refcount = cPyRefs.ref_count(s)
     assert original_refcount == 2
+    assert cPyRefs.inc_ref(s) == original_refcount
+    assert cPyRefs.ref_count(s) == original_refcount + 1
+    assert cPyRefs.dec_ref(s) == original_refcount + 1
+    assert cPyRefs.ref_count(s) == original_refcount
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_ref_count_inc_314_onwards():
+    s = ''.join(dir(cPyRefs))
+    original_refcount = cPyRefs.ref_count(s)
+    assert original_refcount == 1
     assert cPyRefs.inc_ref(s) == original_refcount
     assert cPyRefs.ref_count(s) == original_refcount + 1
     assert cPyRefs.dec_ref(s) == original_refcount + 1

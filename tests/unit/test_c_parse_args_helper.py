@@ -60,7 +60,8 @@ def test_parse_defaults_with_helper_macro_raises_type_error(args, expected):
     assert err.value.args[0] == expected
 
 
-def test_parse_mutable_defaults_with_helper_macro_python():
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_parse_mutable_defaults_with_helper_macro_python_pre_314():
     """A local Python equivalent of cParseArgsHelper.parse_mutable_defaults_with_helper_macro()."""
 
     def parse_mutable_defaults_with_helper_macro(obj, default_list=[]):
@@ -89,7 +90,38 @@ def test_parse_mutable_defaults_with_helper_macro_python():
     assert sys.getrefcount(result) == 3
 
 
-def test_parse_mutable_defaults_with_helper_macro_c():
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_parse_mutable_defaults_with_helper_macro_python_314_onwards():
+    """A local Python equivalent of cParseArgsHelper.parse_mutable_defaults_with_helper_macro()."""
+
+    def parse_mutable_defaults_with_helper_macro(obj, default_list=[]):
+        default_list.append(obj)
+        return default_list
+
+    result = parse_mutable_defaults_with_helper_macro(1)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, ]
+    result = parse_mutable_defaults_with_helper_macro(2)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, 2]
+    result = parse_mutable_defaults_with_helper_macro(3)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, 2, 3]
+
+    local_list = []
+    assert sys.getrefcount(local_list) == 1
+    assert parse_mutable_defaults_with_helper_macro(10, local_list) == [10]
+    assert sys.getrefcount(local_list) == 1
+    assert parse_mutable_defaults_with_helper_macro(11, local_list) == [10, 11]
+    assert sys.getrefcount(local_list) == 1
+
+    result = parse_mutable_defaults_with_helper_macro(4)
+    assert result == [1, 2, 3, 4]
+    assert sys.getrefcount(result) == 2
+
+
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_parse_mutable_defaults_with_helper_macro_c_pre_314():
     result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(1)
     assert sys.getrefcount(result) == 3
     assert result == [1, ]
@@ -110,6 +142,30 @@ def test_parse_mutable_defaults_with_helper_macro_c():
     result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(4)
     assert result == [1, 2, 3, 4]
     assert sys.getrefcount(result) == 3
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_parse_mutable_defaults_with_helper_macro_c_314_onwards():
+    result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(1)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, ]
+    result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(2)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, 2]
+    result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(3)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, 2, 3]
+
+    local_list = []
+    assert sys.getrefcount(local_list) == 1
+    assert cParseArgsHelper.parse_mutable_defaults_with_helper_macro(10, local_list) == [10]
+    assert sys.getrefcount(local_list) == 1
+    assert cParseArgsHelper.parse_mutable_defaults_with_helper_macro(11, local_list) == [10, 11]
+    assert sys.getrefcount(local_list) == 1
+
+    result = cParseArgsHelper.parse_mutable_defaults_with_helper_macro(4)
+    assert result == [1, 2, 3, 4]
+    assert sys.getrefcount(result) == 2
 
 
 # @pytest.mark.parametrize(
@@ -224,7 +280,8 @@ def test_parse_defaults_with_helper_class_raises_type_error(args, expected):
 #     assert ref_counts == expected
 #     del result
 
-def test_parse_mutable_defaults_with_helper_class_python():
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_parse_mutable_defaults_with_helper_class_python_pre_314():
     """A local Python equivalent of cParseArgsHelper.parse_mutable_defaults_with_helper_class()."""
 
     def parse_mutable_defaults_with_helper_class(obj, default_list=[]):
@@ -253,7 +310,38 @@ def test_parse_mutable_defaults_with_helper_class_python():
     assert sys.getrefcount(result) == 3
 
 
-def test_parse_mutable_defaults_with_helper_class_c():
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_parse_mutable_defaults_with_helper_class_python_314_onwards():
+    """A local Python equivalent of cParseArgsHelper.parse_mutable_defaults_with_helper_class()."""
+
+    def parse_mutable_defaults_with_helper_class(obj, default_list=[]):
+        default_list.append(obj)
+        return default_list
+
+    result = parse_mutable_defaults_with_helper_class(1)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, ]
+    result = parse_mutable_defaults_with_helper_class(2)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, 2]
+    result = parse_mutable_defaults_with_helper_class(3)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, 2, 3]
+
+    local_list = []
+    assert sys.getrefcount(local_list) == 1
+    assert parse_mutable_defaults_with_helper_class(10, local_list) == [10]
+    assert sys.getrefcount(local_list) == 1
+    assert parse_mutable_defaults_with_helper_class(11, local_list) == [10, 11]
+    assert sys.getrefcount(local_list) == 1
+
+    result = parse_mutable_defaults_with_helper_class(4)
+    assert result == [1, 2, 3, 4]
+    assert sys.getrefcount(result) == 2
+
+
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_parse_mutable_defaults_with_helper_class_c_pre_314():
     result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(1)
     assert sys.getrefcount(result) == 3
     assert result == [1, ]
@@ -274,3 +362,27 @@ def test_parse_mutable_defaults_with_helper_class_c():
     result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(4)
     assert result == [1, 2, 3, 4]
     assert sys.getrefcount(result) == 3
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_parse_mutable_defaults_with_helper_class_c_314_onwards():
+    result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(1)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, ]
+    result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(2)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, 2]
+    result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(3)
+    assert sys.getrefcount(result) == 2
+    assert result == [1, 2, 3]
+
+    local_list = []
+    assert sys.getrefcount(local_list) == 1
+    assert cParseArgsHelper.parse_mutable_defaults_with_helper_class(10, local_list) == [10]
+    assert sys.getrefcount(local_list) == 1
+    assert cParseArgsHelper.parse_mutable_defaults_with_helper_class(11, local_list) == [10, 11]
+    assert sys.getrefcount(local_list) == 1
+
+    result = cParseArgsHelper.parse_mutable_defaults_with_helper_class(4)
+    assert result == [1, 2, 3, 4]
+    assert sys.getrefcount(result) == 2

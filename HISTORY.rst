@@ -5,7 +5,13 @@ History
 0.3.1rc2 (TODO)
 =====================
 
+- Add Python 3.14 support.
+
+  - This checks the build against Python 3.14 but does not include any Python 3.14 specific features.
+  - Several tests that check reference counts are now conditional on the Python version >= 3.14.
+
 - Add CMake support and example of debugging.
+- Drop support for Python 3.8 and 3.9 (although they will likely work if you try).
 
 0.3.1rc1 (2026-02-02)
 =====================
@@ -24,7 +30,7 @@ History
 
 - Add a single index entry. This is documentation for 0.3.1rc0, 341 pages.
 - Add link to compiler flags resources.
-- Add explicit #include that was failing on some platforms.
+- Add explicit ``#include`` that was failing on some platforms.
 - Include note on ml_flags failure on import.
 - Suggest change for Py_SETREF().
 - Add warning on Py_SETREF and Py_XSETREF. Fixes to Python 3 links.

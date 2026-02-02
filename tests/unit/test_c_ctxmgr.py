@@ -21,10 +21,24 @@ def test_very_simple():
         pass
 
 
-def test_simple():
+@pytest.mark.skipif(not (sys.version_info.minor < 14), reason='Python < 3.14')
+def test_simple_pre_314():
     print()
     with cCtxMgr.ContextManager() as context:
         assert sys.getrefcount(context) == 3
+        assert context.len_buffer_lifetime() == cCtxMgr.BUFFER_LENGTH
+        assert context.len_buffer_context() == cCtxMgr.BUFFER_LENGTH
+    assert sys.getrefcount(context) == 2
+    assert context.len_buffer_lifetime() == cCtxMgr.BUFFER_LENGTH
+    assert context.len_buffer_context() == 0
+    del context
+
+
+@pytest.mark.skipif(not (sys.version_info.minor >= 14), reason='Python >= 3.14')
+def test_simple_314_onwards():
+    print()
+    with cCtxMgr.ContextManager() as context:
+        assert sys.getrefcount(context) == 2
         assert context.len_buffer_lifetime() == cCtxMgr.BUFFER_LENGTH
         assert context.len_buffer_context() == cCtxMgr.BUFFER_LENGTH
     assert sys.getrefcount(context) == 2

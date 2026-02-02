@@ -116,7 +116,7 @@ static PyObject *make_tuple(PyObject *Py_UNUSED(module)) {
     PyObject *v;
 
     r = PyTuple_New(3);         /* New reference. */
-//    fprintf(stdout, "Ref count new: %zd\n", r->ob_refcnt);
+//    fprintf(stdout, "Ref count new: %zd\n", Py_REFCNT(r));
     v = PyLong_FromLong(1L);    /* New reference. */
     /* PyTuple_SetItem steals the new reference v. */
     PyTuple_SetItem(r, 0, v);
@@ -148,11 +148,11 @@ static PyObject *pop_and_print_BAD(PyObject *Py_UNUSED(module), PyObject *pList)
     PyObject *pLast;
 
     pLast = PyList_GetItem(pList, PyList_Size(pList) - 1);
-    fprintf(stdout, "Ref count was: %zd\n", pLast->ob_refcnt);
+    fprintf(stdout, "Ref count was: %zd\n", Py_REFCNT(pLast));
     /* ... stuff here ... */
     delete_all_list_items(pList);
     /* ... more stuff here ... */
-    fprintf(stdout, "Ref count now: %zd\n", pLast->ob_refcnt);
+    fprintf(stdout, "Ref count now: %zd\n", Py_REFCNT(pLast));
     PyObject_Print(pLast, stdout, 0); /* Boom. */
     fprintf(stdout, "\n");
     Py_RETURN_NONE;
@@ -166,16 +166,16 @@ static PyObject *pop_and_print_OK(PyObject *Py_UNUSED(module), PyObject *pList) 
     PyObject *pLast;
 
     pLast = PyList_GetItem(pList, PyList_Size(pList) - 1);
-    fprintf(stdout, "Ref count was: %zd\n", pLast->ob_refcnt);
+    fprintf(stdout, "Ref count was: %zd\n", Py_REFCNT(pLast));
     Py_INCREF(pLast); /* This is the crucial change: increment a borrowed reference. */
-    fprintf(stdout, "Ref count now: %zd\n", pLast->ob_refcnt);
+    fprintf(stdout, "Ref count now: %zd\n", Py_REFCNT(pLast));
     /* ... stuff here ... */
     delete_all_list_items(pList);
     /* ... more stuff here ... */
     PyObject_Print(pLast, stdout, 0);
     fprintf(stdout, "\n");
     Py_DECREF(pLast);
-    fprintf(stdout, "Ref count fin: %zd\n", pLast->ob_refcnt);
+    fprintf(stdout, "Ref count fin: %zd\n", Py_REFCNT(pLast));
 
     Py_RETURN_NONE;
 }
