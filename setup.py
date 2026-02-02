@@ -23,7 +23,7 @@ long_description = (
         + (here / 'HISTORY.rst').read_text(encoding='utf-8')
 )
 
-licence = (here / 'LICENSE.txt').read_text(encoding='utf-8')
+my_license = (here / 'LICENSE.txt').read_text(encoding='utf-8')
 
 DEBUG = True
 # Generally I write code so that if DEBUG is defined as 0 then all optimisations
@@ -375,7 +375,7 @@ setup(
         'Topic :: Software Development :: Documentation',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    licence=licence,
+    license=my_license,
     # See: https://setuptools.pypa.io/en/latest/userguide/ext_modules.html
     # language='c' or language='c++',
     ext_modules=ext_modules
