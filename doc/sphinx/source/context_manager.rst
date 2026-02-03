@@ -126,19 +126,6 @@ Take this simple code:
     with cCtxMgr.ContextManager():
         pass
 
-..
-    def test_very_simple():
-
-    Gives:
-
-          ContextManager_new DONE REFCNT = 1
-        ContextManager_enter STRT REFCNT = 2
-        ContextManager_enter DONE REFCNT = 3
-         ContextManager_exit STRT REFCNT = 1
-         ContextManager_exit DONE REFCNT = 1
-      ContextManager_dealloc STRT REFCNT = 0
-      ContextManager_dealloc DONE REFCNT = 4413491472
-
 The sequence of reference count changes are as follows:
 
 #. Creating the ``cCtxMgr.ContextManager()`` calls ``ContextManager_new`` which makes the
@@ -161,6 +148,18 @@ The sequence of reference count changes are as follows:
    count to 0 and then calls our C function ``ContextManager_dealloc`` with a reference count
    of 0 and that frees the object.
 
+If the cCtxMgr extension is built with ``CONTEXT_MANAGER_VERBOSE_OUTPUT`` non-zero you will get the verbose output from
+``test_very_simple()`` like this:
+
+.. code-block::
+
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+         ContextManager_exit STRT REFCNT = 1
+         ContextManager_exit DONE REFCNT = 1
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4413491472
 
 .. index::
     single: Context Managers; With target
@@ -181,19 +180,6 @@ can be used like this:
     # context survives here with a reference count of 1.
     # This will be decremented when context goes out of scope.
     # For example on a function return.
-
-..
-    def test_simple():
-
-    Gives:
-
-          ContextManager_new DONE REFCNT = 1
-        ContextManager_enter STRT REFCNT = 2
-        ContextManager_enter DONE REFCNT = 3
-         ContextManager_exit STRT REFCNT = 2
-         ContextManager_exit DONE REFCNT = 2
-      ContextManager_dealloc STRT REFCNT = 0
-      ContextManager_dealloc DONE REFCNT = 4413491440
 
 In this case the ``context`` survives the ``with`` statement and is available to any following code.
 So step 4 above would only decrement the reference count once leaving it with a reference count of 2.
@@ -216,6 +202,19 @@ The sequence of reference count changes are now as follows:
 #. When ``context`` goes out of scope, say on a function return or a ``del`` statement the
    CPython interpreter decrements the reference count to 0 and then calls our C function
    ``ContextManager_dealloc`` which frees the object.
+
+If the cCtxMgr extension is built with ``CONTEXT_MANAGER_VERBOSE_OUTPUT`` non-zero you will get the verbose output from
+``test_simple()`` like this:
+
+.. code-block::
+
+          ContextManager_new DONE REFCNT = 1
+        ContextManager_enter STRT REFCNT = 2
+        ContextManager_enter DONE REFCNT = 3
+         ContextManager_exit STRT REFCNT = 2
+         ContextManager_exit DONE REFCNT = 2
+      ContextManager_dealloc STRT REFCNT = 0
+      ContextManager_dealloc DONE REFCNT = 4413491440
 
 .. index::
     single: Context Managers; Minimal in C

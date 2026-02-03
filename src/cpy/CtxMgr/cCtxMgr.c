@@ -8,6 +8,8 @@
 
 static const ssize_t BUFFER_LENGTH = (ssize_t)1024 * 1024 * 128;
 
+#define CONTEXT_MANAGER_VERBOSE_OUTPUT 1
+
 typedef struct {
     PyObject_HEAD
     /* Buffer created for the lifetime of the object. A memory check can show leaks. */
@@ -34,33 +36,43 @@ ContextManager_new(PyObject *Py_UNUSED(arg)) {
         self->buffer_lifetime[i] = ' ';
     }
     self->buffer_context = NULL;
-//    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#if CONTEXT_MANAGER_VERBOSE_OUTPUT
+    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#endif
     return self;
 }
 
 /* ContextManager methods */
 static void
 ContextManager_dealloc(ContextManager *self) {
-//    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#if CONTEXT_MANAGER_VERBOSE_OUTPUT
+    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#endif
     free(self->buffer_lifetime);
     self->buffer_lifetime = NULL;
     assert(self->buffer_context == NULL);
     PyObject_Del(self);
-//    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#if CONTEXT_MANAGER_VERBOSE_OUTPUT
+    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#endif
 }
 
 static PyObject *
 ContextManager_enter(ContextManager *self, PyObject *Py_UNUSED(args)) {
     assert(self->buffer_lifetime != NULL);
     assert(self->buffer_context == NULL);
-//    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#if CONTEXT_MANAGER_VERBOSE_OUTPUT
+    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#endif
     self->buffer_context = malloc(BUFFER_LENGTH);
     // Force an initialisation.
     for (ssize_t i = 0; i < BUFFER_LENGTH; ++i) {
         self->buffer_context[i] = ' ';
     }
     Py_INCREF(self);
-//    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#if CONTEXT_MANAGER_VERBOSE_OUTPUT
+    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#endif
     return (PyObject *)self;
 }
 
@@ -68,10 +80,14 @@ static PyObject *
 ContextManager_exit(ContextManager *self, PyObject *Py_UNUSED(args)) {
     assert(self->buffer_lifetime != NULL);
     assert(self->buffer_context != NULL);
-//    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#if CONTEXT_MANAGER_VERBOSE_OUTPUT
+    fprintf(stdout, "%24s STRT REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#endif
     free(self->buffer_context);
     self->buffer_context = NULL;
-//    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#if CONTEXT_MANAGER_VERBOSE_OUTPUT
+    fprintf(stdout, "%24s DONE REFCNT = %zd\n", __FUNCTION__, Py_REFCNT(self));
+#endif
     Py_RETURN_FALSE;
 }
 
