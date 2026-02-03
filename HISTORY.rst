@@ -11,7 +11,7 @@ History
   - Several tests that check reference counts are now conditional on the Python version >= 3.14.
   - There are reference count changes, as yet unexplained, but reflected in the tests.
 
-- Add CMake support and example of debugging.
+- Add CMake support and example of debugging in CLion.
 - Drop support for Python 3.8 and 3.9 (although they will likely work if you try).
 
 0.3.1rc1 (2026-02-02)
