@@ -373,7 +373,7 @@ Side note: Of course this does not protect you from malicious/badly written code
 
 ------------------------------------
 Variable Number of Arguments
-----------------------------------------------------
+------------------------------------
 
 The function will be called with two arguments, the module and a ``PyTupleObject`` that contains a tuple of arguments.
 You can either parse this list yourself or use a helper method to parse it into Python and C types.
