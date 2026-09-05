@@ -19,11 +19,11 @@ History
 
 - Comprehensive review and copy edit of all chapters.
 - Add support for ``Py_AtExit()`` for allocation tracking.
-- Add allocation tracking example code (``TracAllocs.h/.cpp``, ``cTrackAllocs.cpp``) and documentation.
+- Add allocation tracking example code (``TrackAllocs.h/.cpp``, ``cTrackAllocs.cpp``) and documentation.
 - Split the container debugging code to individual files for each container.
 - Add examples and tests for ``PyDict_Next()`` and ``PyDict_Merge()``.
-- Minor fixes to super() code.
-- Minor fixes to setup.py.
+- Minor fixes to ``super()`` code.
+- Minor fixes to ``setup.py``.
 - Several fixes for gcc when building on Linux.
 
 0.3.1rc0 (2025-04-01)
@@ -33,8 +33,8 @@ History
 - Add link to compiler flags resources.
 - Add explicit ``#include`` that was failing on some platforms.
 - Include note on ml_flags failure on import.
-- Suggest change for Py_SETREF().
-- Add warning on Py_SETREF and Py_XSETREF. Fixes to Python 3 links.
+- Suggest change for ``Py_SETREF()``.
+- Add warning on ``Py_SETREF()`` and ``Py_XSETREF()``. Fixes to Python 3 links.
 - Fix issue #33: Sections in the "Parsing Python Arguments" chapter are of the wrong depth.
 
 0.3.0 (2025-03-20)
