@@ -8,7 +8,10 @@
 
 static const ssize_t BUFFER_LENGTH = (ssize_t)1024 * 1024 * 128;
 
-#define CONTEXT_MANAGER_VERBOSE_OUTPUT 1
+/* Allow CONTEXT_MANAGER_VERBOSE_OUTPUT to be set in setup.py */
+#ifndef CONTEXT_MANAGER_VERBOSE_OUTPUT
+#define CONTEXT_MANAGER_VERBOSE_OUTPUT 0
+#endif
 
 typedef struct {
     PyObject_HEAD

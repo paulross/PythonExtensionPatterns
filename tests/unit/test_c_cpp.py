@@ -48,7 +48,8 @@ def test_placement_new_memory(count):
     print(f'RSS start: {rss_start:,d}')
     # Python 3.10: 65_044_684 < 10_485_760 on occasion.
     # Python 3.10: 280_023_244 < 10_485_760 on occasion.
-    rss_margin = 300 * 1024 * 1024
+    # Python 3.15: 326_664_396 < 314_572_800 on occasion.
+    rss_margin = 350 * 1024 * 1024
     for i in range(count):
         obj = placement_new.CppCtorDtorInPyObject()
         buffer_size = obj.buffer_size()
