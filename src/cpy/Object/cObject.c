@@ -157,9 +157,12 @@ static PyTypeObject ObjectWithAttributes_Type = {
 #endif
 #if PY_MINOR_VERSION >= 12
         '\0',                   /* unsigned char tp_watched */
+#endif
 #if PY_MINOR_VERSION >= 13
         0,                      /* uint16_t tp_versions_used */
 #endif
+#if PY_MINOR_VERSION >= 15
+        0,                      /* _Py_iteritemfunc _tp_iteritem; */
 #endif
 };
 /* --------------------------------------------------------------------- */
@@ -297,9 +300,12 @@ static PyTypeObject Str_Type = {
 #endif
 #if PY_MINOR_VERSION >= 12
         '\0',                   /* unsigned char tp_watched */
+#endif
 #if PY_MINOR_VERSION >= 13
         0,                      /* uint16_t tp_versions_used */
 #endif
+#if PY_MINOR_VERSION >= 15
+        0,                      /* _Py_iteritemfunc _tp_iteritem; */
 #endif
 };
 
@@ -375,9 +381,12 @@ static PyTypeObject Null_Type = {
 #endif
 #if PY_MINOR_VERSION >= 12
         '\0',                   /* unsigned char tp_watched */
+#endif
 #if PY_MINOR_VERSION >= 13
         0,                      /* uint16_t tp_versions_used */
 #endif
+#if PY_MINOR_VERSION >= 15
+        0,                      /* _Py_iteritemfunc _tp_iteritem; */
 #endif
 };
 

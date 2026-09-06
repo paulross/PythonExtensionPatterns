@@ -11,8 +11,14 @@ History
   - Several tests that check reference counts are now conditional on the Python version >= 3.14.
   - There are reference count changes, as yet unexplained, but reflected in the tests.
 
+- Add Python 3.15 support (specifically Python 3.15.0rc2).
+
+  - This checks the build against Python 3.15 but does not include any Python 3.15 specific features.
+
 - Add CMake support and example of debugging in CLion.
 - Drop support for Python 3.8 and 3.9 (although they will likely work if you try).
+- Python versions supported: 3.10, 3.11, 3.12, 3.13, 3.14, 3.15.
+- Development Status :: 5 - Production/Stable
 
 0.3.1rc1 (2026-02-02)
 =====================

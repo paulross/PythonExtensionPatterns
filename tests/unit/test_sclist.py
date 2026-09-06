@@ -7,7 +7,7 @@ def test():
     print('test()')
     print(f'SubList.appends: {s.appends}')
     print(f'SubList now: {s}')
-    return 1
+    assert len(s) == 1
 
 
 if __name__ == '__main__':

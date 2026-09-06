@@ -17,7 +17,7 @@ not just C but Pythons C API, which is huge [#]_ and changes between versions [#
 Not only do you have to worry about just your standard ``malloc()`` and ``free()`` cases but now you have to contend
 with how CPython's does its memory management which is by *reference counting*.
 
-I describe some of the pitfalls you (I am thinking of you as a savvy C coder) can encounter and some of the coding
+I describe some of the pitfalls you (and I am thinking of you as a savvy C coder) can encounter and some of the coding
 patterns that you can use to avoid them.
 
 This also might help if you are considering code to submit to the Python standard library which depends extensively on
@@ -232,4 +232,4 @@ Next up: a simple example showing the effect on code performance.
 .. rubric:: Footnotes
 
 .. [#] Huge, but pretty consistent once mastered.
-.. [#] Version 0.3 of this project supports Python versions: 3.9, 3.10, 3.11, 3.12, 3.13.
+.. [#] Version 0.3 of this project supports Python versions: 3.10, 3.11, 3.12, 3.13, 3.14, 3.15.

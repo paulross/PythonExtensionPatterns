@@ -43,7 +43,7 @@ pointer to the object type [#]_:
     The ``struct _typeobject`` is crucial for defining new types.
     This structure changes over various Python versions.
     For convenience I have included the structure definitions for Python types in ``type_objects/`` for Python versions
-    3.6 to 3.13 which allows easy comparison between versions.
+    3.6 to 3.15 which allows easy comparison between versions.
 
 In Python C extensions you always create and deallocate these ``PyObjects`` *indirectly*.
 Creation is via Python's C API and destruction is done by decrementing the reference count.

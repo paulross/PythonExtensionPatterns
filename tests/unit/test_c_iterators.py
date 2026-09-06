@@ -280,6 +280,11 @@ iterate_and_print: DONE
 def test_iterate_and_print(arg, expected, capfd):
     cIterator.iterate_and_print(arg)
     captured = capfd.readouterr()
+    print()
+    print('captured.out:')
+    print(captured.out)
+    print('expected:')
+    print(expected)
     assert captured.out == expected
 
 

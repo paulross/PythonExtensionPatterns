@@ -13,8 +13,8 @@ set -o pipefail # don't hide errors within pipes
 
 # For current versions see https://devguide.python.org/versions/
 # Takes about 70 seconds per version.
-#PYTHON_VERSIONS=('3.10' '3.11' '3.12' '3.13' '3.14')
-PYTHON_VERSIONS=('3.15')
+PYTHON_VERSIONS=('3.10' '3.11' '3.12' '3.13' '3.14' '3.15')
+#PYTHON_VERSIONS=('3.15')
 # Used for venvs
 PYTHON_VENV_ROOT="${HOME}/pyenvs"
 PROJECT_NAME="PyExtPatt"
@@ -213,20 +213,17 @@ report_all_versions_and_setups() {
 show_results_of_dist() {
   echo "---> dist/:"
   ls -l "dist"
-  echo "WARNING: twine does not support Python 3.15"
-  # twine does not support Python 3.15 with:
-  # SystemError: module charset_normalizer.cd uses unknown slot ID 84
-#  echo "---> pip install twine"
-#  pip install twine
-#  echo "---> twine check dist/*:"
-#  twine check dist/*
-#  # Test from Test PyPi
-#  # pip install -i https://test.pypi.org/simple/orderedstructs
-#  echo "---> Ready for upload to test PyPi:"
-#  echo "---> pip install twine"
-#  echo "---> twine upload --repository testpypi dist/*"
-#  echo "---> Or PyPi:"
-#  echo "---> twine upload dist/*"
+  echo "---> pip install twine"
+  pip install twine
+  echo "---> twine check dist/*:"
+  twine check dist/*
+  # Test from Test PyPi
+  # pip install -i https://test.pypi.org/simple/orderedstructs
+  echo "---> Ready for upload to test PyPi:"
+  echo "---> pip install twine"
+  echo "---> twine upload --repository testpypi dist/*"
+  echo "---> Or PyPi:"
+  echo "---> twine upload dist/*"
 }
 
 echo "===> Start date:"
