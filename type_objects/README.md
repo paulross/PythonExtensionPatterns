@@ -1,4 +1,4 @@
-These are the the `struct _typeobject` for various vereesions of Python:
+These are the the `struct _typeobject` for various versions of Python:
 
 From `Include/cpython/object.h`
 

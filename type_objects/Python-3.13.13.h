@@ -1,10 +1,8 @@
-//
-// Created by Paul Ross on 28/06/2024.
-//
+#ifndef PYTHONEXTENSIONSBASIC_PYTHON_3_13_13_H
+#define PYTHONEXTENSIONSBASIC_PYTHON_3_13_13_H
 
-#define PYTHONEXTENSIONSBASIC_PYTHON_3_13_0b3_H
-#ifndef PYTHONEXTENSIONSBASIC_PYTHON_3_13_0b3_H
-
+// If this structure is modified, Doc/includes/typestruct.h should be updated
+// as well.
 struct _typeobject {
     PyObject_VAR_HEAD
     const char *tp_name; /* For printing, in format "<module>.<name>" */
@@ -82,7 +80,9 @@ struct _typeobject {
     PyObject *tp_weaklist; /* not used for static builtin types */
     destructor tp_del;
 
-    /* Type attribute cache version tag. Added in version 2.6 */
+    /* Type attribute cache version tag. Added in version 2.6.
+     * If zero, the cache is invalid and must be initialized.
+     */
     unsigned int tp_version_tag;
 
     destructor tp_finalize;
@@ -90,8 +90,13 @@ struct _typeobject {
 
     /* bitset of which type-watchers care about this type */
     unsigned char tp_watched;
+
+    /* Number of tp_version_tag values used.
+     * Set to _Py_ATTR_CACHE_UNUSED if the attribute cache is
+     * disabled for this type (e.g. due to custom MRO entries).
+     * Otherwise, limited to MAX_VERSIONS_PER_CLASS (defined elsewhere).
+     */
     uint16_t tp_versions_used;
 };
 
-
-#endif // PYTHONEXTENSIONSBASIC_PYTHON_3_13_0b3_H
+#endif // PYTHONEXTENSIONSBASIC_PYTHON_3_13_13_H
