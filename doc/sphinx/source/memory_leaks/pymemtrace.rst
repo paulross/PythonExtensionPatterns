@@ -42,6 +42,21 @@ The tools provided by ``pymemtrace``:
   See `some process examples <https://pymemtrace.readthedocs.io/en/latest/examples/process.html>`_
 * ``cPyMemTrace`` is a memory tracer written in C that can report total memory usage for every function call/return for
   both C and Python sections.
+
+    * ``pymemtrace.cPyMemTrace.Profile`` is a memory tracer written in C that can report total memory usage
+      for every function call/return for both C and Python sections.
+      This is more suitable for logging C code, for example Python's C extensions.
+    * ``pymemtrace.cPyMemTrace.Trace`` is a memory tracer written in C that can report total memory usage
+      for every function call/return/line for Python sections.
+      This is more suitable for logging pure Python code.
+
+* ``pymemtrace.cPyMemTrace.ReferenceTracing`` can report every object allocation
+  and de-allocation with
+  `Reference Tracing <https://docs.python.org/3/c-api/profiling.html#reference-tracing>`_.
+  This is quite invasive but the API allows this to filter out most of the noise or target specific types
+  of interest.
+  (Python 3.13+ only).
+
   See some `cPyMemTrace examples <https://pymemtrace.readthedocs.io/en/latest/examples/c_py_mem_trace.html>`_
   and a `technical note on cPyMemTrace <https://pymemtrace.readthedocs.io/en/latest/tech_notes/cPyMemTrace.html>`_.
 * DTrace: Here are a number of D scripts that can trace the low level ``malloc()`` and ``free()`` system calls and
@@ -54,7 +69,6 @@ The tools provided by ``pymemtrace``:
 * ``debug_malloc_stats`` is a wrapper around the ``sys._debugmallocstats`` function that can take snapshots of
   memory before and after code execution and report the significant differences of the Python small object allocator.
   See some `debug_malloc_stats examples <https://pymemtrace.readthedocs.io/en/latest/examples/debug_malloc_stats.html>`_
-
 
 .. index::
     single: pymemtrace; Tool Characteristics
@@ -76,40 +90,73 @@ Each tool can be characterised by:
 
 Clearly there are trade-offs between these depending on the problem you are trying to solve.
 
-.. list-table:: **Tool Characteristics**
-   :widths: 30 30 30 20 20
+Firstly granularity:
+
+.. list-table:: **Tool Granularity**
+   :widths: 40 30 30
    :header-rows: 1
 
    * - Tool
      - Memory Granularity
      - Execution Granularity
-     - Memory Cost
-     - Execution Cost
-   * - ``process``
-     - RSS (total Python and C memory).
+   * - ``process_tree``
+     - RSS.
      - Regular time intervals.
-     - Near zero.
-     - Near zero.
-   * - ``cPyMemTrace``
-     - RSS (total Python and C memory).
-     - Per Python line, Python function and C function call.
-     - Near zero.
-     - x10 to x20.
+   * - ``process``
+     - RSS.
+     - Regular time intervals.
+   * - ``cPyMemTrace.Profile``
+     - RSS.
+     - Per Python line, Python function and return. C function call and return.
+   * - ``cPyMemTrace.Trace``
+     - RSS.
+     - Per Python line, Python function and return. Python Opcode and exception.
+   * - ``cPyMemTrace.ReferenceTracing``
+     - RSS.
+     - Every object allocation/de-allocation.
    * - DTrace
      - Every ``malloc()`` and ``free()``.
      - Per function call and return.
-     - Minimal.
-     - x100.
    * - ``trace_malloc``
      - Every Python object.
      - Per Python line, per function call.
-     - Significant but compensated.
-     - x900 for small objects, x6 for large objects.
    * - ``debug_malloc_stats``
      - Python memory pool.
      - Snapshots the CPython memory pool either side of a block of code.
+
+Secondly cost:
+
+.. list-table:: **Tool Cost**
+   :widths: 40 30 30
+   :header-rows: 1
+
+   * - Tool
+     - Memory Cost
+     - Execution Cost
+   * - ``process_tree``
+     - Near zero.
+     - Near zero.
+   * - ``process``
+     - Near zero.
+     - Near zero.
+   * - ``cPyMemTrace.Profile``
+     - Near zero.
+     - 10x to 40x.
+   * - ``cPyMemTrace.Trace``
+     - Near zero.
+     - 20x to 60x.
+   * - ``cPyMemTrace.ReferenceTracing``
+     - Near zero.
+     - 2x to 80x.
+   * - DTrace
      - Minimal.
-     - x2000+ for small objects, x12 for large objects.
+     - 90x to 100x.
+   * - ``trace_malloc``
+     - Significant but compensated.
+     - 900x for small objects, 6x for large objects.
+   * - ``debug_malloc_stats``
+     - Minimal.
+     - +2000x for small objects, 12x for large objects.
 
 Licence
 -------
@@ -243,8 +290,8 @@ Some can be seen <here <https://pymemtrace.readthedocs.io/en/latest/examples/pro
     single: pymemtrace; cPyMemTrace
     single: cPyMemTrace
 
-``pymemtrace`` cPyMemTrace
-==========================
+``pymemtrace`` cPyMemTrace Profiling and Tracing
+================================================
 
 ``cPyMemTrace`` is a Python profiler written in 'C' that records the
 `Resident Set Size <https://en.wikipedia.org/wiki/Resident_set_size>`_
@@ -373,8 +420,308 @@ Tracers can be nested such as this and each level gets logged to its own file, f
         # Do stuff at stack level 0
         # This gets logged again into: "20241107_195847_62264_P_0_PY3.13.0b3.log"
 
+``pymemtrace`` cPyMemTrace Reference Tracing
+================================================
+
+From Python 3.13 onwards Python supports
+`Reference Tracing <https://docs.python.org/3/c-api/profiling.html#reference-tracing>`_.
+This enables us to track every Python allocation and de-allocation.
+
+Reference tracing works by registering a callback function that is invoked for every Python object allocation
+and de-allocation.
+
+.. warning::
+
+    Reference Tracing is highly invasive and can lead to some undesirable side effects.
+    The Reference Tracing API is quite new.
+    Some of the documentation for it is wrong.
+    This is described in more detail in
+    `the technical notes <https://pymemtrace.readthedocs.io/en/latest/tech_notes/cPyMemTrace_ReferenceTracing.html>`_.
+
+The `cPyMemTrace.ReferenceTracing` class logs out all the allocations and
+de-allocations.
+It can also filter out unnecessary information such as builtin allocations.
+
+.. note::
+
+    The Reference Tracing callback function ignores PyObject's of type "frame" as this can play havoc with the
+    Python runtime.
+
+Here we create an example class that just creates a timstamp and allocates memory
+(the full code is in ``pymemtrace/examples/ex_cPyMemTrace_RefTrace.py``):
+
+.. code-block:: python
+
+    import datetime
+    import random
+    import string
+
+    from pymemtrace import cpymemtrace_decs
+    from pymemtrace import cPyMemTrace
 
 
+    class StringAndTime:
+        def __init__(self, size: int):
+            self.now = datetime.datetime.now()
+            self.str = ''.join(random.choices(string.printable, k=size))
+
+Then we invoke this multiple times under the watchful eye of a :py:class:`pymemtrace.cPyMemTrace.ReferenceTracing`
+decorator:
+
+.. code-block:: python
+
+    @cpymemtrace_decs.reference_tracing()
+    def example_reference_tracing():
+        print(f'example_reference_tracing()')
+        print(f'Logging to {cPyMemTrace.reference_tracing_log_path()}')
+        list_of_str_and_time = []
+        for i in range(4):
+            str_len = random.randint(1024, 2048)
+            v = StringAndTime(str_len)
+            list_of_str_and_time.append(v)
+
+    def main():
+        example_reference_tracing()
+        return 0
+
+
+    if __name__ == '__main__':
+        exit(main())
+
+Running this will give something like:
+
+.. code-block:: shell
+
+    python3.13 pymemtrace/examples/ex_cPyMemTrace_RefTrace.py
+    example_reference_tracing()
+    Logging to pymemtrace/examples/20260518_114412_0_85511_O_0_PY3.13.2.log
+
+    Process finished with exit code 0
+
+The log file will look like this (abridged).
+
+..
+    8<---- Snip ---->8
+
+.. raw:: latex
+
+    [Continued on the next page]
+
+    \pagebreak
+
+.. raw:: latex
+
+    \begin{landscape}
+
+.. code-block:: text
+
+    SOF
+    HDR:        Clock          Address LiveCnt Type                File                                           Line Function                        RSS      dRSS
+    NEW:     1.834382   0x60000281a1d0       1 range_iterator      pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   23 example_reference_tracing  17911808  17911808
+    NEW:     1.834498   0x7ff3db813920       1 StringAndTime       pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   25 example_reference_tracing  17920000      8192
+    NEW:     1.834551   0x6000028015d0       1 datetime.datetime   pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   11 __init__                   17936384     16384
+    NEW:     1.834585   0x600001d23310       1 itertools.repeat    Python-3.13.2/Lib/random.py                     471 choices                    17940480      4096
+    DEL:     1.834927   0x600001d23310       0 itertools.repeat    Python-3.13.2/Lib/random.py                     471 choices                    17940480         0
+    NEW:     1.835052   0x7ff3db813a80       2 StringAndTime       pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   25 example_reference_tracing  17944576      4096
+    NEW:     1.835088   0x600002801850       2 datetime.datetime   pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   11 __init__                   17944576         0
+    NEW:     1.835135   0x600001d58070       1 itertools.repeat    Python-3.13.2/Lib/random.py                     471 choices                    17944576         0
+    DEL:     1.835501   0x600001d58070       0 itertools.repeat    Python-3.13.2/Lib/random.py                     471 choices                    17956864     12288
+    NEW:     1.835592   0x7ff3d9608ba0       3 StringAndTime       pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   25 example_reference_tracing  17956864         0
+    NEW:     1.835613   0x60000281a390       3 datetime.datetime   pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   11 __init__                   17956864         0
+    NEW:     1.835637   0x600001d42e10       1 itertools.repeat    Python-3.13.2/Lib/random.py                     471 choices                    17956864         0
+    DEL:     1.836171   0x600001d42e10       0 itertools.repeat    Python-3.13.2/Lib/random.py                     471 choices                    17956864         0
+    NEW:     1.836285   0x7ff3d961a3c0       4 StringAndTime       pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   25 example_reference_tracing  17956864         0
+    NEW:     1.836310   0x60000281a550       4 datetime.datetime   pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   11 __init__                   17956864         0
+    NEW:     1.836333   0x600001d42e10       1 itertools.repeat    Python-3.13.2/Lib/random.py                     471 choices                    17956864         0
+    DEL:     1.836920   0x600001d42e10       0 itertools.repeat    Python-3.13.2/Lib/random.py                     471 choices                    17960960      4096
+    DEL:     1.837031   0x60000281a1d0       0 range_iterator      pymemtrace/examples/ex_cPyMemTrace_RefTrace.py   23 example_reference_tracing  17960960         0
+    DEL:     1.837050   0x7ff3d9608ba0       3 StringAndTime       pymemtrace/cpymemtrace_decs.py                   45 reference_tracingwrapper   17960960         0
+    DEL:     1.837064   0x60000281a390       3 datetime.datetime   pymemtrace/cpymemtrace_decs.py                   45 reference_tracingwrapper   17960960         0
+    DEL:     1.837075   0x7ff3db813a80       2 StringAndTime       pymemtrace/cpymemtrace_decs.py                   45 reference_tracingwrapper   17960960         0
+    DEL:     1.837085   0x600002801850       2 datetime.datetime   pymemtrace/cpymemtrace_decs.py                   45 reference_tracingwrapper   17960960         0
+    DEL:     1.837098   0x7ff3db813920       1 StringAndTime       pymemtrace/cpymemtrace_decs.py                   45 reference_tracingwrapper   17960960         0
+    DEL:     1.837108   0x6000028015d0       1 datetime.datetime   pymemtrace/cpymemtrace_decs.py                   45 reference_tracingwrapper   17960960         0
+    DEL:     1.837119   0x7ff3d961a3c0       0 StringAndTime       pymemtrace/cpymemtrace_decs.py                   45 reference_tracingwrapper   17960960         0
+    DEL:     1.837129   0x60000281a550       0 datetime.datetime   pymemtrace/cpymemtrace_decs.py                   45 reference_tracingwrapper   17960960         0
+    NEW:     1.837155   0x60000166d4c0       1 _ModuleLockManager  <frozen importlib._bootstrap>                  1357 _find_and_load             17960960         0
+    NEW:     1.837185   0x600000f35860       1 _ModuleLock         <frozen importlib._bootstrap>                   443 _get_module_lock           17960960         0
+    NEW:     1.837200   0x6000018715e0       1 _thread.RLock       <frozen importlib._bootstrap>                   253 __init__                   17960960         0
+    NEW:     1.837213   0x600001d42d80       1 _thread.lock        <frozen importlib._bootstrap>                   254 __init__                   17960960         0
+    NEW:     1.837235   0x6000013396b0       1 _BlockingOnManager  <frozen importlib._bootstrap>                   311 acquire                    17960960         0
+    DEL:     1.837282   0x6000013396b0       0 _BlockingOnManager  <frozen importlib._bootstrap>                   311 acquire                    17960960         0
+    NEW:     1.837327   0x600001d42d20       1 list_iterator       <frozen importlib._bootstrap>                  1255 _find_spec                 17960960         0
+    NEW:     1.837343   0x600001871530       1 _ImportLockContext  <frozen importlib._bootstrap>                  1256 _find_spec                 17960960         0
+    NEW:     1.837366   0x600001d42cd0       2 list_iterator       site-packages/_distutils_hack/__init__.py       107 find_spec                  17960960         0
+    DEL:     1.837381   0x600001d42cd0       1 list_iterator       site-packages/_distutils_hack/__init__.py       107 find_spec                  17960960         0
+    DEL:     1.837409   0x600001871530       0 _ImportLockContext  <frozen importlib._bootstrap>                  1256 _find_spec                 17960960         0
+    NEW:     1.837424   0x600001871710       1 _ImportLockContext  <frozen importlib._bootstrap>                  1256 _find_spec                 17960960         0
+    NEW:     1.837454   0x600000a31370       1 ModuleSpec          <frozen importlib._bootstrap>                   688 spec_from_loader           17960960         0
+    DEL:     1.837475   0x600001871710       0 _ImportLockContext  <frozen importlib._bootstrap>                  1256 _find_spec                 17960960         0
+    DEL:     1.837488   0x600001d42d20       0 list_iterator       <frozen importlib._bootstrap>                  1280 _find_spec                 17960960         0
+    DEL:     1.837602   0x60000166d4c0       0 _ModuleLockManager  <frozen importlib._bootstrap>                  1357 _find_and_load             17965056      4096
+    DEL:     1.837620   0x600000f35860       0 _ModuleLock         <frozen importlib._bootstrap>                  1357 _find_and_load             17965056         0
+    DEL:     1.837636   0x6000018715e0       0 _thread.RLock       <frozen importlib._bootstrap>                  1357 _find_and_load             17965056         0
+    DEL:     1.837648   0x600001d42d80       0 _thread.lock        <frozen importlib._bootstrap>                  1357 _find_and_load             17965056         0
+    EOF
+
+.. raw:: latex
+
+    \end{landscape}
+
+The file format is described
+`here <https://pymemtrace.readthedocs.io/en/latest/tech_notes/cPyMemTrace_log_format.html>`_.
+
+
+Analysing the Log With ``ref_trace_analyse.py``
+---------------------------------------------------
+
+This log file can be very large so to help understand it there is a script
+`pymemtrace.util.ref_trace_analyse` that can analyse it.
+
+This performs the following analysis:
+
+- If an object is deleted but hasn't been created in the log file a warning is issued.
+  These are not significant as they refer to objects created before the log file was started.
+- An error will be reported if an object has been created at a particular address without being
+  previously deleted at the same address.
+  These are not significant as they (mostly?) refer to objects that are everlasting objects
+  within the Python process.
+- Any objects that were created within the log run but not de-allocated are listed
+  along with the function, file, and line where it was created.
+- Any objects that were created and deleted within the log run are listed.
+- A count of objects created and deleted by object type.
+
+For example the output will be something like:
+
+
+.. raw:: latex
+
+    [Continued on the next page]
+
+    \pagebreak
+
+.. raw:: latex
+
+    \begin{landscape}
+
+First running the script:
+
+.. code-block:: text
+
+    python pymemtrace/util/ref_trace_analyse.py --include-historical pymemtrace/examples/20260518_114412_0_85511_O_0_PY3.13.2.log
+    File path: pymemtrace/examples/20260518_114412_0_85511_O_0_PY3.13.2.log
+    2026-05-18 13:04:41,604 - ref_trace_analyse.py#399 - INFO     - Starting log file: pymemtrace/examples/20260518_114412_0_85511_O_0_PY3.13.2.log
+    2026-05-18 13:04:41,606 - ref_trace_analyse.py#379 - INFO     - Lines: 49 NEW: 23 DEL: 22 NEW - DEL: 1 MSG: 0
+    2026-05-18 13:04:41,607 - ref_trace_analyse.py#401 - INFO     - Finished log file: pymemtrace/examples/20260518_114412_0_85511_O_0_PY3.13.2.log
+
+Then live objects once the log has completed:
+
+.. code-block:: text
+
+    With include_builtins=False
+    Live Objects [1]:
+        0x600000a31370 1.837454    1 ModuleSpec                               spec_from_loader                 <frozen_importlib._bootstrap>#688
+
+Then previous objects that were created and destroyed during the log lifetime:
+
+.. code-block:: text
+
+    Previous Objects, sorted by clock [21]:
+    0x60000281a1d0 range_iterator      NEW: t: 1.834382 ex_cPyMemTrace_RefTrace.py#23 DEL: dt: 0.002649 ex_cPyMemTrace_RefTrace.py#23
+    0x7ff3db813920 StringAndTime       NEW: t: 1.834498 ex_cPyMemTrace_RefTrace.py#25 DEL: dt: 0.002600 cpymemtrace_decs.py#45
+    0x6000028015d0 datetime.datetime   NEW: t: 1.834551 ex_cPyMemTrace_RefTrace.py#11 DEL: dt: 0.002557 cpymemtrace_decs.py#45
+    0x600001d23310 itertools.repeat    NEW: t: 1.834585 random.py#471 DEL: dt: 0.000342 random.py#471
+    0x7ff3db813a80 StringAndTime       NEW: t: 1.835052 ex_cPyMemTrace_RefTrace.py#25 DEL: dt: 0.002023 cpymemtrace_decs.py#45
+    0x600002801850 datetime.datetime   NEW: t: 1.835088 ex_cPyMemTrace_RefTrace.py#11 DEL: dt: 0.001997 cpymemtrace_decs.py#45
+    0x600001d58070 itertools.repeat    NEW: t: 1.835135 random.py#471 DEL: dt: 0.000366 random.py#471
+    0x7ff3d9608ba0 StringAndTime       NEW: t: 1.835592 ex_cPyMemTrace_RefTrace.py#25 DEL: dt: 0.001458 cpymemtrace_decs.py#45
+    0x60000281a390 datetime.datetime   NEW: t: 1.835613 ex_cPyMemTrace_RefTrace.py#11 DEL: dt: 0.001451 cpymemtrace_decs.py#45
+    0x600001d42e10 itertools.repeat    NEW: t: 1.835637 random.py#471 DEL: dt: 0.000534 random.py#471
+    0x7ff3d961a3c0 StringAndTime       NEW: t: 1.836285 ex_cPyMemTrace_RefTrace.py#25 DEL: dt: 0.000834 cpymemtrace_decs.py#45
+    0x60000281a550 datetime.datetime   NEW: t: 1.836310 ex_cPyMemTrace_RefTrace.py#11 DEL: dt: 0.000819 cpymemtrace_decs.py#45
+    0x600001d42e10 itertools.repeat    NEW: t: 1.836333 random.py#471 DEL: dt: 0.000587 random.py#471
+    0x60000166d4c0 _ModuleLockManager  NEW: t: 1.837155 <frozen_importlib._bootstrap>#1357 DEL: dt: 0.000447 <frozen_importlib._bootstrap>#1357
+    0x600000f35860 _ModuleLock         NEW: t: 1.837185 <frozen_importlib._bootstrap>#443 DEL: dt: 0.000435 <frozen_importlib._bootstrap>#1357
+    0x6000018715e0 _thread.RLock       NEW: t: 1.837200 <frozen_importlib._bootstrap>#253 DEL: dt: 0.000436 <frozen_importlib._bootstrap>#1357
+    0x600001d42d80 _thread.lock        NEW: t: 1.837213 <frozen_importlib._bootstrap>#254 DEL: dt: 0.000435 <frozen_importlib._bootstrap>#1357
+    0x6000013396b0 _BlockingOnManager  NEW: t: 1.837235 <frozen_importlib._bootstrap>#311 DEL: dt: 0.000047 <frozen_importlib._bootstrap>#311
+    0x600001d42d20 list_iterator       NEW: t: 1.837327 <frozen_importlib._bootstrap>#1255 DEL: dt: 0.000161 <frozen_importlib._bootstrap>#1280
+    0x600001871530 _ImportLockContext  NEW: t: 1.837343 <frozen_importlib._bootstrap>#1256 DEL: dt: 0.000066 <frozen_importlib._bootstrap>#1256
+    0x600001d42cd0 list_iterator       NEW: t: 1.837366 __init__.py#107 DEL: dt: 0.000015 __init__.py#107
+    0x600001871710 _ImportLockContext  NEW: t: 1.837424 <frozen_importlib._bootstrap>#1256 DEL: dt: 0.000051 <frozen_importlib._bootstrap>#1256
+
+Then a table of the count of creations and deletions by type:
+
+.. code-block:: text
+
+    Type count [12]:
+    Type                                          New      Del  New - Del
+    ModuleSpec                                      1        0          1
+    StringAndTime                                   4        4          0
+    _BlockingOnManager                              1        1          0
+    _ImportLockContext                              2        2          0
+    _ModuleLock                                     1        1          0
+    _ModuleLockManager                              1        1          0
+    _thread.RLock                                   1        1          0
+    _thread.lock                                    1        1          0
+    datetime.datetime                               4        4          0
+    itertools.repeat                                4        4          0
+    list_iterator                                   2        2          0
+    range_iterator                                  1        1          0
+    Process time: 0.003 (s)
+
+.. raw:: latex
+
+    [Continued on the next page]
+
+    \pagebreak
+
+.. raw:: latex
+
+    \end{landscape}
+
+``ref_trace_analyse.py`` Options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``ref_trace_analyse.py`` has these options:
+
+.. code-block:: text
+
+    usage: ref_trace_analyse.py
+           [-h] [--full-path] [--include-untracked] [--include-historical]
+           [--recurse-files] [-l LOG_LEVEL]
+           log_path
+
+    Reads an Reference Tracing log of a process and analyses it.
+
+    positional arguments:
+      log_path              Input path to the log.
+
+    options:
+      -h, --help            show this help message and exit
+      --full-path           Show the full Python file path. [default: False]
+      --include-untracked   Include untracked objects. These are objects that are
+                            de-allocated with no corresponding allocation.
+                            [default: False]
+      --include-historical  Ignore objects that were allocated and de-allocated
+                            correctly. [default: False]
+      --recurse-files       If True then recurse into child log files. [default:
+                            False]
+      --gnuplot-path GNUPLOT_PATH
+                            Output path for the gnuplot results.
+      --gnuplot-types GNUPLOT_TYPES
+                            Comma seperated list of types to monitor for the
+                            gnuplot results. [default: ]
+      -l, --log_level LOG_LEVEL
+                            Log Level (debug=10, info=20, warning=30, error=40,
+                            critical=50) [default: 20]
+
+The ``--gnuplot...`` options allow you to create plots of the memory
+usage and the corresponding number of live objects during program
+execution.
+See
+`here <https://pymemtrace.readthedocs.io/en/latest/tech_notes/cPyMemTrace_ReferenceTracing_MemoryLeaks.html#plotting-memory-and-live-count>`_
+for an example.
 
 .. index::
     single: pymemtrace; DTrace
