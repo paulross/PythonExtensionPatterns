@@ -17,6 +17,21 @@ A Simple Way of Tracing Allocations and De-allocations
 
 Here is a simple way of instrumenting a CPython module to trace the allocations and de-allocations of
 objects in that module.
+A modification of this could be made to be object specific.
+
+.. note::
+
+    From Python 3.13 onwards Python supports
+    `Reference Tracing <https://docs.python.org/3/c-api/profiling.html#reference-tracing>`_.
+    This can track every Python allocation and de-allocation.
+    My library, ``pymemtrace`` project contains a wrappers that logs each allocation
+    and de-allocation to file. This can be filtered by type.
+
+    * On PyPi: `<https://pypi.org/project/pymemtrace/>`_
+    * Project: `<https://github.com/paulross/pymemtrace>`_
+    * Documentation: `<https://pymemtrace.readthedocs.io/en/latest/index.html>`_
+
+    You can see a summary of this here: :ref:`chapter_memory_leaks.pymemtrace.reference_tracing`.
 
 A Tracking Class
 ======================================================

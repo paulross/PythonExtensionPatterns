@@ -420,6 +420,8 @@ Tracers can be nested such as this and each level gets logged to its own file, f
         # Do stuff at stack level 0
         # This gets logged again into: "20241107_195847_62264_P_0_PY3.13.0b3.log"
 
+.. _chapter_memory_leaks.pymemtrace.reference_tracing:
+
 ``pymemtrace`` cPyMemTrace Reference Tracing
 ================================================
 
