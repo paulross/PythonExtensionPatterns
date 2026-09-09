@@ -17,7 +17,6 @@ A Simple Way of Tracing Allocations and De-allocations
 
 Here is a simple way of instrumenting a CPython module to trace the allocations and de-allocations of
 objects in that module.
-A modification of this could be made to be object specific.
 
 .. note::
 
