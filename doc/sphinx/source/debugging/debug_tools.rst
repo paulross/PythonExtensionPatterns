@@ -68,8 +68,8 @@ Here :ref:`leaked-new-references-valgrind-label` is an example of finding a leak
 .. index::
     single: Debugging; Memory Monitor
     single: Memory Monitor
-    see: Memory Monitor; pymemtrace
-    see: pymemtrace; Memory Monitor
+    seealso: Memory Monitor; pymemtrace
+    seealso: pymemtrace; Memory Monitor
 
 ------------------------------------------------
 A Simple Memory Monitor
