@@ -22,8 +22,8 @@ objects in that module.
 
     From Python 3.13 onwards Python supports
     `Reference Tracing <https://docs.python.org/3/c-api/profiling.html#reference-tracing>`_.
-    This can track every Python allocation and de-allocation.
-    My library, ``pymemtrace`` project contains a wrappers that logs each allocation
+    This can track every Python object allocation and de-allocation.
+    My library, ``pymemtrace``, uses this to log each allocation
     and de-allocation to file. This can be filtered by type.
 
     * On PyPi: `<https://pypi.org/project/pymemtrace/>`_

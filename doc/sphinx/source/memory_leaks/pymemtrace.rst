@@ -422,6 +422,10 @@ Tracers can be nested such as this and each level gets logged to its own file, f
 
 .. _chapter_memory_leaks.pymemtrace.reference_tracing:
 
+.. index::
+
+    single: Reference Tracing
+
 ``pymemtrace`` cPyMemTrace Reference Tracing
 ================================================
 
