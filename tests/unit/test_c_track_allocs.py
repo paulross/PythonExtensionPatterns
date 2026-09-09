@@ -28,7 +28,7 @@ def test_object_with_bytes_simple(sizes, expected):
     list_objects = []
     for size in sizes:
         list_objects.append(cTrackAllocs.ObjectWithBytes(length=size))
-        print(cTrackAllocs.dump_remaining())
+        print(f'cTrackAllocs.dump_remaining(): {cTrackAllocs.dump_remaining()}')
         print(f'Statistics: {cTrackAllocs.statistics()}')
         ids = [f'0x{id(v):x}' for v in list_objects]
         print(f'IDs: {ids}')
@@ -36,10 +36,11 @@ def test_object_with_bytes_simple(sizes, expected):
     print(f'RSS mid: {rss:,d} {rss - rss_start:+,d}')
     while len(list_objects):
         list_objects.pop()
-        print(cTrackAllocs.dump_remaining())
+        print(f'cTrackAllocs.dump_remaining(): {cTrackAllocs.dump_remaining()}')
         print(f'Statistics: {cTrackAllocs.statistics()}')
-    print(cTrackAllocs.dump_remaining())
-    print(cTrackAllocs.statistics())
+    print('DONE...')
+    print(f'cTrackAllocs.dump_remaining(): {cTrackAllocs.dump_remaining()}')
+    print(f'Statistics: {cTrackAllocs.statistics()}')
     rss = proc.memory_info().rss
     print(f'RSS end: {rss:,d} {rss - rss_start:+,d}')
 

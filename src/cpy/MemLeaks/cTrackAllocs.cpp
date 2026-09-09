@@ -12,6 +12,15 @@
 
 static NewAndDeallocTracker s_NewAndDeallocTracker;
 
+/**
+ * Returns a summary string of all the currently live objects.
+ *
+ * See: \c NewAndDeallocTracker::dump_remaining()
+ *
+ * @param _unused_module
+ * @param _unused_args
+ * @return A summary string of all the currently live objects
+ */
 static PyObject *
 cTrackAllocs_dump_remaining(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args)) {
     std::string result = s_NewAndDeallocTracker.dump_remaining();
@@ -19,6 +28,18 @@ cTrackAllocs_dump_remaining(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(arg
 
 }
 
+/**
+ * Returns a tuple of integers that summarises the allocations and de-allocations:
+ *
+ * - The total of objects allocated.
+ * - The total of the \c tp_basicsize bytes of the objects allocated.
+ * - The total of objects de-allocated. So the tuple value [0] - [2] is the number currently allocated.
+ * - The maximum number of of objects allocated at any one time.
+ *
+ * @param _unused_module
+ * @param _unused_args
+ * @return The tuple of integers.
+ */
 static PyObject *
 cTrackAllocs_statistics(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args)) {
     return Py_BuildValue(
