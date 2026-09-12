@@ -870,4 +870,4 @@ Once built this can be accessed from Python (see ``tests/unit/test_c_struct_sequ
 
 .. rubric:: Footnotes
 
-.. [#] `namedtuples`_ have been largely superseded by `dataclasses`_ and the is no direct C equivalent for them.
+.. [#] `namedtuples`_ have been largely superseded by `dataclasses`_ and there is no direct C equivalent for these.
