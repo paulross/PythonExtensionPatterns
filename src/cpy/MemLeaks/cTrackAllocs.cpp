@@ -100,18 +100,27 @@ ObjectWithBytes_new(PyTypeObject *type, PyObject *Py_UNUSED(args), PyObject *Py_
 
 static int
 ObjectWithBytes_init(ObjectWithBytes *self, PyObject *args, PyObject *kwds) {
+    assert(!PyErr_Occurred());
     static const char *kwlist[] = {"length", NULL};
     long long length = -1;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "k", (char **)kwlist, &length)) {
         return -1;
     }
+    if (length < 0) {
+        PyErr_SetString(PyExc_ValueError, "length must be >= 0");
+        return -1;
+    }
     self->pBytes = PyBytes_FromStringAndSize(NULL, length);
+    if (self->pBytes == NULL) {
+        assert(PyErr_Occurred());
+        return -1;
+    }
     return 0;
 }
 
 static PyObject *
-ObjectWithBytes___str__(ObjectWithBytes *self, PyObject *Py_UNUSED(ignored)) {
+ObjectWithBytes_str(ObjectWithBytes *self, PyObject *Py_UNUSED(ignored)) {
     assert(!PyErr_Occurred());
     return PyUnicode_FromFormat(
             "<ObjectWithBytes @: %p with bytes of size %ld index %ld",
@@ -129,7 +138,7 @@ static PyTypeObject ObjectWithBytes_Type = {
         .tp_basicsize = sizeof(ObjectWithBytes),
         .tp_itemsize = 0,
         .tp_dealloc = (destructor) ObjectWithBytes_dealloc,
-        .tp_str = (reprfunc) ObjectWithBytes___str__,
+        .tp_str = (reprfunc) ObjectWithBytes_str,
         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
         .tp_doc = "Object containing a bytes object.",
         .tp_methods = ObjectWithBytes_methods,
